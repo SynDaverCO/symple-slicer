@@ -1,0 +1,3 @@
+[submodule "src-cura/CuraEngine"]
+	path = src-cura/CuraEngine
+	url = git@github.com:SynDaverCO/CuraEngine.git

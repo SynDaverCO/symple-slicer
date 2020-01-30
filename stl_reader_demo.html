@@ -1,0 +1,219 @@
+<!--
+WebSlicer
+Copyright (C) 2016 Marcio Teixeira
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Stl Reader Demonstration</title>
+		<style>
+			html, body {
+				position:  relative;
+				width:     100%;
+				height:    100%;
+				margin:    0;
+				padding:   0;
+				overflow:  hidden;
+			}
+			
+			#webgl {
+				display:    block;
+				background: black;
+                width:      100%;
+				height:     100%;
+			}
+			
+ 			#dropBox {
+				position:           absolute;
+				z-index:            15;
+				width:              60px;
+				bottom:             30px;
+				left:               30px;
+				background:         black;
+
+				font-family:        Verdana, Geneva, sans-serif;				
+				text-align:         center;
+			}
+            
+			.dashedAndRound {
+				color:              gray;
+				border:             3px dashed gray;
+				border-radius:      15px;
+				padding:            10px;
+			}
+			
+			.dashedAndRound:hover {
+				-ms-transform:     rotate(-3deg) scale(1.1); /* IE 9 */
+				-webkit-transform: rotate(-3deg) scale(1.1); /* Chrome, Safari, Opera */
+				transform:         rotate(-3deg) scale(1.1);
+			}
+		</style>
+	</head>
+	
+	<body onload="onLoad()">
+		
+		<canvas id="webgl">
+			Your browser does not support the HTML5 canvas tag.
+		</canvas>
+		
+		<div id="dropBox" class="dashedAndRound">
+			Drag STL file here.
+		</div>
+        
+ 		<script src="lib/geometry-lib/StlReader.js"></script>
+		<script src="/lib/three/three.min.js"></script>
+        <script src="/lib/three/OrbitControls.js"></script>
+		<script src="/lib/jquery/jquery.js"></script>
+		
+		<script>
+            var scene, camera, renderer, canvas, control;
+            
+			function setUpDragAndDrop(func) {
+			
+				function readFile(evt) {
+					evt.stopPropagation();
+					evt.preventDefault();
+					var f = ('dataTransfer' in evt) ?
+						(evt.dataTransfer.files[0]) :
+						(evt.target.files[0]);
+					if (f) {
+						var r = new FileReader();
+						r.onload = function(e) {
+							func(e.target.result);
+						}
+						r.readAsArrayBuffer(f);
+					}
+				}
+				
+				function handleDragOver(evt) {
+					evt.stopPropagation();
+					evt.preventDefault();
+					evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+				}
+				
+				var da = document.getElementById('dropBox');
+				da.addEventListener('dragover', handleDragOver, false);
+				da.addEventListener('drop',     readFile,       false);
+			}
+			
+            function animate() {
+                renderer.render( scene, camera );
+                requestAnimationFrame( animate );
+            }
+            
+            function init() {
+                canvas = document.getElementById('webgl');
+                renderer = new THREE.WebGLRenderer({alpha: true, canvas: canvas});
+                canvas.width  = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+                renderer.setViewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+                
+                window.addEventListener( 'resize', onWindowResize, false );
+                
+                camera = new THREE.PerspectiveCamera( 70, canvas.clientWidth / canvas.clientHeight, 1, 1000);
+                scene = new THREE.Scene();
+                scene.add(camera);
+                
+                camera.position.set( 0, 0, 10 );
+
+                var light = new THREE.DirectionalLight(0xffffff, 1.0);
+                light.position.set( 10, 10, 30 ).normalize();
+                camera.add(light);
+                
+                var light = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(light);
+                
+                control = new THREE.OrbitControls( camera, renderer.domElement );
+            }
+            
+            function onLoad() {
+                init();
+                animate();
+            }
+
+            function onWindowResize() {
+                /* The resizing code here also comes from rioki */
+                canvas.width  = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+                renderer.setViewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.render( scene, camera );
+            }
+            
+            function fitCameraToObject( camera, obj, controls, fitOffset = 1.2 ) {
+              obj.geometry.computeBoundingBox();
+              var box = obj.geometry.boundingBox.clone();
+              
+              const size = box.getSize( new THREE.Vector3() );
+              const center = box.getCenter( new THREE.Vector3() );
+              
+              const maxSize = Math.max( size.x, size.y, size.z );
+              const fitHeightDistance = maxSize / ( 2 * Math.atan( Math.PI * camera.fov / 360 ) );
+              const fitWidthDistance = fitHeightDistance / camera.aspect;
+              const distance = fitOffset * Math.max( fitHeightDistance, fitWidthDistance );
+              
+              const direction = center.clone()
+                .sub( camera.position )
+                .normalize()
+                .multiplyScalar( distance );
+              
+              camera.near = distance / 100;
+              camera.far = distance * 100;
+              camera.updateProjectionMatrix();
+
+              camera.position.copy(center).sub(direction);
+              camera.lookAt(center);
+              
+              if (controls) {
+                  controls.maxDistance = distance * 10;
+                  controls.target.copy( center );
+                  controls.update();
+              }
+            }
+			
+			setUpDragAndDrop(function(blob) {
+                var t0 = performance.now();
+                var geometry = GEOMETRY_READERS.readStl(blob, GEOMETRY_READERS.THREEGeometryCreator);
+                geometry.computeFaceNormals();
+                geometry.mergeVertices();
+                var t1 = performance.now();
+                console.log("Loaded STL in " + (t1 - t0) + " milliseconds.");
+                
+                var material = new THREE.MeshPhongMaterial({
+                    color: 0x444444,
+                    specular: 0x888888,
+                    shininess: 30,
+                    side: THREE.DoubleSide
+                });
+                var obj = new THREE.Mesh( geometry, material );
+                scene.add(obj);
+                
+                fitCameraToObject(camera, obj, control);
+                
+                renderer.render(scene, camera);
+			});
+			
+			function messageHandler(event) {
+				//if(event.origin !== 'http://scriptandstyle.com') return;
+				console.log('received response:  ', event.data);
+			}
+            
+			window.addEventListener('message', messageHandler);
+		</script>
+
+	</body>
+</html>

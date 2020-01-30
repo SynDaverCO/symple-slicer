@@ -1,0 +1,105 @@
+<!--
+FaceBook Sharing Widget
+Copyright (C) 2016 Marcio Teixeira
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Facebook Integration Test</title>
+		<style>
+			body {
+				/* Make the body take up entire window minus a margin
+				   http://stackoverflow.com/questions/485827/css-100-height-with-padding-margin
+				 */
+				position:   absolute;
+				top:        0;
+				left:       0;
+				right:      0;
+				bottom:     0;
+				margin:     3em;
+			}
+			
+			/* Themes */
+			
+			body {
+				font-family: Tahoma,Verdana,Segoe,sans-serif;
+			}
+			
+			body .darkThemeColor {
+				background-color: darkGray;
+			}
+			
+			body .lightThemeColor {
+				background-color: lightGray;
+			}
+			
+			#webgl {
+				width:      100%;
+				height:     100%;
+			}
+			
+			.centered, .dialogBox {
+				position:          absolute;
+				top:               50%;
+				left:              50%;
+				padding:           15px;
+				-ms-transform:     translateX(-50%) translateY(-50%);
+				-webkit-transform: translate(-50%,-50%);
+				transform:         translate(-50%,-50%);
+			}
+			
+			.popupBox, .dialogBox {
+				border:         black solid 1px;
+			}
+			
+			.dialogBox {
+				font-size:      90%;
+			}
+			
+			.dialogBox button {
+				border:         white solid 1px;
+				float:          right;
+				margin:         5px;
+				font-size:      100%;
+			}
+			
+			.dialogBox h1 {
+				margin-top:     0px;
+				font-size:      large;
+			}
+		</style>
+		<link rel="stylesheet" type="text/css" href="fb-share.css">
+	</head>
+	<body>
+		<canvas id="webgl" class="lightThemeColor"></canvas>
+		<button id="shareToFacebook">Share on Facebook</button>
+		<div id="fb-share"></div>
+		
+		<script src="../../jquery/jquery-1.12.0.min.js"></script>
+		<script src="../../three/three.min.js"></script>
+		<script src="three-sample.js"></script>
+		<script src="fb-share.js"></script>
+		<script>
+			var fbAppID   = '508195599367692';
+			var fbShareUI = new FacebookShareUI(fbAppID);
+			fbShareUI.appendToDom();
+			fbShareUI.attachToButton("#shareToFacebook");
+			fbShareUI.setSourceCanvas("#webgl", render);
+			
+			onLoad();
+		</script>
+	</body>
+</html>

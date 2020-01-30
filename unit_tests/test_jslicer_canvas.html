@@ -1,0 +1,114 @@
+<!--
+WebSlicer
+Copyright (C) 2016 Marcio Teixeira
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html>
+	<body>
+
+		<canvas id="myCanvas1" width="600" height="600" style="border:1px solid #d3d3d3;">
+			Your browser does not support the HTML5 canvas tag.
+		</canvas>
+		
+		<canvas id="myCanvas2" width="600" height="600" style="border:1px solid #d3d3d3;">
+			Your browser does not support the HTML5 canvas tag.
+		</canvas>
+		
+		<canvas id="myCanvas3" width="600" height="600" style="border:1px solid #d3d3d3;">
+			Your browser does not support the HTML5 canvas tag.
+		</canvas>
+
+		<script src="../lib/geometry-lib/TestGeometry.js"></script>
+        
+		<script src="../lib/jslicer-engine/core/ClipperPath.js"></script>
+		<script src="../lib/jslicer-engine/core/Infill.js"></script>
+		<script src="../lib/jslicer-engine/core/MeshSlicer.js"></script>
+		<script src="../lib/jslicer-engine/core/SlicerEngine.js"></script>
+		
+		<script src="../lib/three/three.min.js"></script>
+		<script src="../lib/clipper/clipper.js"></script>
+		
+		<script>
+			var model = makePolyModel(150);
+		
+			var c = document.getElementById("myCanvas1");
+			var ctx = c.getContext("2d");
+			
+			var origin_x = 300;
+			var origin_y = 300;
+			
+			/*var edges = model.getEdges();
+			var loops = Util.getLoops(edges);
+			var brim  = Util.brim(loops[0], 5, 3);
+			var fill1 = Infill.polyFill(edges, 5,  45, PenFill);
+			var fill2 = Infill.polyFill(edges, 5, -45, PenFill);
+			
+			Util.strokeEdges(ctx, edges, origin_x, origin_y);
+			
+			ctx.strokeStyle = "green";
+			Util.strokeEdges(ctx, brim,  origin_x, origin_y);
+			
+			ctx.strokeStyle = "red";
+			Util.strokeEdges(ctx, fill1,  origin_x, origin_y);
+			ctx.strokeStyle = "blue";
+			Util.strokeEdges(ctx, fill2,  origin_x, origin_y);*/
+			
+			// Slice mesh test
+			var scale = 3.0;
+						
+			var c = document.getElementById("myCanvas2");
+			var ctx = c.getContext("2d");
+			
+			var geometry = new THREE.SphereGeometry( 100, 32, 32 );
+			
+			/*for(var z = 0; z < 100; z+=10) {
+				var slice = SlicerOps.sliceGeometry(geometry, z);
+				if(!slice.sane) {
+					console.log("Skipping invalid layer: ", z);
+					continue;
+				}
+				SlicerOps.strokeEdges(ctx, slice.vertices, slice.edges, origin_x, origin_y, scale);
+				
+				//console.log("slice.edges:", slice.edges);
+				var paths = SlicerOps.makePaths(slice.edges);
+				//console.log("paths.length", paths.length);
+				//console.log("paths", paths);
+				
+				//console.log("slice.vertices", slice.vertices);
+				var paths = SlicerOps.toClipperPath(slice.vertices, paths, 1);
+				SlicerOps.strokeClipperPath(ctx, paths, origin_x, origin_y, scale);
+			}*/
+			
+			// SlicerEngine test
+			var scale = 3.0;
+			
+			var c = document.getElementById("myCanvas3");
+			var ctx = c.getContext("2d");
+			var engine = new SlicerEngine();
+			engine.setGeometry(geometry);
+			var slices = engine.getSlices(2);
+			for( var i = 0; i < slices.length; i++) {
+				ctx.strokeStyle = "black";
+				SlicerOps.strokePath(ctx, slices[i].outer_shell, origin_x, origin_y, scale);
+				ctx.strokeStyle = "red";
+				SlicerOps.strokePath(ctx, slices[i].inner_shell, origin_x, origin_y, scale);
+			}
+			ctx.strokeStyle = "blue";
+			console.log("Infill: " +  slices[slices.length-5].infill.length);			
+			SlicerOps.strokePath(ctx, slices[slices.length-5].infill, origin_x, origin_y, scale);
+		</script>
+	</body>
+</html>

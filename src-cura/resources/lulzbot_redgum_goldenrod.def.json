@@ -1,0 +1,60 @@
+{
+    "id": "lulzbot_redgum_goldenrod",
+    "name": "TAZ Workhorse | HE | 0.5mm",
+    "inherits": "lulzbot_redgum_base",
+    "version": 2,
+    "metadata":
+    {
+        "type": "machine",
+        "visible": true,
+        "priority": "01",
+        "machine_extruder_trains":
+        {
+            "0": "lulzbot_redgum_goldenrod_extruder"
+        },
+        "supported_actions": ["MachineSettingsAction"],
+        "firmware_toolhead_name": "HardenedExtruder",
+        "base_machine": "LulzBot TAZ Workhorse",
+        "base_machine_name": "LulzBot TAZ Workhorse",
+        "preferred_material": "*PolyLite_PLA*",
+        "user_toolhead_name": "HE | 0.5mm",
+        "toolhead_info_link": "https://www.lulzbot.com/store/tool-heads?pk_campaign=software-cura",
+        "default_category": "All"
+    },
+    "overrides":
+    {
+        "machine_name":
+        {
+            "default_value": "LulzBot Workhorse Goldenrod"
+        },
+        "machine_start_gcode":
+        {
+            "default_value_from_file": "lulzbot_redgum_goldenrod_start"
+        },
+        "machine_end_gcode":
+        {
+            "default_value_from_file": "lulzbot_redgum_goldenrod_end"
+        },
+        "machine_level_x_axis_gcode":
+        {
+            "default_value_from_file": "lulzbot_quiver_level_x_axis"
+        },
+        "machine_extruder_count": {
+            "default_value": 1
+        },
+        "machine_width":
+        {
+            "default_value": 282
+        },
+        "machine_depth":
+        {
+            "default_value": 282
+        },
+        "machine_height":
+        {
+            "default_value": 286
+        },
+        "layer_start_x": { "value": "100" },
+        "layer_start_y": { "value": "100" }
+    }
+}
