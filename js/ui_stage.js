@@ -95,6 +95,10 @@ function PrintableObject(geometry) {
 	this.getPosition = function() {
 		return position;
 	}
+    
+    this.getGeometry = function() {
+        return geometry;
+    }
 	
 	this.sliceObject = function() {
 		var slicer = new MeshSlicer(geometry);
@@ -233,17 +237,20 @@ function Stage() {
 		}
 		return scene;
 	}
+    
+    this.getGeometry = function() {
+        // TODO: Support multiple objects.
+        return printableObjects[0].getGeometry();
+    }
 	
 	this.addGeometry = function(geometry) {
 		var obj = new PrintableObject(geometry);
-		//obj.sliceObject();
 		printableObjects.push(obj);
 		arrangeObjectsOnPlatform();
 		constructScene();
 	}
 	
 	this.addEdges = function(edges) {
-
 		scene.add(model);
 	}
 }

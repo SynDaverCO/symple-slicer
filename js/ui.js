@@ -116,5 +116,5 @@ function onClearPlatform() {
 }
 
 function onSaveGcode() {
-    slice();
+    slicer.sliceGeometry(stage.getGeometry());
 }

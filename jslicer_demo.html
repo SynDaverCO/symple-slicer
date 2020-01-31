@@ -197,19 +197,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 				}
 			}
 			
-			function setStatus(status) {
+            var slicer = new SlicerInterface();
+            
+			slicer.onStdoutOutput = function(status) {
 				var tiltRight = $("#statusBar").hasClass("tiltLeft");
 				$("#statusBar").fadeIn().html(status)
 					.toggleClass("tiltLeft", !tiltRight).toggleClass("tiltRight", tiltRight);
 				console.log(status);
 			}
-
-			function gotGeometry(json) {
+            
+            slicer.onGeometryLoaded = function(json) {
 				console.log("Received geometry");
 				newGeometryAsJson = json;
 			}
-			
-			function gotSlices(sl) {
+            
+            slicer.onSlicingFinished = function(sl) {
 				console.log("Received slices");
 				setTimeout(function(){postProcessData(sl);}, 100);
 			}
@@ -225,16 +227,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 				resizeCanvas();
 				$("#statusBar").fadeOut("slow");
 			}
-			
-			function messageHandler(event) {
-				//if(event.origin !== 'http://scriptandstyle.com') return;
-				console.log('received response:  ', event.data);
-			}
-			
-			var slicer = new SlicerInterface();
-			slicer.statusCallback(setStatus);
-			slicer.slicingFinishedCallback(gotSlices);
-			slicer.geometryLoadedCallback(gotGeometry);
 			
 			function setUpDragAndDrop(func) {
 			
@@ -361,8 +353,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 			
 			var rot = new RotateFiles();
 			rot.fetchNext();
-			
-			window.addEventListener('message', messageHandler);
 		</script>
 
 		<!-- The following will enable Google Analytics if the .include file exists -->

@@ -28,6 +28,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 		<script src="lib/jquery/jquery.easing.1.3.js"></script>
         <script src="lib/FileSaver/FileSaver.js"></script>
 		<script src="lib/geometry-lib/StlReader.js"></script>
+        <script src="lib/geometry-lib/GeometrySerialize.js"></script>
         
         <link rel="stylesheet" type="text/css" href="css/ui.css">
 		<link rel="stylesheet" type="text/css" href="lib/ui-toolbox/toolbox.css">
@@ -112,16 +113,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 			
 			toolboxInit();
             
+            slicer = new SlicerInterface();
+            
             // Cura interface
-            function clearLog() {
+            /*function clearLog() {
                 document.getElementById('log').textContent = '';
             }
             
             function onConsoleMessage(str) {
                 document.getElementById('log').textContent += str + '\n';
-            }
+            }*/
 
-            function onFileReceived(data) {
+            slicer.onFileReceived = function(data) {
                 var blob = new Blob([data], {type: "application/octet-stream"});
                 var fileName = "cura.gcode";
                 saveAs(blob, fileName);
