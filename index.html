@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 	</head>
 	<body>
 		<script src="lib/three/three.min.js"></script>
-		<script src="lib/three/TrackballControls.js"></script>
+		<script src="lib/three/OrbitControls.js"></script>
 		<script src="lib/jquery/jquery.js"></script>
 		<script src="lib/jquery/jquery.easing.1.3.js"></script>
         <script src="lib/FileSaver/FileSaver.js"></script>
@@ -39,7 +39,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 		<script src="js/ui.js"></script>
         
         <script src="lib/cura-engine/cura-interface.js"></script>
-				
+        
+        <!-- Shader for drawing a checkered floor -->
+        
 		<script id="checkersVertexShader" type="x-shader/x-vertex">
 			varying vec2 vUv;
  

@@ -17,7 +17,7 @@
  */
 function RenderEngine(canvas, stage) {
 	var that     = this;
-	var camera   = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+	var camera   = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 10, 3000 );
 	var renderer = new THREE.WebGLRenderer({canvas:canvas});
 	
 	var backgroundColor = 0x999999;
@@ -34,17 +34,18 @@ function RenderEngine(canvas, stage) {
 	camera.position.y =  100;
 	camera.position.z = -350;
 
-	controls = new THREE.TrackballControls( camera, canvas );
+	//controls = new THREE.TrackballControls( camera, canvas );
+    controls = new THREE.OrbitControls( camera, canvas );
 
-	controls.rotateSpeed = 1.0;
-	controls.zoomSpeed = 1.2;
-	controls.panSpeed = 0.8;
+	//controls.rotateSpeed = 1.0;
+	//controls.zoomSpeed = 1.2;
+	//controls.panSpeed = 0.8;
 
-	controls.noZoom = false;
-	controls.noPan = false;
+	//controls.noZoom = false;
+	//controls.noPan = false;
 
-	controls.staticMoving = true;
-	controls.dynamicDampingFactor = 0.3;
+	//controls.staticMoving = true;
+	//controls.dynamicDampingFactor = 0.3;
 
 	controls.keys = [ 65, 83, 68 ];
 	
@@ -54,16 +55,13 @@ function RenderEngine(canvas, stage) {
 		controls.update();
 	}
 	
-	this.render = function() {		
-		var scene = stage.getScene(camera.position);
-		
+	this.render = function() {				
 		// Mouse logic
 		raycaster.setFromCamera( mouse, camera );
 		stage.mousePicker(raycaster);
 		
 		// Render
-		renderer.render( scene, camera );
-		
+		renderer.render( stage.getScene(camera.position), camera );
 	}
 	
 	// Add event listeners
@@ -72,7 +70,7 @@ function RenderEngine(canvas, stage) {
 		camera.updateProjectionMatrix();
 		renderer.setSize( window.innerWidth, window.innerHeight );
 
-		controls.handleResize();
+		controls.update();
 
 		that.render();
 	}
