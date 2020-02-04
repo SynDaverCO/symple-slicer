@@ -17,6 +17,8 @@
  */
 
 function Stage() {
+    var mine = this;
+    
     // Private:
     
     var printer = {
@@ -50,7 +52,7 @@ function Stage() {
         fragmentShader: document.getElementById('checkersFragmentShader').innerHTML
     });
     
-    // Circular print bed
+    // Print bed representation
     var geometry;
     if (printer.circular) {
         var segments = 64;
@@ -110,7 +112,7 @@ function Stage() {
     }
     
     /**
-     * Returns the PrintableObject associated with a Scene object
+     * Returns the PrintableObject associated with a 3D object
      */
     function findPrintableObject(obj) {
         return obj.hasOwnProperty("printableObjectIdx") ? printableObjects[obj.printableObjectIdx] : null;
@@ -122,10 +124,12 @@ function Stage() {
         var intersects = raycaster.intersectObject( scene, true );
 
         for ( var i = 0; i < intersects.length; i++ ) {
-            var printableObject = findPrintableObject(intersects[ i ].object);
+            var obj = intersects[ i ].object;
+            var printableObject = findPrintableObject(obj);
             if(printableObject) {
                 //printableObject.setSelected(true);
                 outlinePass.selectedObjects = [intersects[ i ].object];
+                mine.transformControl.attach(obj);
             }
         }
     }

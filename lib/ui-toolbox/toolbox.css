@@ -21,9 +21,6 @@
 	padding:            10px;
 	min-width:          200px;
                         
-	left:               10px;
-	top:                15px;
-                        
 	color:              Indigo  ;
 	background-color:   LightGoldenRodYellow ;
 	border:             1px solid Indigo;
@@ -31,6 +28,16 @@
 	box-shadow:         5px 5px 10px #222222;
                         
 	vertical-align:     middle;
+}
+
+#toolbox.dock-left {
+	left:               10px;
+	top:                15px;
+}
+
+#toolbox.dock-right {
+	right:              10px;
+	top:                15px;
 }
 
 .toolbox-panel {

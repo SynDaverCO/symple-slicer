@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     <body>
         <script src="lib/three/three.min.js"></script>
         <script src="lib/three/OrbitControls.js"></script>
+        <script src="lib/three/TransformControls.js"></script>
         <script src="lib/jquery/jquery.js"></script>
         <script src="lib/jquery/jquery.easing.1.3.js"></script>
         <script src="lib/FileSaver/FileSaver.js"></script>
@@ -91,7 +92,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             Sorry, your browser does not support the HTML canvas.
         </canvas>
         
-        <div id="toolbox"></div>
+        <div id="toolbox" class="dock-right"></div>
+        
+        <div id="toolbar">
+            <img src="images/open-file.png">
+            <img src="images/move.png">
+            <img src="images/scale.png">
+            <img src="images/rotate.png">
+            <img src="images/mirror.png">
+            <img src="images/custom-supports.png">
+            <img src="images/support-blocker.png">
+        </div>
             
         <!-- Help table -->
         

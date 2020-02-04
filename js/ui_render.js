@@ -59,14 +59,20 @@ function RenderEngine(canvas, stage) {
     camera.position.y =  100;
     camera.position.z = -350;
 
-    controls = new THREE.OrbitControls( camera, canvas );
-
-    controls.keys = [ 65, 83, 68 ];
+    var orbit = new THREE.OrbitControls( camera, canvas );
+    orbit.keys = [ 65, 83, 68 ];
+    orbit.addEventListener( 'change', that.render );
+    
+    var control = new THREE.TransformControls( camera, renderer.domElement );
+    scene.add( control );
+    control.addEventListener( 'change', function() {that.render()} );
+    control.addEventListener( 'dragging-changed', function ( event ) {orbit.enabled = ! event.value;} );
+    
+    stage.transformControl = control;
     
     // Animate loop for control
     function animate() {
         requestAnimationFrame( animate );
-        controls.update();
         that.render();
     }
     
@@ -86,8 +92,7 @@ function RenderEngine(canvas, stage) {
         renderer.setSize( window.innerWidth, window.innerHeight );
         composer.setSize( window.innerWidth, window.innerHeight );
 
-        controls.update();
-
+        orbit.update();
         that.render();
     }
     
@@ -100,8 +105,7 @@ function RenderEngine(canvas, stage) {
 
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
-    controls.addEventListener( 'change', that.render );
-    
+
     // Start animation and render initial frame
     animate();
 }

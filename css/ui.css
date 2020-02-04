@@ -16,38 +16,65 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 body {
-	margin:           0;
-	overflow:         hidden;
-	
-	font-family:      Tahoma, Verdana, Segoe, sans-serif;
+    margin:             0;
+    overflow:           hidden;
+
+    font-family:        Tahoma, Verdana, Segoe, sans-serif;
+}                       
+
+canvas {                
+    width:              100%;
+    height:             100%;
+}                       
+
+hr {                    
+    height:             1px;
+    border-width:       0;
+    color:              Indigo;
+    background-color:   Indigo;
+}                       
+
+#credits {              
+    position:           absolute;
+    bottom:             10px;
+    left:               10px;
+
+    color:              Indigo;
+    font-weight:        bold;
+}                       
+
+#weblink {              
+    position:           absolute;
+    bottom:             10px;
+    right:              10px;
+
+    color:              Indigo;
+    font-weight:        bold;
 }
 
-canvas {
-	width:            100%;
-	height:           100%;
+#toolbar {
+    position:           absolute;
+    padding:            0px;
+    min-width:          200px;
+
+    color:              Indigo  ;
+    background-color:   LightGoldenRodYellow ;
+    border:             1px solid Indigo;
+
+    box-shadow:         5px 5px 10px #222222;
+
+    vertical-align:     middle;
+
+    left:               10px;
+    top:                15px;
 }
 
-hr {
-	height:           1px;
-	border-width:     0;
-	color:            Indigo;
-	background-color: Indigo;
+#toolbar img {
+     mix-blend-mode:    darken;
+     opacity:           25%;
 }
 
-#credits {
-	position:         absolute;
-	bottom:           10px;
-	left:             10px;
-	
-	color:            Indigo;
-	font-weight:      bold;
-}
-
-#weblink {
-	position:         absolute;
-	bottom:           10px;
-	right:            10px;
-	
-	color:            Indigo;
-	font-weight:      bold;
+#toolbar img:hover {
+     mix-blend-mode:    normal;
+     opacity:           100%;
 }
