@@ -26,17 +26,26 @@ function RenderEngine(canvas, stage) {
 
     var mouse = new THREE.Vector2();
                 
-    
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.setClearColor( backgroundColor );
     
-    // postprocessing
+    var scene = new THREE.Scene();
+    scene.add(stage.getPrintVolume());
     
-    var scene = stage.getScene();
+    // Ambient light
+    var ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+    scene.add( ambientLight );
+
+    // Directional light (attached to the camera)
+    directionalLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
+    camera.add( directionalLight );
+    scene.add(camera);
+    
+    // postprocessing    
 
     var composer = new THREE.EffectComposer( renderer );
 
-    var renderPass = new THREE.RenderPass(  stage.getScene(), camera );
+    var renderPass = new THREE.RenderPass( scene, camera );
     composer.addPass( renderPass );
 
     outlinePass = new THREE.OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
@@ -64,12 +73,10 @@ function RenderEngine(canvas, stage) {
     this.render = function() {              
         // Mouse logic
         raycaster.setFromCamera( mouse, camera );
-        stage.mousePicker(raycaster);
+        stage.mousePicker(raycaster, scene);
         
         // Render
         composer.render();
-        
-        stage.updateCameraPosition(camera.position);
     }
     
     // Add event listeners
@@ -89,7 +96,6 @@ function RenderEngine(canvas, stage) {
 
         mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
         mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
     }
 
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );

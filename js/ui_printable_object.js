@@ -25,6 +25,8 @@ function PrintableObject(geometry) {
         "slices" : 2
     });
     
+    /********************** OBJECT INITIALIZATION **********************/
+        
     var position = new THREE.Vector3();
     var renderStyle = RenderStyles.volume;
     var paths;
@@ -41,9 +43,10 @@ function PrintableObject(geometry) {
     // The convex hull is necessary to allow 
     var convex_hull = new THREE.ConvexGeometry( geometry.vertices );
     
+    /********************** PRIVATE METHODS **********************/
+    
     function getSceneObjectFromGeometry(geometry, material) {
-        //return new THREE.Mesh(geometry, material);
-        return new THREE.Mesh(convex_hull, material);
+        return new THREE.Mesh(geometry, material);
     }
     
     function renderPathsToGeometry(geometry, paths, z, hue) {
@@ -81,7 +84,9 @@ function PrintableObject(geometry) {
             vertexColors: THREE.VertexColors} );
         return new THREE.LineSegments(geometry, material);      
     }
-        
+    
+    /********************** PUBLIC METHODS **********************/
+    
     this.getTHREESceneObject = function() {
         if(renderStyle === RenderStyles.volume) {
             mine.object = getSceneObjectFromGeometry(geometry, material);
@@ -117,6 +122,5 @@ function PrintableObject(geometry) {
     
     this.setSelected = function(isSelected) {
         mine.selected = isSelected;
-        mine.object.material.color.set( 0xff0000 );
     }
 }

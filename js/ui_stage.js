@@ -19,11 +19,81 @@
 function Stage() {
     // Private:
     
-    var scene;
-        
-    var directionalLight;
-    var printableObjects = [];
+    var printer = {
+        circular:    false,
+        z_height:    300,
+        bed_radius:  150, // when circular
+        bed_depth:   300, // when rectangular
+        bed_width:   300
+    };
     
+    var printableObjects = [];
+        
+    /********************** OBJECT INITIALIZATION **********************/
+        
+    var printVolume = new THREE.Object3D();
+    
+    // Set to printer coordinates (Z goes up)
+    printVolume.rotateX(-90 * Math.PI / 180);
+    printVolume.rotateZ(180 * Math.PI / 180);
+    
+    // Checkerboard material
+    var uniforms = {
+        checkSize: { type: "f", value: 15 },
+        color1: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 1.0, 1) },
+        color2: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.7, 1) },
+    };
+
+    var material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: document.getElementById('checkersVertexShader').innerHTML,
+        fragmentShader: document.getElementById('checkersFragmentShader').innerHTML
+    });
+    
+    // Circular print bed
+    var geometry;
+    if (printer.circular) {
+        var segments = 64;
+        geometry = new THREE.CircleGeometry( printer.bed_radius, segments );
+    } else {
+        geometry = new THREE.PlaneGeometry( printer.bed_width, printer.bed_depth, 1 );
+    }
+    
+    // Topside
+    var mesh = new THREE.Mesh( geometry, material );
+    mesh.position.z = -0.1;
+    printVolume.add(mesh);
+    
+    // Bottom
+    var material = new THREE.MeshBasicMaterial( { color: 0x5555FF, transparent: true, opacity: 0.5} );
+    mesh = new THREE.Mesh( geometry, material );
+    mesh.rotation.x = Math.PI * -180 / 180;
+    mesh.position.y = -0.1;
+    printVolume.add(mesh);
+    
+    // Walls
+    if (printer.circular) {
+        geometry = new THREE.CylinderGeometry( printer.bed_radius, printer.bed_radius, printer.z_height, segments );
+    } else {
+        geometry = new THREE.BoxGeometry( printer.bed_width, printer.bed_depth, printer.z_height );
+    }
+    geometry.rotateX(90 * Math.PI / 180);
+    var material = new THREE.MeshBasicMaterial( { color: 0x5555FF, transparent: true, opacity: 0.5} );
+    var mesh = new THREE.Mesh( geometry, material );
+    material.side = THREE.BackSide;
+    mesh.position.z = printer.z_height / 2;
+    printVolume.add(mesh);
+    
+    // Axis
+    var axesHelper = new THREE.AxesHelper( 25 );
+    var a = 225;
+    //axesHelper.position.x = printer.radius * 1.2 * Math.cos(a * Math.PI / 180);
+    //axesHelper.position.y = printer.radius * 1.2 * Math.sin(a * Math.PI / 180);
+    //axesHelper.position.z = 0;
+    printVolume.add( axesHelper );
+    
+    /********************** PRIVATE METHODS **********************/
+        
     function arrangeObjectsOnPlatform() {
         for( var i = 0; i < printableObjects.length; i++) {
             var object = printableObjects[i];
@@ -38,89 +108,6 @@ function Stage() {
             );
         }
     }
-
-    function addPrinterVolumeToScene(scene) {
-        var printer = {
-            circular:    false,
-            z_height:    300,
-            bed_radius:  150, // when circular
-            bed_depth:   300, // when rectangular
-            bed_width:   300
-        };
-        
-        // Checkerboard material
-        var uniforms = {
-            checkSize: { type: "f", value: 15 },
-            color1: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 1.0, 1) },
-            color2: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.7, 1) },
-        };
-
-        var material = new THREE.ShaderMaterial({
-            uniforms: uniforms,
-            vertexShader: document.getElementById('checkersVertexShader').innerHTML,
-            fragmentShader: document.getElementById('checkersFragmentShader').innerHTML
-        });
-        
-        // Circular print bed
-        var segments, geometry;
-        if (printer.circular) {
-            segments = 64;
-            geometry = new THREE.CircleGeometry( printer.bed_radius, segments );
-        } else {
-            geometry = new THREE.PlaneGeometry( printer.bed_width, printer.bed_depth, 1 );
-        }
-        
-        // Topside
-        var mesh = new THREE.Mesh( geometry, material );
-        mesh.position.z = -0.1;
-        scene.add(mesh);
-        
-        // Bottom
-        var material = new THREE.MeshBasicMaterial( { color: 0x5555FF, transparent: true, opacity: 0.5} );
-        mesh = new THREE.Mesh( geometry, material );
-        mesh.rotation.x = Math.PI * -180 / 180;
-        mesh.position.y = -0.1;
-        scene.add(mesh);
-        
-        // Walls
-        if (printer.circular) {
-            geometry = new THREE.CylinderGeometry( printer.bed_radius, printer.bed_radius, printer.z_height, segments );
-        } else {
-            geometry = new THREE.BoxGeometry( printer.bed_width, printer.bed_depth, printer.z_height );
-        }
-        geometry.rotateX(90 * Math.PI / 180);
-        var material = new THREE.MeshBasicMaterial( { color: 0x5555FF, transparent: true, opacity: 0.5} );
-        var mesh = new THREE.Mesh( geometry, material );
-        material.side = THREE.BackSide;
-        mesh.position.z = printer.z_height / 2;
-        scene.add(mesh);
-        
-        // Axis
-        var axesHelper = new THREE.AxesHelper( 25 );
-        var a = 225;
-        //axesHelper.position.x = printer.radius * 1.2 * Math.cos(a * Math.PI / 180);
-        //axesHelper.position.y = printer.radius * 1.2 * Math.sin(a * Math.PI / 180);
-        //axesHelper.position.z = 0;
-        scene.add( axesHelper );
-    }
-
-    function constructScene() {
-        scene = new THREE.Scene();
-        
-        // Set to printer coordinates (Z goes up)
-        scene.rotateX(-90 * Math.PI / 180);
-        scene.rotateZ(180 * Math.PI / 180);
-        
-        // Ambient light
-        var ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
-        scene.add( ambientLight );
-
-        // Directional light
-        directionalLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
-        scene.add( directionalLight );
-        
-        addPrinterVolumeToScene(scene);
-    }
     
     /**
      * Returns the PrintableObject associated with a Scene object
@@ -129,9 +116,9 @@ function Stage() {
         return obj.hasOwnProperty("printableObjectIdx") ? printableObjects[obj.printableObjectIdx] : null;
     }
     
-    this.mousePicker = function( raycaster ) {
-        if(!scene) return false;
-        
+    /********************** PUBLIC METHODS **********************/
+    
+    this.mousePicker = function( raycaster, scene ) {
         var intersects = raycaster.intersectObject( scene, true );
 
         for ( var i = 0; i < intersects.length; i++ ) {
@@ -141,27 +128,10 @@ function Stage() {
                 outlinePass.selectedObjects = [intersects[ i ].object];
             }
         }
-        
-        console.log("Intersections: " + intersects.length);
-    }
-
-    this.updateCameraPosition = function(cameraPosition) {
-        // Move the directional light to the camera position, since the scene has been
-        // rotated into printer coordinates, we need to convert the light position to that
-        // coordinate space.
-        
-        if(directionalLight) {
-            var lightPos = cameraPosition.clone();
-            scene.worldToLocal(lightPos);
-            directionalLight.position.copy(lightPos);
-        }
     }
     
-    this.getScene = function(cameraPosition) {
-        if(!scene) {
-            constructScene();
-        }
-        return scene;
+    this.getPrintVolume = function() {
+        return printVolume;
     }
     
     this.getGeometry = function() {
@@ -174,12 +144,12 @@ function Stage() {
         printableObjects.push(printable);
         var sceneObj = printable.getTHREESceneObject();
         sceneObj.printableObjectIdx = printableObjects.length - 1;
-        scene.add(sceneObj);
+        printVolume.add(sceneObj);
         
         arrangeObjectsOnPlatform();
     }
     
     this.addEdges = function(edges) {
-        scene.add(model);
+        printVolume.add(model);
     }
 }
