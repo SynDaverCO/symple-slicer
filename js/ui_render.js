@@ -70,6 +70,12 @@ function RenderEngine(canvas, stage) {
     
     stage.transformControl = control;
     
+    // https://stackoverflow.com/questions/41000983/using-transformcontrols-with-outlinepass-in-three-js?noredirect=1&lq=1
+    // Fix for transform controls being updated in OutlinePass
+    control.traverse((obj) => { // To be detected correctly by OutlinePass.
+        obj.isTransformControls = true;
+    });
+
     // Animate loop for control
     function animate() {
         requestAnimationFrame( animate );
