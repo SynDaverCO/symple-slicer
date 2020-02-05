@@ -1,6 +1,7 @@
 /**
  * WebSlicer
- * Copyright (C) 2016 Marcio Teixeira
+ * Copyright (C) 2016  Marcio Teixeira
+ * Copyright (C) 2020  SynDaver Labs, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,57 +20,56 @@
 function PrintableObject(geometry) {
 
     var mine = this;
-    
+
     var RenderStyles = Object.freeze({
         "volume" : 1,
         "slices" : 2
     });
-    
+
     /********************** OBJECT INITIALIZATION **********************/
-        
-    var position = new THREE.Vector3();
+
     var renderStyle = RenderStyles.volume;
     var paths;
-    
+
     this.selected = false;
-    
+
     var material = new THREE.MeshLambertMaterial( { color: 0xffff00 } );
-    
+
     // Initialze things
-    geometry.computeBoundingBox();
-    geometry.computeFaceNormals();
-    geometry.mergeVertices();
-    
-    // The convex hull is necessary to allow 
-    var convex_hull = new THREE.ConvexGeometry( geometry.vertices );
-    
+    this.geometry = geometry;
+    this.geometry.computeBoundingBox();
+    this.geometry.computeFaceNormals();
+    this.geometry.mergeVertices();
+    this.mesh = new THREE.Mesh(geometry, material);
+    this.hull = new THREE.ConvexGeometry(geometry.vertices);
+
     /********************** PRIVATE METHODS **********************/
-    
+
     function getSceneObjectFromGeometry(geometry, material) {
-        return new THREE.Mesh(geometry, material);
+        return mine.mesh;
     }
-    
+
     function renderPathsToGeometry(geometry, paths, z, hue) {
         SlicerOps.forEachSegment(paths, function(start,end) {
             geometry.vertices.push(
                 new THREE.Vector3(start.x, start.y, z),
                 new THREE.Vector3(end.x,   end.y,   z)
             );
-            
+
             // Compute the edge color
             var a = Math.atan2(start.y, start.x);
             a = Math.sin(a) /4 + 0.5;
-            
+
             var color = new THREE.Color(0xFFFFFF);
             color.setHSL(hue,1,a);
             geometry.colors.push(color);
             geometry.colors.push(color);
         });
     }
-    
+
     function getSceneObjectFromSlices(slices) {
         var geometry = new THREE.Geometry();
-        
+
         for( i = 0; i < slices.length; i++) {
             //renderPathsToGeometry(geometry, slices[i].outer_shell, slices[i].z, 0.5);
             for( j = 0; j < slices[i].inner_shell.length; j++) {
@@ -77,49 +77,36 @@ function PrintableObject(geometry) {
             }
             //renderPathsToGeometry(geometry, slices[i].infill, slices[i].z, 0.9);
         }
-        
+
         var material = new THREE.LineBasicMaterial( {
             opacity:1.0,
             linewidth: 1.0,
             vertexColors: THREE.VertexColors} );
         return new THREE.LineSegments(geometry, material);      
     }
-    
+
     /********************** PUBLIC METHODS **********************/
-    
+
     this.getTHREESceneObject = function() {
         if(renderStyle === RenderStyles.volume) {
             mine.object = getSceneObjectFromGeometry(geometry, material);
         } else {
             mine.object = getSceneObjectFromSlices(slices);
         }
-        mine.object.position.copy(position);
         return mine.object;
     }
-    
+
     this.getBoundingBox = function () {
         return geometry.boundingBox;
     }
-    
-    this.setPosition = function (x, y, z) {
-        position.set(x,y,z);
-    }
-    
-    this.getPosition = function() {
-        return position;
-    }
-    
-    this.getGeometry = function() {
-        return geometry;
-    }
-    
+
     this.sliceObject = function() {
         var slicer = new MeshSlicer(geometry);
         //slicer.setGeometry(geometry);
         slices = slicer.getSlices();
         renderStyle = RenderStyles.slices;
     }
-    
+
     this.setSelected = function(isSelected) {
         mine.selected = isSelected;
     }

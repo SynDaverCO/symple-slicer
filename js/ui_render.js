@@ -1,6 +1,7 @@
 /**
  * WebSlicer
- * Copyright (C) 2016 Marcio Teixeira
+ * Copyright (C) 2016  Marcio Teixeira
+ * Copyright (C) 2020  SynDaver Labs, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,19 +20,19 @@ function RenderEngine(canvas, stage) {
     var that     = this;
     var camera   = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 10, 3000 );
     var renderer = new THREE.WebGLRenderer({canvas:canvas});
-    
+
     var backgroundColor = 0x999999;
     
     var raycaster = new THREE.Raycaster();
 
     var mouse = new THREE.Vector2();
-                
+
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.setClearColor( backgroundColor );
-    
+
     var scene = new THREE.Scene();
     scene.add(stage.getPrintVolume());
-    
+
     // Ambient light
     var ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
     scene.add( ambientLight );
@@ -40,7 +41,7 @@ function RenderEngine(canvas, stage) {
     directionalLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
     camera.add( directionalLight );
     scene.add(camera);
-    
+
     // postprocessing    
 
     var composer = new THREE.EffectComposer( renderer );
@@ -50,7 +51,7 @@ function RenderEngine(canvas, stage) {
 
     outlinePass = new THREE.OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
     composer.addPass( outlinePass );
-    
+
     outlinePass.edgeStrength  = 10;
     outlinePass.edgeThickness = 2;
     outlinePass.edgeGlow      = 1;
@@ -61,35 +62,37 @@ function RenderEngine(canvas, stage) {
 
     var orbit = new THREE.OrbitControls( camera, canvas );
     orbit.keys = [ 65, 83, 68 ];
-    
+
     var control = new THREE.TransformControls( camera, renderer.domElement );
     scene.add( control );
-    control.addEventListener( 'change', function() {that.render()} );
-    control.addEventListener( 'dragging-changed', function ( event ) {orbit.enabled = ! event.value;} );
-    
+    control.addEventListener( 'change', render );
+    control.addEventListener( 'dragging-changed', function ( event ) {
+        orbit.enabled = ! event.value;
+        if (!event.value) stage.onObjectTransformed();
+    } );
+
     stage.transformControl = control;
-    
+
     // https://stackoverflow.com/questions/41000983/using-transformcontrols-with-outlinepass-in-three-js?noredirect=1&lq=1
     // Fix for transform controls being updated in OutlinePass
     control.traverse((obj) => { // To be detected correctly by OutlinePass.
         obj.isTransformControls = true;
     });
 
+    function render() {
+        composer.render();
+    }
+
     // Animate loop for control
     function animate() {
         requestAnimationFrame( animate );
-        that.render();
-    }
-    
-    this.render = function() {              
+        render();
+
         // Mouse logic
         raycaster.setFromCamera( mouse, camera );
         stage.mousePicker(raycaster, scene);
-        
-        // Render
-        composer.render();
     }
-    
+
     // Add event listeners
     function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -98,9 +101,9 @@ function RenderEngine(canvas, stage) {
         composer.setSize( window.innerWidth, window.innerHeight );
 
         orbit.update();
-        that.render();
+        render();
     }
-    
+
     function onDocumentMouseMove( event ) {
         event.preventDefault();
 

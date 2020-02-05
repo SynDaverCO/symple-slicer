@@ -31,10 +31,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/FileSaver/FileSaver.js"></script>
         <script src="lib/geometry-lib/StlReader.js"></script>
         <script src="lib/geometry-lib/GeometrySerialize.js"></script>
-        
         <script src="lib/three/ConvexHull.js"></script>
         <script src="lib/three/ConvexGeometry.js"></script>
-        
+
         <!-- ***************** Prequisites for OutlinePass.js *****************
              We need all the following files to give selected objects a halo -->
         <script src="lib/three/Pass.js"></script>
@@ -44,22 +43,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/three/EffectComposer.js"></script>
         <script src="lib/three/OutlinePass.js"></script>
         <!-- ***************** Prequisites for OutlinePass.js ***************** -->
-        
+
         <link rel="stylesheet" type="text/css" href="css/ui.css">
         <link rel="stylesheet" type="text/css" href="lib/ui-toolbox/toolbox.css">
         <link rel="stylesheet" type="text/css" href="lib/ui-toolbar/toolbar.css">
-        
+
         <script src="lib/ui-toolbox/toolbox.js"></script>
         <script src="lib/ui-toolbar/toolbar.js"></script>
         <script src="js/ui_printable_object.js"></script>
         <script src="js/ui_render.js"></script>
         <script src="js/ui_stage.js"></script>
         <script src="js/ui.js"></script>
-        
+
         <script src="lib/cura-engine/cura-interface.js"></script>
-        
+
         <!-- Shader for drawing a checkered floor -->
-        
+
         <script id="checkersVertexShader" type="x-shader/x-vertex">
             varying vec2 vUv;
  
@@ -68,7 +67,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
         </script>
-        
+
         <script id="checkersFragmentShader" type="x-shader/x-fragment">
             varying vec2  vUv;
             uniform float checkSize;
@@ -84,22 +83,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     return color2;
                 }
             }
-            
+
             void main() {
                 vec2 position = -1.0 + 2.0 * vUv;
                 gl_FragColor = checker(vUv.x, vUv.y);
             }
         </script>
-        
+
         <canvas id="myCanvas">
             Sorry, your browser does not support the HTML canvas.
         </canvas>
-        
+
         <div id="toolbox" class="dock-right"></div>
         <div id="toolbar" class="dock-left"></div>
-            
+
         <!-- Help table -->
-        
+
         <table id="viewport-help">
             <tr>
                 <th></th>
@@ -121,37 +120,39 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <td>Right</td>
                 <td>D</td>
             </tr>
-            
+
         </table>
-        
-        <div id="credits">&copy; M Teixeira 2016</div>
+
+        <div id="credits">&copy; M Teixeira 2016, &copy; SynDaver 2020</div>
         <div id="weblink"><a href="http://marciot.freeshell.org">marciot.freeshell.org</a></div>
-        
+
         <script>
             var canvas       = document.getElementById("myCanvas");
             var stage        = new Stage();
             var renderEngine = new RenderEngine(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
-            
+
             toolbar.addIcon("open-file",       "images/open-file.png");
-            toolbar.addIcon("move",            "images/move.png");
-            toolbar.addIcon("scale",           "images/scale.png");
+            toolbar.addIcon("move",            "images/scale.png");
+            toolbar.addIcon("scale",           "images/scale-max.png");
             toolbar.addIcon("rotate",          "images/rotate.png");
             toolbar.addIcon("mirror",          "images/mirror.png");
-            toolbar.addIcon("custom-supports", "images/custom-supports.png");
-            toolbar.addIcon("support-blocker", "images/support-blocker.png");
-            
+            //toolbar.addIcon("custom-supports", "images/custom-supports.png");
+            //toolbar.addIcon("support-blocker", "images/support-blocker.png");
+            toolbar.addIcon("layflat",         "images/lay-flat.png");
+            toolbar.addIcon("undo",            "images/undo.png");
+
             toolbar.onChange = function(id) {stage.changeTool(id);};
-            
+
             toolboxInit();
-            
+
             slicer = new SlicerInterface();
-            
+
             // Cura interface
             /*function clearLog() {
                 document.getElementById('log').textContent = '';
             }
-            
+
             function onConsoleMessage(str) {
                 document.getElementById('log').textContent += str + '\n';
             }*/
@@ -162,6 +163,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 saveAs(blob, fileName);
             }
         </script>
-        
     </body>
 </html>

@@ -1,6 +1,7 @@
 /**
  * WebSlicer
- * Copyright (C) 2016 Marcio Teixeira
+ * Copyright (C) 2016  Marcio Teixeira
+ * Copyright (C) 2020  SynDaver Labs, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -18,9 +19,9 @@
 
 function Stage() {
     var mine = this;
-    
+
     // Private:
-    
+
     var printer = {
         circular:    false,
         z_height:    300,
@@ -28,17 +29,24 @@ function Stage() {
         bed_depth:   300, // when rectangular
         bed_width:   300
     };
-    
+
     var printableObjects = [];
-        
+
+    var selectedPrintableObject = null;
+
+    this.onObjectTransformed = function() {
+        if(selectedPrintableObject != null)
+            dropToFloor(selectedPrintableObject);
+    }
+
     /********************** OBJECT INITIALIZATION **********************/
-        
+
     var printVolume = new THREE.Object3D();
-    
+
     // Set to printer coordinates (Z goes up)
     printVolume.rotateX(-90 * Math.PI / 180);
     printVolume.rotateZ(180 * Math.PI / 180);
-    
+
     // Checkerboard material
     var uniforms = {
         checkSize: { type: "f", value: 15 },
@@ -51,7 +59,7 @@ function Stage() {
         vertexShader: document.getElementById('checkersVertexShader').innerHTML,
         fragmentShader: document.getElementById('checkersFragmentShader').innerHTML
     });
-    
+
     // Print bed representation
     var geometry;
     if (printer.circular) {
@@ -60,19 +68,19 @@ function Stage() {
     } else {
         geometry = new THREE.PlaneGeometry( printer.bed_width, printer.bed_depth, 1 );
     }
-    
+
     // Topside
     var mesh = new THREE.Mesh( geometry, material );
     mesh.position.z = -0.1;
     printVolume.add(mesh);
-    
+
     // Bottom
     var material = new THREE.MeshBasicMaterial( { color: 0x5555FF, transparent: true, opacity: 0.5} );
     mesh = new THREE.Mesh( geometry, material );
     mesh.rotation.x = Math.PI * -180 / 180;
     mesh.position.y = -0.1;
     printVolume.add(mesh);
-    
+
     // Walls
     if (printer.circular) {
         geometry = new THREE.CylinderGeometry( printer.bed_radius, printer.bed_radius, printer.z_height, segments );
@@ -85,7 +93,7 @@ function Stage() {
     material.side = THREE.BackSide;
     mesh.position.z = printer.z_height / 2;
     printVolume.add(mesh);
-    
+
     // Axis
     var axesHelper = new THREE.AxesHelper( 25 );
     var a = 225;
@@ -93,33 +101,45 @@ function Stage() {
     //axesHelper.position.y = printer.radius * 1.2 * Math.sin(a * Math.PI / 180);
     //axesHelper.position.z = 0;
     printVolume.add( axesHelper );
-    
+
     /********************** PRIVATE METHODS **********************/
         
     function arrangeObjectsOnPlatform() {
         for( var i = 0; i < printableObjects.length; i++) {
             var object = printableObjects[i];
             var bounds = object.getBoundingBox();
-            
-            console.log(bounds.min.x, bounds.max.x, bounds.min.y, bounds.max.y)
-            
-            object.setPosition(
+
+            object.object.position.set(
                 -(bounds.min.x + bounds.max.x)/2,
                 -(bounds.min.y + bounds.max.y)/2,
                 -bounds.min.z
             );
         }
     }
-    
+
     /**
      * Returns the PrintableObject associated with a 3D object
      */
     function findPrintableObject(obj) {
         return obj.hasOwnProperty("printableObjectIdx") ? printableObjects[obj.printableObjectIdx] : null;
     }
-    
+
+    /**
+     * Drops a PrintableObject so it touches the print platform
+     */
+    function dropToFloor(obj) {
+        var min_z = Number.POSITIVE_INFINITY;
+        var pt = new THREE.Vector3();
+        obj.hull.vertices.forEach(function(v) {
+            pt.copy(v);
+            printVolume.worldToLocal(obj.object.localToWorld(pt));
+            min_z = Math.min(min_z, pt.z);
+        });
+        obj.object.position.z -= min_z;
+    }
+
     /********************** PUBLIC METHODS **********************/
-    
+
     this.changeTool = function(tool) {
         switch(tool) {
             case "move":   this.transformControl.setMode("translate"); break;
@@ -127,7 +147,7 @@ function Stage() {
             case "scale":  this.transformControl.setMode("scale"); break;
         }
     }
-    
+
     this.mousePicker = function( raycaster, scene ) {
         var intersects = raycaster.intersectObject( scene, true );
 
@@ -135,22 +155,22 @@ function Stage() {
             var obj = intersects[ i ].object;
             var printableObject = findPrintableObject(obj);
             if(printableObject) {
-                //printableObject.setSelected(true);
                 outlinePass.selectedObjects = [obj];
                 mine.transformControl.attach(obj);
+                selectedPrintableObject = printableObject;
             }
         }
     }
-    
+
     this.getPrintVolume = function() {
         return printVolume;
     }
-    
+
     this.getGeometry = function() {
         // TODO: Support multiple objects.
         return printableObjects[0].getGeometry();
     }
-    
+
     this.addGeometry = function(geometry) {
         var printable = new PrintableObject(geometry);
         printableObjects.push(printable);
@@ -160,7 +180,7 @@ function Stage() {
         
         arrangeObjectsOnPlatform();
     }
-    
+
     this.addEdges = function(edges) {
         printVolume.add(model);
     }
