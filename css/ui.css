@@ -51,30 +51,3 @@ hr {
     color:              Indigo;
     font-weight:        bold;
 }
-
-#toolbar {
-    position:           absolute;
-    padding:            0px;
-    min-width:          200px;
-
-    color:              Indigo  ;
-    background-color:   LightGoldenRodYellow ;
-    border:             1px solid Indigo;
-
-    box-shadow:         5px 5px 10px #222222;
-
-    vertical-align:     middle;
-
-    left:               10px;
-    top:                15px;
-}
-
-#toolbar img {
-     mix-blend-mode:    darken;
-     opacity:           25%;
-}
-
-#toolbar img:hover {
-     mix-blend-mode:    normal;
-     opacity:           100%;
-}

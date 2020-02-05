@@ -120,6 +120,14 @@ function Stage() {
     
     /********************** PUBLIC METHODS **********************/
     
+    this.changeTool = function(tool) {
+        switch(tool) {
+            case "move":   this.transformControl.setMode("translate"); break;
+            case "rotate": this.transformControl.setMode("rotate"); break;
+            case "scale":  this.transformControl.setMode("scale"); break;
+        }
+    }
+    
     this.mousePicker = function( raycaster, scene ) {
         var intersects = raycaster.intersectObject( scene, true );
 
@@ -128,7 +136,7 @@ function Stage() {
             var printableObject = findPrintableObject(obj);
             if(printableObject) {
                 //printableObject.setSelected(true);
-                outlinePass.selectedObjects = [intersects[ i ].object];
+                outlinePass.selectedObjects = [obj];
                 mine.transformControl.attach(obj);
             }
         }

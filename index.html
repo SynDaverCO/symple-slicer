@@ -1,6 +1,7 @@
 <!--
 WebSlicer
-Copyright (C) 2016 Marcio Teixeira
+Copyright (C) 2016  Marcio Teixeira
+Copyright (C) 2020  SynDaver Labs, Inc.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -46,8 +47,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         
         <link rel="stylesheet" type="text/css" href="css/ui.css">
         <link rel="stylesheet" type="text/css" href="lib/ui-toolbox/toolbox.css">
+        <link rel="stylesheet" type="text/css" href="lib/ui-toolbar/toolbar.css">
         
         <script src="lib/ui-toolbox/toolbox.js"></script>
+        <script src="lib/ui-toolbar/toolbar.js"></script>
         <script src="js/ui_printable_object.js"></script>
         <script src="js/ui_render.js"></script>
         <script src="js/ui_stage.js"></script>
@@ -93,16 +96,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </canvas>
         
         <div id="toolbox" class="dock-right"></div>
-        
-        <div id="toolbar">
-            <img src="images/open-file.png">
-            <img src="images/move.png">
-            <img src="images/scale.png">
-            <img src="images/rotate.png">
-            <img src="images/mirror.png">
-            <img src="images/custom-supports.png">
-            <img src="images/support-blocker.png">
-        </div>
+        <div id="toolbar" class="dock-left"></div>
             
         <!-- Help table -->
         
@@ -137,6 +131,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var canvas       = document.getElementById("myCanvas");
             var stage        = new Stage();
             var renderEngine = new RenderEngine(canvas, stage);
+            var toolbar      = new ToolbarUI("toolbar");
+            
+            toolbar.addIcon("open-file",       "images/open-file.png");
+            toolbar.addIcon("move",            "images/move.png");
+            toolbar.addIcon("scale",           "images/scale.png");
+            toolbar.addIcon("rotate",          "images/rotate.png");
+            toolbar.addIcon("mirror",          "images/mirror.png");
+            toolbar.addIcon("custom-supports", "images/custom-supports.png");
+            toolbar.addIcon("support-blocker", "images/support-blocker.png");
+            
+            toolbar.onChange = function(id) {stage.changeTool(id);};
             
             toolboxInit();
             
