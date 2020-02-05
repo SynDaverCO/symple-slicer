@@ -61,7 +61,6 @@ function RenderEngine(canvas, stage) {
 
     var orbit = new THREE.OrbitControls( camera, canvas );
     orbit.keys = [ 65, 83, 68 ];
-    orbit.addEventListener( 'change', that.render );
     
     var control = new THREE.TransformControls( camera, renderer.domElement );
     scene.add( control );
