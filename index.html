@@ -142,7 +142,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             toolbar.addIcon("layflat",         "images/lay-flat.png");
             toolbar.addIcon("undo",            "images/undo.png");
 
-            toolbar.onChange = function(id) {stage.changeTool(id);};
+            toolbar.onChange = function(id) {stage.onTranformToolChanged(id);};
 
             toolboxInit();
 

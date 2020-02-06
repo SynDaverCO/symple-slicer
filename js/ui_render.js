@@ -17,7 +17,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 function RenderEngine(canvas, stage) {
-    var that     = this;
+    var debugShadowLight = false;
+    
+    var mine     = this;
     var camera   = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 10, 3000 );
     var renderer = new THREE.WebGLRenderer({canvas:canvas});
 
@@ -46,8 +48,10 @@ function RenderEngine(canvas, stage) {
     
     // For debugging: Show the shadow camera that is used to project
     // shadows on the build plane.
-    //var helper = new THREE.CameraHelper( stage.shadowLight.shadow.camera );
-    //scene.add( helper );
+    if (debugShadowLight) {
+        var helper = new THREE.CameraHelper( stage.shadowLight.shadow.camera );
+        scene.add( helper );
+    }
 
     // postprocessing
 
@@ -70,6 +74,8 @@ function RenderEngine(canvas, stage) {
     var orbit = new THREE.OrbitControls( camera, canvas );
     orbit.keys = [ 65, 83, 68 ];
 
+    orbit.addEventListener( 'change', render );
+
     var control = new THREE.TransformControls( camera, renderer.domElement );
     scene.add( control );
     control.addEventListener( 'change', render );
@@ -79,6 +85,7 @@ function RenderEngine(canvas, stage) {
     } );
 
     stage.transformControl = control;
+    stage.render           = render;
 
     // https://stackoverflow.com/questions/41000983/using-transformcontrols-with-outlinepass-in-three-js?noredirect=1&lq=1
     // Fix for transform controls being updated in OutlinePass
@@ -94,10 +101,6 @@ function RenderEngine(canvas, stage) {
     function animate() {
         requestAnimationFrame( animate );
         render();
-
-        // Mouse logic
-        raycaster.setFromCamera( mouse, camera );
-        stage.mousePicker(raycaster, scene);
     }
 
     // Add event listeners
@@ -111,16 +114,23 @@ function RenderEngine(canvas, stage) {
         render();
     }
 
+    function onDocumentMouseDown( event ) {
+        raycaster.setFromCamera( mouse, camera );
+        stage.onMouseDown(raycaster, scene);
+    }
+
     function onDocumentMouseMove( event ) {
         event.preventDefault();
 
-        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        mouse.x =   ( event.clientX / window.innerWidth )  * 2 - 1;
         mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     }
 
+    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
 
-    // Start animation and render initial frame
-    animate();
+    // Start animation and/or render initial frame
+    //animate();
+    render();
 }

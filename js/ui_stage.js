@@ -56,7 +56,7 @@ function Stage() {
 
     var checkerboardMaterial = new THREE.ShaderMaterial({
         uniforms: uniforms,
-        vertexShader: document.getElementById('checkersVertexShader').innerHTML,
+        vertexShader:   document.getElementById('checkersVertexShader'  ).innerHTML,
         fragmentShader: document.getElementById('checkersFragmentShader').innerHTML,
         side: THREE.DoubleSide,
     });
@@ -75,6 +75,7 @@ function Stage() {
     mesh.position.z = 0.1;
     mesh.receiveShadow = true;
     printVolume.add(mesh);
+    var floorPlane = mesh;
 
     // Checkered floor
     var mesh = new THREE.Mesh( geometry, checkerboardMaterial );
@@ -112,10 +113,10 @@ function Stage() {
         light.shadow.camera.top    = -printer.bed_radius;
         light.shadow.camera.bottom =  printer.bed_radius;
     } else {
-        light.shadow.camera.left   = -printer.bed_width /2;
-        light.shadow.camera.right  =  printer.bed_width /2;
-        light.shadow.camera.top    = -printer.bed_depth/2;
-        light.shadow.camera.bottom =  printer.bed_depth/2;
+        light.shadow.camera.left   = -printer.bed_width / 2;
+        light.shadow.camera.right  =  printer.bed_width / 2;
+        light.shadow.camera.top    = -printer.bed_depth / 2;
+        light.shadow.camera.bottom =  printer.bed_depth / 2;
     }
 
     //Set up shadow properties for the light
@@ -172,7 +173,7 @@ function Stage() {
 
     /********************** PUBLIC METHODS **********************/
 
-    this.changeTool = function(tool) {
+    this.onTranformToolChanged = function(tool) {
         switch(tool) {
             case "move":   this.transformControl.setMode("translate"); break;
             case "rotate": this.transformControl.setMode("rotate"); break;
@@ -180,16 +181,30 @@ function Stage() {
         }
     }
 
-    this.mousePicker = function( raycaster, scene ) {
+    /**
+     * This method is called when the user clicks on an object.
+     * It evaluates the intersections from the raycaster and
+     * determines what should be selected or unselected.
+     */
+    this.onMouseDown = function( raycaster, scene ) {
         var intersects = raycaster.intersectObject( scene, true );
 
-        for ( var i = 0; i < intersects.length; i++ ) {
+        for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
+            // If the first object we hit is the floor plane,
+            // then unselect everything.
+            if(i == 0 && obj == floorPlane) {
+                outlinePass.selectedObjects = [];
+                mine.transformControl.detach();
+                break;
+            }
+            // If we intersected a PrintableObject, highlight it.
             var printableObject = findPrintableObject(obj);
             if(printableObject) {
                 outlinePass.selectedObjects = [obj];
                 mine.transformControl.attach(obj);
                 selectedPrintableObject = printableObject;
+                break;
             }
         }
     }
@@ -211,6 +226,7 @@ function Stage() {
         printVolume.add(sceneObj);
         
         arrangeObjectsOnPlatform();
+        this.render();
     }
 
     this.addEdges = function(edges) {
