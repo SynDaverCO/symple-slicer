@@ -54,31 +54,31 @@ function Stage() {
         color2: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.7, 1) },
     };
 
-    var material = new THREE.ShaderMaterial({
+    var checkerboardMaterial = new THREE.ShaderMaterial({
         uniforms: uniforms,
         vertexShader: document.getElementById('checkersVertexShader').innerHTML,
-        fragmentShader: document.getElementById('checkersFragmentShader').innerHTML
+        fragmentShader: document.getElementById('checkersFragmentShader').innerHTML,
+        side: THREE.DoubleSide,
     });
 
     // Print bed representation
     var geometry;
     if (printer.circular) {
         var segments = 64;
-        geometry = new THREE.CircleGeometry( printer.bed_radius, segments );
+        geometry = new THREE.CircleBufferGeometry( printer.bed_radius, segments );
     } else {
-        geometry = new THREE.PlaneGeometry( printer.bed_width, printer.bed_depth, 1 );
+        geometry = new THREE.PlaneBufferGeometry( printer.bed_width, printer.bed_depth, 1 );
     }
 
-    // Topside
-    var mesh = new THREE.Mesh( geometry, material );
-    mesh.position.z = -0.1;
+    // Shadow receiver
+    var mesh = new THREE.Mesh( geometry, new THREE.ShadowMaterial({opacity: 0.25}) );
+    mesh.position.z = 0.1;
+    mesh.receiveShadow = true;
     printVolume.add(mesh);
 
-    // Bottom
-    var material = new THREE.MeshBasicMaterial( { color: 0x5555FF, transparent: true, opacity: 0.5} );
-    mesh = new THREE.Mesh( geometry, material );
-    mesh.rotation.x = Math.PI * -180 / 180;
-    mesh.position.y = -0.1;
+    // Checkered floor
+    var mesh = new THREE.Mesh( geometry, checkerboardMaterial );
+    mesh.position.z = 0.05;
     printVolume.add(mesh);
 
     // Walls
@@ -88,11 +88,43 @@ function Stage() {
         geometry = new THREE.BoxGeometry( printer.bed_width, printer.bed_depth, printer.z_height );
     }
     geometry.rotateX(90 * Math.PI / 180);
-    var material = new THREE.MeshBasicMaterial( { color: 0x5555FF, transparent: true, opacity: 0.5} );
+    var material = new THREE.MeshBasicMaterial( {
+        color: 0x5555FF,
+        transparent: true,
+        side: THREE.BackSide,
+        opacity: 0.5,
+        depthWrite: false
+    } );
     var mesh = new THREE.Mesh( geometry, material );
-    material.side = THREE.BackSide;
     mesh.position.z = printer.z_height / 2;
     printVolume.add(mesh);
+
+    // Light for casting shadows
+    
+    var light = new THREE.DirectionalLight( 0xffffff, 0 );
+    light.position.set( 0, 0, printer.z_height );
+    light.castShadow = true;
+    printVolume.add(light);
+
+    if (printer.circular) {
+        light.shadow.camera.left   = -printer.bed_radius;
+        light.shadow.camera.right  =  printer.bed_radius;
+        light.shadow.camera.top    = -printer.bed_radius;
+        light.shadow.camera.bottom =  printer.bed_radius;
+    } else {
+        light.shadow.camera.left   = -printer.bed_width /2;
+        light.shadow.camera.right  =  printer.bed_width /2;
+        light.shadow.camera.top    = -printer.bed_depth/2;
+        light.shadow.camera.bottom =  printer.bed_depth/2;
+    }
+
+    //Set up shadow properties for the light
+    light.shadow.mapSize.width  = 512;
+    light.shadow.mapSize.height = 512;
+    light.shadow.camera.near    = 0;
+    light.shadow.camera.far     = printer.z_height + 1;
+
+    this.shadowLight = light;
 
     // Axis
     var axesHelper = new THREE.AxesHelper( 25 );

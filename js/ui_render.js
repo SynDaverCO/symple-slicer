@@ -29,6 +29,8 @@ function RenderEngine(canvas, stage) {
 
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.setClearColor( backgroundColor );
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     var scene = new THREE.Scene();
     scene.add(stage.getPrintVolume());
@@ -41,8 +43,13 @@ function RenderEngine(canvas, stage) {
     directionalLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
     camera.add( directionalLight );
     scene.add(camera);
+    
+    // For debugging: Show the shadow camera that is used to project
+    // shadows on the build plane.
+    //var helper = new THREE.CameraHelper( stage.shadowLight.shadow.camera );
+    //scene.add( helper );
 
-    // postprocessing    
+    // postprocessing
 
     var composer = new THREE.EffectComposer( renderer );
 
@@ -52,9 +59,9 @@ function RenderEngine(canvas, stage) {
     outlinePass = new THREE.OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
     composer.addPass( outlinePass );
 
-    outlinePass.edgeStrength  = 10;
+    outlinePass.edgeStrength  = 5;
     outlinePass.edgeThickness = 2;
-    outlinePass.edgeGlow      = 1;
+    outlinePass.edgeGlow      = 0.5;
 
     // Set up the controls
     camera.position.y =  100;
