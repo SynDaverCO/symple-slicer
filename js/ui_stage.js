@@ -31,17 +31,14 @@ function Stage() {
     };
 
     var printableObjects = [];
-
-    var selectedPrintableObject = null;
+    var printVolume = new THREE.Object3D();
+    var selectedGroup = new SelectionGroup();
 
     this.onObjectTransformed = function() {
-        if(selectedPrintableObject != null)
-            dropToFloor(selectedPrintableObject);
+        dropObjectToFloor(selectedGroup);
     }
 
     /********************** OBJECT INITIALIZATION **********************/
-
-    var printVolume = new THREE.Object3D();
 
     // Set to printer coordinates (Z goes up)
     printVolume.rotateX(-90 * Math.PI / 180);
@@ -150,25 +147,49 @@ function Stage() {
         }
     }
 
+    function isPrintableObject(obj) {
+        return obj.hasOwnProperty("printableObjectIdx")
+    }
+
     /**
      * Returns the PrintableObject associated with a 3D object
      */
     function findPrintableObject(obj) {
-        return obj.hasOwnProperty("printableObjectIdx") ? printableObjects[obj.printableObjectIdx] : null;
+        return isPrintableObject(obj) ? printableObjects[obj.printableObjectIdx] : null;
     }
 
     /**
-     * Drops a PrintableObject so it touches the print platform
+     * Drops an object so it touches the print platform
      */
-    function dropToFloor(obj) {
+    function dropObjectToFloor(obj) {
         var min_z = Number.POSITIVE_INFINITY;
         var pt = new THREE.Vector3();
-        obj.hull.vertices.forEach(function(v) {
-            pt.copy(v);
-            printVolume.worldToLocal(obj.object.localToWorld(pt));
-            min_z = Math.min(min_z, pt.z);
+        obj.traverse(function(child) {
+            if (child instanceof THREE.Mesh) {
+                var geometry = child.hull || child.geometry;
+                geometry.vertices.forEach(function(v) {
+                    pt.copy(v);
+                    printVolume.worldToLocal(child.localToWorld(pt));
+                    min_z = Math.min(min_z, pt.z);
+                });
+            }
         });
-        obj.object.position.z -= min_z;
+        obj.position.z -= min_z;
+    }
+
+    function addObjectToSelection(obj) {
+        printVolume.add(selectedGroup);
+        selectedGroup.addToSelection(obj);
+        outlinePass.selectedObjects = [selectedGroup];
+        mine.transformControl.attach(selectedGroup);
+        mine.render();
+    }
+
+    function selectNone() {
+        selectedGroup.selectNone();
+        outlinePass.selectedObjects = [];
+        mine.transformControl.detach();
+        mine.render();
     }
 
     /********************** PUBLIC METHODS **********************/
@@ -181,31 +202,27 @@ function Stage() {
         }
     }
 
+    this.onObjectClicked = function(obj) {
+        addObjectToSelection(obj);
+    }
+
+    this.onFloorClicked = function(obj) {
+        selectNone();
+    }
+
     /**
      * This method is called when the user clicks on an object.
      * It evaluates the intersections from the raycaster and
-     * determines what should be selected or unselected.
+     * determines what to do.
      */
     this.onMouseDown = function( raycaster, scene ) {
         var intersects = raycaster.intersectObject( scene, true );
-
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
-            // If the first object we hit is the floor plane,
-            // then unselect everything.
-            if(i == 0 && obj == floorPlane) {
-                outlinePass.selectedObjects = [];
-                mine.transformControl.detach();
-                break;
-            }
-            // If we intersected a PrintableObject, highlight it.
-            var printableObject = findPrintableObject(obj);
-            if(printableObject) {
-                outlinePass.selectedObjects = [obj];
-                mine.transformControl.attach(obj);
-                selectedPrintableObject = printableObject;
-                break;
-            }
+            if (obj instanceof THREE.TransformControlsPlane)  continue; // Skip to next intersection
+            if (obj == floorPlane)                            this.onFloorClicked();
+            if (isPrintableObject(obj))                       this.onObjectClicked(obj);
+            break; // Stop on first intersection
         }
     }
 
@@ -224,8 +241,8 @@ function Stage() {
         var sceneObj = printable.getTHREESceneObject();
         sceneObj.printableObjectIdx = printableObjects.length - 1;
         printVolume.add(sceneObj);
-        
-        arrangeObjectsOnPlatform();
+        //arrangeObjectsOnPlatform();
+        dropObjectToFloor(sceneObj);
         this.render();
     }
 
