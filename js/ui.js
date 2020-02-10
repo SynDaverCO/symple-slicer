@@ -16,68 +16,68 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-var toolbox;
+var settings;
 
-function toolboxInit() {
-	var t = new ToolboxUI("toolbox");
+function settingsInit(id) {
+	var s = new SettingsUI(id);
 	
-	t.page(          "toolbox-design",  "Placement Menu");
-	t.file(          "fileSelect", true);
+	s.page(          "settings-design",  "Placement Menu");
+	s.file(          "fileSelect", true);
 	
-	t.separator(     "br");
-	t.button(          onAddToPlatform, "Add to Platform");
-	t.button(          onClearPlatform, "Clear Platform");
+	s.separator(     "br");
+	s.button(          onAddToPlatform, "Add to Platform");
+	s.button(          onClearPlatform, "Clear Platform");
 	
-	t.page(          "toolbox-machine", "Machine Preferences");
-	t.heading(                          "Load Preset:");
-	t.choice(    "machinePresetSelect", "")
+	s.page(          "settings-machine", "Machine Preferences");
+	s.heading(                          "Load Preset:");
+	s.choice(    "machinePresetSelect", "")
 	 .option(         "deltaprintr-ks", "Deltaprintr Kickstarter Edition");
-	t.heading(                          "Machine:");
-	t.parameter(   "printerNozzleSize", "Nozzle (mm)",   0.4);
-	t.heading(                          "Build area:");
-	t.choice(    "platformStyleSelect", "Shape")
+	s.heading(                          "Machine:");
+	s.parameter(   "printerNozzleSize", "Nozzle (mm)",   0.4);
+	s.heading(                          "Build area:");
+	s.choice(    "platformStyleSelect", "Shape")
 	 .option(            "rectangular", "Rectangular")
 	 .option(            "circular",    "Circular");
-	t.parameter(     "printerMaxWidth", "Maximum width (mm)",  300);
-	t.parameter(     "printerMaxDepth", "Maximum depth (mm)",  300);
-	t.parameter(    "printerMaxHeight", "Maximum height (mm)", 300);
-	t.heading(                          "Start/End Gcode:");
-	t.choice(          "editGcodeMenu", "Edit gcode template")
+	s.parameter(     "printerMaxWidth", "Maximum width (mm)",  300);
+	s.parameter(     "printerMaxDepth", "Maximum depth (mm)",  300);
+	s.parameter(    "printerMaxHeight", "Maximum height (mm)", 300);
+	s.heading(                          "Start/End Gcode:");
+	s.choice(          "editGcodeMenu", "Edit gcode template")
 	 .option(                   "none", "...")
 	 .option(            "start-gcode", "start")
 	 .option(              "end-gcode", "end");
 	
-	t.page(              "start-gcode");
-	t.heading(                          "Start GCode template:");
-	t.textarea(           "startGcode");
-	t.button(         doneEditingGcode, "Done");
+	s.page(              "start-gcode");
+	s.heading(                          "Start GCode template:");
+	s.textarea(           "startGcode");
+	s.button(         doneEditingGcode, "Done");
 	
-	t.page(                "end-gcode");
-	t.heading(                          "End GCode template:");
-	t.textarea(             "endGcode");
-	t.button(         doneEditingGcode, "Done");
+	s.page(                "end-gcode");
+	s.heading(                          "End GCode template:");
+	s.textarea(             "endGcode");
+	s.button(         doneEditingGcode, "Done");
 	
-	t.page(            "toolbox-print", "Print Menu");
-	t.heading(                          "Quality:");
-	t.parameter("bottomLayerThickness", "Bottom layer thickness (mm)",  0.2);
-	t.heading(                          "Speed and Temperature:");
-	t.parameter(    "printTemperature", "Printing temperature (C)",     200);
-	t.parameter(          "printSpeed", "Print speed (mm/s)",           50);
-	t.parameter(         "travelSpeed", "Travel speed (mm/s)",          70);
-	t.heading(                          "Filament:");
-	t.parameter(    "filamentDiameter", "Diameter (mm)",                1.4);
-	t.parameter(        "filamentFlow", "Flow (%)",                     100);
-	t.separator();
-	t.button(              onSaveGcode, "Slice");
-	t.buttonHelp("Click this button to save .gcode you<br>can then send to your 3D printer.");
+	s.page(            "settings-print", "Print Menu");
+	s.heading(                          "Quality:");
+	s.parameter("bottomLayerThickness", "Bottom layer thickness (mm)",  0.2);
+	s.heading(                          "Speed and Temperature:");
+	s.parameter(    "printTemperature", "Printing temperature (C)",     200);
+	s.parameter(          "printSpeed", "Print speed (mm/s)",           50);
+	s.parameter(         "travelSpeed", "Travel speed (mm/s)",          70);
+	s.heading(                          "Filament:");
+	s.parameter(    "filamentDiameter", "Diameter (mm)",                1.4);
+	s.parameter(        "filamentFlow", "Flow (%)",                     100);
+	s.separator();
+	s.button(              onSaveGcode, "Slice");
+	s.buttonHelp("Click this button to save .gcode you<br>can then send to your 3D printer.");
 	
-	t.page(             "toolbox-help", "Help");
-	t.heading(                          "View Controls:");
-	t.element(                          "viewport-help");
+	s.page(             "settings-help", "Help");
+	s.heading(                          "View Controls:");
+	s.element(                          "viewport-help");
 	
-	t.done();
+	s.done();
 
-	toolbox = t;
+	settings = s;
 	
 	// Set the callbacks
 	
@@ -87,12 +87,12 @@ function toolboxInit() {
 function onEditGcodeSelect() {
 	var choice = $("#editGcodeMenu").val();
 	if(choice != "none") {
-		toolbox.gotoPage(choice);
+		settings.gotoPage(choice);
 	}
 }
 
 function doneEditingGcode() {
-	toolbox.gotoPage("toolbox-machine");
+	settings.gotoPage("settings-machine");
 }
 
 function entitiesToModel(entities) {
@@ -106,7 +106,7 @@ function entitiesToModel(entities) {
 }
 
 function onAddToPlatform() {
-	var stlData = toolbox.get("fileSelect");
+	var stlData = settings.get("fileSelect");
 	var geometry = GEOMETRY_READERS.readStl(stlData, GEOMETRY_READERS.THREEGeometryCreator);
 	stage.addGeometry(geometry);
 }

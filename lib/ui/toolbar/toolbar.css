@@ -31,13 +31,19 @@
 }
 
 #toolbar.dock-left {
-	left:               10px;
-	top:                15px;
+    left:               10px;
 }
 
 #toolbar.dock-right {
-	right:              10px;
-	top:                15px;
+    right:              10px;
+}
+
+#toolbar.dock-top {
+    top:                15px;
+}
+
+#toolbar.dock-bottom {
+    bottom:                15px;
 }
 
 #toolbar img {

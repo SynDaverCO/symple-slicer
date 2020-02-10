@@ -45,11 +45,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <!-- ***************** Prequisites for OutlinePass.js ***************** -->
 
         <link rel="stylesheet" type="text/css" href="css/ui.css">
-        <link rel="stylesheet" type="text/css" href="lib/ui-toolbox/toolbox.css">
-        <link rel="stylesheet" type="text/css" href="lib/ui-toolbar/toolbar.css">
+        <link rel="stylesheet" type="text/css" href="lib/ui/settings/settings.css">
+        <link rel="stylesheet" type="text/css" href="lib/ui/toolbar/toolbar.css">
 
-        <script src="lib/ui-toolbox/toolbox.js"></script>
-        <script src="lib/ui-toolbar/toolbar.js"></script>
+        <script src="lib/ui/settings/settings.js"></script>
+        <script src="lib/ui/toolbar/toolbar.js"></script>
         <script src="js/ui_printable_object.js"></script>
         <script src="js/ui_selection_group.js"></script>
         <script src="js/ui_render.js"></script>
@@ -95,8 +95,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             Sorry, your browser does not support the HTML canvas.
         </canvas>
 
-        <div id="toolbox" class="dock-right"></div>
-        <div id="toolbar" class="dock-left"></div>
+        <div id="settings" class="dock-right dock-bottom"></div>
+        <div id="toolbar" class="dock-left  dock-bottom"></div>
 
         <!-- Help table -->
 
@@ -145,7 +145,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             toolbar.onChange = function(id) {stage.onTranformToolChanged(id);};
 
-            toolboxInit();
+            settingsInit("settings");
 
             slicer = new SlicerInterface();
 

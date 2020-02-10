@@ -36,7 +36,7 @@ hr {
 
 #credits {              
     position:           absolute;
-    bottom:             10px;
+    top:                10px;
     left:               10px;
 
     color:              Indigo;
@@ -45,7 +45,7 @@ hr {
 
 #weblink {              
     position:           absolute;
-    bottom:             10px;
+    top:                10px;
     right:              10px;
 
     color:              Indigo;
