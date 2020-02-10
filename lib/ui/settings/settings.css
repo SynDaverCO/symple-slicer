@@ -20,13 +20,6 @@
     position:           absolute;
     padding:            10px;
     min-width:          200px;
-                        
-    color:              Indigo  ;
-    background-color:   LightGoldenRodYellow ;
-    border:             1px solid Indigo;
-                        
-    box-shadow:         5px 5px 10px #222222;
-                        
     vertical-align:     middle;
 }
 
@@ -89,6 +82,10 @@
     right:              10px;
     font-size:          11px;
     border:             1px solid Indigo;
+}
+
+.settings-panel button {
+    margin:             5px;
 }
 
 .settings-panel textarea {

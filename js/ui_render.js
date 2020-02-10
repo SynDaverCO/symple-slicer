@@ -68,11 +68,14 @@ function RenderEngine(canvas, stage) {
     outlinePass.edgeGlow      = 0.5;
 
     // Set up the controls
-    camera.position.y =  100;
-    camera.position.z = -350;
+    var eyeHeight = stage.printer.z_height / 2;
+    camera.position.y = eyeHeight;
+    camera.position.z = -600;
 
     var orbit = new THREE.OrbitControls( camera, canvas );
     orbit.keys = [ 65, 83, 68 ];
+    orbit.target.set(0,eyeHeight,0);
+    orbit.update();
 
     orbit.addEventListener( 'change', render );
 

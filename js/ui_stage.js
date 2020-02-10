@@ -22,7 +22,7 @@ function Stage() {
 
     // Private:
 
-    var printer = {
+    this.printer = {
         circular:    false,
         z_height:    300,
         bed_radius:  150, // when circular
@@ -60,11 +60,11 @@ function Stage() {
 
     // Print bed representation
     var geometry;
-    if (printer.circular) {
+    if (this.printer.circular) {
         var segments = 64;
-        geometry = new THREE.CircleBufferGeometry( printer.bed_radius, segments );
+        geometry = new THREE.CircleBufferGeometry( this.printer.bed_radius, segments );
     } else {
-        geometry = new THREE.PlaneBufferGeometry( printer.bed_width, printer.bed_depth, 1 );
+        geometry = new THREE.PlaneBufferGeometry( this.printer.bed_width, this.printer.bed_depth, 1 );
     }
 
     // Shadow receiver
@@ -80,10 +80,10 @@ function Stage() {
     printVolume.add(mesh);
 
     // Walls
-    if (printer.circular) {
-        geometry = new THREE.CylinderGeometry( printer.bed_radius, printer.bed_radius, printer.z_height, segments );
+    if (this.printer.circular) {
+        geometry = new THREE.CylinderGeometry( this.printer.bed_radius, this.printer.bed_radius, this.printer.z_height, segments );
     } else {
-        geometry = new THREE.BoxGeometry( printer.bed_width, printer.bed_depth, printer.z_height );
+        geometry = new THREE.BoxGeometry( this.printer.bed_width, this.printer.bed_depth, this.printer.z_height );
     }
     geometry.rotateX(90 * Math.PI / 180);
     var material = new THREE.MeshBasicMaterial( {
@@ -94,41 +94,41 @@ function Stage() {
         depthWrite: false
     } );
     var mesh = new THREE.Mesh( geometry, material );
-    mesh.position.z = printer.z_height / 2;
+    mesh.position.z = this.printer.z_height / 2;
     printVolume.add(mesh);
 
     // Light for casting shadows
     
     var light = new THREE.DirectionalLight( 0xffffff, 0 );
-    light.position.set( 0, 0, printer.z_height );
+    light.position.set( 0, 0, this.printer.z_height );
     light.castShadow = true;
     printVolume.add(light);
 
-    if (printer.circular) {
-        light.shadow.camera.left   = -printer.bed_radius;
-        light.shadow.camera.right  =  printer.bed_radius;
-        light.shadow.camera.top    = -printer.bed_radius;
-        light.shadow.camera.bottom =  printer.bed_radius;
+    if (this.printer.circular) {
+        light.shadow.camera.left   = -this.printer.bed_radius;
+        light.shadow.camera.right  =  this.printer.bed_radius;
+        light.shadow.camera.top    = -this.printer.bed_radius;
+        light.shadow.camera.bottom =  this.printer.bed_radius;
     } else {
-        light.shadow.camera.left   = -printer.bed_width / 2;
-        light.shadow.camera.right  =  printer.bed_width / 2;
-        light.shadow.camera.top    = -printer.bed_depth / 2;
-        light.shadow.camera.bottom =  printer.bed_depth / 2;
+        light.shadow.camera.left   = -this.printer.bed_width / 2;
+        light.shadow.camera.right  =  this.printer.bed_width / 2;
+        light.shadow.camera.top    = -this.printer.bed_depth / 2;
+        light.shadow.camera.bottom =  this.printer.bed_depth / 2;
     }
 
     //Set up shadow properties for the light
     light.shadow.mapSize.width  = 512;
     light.shadow.mapSize.height = 512;
     light.shadow.camera.near    = 0;
-    light.shadow.camera.far     = printer.z_height + 1;
+    light.shadow.camera.far     = this.printer.z_height + 1;
 
     this.shadowLight = light;
 
     // Axis
     var axesHelper = new THREE.AxesHelper( 25 );
     var a = 225;
-    //axesHelper.position.x = printer.radius * 1.2 * Math.cos(a * Math.PI / 180);
-    //axesHelper.position.y = printer.radius * 1.2 * Math.sin(a * Math.PI / 180);
+    //axesHelper.position.x = this.printer.radius * 1.2 * Math.cos(a * Math.PI / 180);
+    //axesHelper.position.y = this.printer.radius * 1.2 * Math.sin(a * Math.PI / 180);
     //axesHelper.position.z = 0;
     printVolume.add( axesHelper );
 

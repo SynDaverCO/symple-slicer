@@ -19,31 +19,8 @@
 #toolbar {
     position:           absolute;
     padding:            0px;
-    min-width:          200px;
-
-    color:              Indigo  ;
-    background-color:   LightGoldenRodYellow ;
-    border:             1px solid Indigo;
-
-    box-shadow:         5px 5px 10px #222222;
 
     vertical-align:     middle;
-}
-
-#toolbar.dock-left {
-    left:               10px;
-}
-
-#toolbar.dock-right {
-    right:              10px;
-}
-
-#toolbar.dock-top {
-    top:                15px;
-}
-
-#toolbar.dock-bottom {
-    bottom:                15px;
 }
 
 #toolbar img {
@@ -54,4 +31,10 @@
 #toolbar img:hover {
      mix-blend-mode:    normal;
      opacity:           100%;
+}
+
+#toolbar.vertical {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
 }

@@ -45,6 +45,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <!-- ***************** Prequisites for OutlinePass.js ***************** -->
 
         <link rel="stylesheet" type="text/css" href="css/ui.css">
+        <link rel="stylesheet" type="text/css" href="lib/ui/ui-theme.css">
         <link rel="stylesheet" type="text/css" href="lib/ui/settings/settings.css">
         <link rel="stylesheet" type="text/css" href="lib/ui/toolbar/toolbar.css">
 
@@ -96,7 +97,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </canvas>
 
         <div id="settings" class="dock-right dock-bottom"></div>
-        <div id="toolbar" class="dock-left  dock-bottom"></div>
+        <div id="toolbar" class="dock-left  dock-bottom vertical"></div>
 
         <!-- Help table -->
 
@@ -133,7 +134,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var renderEngine = new RenderEngine(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
 
-            toolbar.addIcon("open-file",         "Open File",       "images/open-file.png",);
+            //toolbar.addIcon("open-file",         "Open File",       "images/open-file.png",);
             toolbar.addIcon("move",              "Move Object",     "images/scale.png");
             toolbar.addIcon("scale",             "Scale Object",    "images/scale-max.png");
             toolbar.addIcon("rotate",            "Rotate Object",   "images/rotate.png");
