@@ -22,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <meta charset=utf-8>
         <title>Web Slicer</title>
     </head>
-    <body>
+    <body id="main">
         <script src="lib/three/three.min.js"></script>
         <script src="lib/three/OrbitControls.js"></script>
         <script src="lib/three/TransformControls.js"></script>
@@ -92,12 +92,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
         </script>
 
-        <canvas id="myCanvas">
+        <canvas id="webgl">
             Sorry, your browser does not support the HTML canvas.
         </canvas>
-
-        <div id="settings" class="dock-right dock-bottom"></div>
-        <div id="toolbar" class="dock-left  dock-bottom vertical"></div>
+        <div id="buttons">
+            <button id="aboutbtn" onclick="showAbout()">About</button>
+            <button id="fullscreen" onclick="enterFullscreen()">Fullscreen</button>
+        </div>
+        <div id="settings" class="panel dock-right dock-bottom"></div>
+        <div id="toolbar"  class="panel dock-left  dock-bottom vertical"></div>
 
         <!-- Help table -->
 
@@ -122,14 +125,54 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <td>Right</td>
                 <td>D</td>
             </tr>
-
         </table>
+        
+        <div id="about" onclick="hideAbout()" class="dialog panel">
+            <a href="www.syndaver.com"><img src="images/logo.png"></a>
+            <h1>Simple Slicer V0.1</h1>
+            <p>
+                Simple Slicer is maintained by SynDaver, Inc. for use with SynDaver printers. It is derived from Cura,
+                which is developed by Ultimaker B.V. in cooperation with the community.
+            </p>
+            <p>
+                Simple Slicer proudly uses the following open source projects:
 
-        <div id="credits">&copy; M Teixeira 2016, &copy; SynDaver 2020</div>
-        <div id="weblink"><a href="http://marciot.freeshell.org">marciot.freeshell.org</a></div>
+                <table id="jslicense-labels1">
+                    <tr>
+                        <td>THREE.js</td>
+                        <td><a target="_blank" href="lib/three/LICENSE">MIT</a></td>
+                        <td><a target="_blank" href="https://github.com/mrdoob/three.js/">Source</a></td>
+                    </tr>
+                    <tr>
+                        <td>FileSaver</td>
+                        <td><a target="_blank" href="lib/FileSaver/LICENSE.md.txt">MIT</a></td>
+                        <td><a target="_blank" href="https://github.com/eligrey/FileSaver.js/">Source</a></td>
+                    </tr>
+                    <tr>
+                        <td>JavaScript Clipper</td>
+                        <td><a target="_blank" href="http://www.boost.org/LICENSE_1_0.txt">Boost</a></td>
+                        <td><a target="_blank" href="https://sourceforge.net/projects/jsclipper/">Source</a></td>
+                    </tr>
+                    <tr>
+                        <td>CuraEngine</td>
+                        <td><a target="_blank" href="src-cura/CuraEngine/LICENSE">AGPL</a></td>
+                        <td><a target="_blank" href="https://github.com/Ultimaker/CuraEngine">Source</a></td>
+                    </tr>
+                    <tr>
+                        <td>emscripten</td>
+                        <td><a target="_blank" href="https://github.com/emscripten-core/emscripten/blob/master/LICENSE">MIT</a></td>
+                        <td><a target="_blank" href="https://emscripten.org/">Source</a></td>
+                    </tr>
+                </table>
+            </p>
+            <p>
+                This software is licensed under the <a href="COPYING">Affero GPL license</a>
+                (<a target="_blank" href="https://github.com/SynDaverCO/web-cura">Source Code</a>).
+            </p>
+        </div>
 
         <script>
-            var canvas       = document.getElementById("myCanvas");
+            var canvas       = document.getElementById("webgl");
             var stage        = new Stage();
             var renderEngine = new RenderEngine(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");

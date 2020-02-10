@@ -16,10 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#settings, #toolbar {
-    color:              Indigo  ;
+.panel {
+    color:              #002e62;
     background-color:   LightGoldenRodYellow ;
-    border:             1px solid Indigo;
+    border:             1px solid #002e62;
     box-shadow:         5px 5px 10px #222222;
 }
 

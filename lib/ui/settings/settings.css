@@ -74,14 +74,14 @@
     right:              10px;
     width:              40px;
     font-size:          11px;
-    border:             1px solid Indigo;
+    border:             1px solid;
 }
 
 .settings-panel select {
     position:           absolute;
     right:              10px;
     font-size:          11px;
-    border:             1px solid Indigo;
+    border:             1px solid;
 }
 
 .settings-panel button {
@@ -109,7 +109,7 @@
     text-align:         center;
     height:             3em;
     vertical-align:     middle;
-    border:             3px dotted Indigo;
+    border:             3px dotted;
 }
 
 .settings-panel .drop-area > div {
