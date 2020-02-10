@@ -28,6 +28,14 @@ class SelectionGroup extends THREE.Object3D {
     }
 
     /**
+     * Forces a call to "setSelection()" to compute a new center
+     * for the current selection.
+     */
+    recompute() {
+        this.setSelection(this.children.slice(0));
+    }
+
+    /**
      * Adds a single object to the selection. This is done
      * via "setSelection()" to compute a new center.
      */

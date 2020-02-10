@@ -35,19 +35,15 @@ function PrintableObject(geometry) {
 
     // Initialze things
     this.geometry = geometry;
+    this.geometry.mergeVertices();
     this.geometry.computeBoundingBox();
     this.geometry.computeFaceNormals();
-    this.geometry.mergeVertices();
     this.mesh = new THREE.Mesh(this.geometry, material);
     this.mesh.hull = new THREE.ConvexGeometry(this.geometry.vertices);
     this.mesh.hull.computeFaceNormals();
     this.mesh.castShadow = true;
 
     /********************** PRIVATE METHODS **********************/
-
-    function getSceneObjectFromGeometry(geometry, material) {
-        return mine.mesh;
-    }
 
     function renderPathsToGeometry(geometry, paths, z, hue) {
         SlicerOps.forEachSegment(paths, function(start,end) {
@@ -89,7 +85,7 @@ function PrintableObject(geometry) {
 
     this.getTHREESceneObject = function() {
         if(renderStyle === RenderStyles.volume) {
-            mine.object = getSceneObjectFromGeometry(geometry, material);
+            mine.object = mine.mesh;
         } else {
             mine.object = getSceneObjectFromSlices(slices);
         }

@@ -167,98 +167,102 @@ function Stage() {
     }
 
     /**
-     * Helper function for finding the vertex in an object closest
+     * Helper function for finding the point in an object closest
      * to the print bed.
      *
-     *  vec          - Scratch Vector3 for use in computation
-     *  parent       - Parent object for geometry
+     *  vector       - Scratch Vector3 for use in computation
+     *  object       - Parent object for geometry
      *  geometry     - Geometry to tranverse
-     *  lowestVertex - Pass result from previous call to continue search
+     *  lowestPoint - Pass result from previous call to continue search
      */
-    function findLowestVertex(vector, object, geometry, lowestVertex) {
-        geometry.vertices.forEach(function(v) {
+    function findLowestPoint(vector, object, geometry, lowestPoint) {
+        geometry.vertices.forEach(function(v, i) {
             localToBed(object, vector.copy(v));
-            if (!lowestVertex) {
-                lowestVertex = {object: object, vertex: v, z: vector.z};
+            if (!lowestPoint) {
+                lowestPoint = {object: object, vertex: v, index: i, z: vector.z};
             } else {
                 localToBed(object, vector.copy(v));
-                if(vector.z < lowestVertex.z) {
-                    lowestVertex.object = object;
-                    lowestVertex.vertex = v;
-                    lowestVertex.z      = vector.z;
+                if(vector.z < lowestPoint.z) {
+                    lowestPoint.object = object;
+                    lowestPoint.vertex = v;
+                    lowestPoint.index  = i;
+                    lowestPoint.z      = vector.z;
                 }
             }
         });
-        return lowestVertex;
+        return lowestPoint;
     }
 
     /**
      * Drops an object so it touches the print platform
      */
     function dropObjectToFloor(obj) {
-        var lowestVertex;
+        obj.updateMatrixWorld();
+        var lowestPoint;
         var vector = new THREE.Vector3();
         obj.traverse(function(child) {
             if (child instanceof THREE.Mesh) {
-                lowestVertex = findLowestVertex(vector, child, child.hull || child.geometry, lowestVertex);
+                lowestPoint = findLowestPoint(vector, child, child.hull || child.geometry, lowestPoint);
             }
         });
-        obj.position.z -= lowestVertex.z;
+        obj.position.z -= lowestPoint.z;
     }
-    
+
     /**
      * Lays an object flat on the print bed
      */
     function layObjectFlat(obj) {
         selectNone();
-        // Step 1: Find the lowest vertex in the convex hull
+
         var vector = new THREE.Vector3();
-        var lowestVertex = findLowestVertex(vector, obj, obj.hull);
-        // Step 2: Obtain the world quaternion of the object
-        var position = new THREE.Vector3();
         var quaternion = new THREE.Quaternion();
-        var scale = new THREE.Vector3();
-        obj.matrixWorld.decompose( position, quaternion, scale );
+
+        // Step 1: Find the lowest point in the convex hull
+        var pivot = findLowestPoint(vector, obj, obj.hull);
+
+        // Step 2: Obtain the world quaternion of the object
+        obj.matrixWorld.decompose( vector, quaternion, vector );
+
         // Step 3: For all faces that share this vertex, compute the angle of that face to the horizontal.
         var downVector = new THREE.Vector3(0, -1, 0);
-        var vertexIndex = obj.hull.vertices.indexOf(lowestVertex.vertex);
         var candidates = [];
         obj.hull.faces.forEach((face) => {
-            if(vertexIndex == face.a ||
-               vertexIndex == face.b ||
-               vertexIndex == face.c) {
+            if(pivot.index == face.a ||
+               pivot.index == face.b ||
+               pivot.index == face.c) {
+                   // Rotate face normal into world coordinates and
+                   // find the angle between it and the world down vector
                    vector.copy(face.normal);
                    vector.applyQuaternion(quaternion);
                    candidates.push({
-                        angle: Math.acos(vector.dot(downVector)),
-                        face: face
+                        angle:  Math.acos(vector.dot(downVector)),
+                        normal: face.normal
                    });
                }
         });
-        // Step 4: Find face closest to horizontal
+
+        // Step 4: Find the normal which is closest to horizontal
         candidates.sort(function(a, b){return a.angle-b.angle});
-        // Step 5: Find the normal vector for that face in world coordinates
-        vector.copy(candidates[0].face.normal);
+
+        // Step 5: Transform the downVector into object coordinates
         downVector.applyQuaternion(quaternion.inverse());
-        
+
         /*var arrowHelper = new THREE.ArrowHelper( downVector, new THREE.Vector3(), 100 );
         obj.add( arrowHelper );
-        
+
         var arrowHelper = new THREE.ArrowHelper( vector, new THREE.Vector3(), 100 );
         obj.add( arrowHelper );*/
-        
-        // Step 6: Rotate object so that face is horizontal
-        var rotation = new THREE.Quaternion();
-        rotation.setFromUnitVectors(vector, downVector);
 
-        // Step 6: Rotate object so that face is horizontal
-        obj.quaternion.multiply(rotation);
-        
+        // Step 6: Rotate object so that the face normal and down vector are aligned.
+        // This causes the object to "layflat" on that face.
+        quaternion.setFromUnitVectors(candidates[0].normal, downVector);
+        obj.quaternion.multiply(quaternion);
+
         // Step 7: Bring the object down to the print plate
         dropObjectToFloor(obj);
         mine.render();
     }
-    
+
     function onLayFlatClicked() {
         selectedGroup.children.forEach((obj) => {layObjectFlat(obj);});
     }
@@ -281,12 +285,17 @@ function Stage() {
     /********************** PUBLIC METHODS **********************/
 
     this.onTranformToolChanged = function(tool) {
+        this.transformControl.enabled = false;
+        selectedGroup.recompute();
+        this.currentTool = tool;
         switch(tool) {
             case "move":    this.transformControl.setMode("translate"); break;
             case "rotate":  this.transformControl.setMode("rotate"); break;
             case "scale":   this.transformControl.setMode("scale"); break;
+            case "mirror":  this.transformControl.setMode("translate"); break;
             case "layflat": onLayFlatClicked(); break;
         }
+        this.transformControl.enabled = true;
     }
 
     this.onObjectClicked = function(obj) {
@@ -335,5 +344,27 @@ function Stage() {
 
     this.addEdges = function(edges) {
         printVolume.add(model);
+    }
+
+    /**
+     * Attaches a special handler for the TransformControl. Since the control
+     * does not have a "mirror" mode, we use a custom "mouseDown" handler to
+     * modify the behavior of the "translate" mode to act as if it were a
+     * "mirror".
+     */
+    this.setTransformControl = function(control) {
+        this.transformControl = control;
+        this.transformControl.space = "local";
+
+        this.transformControl.addEventListener( 'mouseDown', function ( event ) {
+            if(mine.currentTool == "mirror") {
+                mine.transformControl.dragging = false;
+                switch(mine.transformControl.axis) {
+                    case 'X': selectedGroup.scale.x = selectedGroup.scale.x < 0 ? 1 : -1; break;
+                    case 'Y': selectedGroup.scale.y = selectedGroup.scale.y < 0 ? 1 : -1; break;
+                    case 'Z': selectedGroup.scale.z = selectedGroup.scale.z < 0 ? 1 : -1; break;
+                }
+            }
+        } );
     }
 }

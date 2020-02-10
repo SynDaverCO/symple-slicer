@@ -84,7 +84,7 @@ function RenderEngine(canvas, stage) {
         if (!event.value) stage.onObjectTransformed();
     } );
 
-    stage.transformControl = control;
+    stage.setTransformControl(control);
     stage.render           = render;
 
     // https://stackoverflow.com/questions/41000983/using-transformcontrols-with-outlinepass-in-three-js?noredirect=1&lq=1

@@ -133,15 +133,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var renderEngine = new RenderEngine(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
 
-            toolbar.addIcon("open-file",       "images/open-file.png");
-            toolbar.addIcon("move",            "images/scale.png");
-            toolbar.addIcon("scale",           "images/scale-max.png");
-            toolbar.addIcon("rotate",          "images/rotate.png");
-            toolbar.addIcon("mirror",          "images/mirror.png");
-            //toolbar.addIcon("custom-supports", "images/custom-supports.png");
-            //toolbar.addIcon("support-blocker", "images/support-blocker.png");
-            toolbar.addIcon("layflat",         "images/lay-flat.png");
-            toolbar.addIcon("undo",            "images/undo.png");
+            toolbar.addIcon("open-file",         "Open File",       "images/open-file.png",);
+            toolbar.addIcon("move",              "Move Object",     "images/scale.png");
+            toolbar.addIcon("scale",             "Scale Object",    "images/scale-max.png");
+            toolbar.addIcon("rotate",            "Rotate Object",   "images/rotate.png");
+            toolbar.addIcon("mirror",            "Mirror Object",   "images/mirror.png");
+            //toolbar.addIcon("custom-supports", "Custom Supports", "images/custom-supports.png");
+            //toolbar.addIcon("support-blocker", "Support Blocker", "images/support-blocker.png");
+            toolbar.addIcon("layflat",           "Lay Flat",        "images/lay-flat.png");
+            toolbar.addIcon("undo",              "Undo",            "images/undo.png");
 
             toolbar.onChange = function(id) {stage.onTranformToolChanged(id);};
 
