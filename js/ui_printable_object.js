@@ -31,8 +31,6 @@ function PrintableObject(geometry) {
     var renderStyle = RenderStyles.volume;
     var paths;
 
-    this.selected = false;
-
     var material = new THREE.MeshLambertMaterial( { color: 0xffff00 } );
 
     // Initialze things
@@ -40,7 +38,6 @@ function PrintableObject(geometry) {
     this.geometry.computeBoundingBox();
     this.geometry.computeFaceNormals();
     this.geometry.mergeVertices();
-    this.geometry.center();
     this.mesh = new THREE.Mesh(this.geometry, material);
     this.mesh.hull = new THREE.ConvexGeometry(this.geometry.vertices);
     this.mesh.castShadow = true;
@@ -107,9 +104,5 @@ function PrintableObject(geometry) {
         //slicer.setGeometry(geometry);
         slices = slicer.getSlices();
         renderStyle = RenderStyles.slices;
-    }
-
-    this.setSelected = function(isSelected) {
-        mine.selected = isSelected;
     }
 }
