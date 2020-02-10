@@ -23,7 +23,7 @@ function RenderEngine(canvas, stage) {
     var camera   = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 10, 3000 );
     var renderer = new THREE.WebGLRenderer({canvas:canvas});
 
-    var backgroundColor = 0x999999;
+    var backgroundColor = 0x757575;
     
     var raycaster = new THREE.Raycaster();
 
@@ -38,11 +38,11 @@ function RenderEngine(canvas, stage) {
     scene.add(stage.getPrintVolume());
 
     // Ambient light
-    var ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+    var ambientLight = new THREE.AmbientLight( 0x404040, 0.9 ); // soft white light
     scene.add( ambientLight );
 
     // Directional light (attached to the camera)
-    directionalLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
+    directionalLight = new THREE.DirectionalLight( 0xffffff, 0.9 );
     camera.add( directionalLight );
     scene.add(camera);
     
@@ -77,7 +77,7 @@ function RenderEngine(canvas, stage) {
     orbit.target.set(0,eyeHeight,0);
     orbit.update();
 
-    orbit.addEventListener( 'change', render );
+    orbit.addEventListener( 'change', onViewChanged );
 
     var control = new THREE.TransformControls( camera, renderer.domElement );
     scene.add( control );
@@ -116,10 +116,20 @@ function RenderEngine(canvas, stage) {
         orbit.update();
         render();
     }
+    
+    function onViewChanged( event ) {
+        render();
+        stage.onViewChanged();
+    }
 
     function onDocumentMouseDown( event ) {
         raycaster.setFromCamera( mouse, camera );
         stage.onMouseDown(raycaster, scene);
+    }
+
+    function onDocumentMouseUp( event ) {
+        raycaster.setFromCamera( mouse, camera );
+        stage.onMouseUp(raycaster, scene);
     }
 
     function onDocumentMouseMove( event ) {
@@ -130,6 +140,7 @@ function RenderEngine(canvas, stage) {
     }
 
     document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    document.addEventListener( 'mouseup', onDocumentMouseUp, false );
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
 

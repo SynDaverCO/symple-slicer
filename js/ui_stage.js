@@ -33,9 +33,11 @@ function Stage() {
     var printableObjects = [];
     var printVolume = new THREE.Object3D();
     var selectedGroup = new SelectionGroup();
-
+    var dragging;
+    
     this.onObjectTransformed = function() {
         dropObjectToFloor(selectedGroup);
+        dragging = true;
     }
 
     /********************** OBJECT INITIALIZATION **********************/
@@ -47,8 +49,8 @@ function Stage() {
     // Checkerboard material
     var uniforms = {
         checkSize: { type: "f", value: 15 },
-        color1: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 1.0, 1) },
-        color2: { type: "v4", value: new THREE.Vector4(0.5, 0.5, 0.7, 1) },
+        color1: { type: "v4", value: new THREE.Vector4(0.55, 0.55, 0.55, 1) },
+        color2: { type: "v4", value: new THREE.Vector4(0.50, 0.50, 0.50, 1) },
     };
 
     var checkerboardMaterial = new THREE.ShaderMaterial({
@@ -80,22 +82,13 @@ function Stage() {
     printVolume.add(mesh);
 
     // Walls
-    if (this.printer.circular) {
-        geometry = new THREE.CylinderGeometry( this.printer.bed_radius, this.printer.bed_radius, this.printer.z_height, segments );
-    } else {
-        geometry = new THREE.BoxGeometry( this.printer.bed_width, this.printer.bed_depth, this.printer.z_height );
-    }
-    geometry.rotateX(90 * Math.PI / 180);
-    var material = new THREE.MeshBasicMaterial( {
-        color: 0x5555FF,
-        transparent: true,
-        side: THREE.BackSide,
-        opacity: 0.5,
-        depthWrite: false
-    } );
-    var mesh = new THREE.Mesh( geometry, material );
-    mesh.position.z = this.printer.z_height / 2;
-    printVolume.add(mesh);
+
+    var box = new THREE.BoxGeometry( this.printer.bed_width, this.printer.bed_depth, this.printer.z_height );
+    geometry = new THREE.EdgesGeometry( box ); // or WireframeGeometry( geometry )
+    material = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
+    var wireframe = new THREE.LineSegments( geometry, material );
+    wireframe.position.z = this.printer.z_height / 2;
+    printVolume.add(wireframe);
 
     // Light for casting shadows
     
@@ -306,12 +299,17 @@ function Stage() {
         selectNone();
     }
 
+    this.onMouseDown = function( raycaster, scene ) {
+        dragging = false;
+    }
+
     /**
      * This method is called when the user clicks on an object.
      * It evaluates the intersections from the raycaster and
      * determines what to do.
      */
-    this.onMouseDown = function( raycaster, scene ) {
+    this.onMouseUp = function( raycaster, scene ) {
+        if(dragging) return;
         var intersects = raycaster.intersectObject( scene, true );
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
@@ -320,6 +318,10 @@ function Stage() {
             if (isPrintableObject(obj))                       this.onObjectClicked(obj);
             break; // Stop on first intersection
         }
+    }
+    
+    this.onViewChanged = function() {
+        dragging = true;
     }
 
     this.getPrintVolume = function() {

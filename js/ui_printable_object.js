@@ -31,7 +31,7 @@ function PrintableObject(geometry) {
     var renderStyle = RenderStyles.volume;
     var paths;
 
-    var material = new THREE.MeshLambertMaterial( { color: 0xffff00 } );
+    var material = new THREE.MeshLambertMaterial( { color: 0xfafad2 } );
 
     // Initialze things
     this.geometry = geometry;
