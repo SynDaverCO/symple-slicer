@@ -133,7 +133,7 @@ function Stage() {
     printVolume.add( axesHelper );
 
     /********************** PRIVATE METHODS **********************/
-        
+
     function arrangeObjectsOnPlatform() {
         for( var i = 0; i < printableObjects.length; i++) {
             var object = printableObjects[i];
@@ -157,24 +157,110 @@ function Stage() {
     function findPrintableObject(obj) {
         return isPrintableObject(obj) ? printableObjects[obj.printableObjectIdx] : null;
     }
+    
+    /**
+     * Converts a vector in object coordinates to print bed
+     * coordinates
+     */
+    function localToBed(child, vector) {
+        printVolume.worldToLocal(child.localToWorld(vector));
+    }
+
+    /**
+     * Helper function for finding the vertex in an object closest
+     * to the print bed.
+     *
+     *  vec          - Scratch Vector3 for use in computation
+     *  parent       - Parent object for geometry
+     *  geometry     - Geometry to tranverse
+     *  lowestVertex - Pass result from previous call to continue search
+     */
+    function findLowestVertex(vector, object, geometry, lowestVertex) {
+        geometry.vertices.forEach(function(v) {
+            localToBed(object, vector.copy(v));
+            if (!lowestVertex) {
+                lowestVertex = {object: object, vertex: v, z: vector.z};
+            } else {
+                localToBed(object, vector.copy(v));
+                if(vector.z < lowestVertex.z) {
+                    lowestVertex.object = object;
+                    lowestVertex.vertex = v;
+                    lowestVertex.z      = vector.z;
+                }
+            }
+        });
+        return lowestVertex;
+    }
 
     /**
      * Drops an object so it touches the print platform
      */
     function dropObjectToFloor(obj) {
-        var min_z = Number.POSITIVE_INFINITY;
-        var pt = new THREE.Vector3();
+        var lowestVertex;
+        var vector = new THREE.Vector3();
         obj.traverse(function(child) {
             if (child instanceof THREE.Mesh) {
-                var geometry = child.hull || child.geometry;
-                geometry.vertices.forEach(function(v) {
-                    pt.copy(v);
-                    printVolume.worldToLocal(child.localToWorld(pt));
-                    min_z = Math.min(min_z, pt.z);
-                });
+                lowestVertex = findLowestVertex(vector, child, child.hull || child.geometry, lowestVertex);
             }
         });
-        obj.position.z -= min_z;
+        obj.position.z -= lowestVertex.z;
+    }
+    
+    /**
+     * Lays an object flat on the print bed
+     */
+    function layObjectFlat(obj) {
+        selectNone();
+        // Step 1: Find the lowest vertex in the convex hull
+        var vector = new THREE.Vector3();
+        var lowestVertex = findLowestVertex(vector, obj, obj.hull);
+        // Step 2: Obtain the world quaternion of the object
+        var position = new THREE.Vector3();
+        var quaternion = new THREE.Quaternion();
+        var scale = new THREE.Vector3();
+        obj.matrixWorld.decompose( position, quaternion, scale );
+        // Step 3: For all faces that share this vertex, compute the angle of that face to the horizontal.
+        var downVector = new THREE.Vector3(0, -1, 0);
+        var vertexIndex = obj.hull.vertices.indexOf(lowestVertex.vertex);
+        var candidates = [];
+        obj.hull.faces.forEach((face) => {
+            if(vertexIndex == face.a ||
+               vertexIndex == face.b ||
+               vertexIndex == face.c) {
+                   vector.copy(face.normal);
+                   vector.applyQuaternion(quaternion);
+                   candidates.push({
+                        angle: Math.acos(vector.dot(downVector)),
+                        face: face
+                   });
+               }
+        });
+        // Step 4: Find face closest to horizontal
+        candidates.sort(function(a, b){return a.angle-b.angle});
+        // Step 5: Find the normal vector for that face in world coordinates
+        vector.copy(candidates[0].face.normal);
+        downVector.applyQuaternion(quaternion.inverse());
+        
+        /*var arrowHelper = new THREE.ArrowHelper( downVector, new THREE.Vector3(), 100 );
+        obj.add( arrowHelper );
+        
+        var arrowHelper = new THREE.ArrowHelper( vector, new THREE.Vector3(), 100 );
+        obj.add( arrowHelper );*/
+        
+        // Step 6: Rotate object so that face is horizontal
+        var rotation = new THREE.Quaternion();
+        rotation.setFromUnitVectors(vector, downVector);
+
+        // Step 6: Rotate object so that face is horizontal
+        obj.quaternion.multiply(rotation);
+        
+        // Step 7: Bring the object down to the print plate
+        dropObjectToFloor(obj);
+        mine.render();
+    }
+    
+    function onLayFlatClicked() {
+        selectedGroup.children.forEach((obj) => {layObjectFlat(obj);});
     }
 
     function addObjectToSelection(obj) {
@@ -196,9 +282,10 @@ function Stage() {
 
     this.onTranformToolChanged = function(tool) {
         switch(tool) {
-            case "move":   this.transformControl.setMode("translate"); break;
-            case "rotate": this.transformControl.setMode("rotate"); break;
-            case "scale":  this.transformControl.setMode("scale"); break;
+            case "move":    this.transformControl.setMode("translate"); break;
+            case "rotate":  this.transformControl.setMode("rotate"); break;
+            case "scale":   this.transformControl.setMode("scale"); break;
+            case "layflat": onLayFlatClicked(); break;
         }
     }
 

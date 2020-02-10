@@ -40,6 +40,7 @@ function PrintableObject(geometry) {
     this.geometry.mergeVertices();
     this.mesh = new THREE.Mesh(this.geometry, material);
     this.mesh.hull = new THREE.ConvexGeometry(this.geometry.vertices);
+    this.mesh.hull.computeFaceNormals();
     this.mesh.castShadow = true;
 
     /********************** PRIVATE METHODS **********************/
