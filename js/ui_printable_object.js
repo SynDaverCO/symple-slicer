@@ -102,4 +102,12 @@ function PrintableObject(geometry) {
         slices = slicer.getSlices();
         renderStyle = RenderStyles.slices;
     }
+
+    this.getGeometry = function() {
+        return mine.mesh.geometry;
+    }
+
+    this.getMatrixWorld = function() {
+        return mine.mesh.matrixWorld;
+    }
 }

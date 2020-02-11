@@ -328,9 +328,19 @@ function Stage() {
         return printVolume;
     }
 
-    this.getGeometry = function() {
-        // TODO: Support multiple objects.
-        return printableObjects[0].getGeometry();
+    /**
+     * This function returns a list of ready to print geometries objects with
+     * all the transformations already baked in
+     */
+    this.getAllGeometry = function() {
+        return printableObjects.map(obj => {
+            var geometry = obj.getGeometry().clone();
+            var transform = obj.getMatrixWorld().clone();
+            var worldToPrintVolume = new THREE.Matrix4();
+            transform.multiply(worldToPrintVolume.getInverse(printVolume.matrixWorld));
+            geometry.applyMatrix(transform);
+            return geometry;
+        });
     }
 
     this.addGeometry = function(geometry) {
@@ -341,6 +351,14 @@ function Stage() {
         printVolume.add(sceneObj);
         //arrangeObjectsOnPlatform();
         dropObjectToFloor(sceneObj);
+        this.render();
+    }
+
+    this.removeObjects = function() {
+        printableObjects.forEach(printable => {
+            printVolume.remove(printable.getTHREESceneObject());
+        });
+        printableObjects = [];
         this.render();
     }
 

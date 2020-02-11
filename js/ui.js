@@ -117,10 +117,11 @@ function onAddToPlatform() {
 }
 
 function onClearPlatform() {
+    stage.removeObjects();
 }
 
 function onSaveGcode() {
-    slicer.sliceGeometry(stage.getGeometry());
+    stage.getAllGeometry().forEach((geo,i) => slicer.loadFromGeometry(geo, 'input' + i || '' + '.stl'));
 }
 
 function showAbout() {
