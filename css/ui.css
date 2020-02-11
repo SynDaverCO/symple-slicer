@@ -56,6 +56,13 @@ hr {
     color:              #96172e;
 }
 
+#about table {
+  display:              table;
+  margin-right:         auto;
+  margin-left:          auto;
+  width:                80%;
+}
+
 .dialog {
     position: absolute;
 

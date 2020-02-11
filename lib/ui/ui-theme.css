@@ -23,6 +23,10 @@
     box-shadow:         5px 5px 10px #222222;
 }
 
+#toolbar img {
+    filter: url(#colorize-blue);
+}
+
 .dock-left {
     left:               10px;
 }
@@ -37,4 +41,11 @@
 
 .dock-bottom {
     bottom:             15px;
+}
+
+.defs-only {
+    position: absolute;
+    height: 0; width: 0;
+    overflow: none;
+    left: -100%;
 }

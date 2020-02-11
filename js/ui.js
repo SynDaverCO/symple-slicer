@@ -21,16 +21,17 @@ var settings;
 function settingsInit(id) {
     var s = new SettingsUI(id);
     
-    s.page(          "settings-design",  "Placement Menu");
-    s.file(          "fileSelect", true);
+    s.page(          "settings-design",  "Place Objects");
+    s.file(          "fileSelect", true, "Drop STL file here");
     
     s.separator(     "br");
     s.button(          onAddToPlatform, "Add to Platform");
     s.button(          onClearPlatform, "Clear Platform");
     
-    s.page(          "settings-machine", "Machine Preferences");
+    s.page(         "settings-machine", "Configure Machine");
     s.heading(                          "Load Preset:");
     s.choice(    "machinePresetSelect", "")
+     .option(           "lulzbot-mini", "Lulzbot Mini 2")
      .option(         "deltaprintr-ks", "Deltaprintr Kickstarter Edition");
     s.heading(                          "Machine:");
     s.parameter(   "printerNozzleSize", "Nozzle (mm)",   0.4);
@@ -57,7 +58,11 @@ function settingsInit(id) {
     s.textarea(             "endGcode");
     s.button(         doneEditingGcode, "Done");
     
-    s.page(            "settings-print", "Print Menu");
+    s.page(           "settings-print", "Slice and Print");
+    s.heading(                          "Load Preset:");
+    s.choice(    "materialPresetSelect", "")
+     .option(         "pla-high-speed", "PLA High Speed")
+     .option(        "pla-high-detail", "PLA High Detail");
     s.heading(                          "Quality:");
     s.parameter("bottomLayerThickness", "Bottom layer thickness (mm)",  0.2);
     s.heading(                          "Speed and Temperature:");
@@ -71,7 +76,7 @@ function settingsInit(id) {
     s.button(              onSaveGcode, "Slice");
     s.buttonHelp("Click this button to save .gcode you<br>can then send to your 3D printer.");
     
-    s.page(             "settings-help", "Help");
+    s.page(            "settings-help", "Help");
     s.heading(                          "View Controls:");
     s.element(                          "viewport-help");
     

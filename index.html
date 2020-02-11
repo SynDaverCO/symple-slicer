@@ -92,6 +92,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
         </script>
 
+        <!-- Trick for colorizing images: https://css-tricks.com/color-filters-can-turn-your-gray-skies-blue/
+             The target color is rgb(0.00 0.18 0.38) but for some reason we need to use (0.00, 0.03, 0.12) in
+             the last column of the matrix to get that color. 
+        -->
+        <svg class="defs-only">
+            <filter id="colorize-blue">
+                <feColorMatrix type="matrix"
+                    values="1.00 0 0 0 0.00
+                            0.97 0 0 0 0.03
+                            0.89 0 0 0 0.12
+                            0    0 0 1 0"/>
+            </filter>
+        </svg>
+
         <canvas id="webgl">
             Sorry, your browser does not support the HTML canvas.
         </canvas>
@@ -131,7 +145,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
             <h1>Simple Slicer V0.1</h1>
             <p>
-                Simple Slicer is maintained by SynDaver, Inc. for use with SynDaver printers. It is derived from Cura,
+                Simple Slicer is maintained by SynDaver Labs, Inc. for use with SynDaver printers. It uses the Cura Engine,
                 which is developed by Ultimaker B.V. in cooperation with the community.
             </p>
             <p>
@@ -167,7 +181,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             </p>
             <p>
                 This software is licensed under the <a href="COPYING">Affero GPL license</a>
-                (<a target="_blank" href="https://github.com/SynDaverCO/web-cura">Source Code</a>).
+                (<a target="_blank" href="https://github.com/SynDaverCO/web-cura">Source</a>).
             </p>
         </div>
 
