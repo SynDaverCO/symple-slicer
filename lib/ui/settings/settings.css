@@ -110,6 +110,7 @@
     height:             3em;
     vertical-align:     middle;
     border:             3px dotted;
+    cursor:             pointer;
 }
 
 .settings-panel .drop-area > div {
@@ -137,6 +138,7 @@
 .settings-panel .selected-file {
     position:           relative;
     padding:            2px;
+    cursor:             pointer;
 }
 
 .settings-panel .selected-file .reset {

@@ -21,12 +21,20 @@ var settings;
 function settingsInit(id) {
     var s = new SettingsUI(id);
 
+    function onFileChange(file) {
+        if(file) {
+            $('#add_to_platform').attr('disabled', false);
+        } else {
+            $('#add_to_platform').attr('disabled', true);
+        }
+    }
+
     s.page(          "settings-design",  "Place Objects");
-    s.file(          "fileSelect", true, "Drop STL file here");
+    s.file(          "fileSelect", {'binary': true, 'text': "Drop STL file here", 'callback': onFileChange});
 
     s.separator(     "br");
-    s.button(          onAddToPlatform, "Add to Platform");
-    s.button(          onClearPlatform, "Clear Platform");
+    s.button(          onAddToPlatform, "Add to Platform", {'id': "add_to_platform"});
+    s.button(          onClearPlatform, "Clear Platform",  {'id': "clear_platform"});
 
     s.page(         "settings-machine", "Configure Machine");
     s.heading(                          "Load Preset:");
@@ -34,7 +42,7 @@ function settingsInit(id) {
      .option(           "lulzbot-mini", "Lulzbot Mini 2")
      .option(         "deltaprintr-ks", "Deltaprintr Kickstarter Edition");
     s.heading(                          "Machine:");
-    s.parameter(   "printerNozzleSize", "Nozzle (mm)",   0.4);
+    s.parameter(   "printerNozzleSize", "Nozzle (mm)",         0.4);
     s.heading(                          "Build area:");
     s.choice(    "platformStyleSelect", "Shape")
      .option(            "rectangular", "Rectangular")
@@ -59,22 +67,40 @@ function settingsInit(id) {
     s.button(         doneEditingGcode, "Done");
 
     s.page(           "settings-print", "Slice and Print");
-    s.heading(                          "Load Preset:");
-    s.choice(    "materialPresetSelect", "")
+    s.heading(                          "General:");
+    s.choice(    "slicingEngine",       "Slicing Engine:")
+     .option(                    "cura", "Cura")
+     .option(                  "slic3r", "Slic3r");
+    s.choice(    "materialPresetSelect", "Load Preset:")
      .option(         "pla-high-speed", "PLA High Speed")
      .option(        "pla-high-detail", "PLA High Detail");
-    s.heading(                          "Quality:");
-    s.parameter("bottomLayerThickness", "Bottom layer thickness (mm)",  0.2);
+    s.heading(                          "Print Strength:");
+    s.choice(               "infill",   "Infill Pattern:")
+     .option(                   "grid", "Grid")
+     .option(                  "lines", "Lines")
+     .option(                 "gyroid", "Gyroid");
+    s.parameter(       "infillDensity", "Infill Density (%):",           30);
     s.heading(                          "Speed and Temperature:");
-    s.parameter(    "printTemperature", "Printing temperature (C)",     200);
-    s.parameter(          "printSpeed", "Print speed (mm/s)",           50);
-    s.parameter(         "travelSpeed", "Travel speed (mm/s)",          70);
+    s.parameter(    "printTemperature", "Printing temperature (C):",     200);
+    s.parameter(          "printSpeed", "Print speed (mm/s):",           50);
     s.heading(                          "Filament:");
-    s.parameter(    "filamentDiameter", "Diameter (mm)",                1.4);
-    s.parameter(        "filamentFlow", "Flow (%)",                     100);
+    s.choice(     "filamentDiameter",   "Filament Diameter (mm):")
+     .option(                   "1.75", "1.75")
+     .option(                   "3.00", "3.00");
+    s.parameter(        "filamentFlow", "Flow (%):",                     100);
+    s.heading(                          "Scaffolding:");
+    s.choice(               "supports", "Support Material:")
+     .option(                   "none", "None")
+     .option(             "everywhere", "Everywhere")
+     .option(   "touching-build-plate", "Touching Build Plate");
+    s.choice(               "adhesion", "Bed Adhesion:")
+     .option(                  "skirt", "Skirt")
+     .option(                   "brim", "Brim")
+     .option(                   "raft", "Raft")
+     .option(                   "none", "None");
     s.separator();
     s.button(              onSaveGcode, "Slice");
-    s.buttonHelp("Click this button to save .gcode you<br>can then send to your 3D printer.");
+    s.buttonHelp("Click this button to save<br>gcode for your 3D printer.");
 
     s.page(            "settings-help", "Help");
     s.heading(                          "View Controls:");
@@ -87,6 +113,8 @@ function settingsInit(id) {
     // Set the callbacks
 
     document.getElementById("editGcodeMenu").onchange = onEditGcodeSelect;
+
+    onFileChange(); // Disable buttons
 }
 
 function onEditGcodeSelect() {
