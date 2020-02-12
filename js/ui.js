@@ -20,14 +20,14 @@ var settings;
 
 function settingsInit(id) {
     var s = new SettingsUI(id);
-    
+
     s.page(          "settings-design",  "Place Objects");
     s.file(          "fileSelect", true, "Drop STL file here");
-    
+
     s.separator(     "br");
     s.button(          onAddToPlatform, "Add to Platform");
     s.button(          onClearPlatform, "Clear Platform");
-    
+
     s.page(         "settings-machine", "Configure Machine");
     s.heading(                          "Load Preset:");
     s.choice(    "machinePresetSelect", "")
@@ -47,17 +47,17 @@ function settingsInit(id) {
      .option(                   "none", "...")
      .option(            "start-gcode", "start")
      .option(              "end-gcode", "end");
-    
+
     s.page(              "start-gcode");
     s.heading(                          "Start GCode template:");
     s.textarea(           "startGcode");
     s.button(         doneEditingGcode, "Done");
-    
+
     s.page(                "end-gcode");
     s.heading(                          "End GCode template:");
     s.textarea(             "endGcode");
     s.button(         doneEditingGcode, "Done");
-    
+
     s.page(           "settings-print", "Slice and Print");
     s.heading(                          "Load Preset:");
     s.choice(    "materialPresetSelect", "")
@@ -75,17 +75,17 @@ function settingsInit(id) {
     s.separator();
     s.button(              onSaveGcode, "Slice");
     s.buttonHelp("Click this button to save .gcode you<br>can then send to your 3D printer.");
-    
+
     s.page(            "settings-help", "Help");
     s.heading(                          "View Controls:");
     s.element(                          "viewport-help");
-    
+
     s.done();
 
     settings = s;
-    
+
     // Set the callbacks
-    
+
     document.getElementById("editGcodeMenu").onchange = onEditGcodeSelect;
 }
 
@@ -101,7 +101,7 @@ function doneEditingGcode() {
 }
 
 function entitiesToModel(entities) {
-    model = new Model();                
+    model = new Model();
     for(var i = 0; i < entities.lines.length; i++) {
         var pts = entities.lines[i].points;
         model.addEdge(pts[0][0],pts[0][1],pts[0][2],pts[1][0],pts[1][1],pts[1][2]);
