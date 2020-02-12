@@ -44,8 +44,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/three/OutlinePass.js"></script>
         <!-- ***************** Prequisites for OutlinePass.js ***************** -->
 
-        <link rel="stylesheet" type="text/css" href="css/ui.css">
-        <link rel="stylesheet" type="text/css" href="lib/ui/ui-theme.css">
+        <link rel="stylesheet" type="text/css" href="css/layout.css">
+        <link rel="stylesheet" type="text/css" href="css/theme.css">
+        <link rel="stylesheet" type="text/css" href="lib/ui/ui.css">
         <link rel="stylesheet" type="text/css" href="lib/ui/settings/settings.css">
         <link rel="stylesheet" type="text/css" href="lib/ui/toolbar/toolbar.css">
 
@@ -109,12 +110,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <canvas id="webgl">
             Sorry, your browser does not support the HTML canvas.
         </canvas>
-        <div id="buttons">
+        <div id="buttons" class="dock-right dock-top">
             <button id="aboutbtn" onclick="showAbout()">About</button>
             <button id="fullscreen" onclick="enterFullscreen()">Fullscreen</button>
         </div>
-        <div id="settings" class="panel dock-right dock-bottom"></div>
-        <div id="toolbar"  class="panel dock-left  dock-bottom vertical"></div>
+        <div id="settings" class="panel-style dock-right dock-bottom"></div>
+        <div id="toolbar"  class="panel-style dock-left  dock-bottom vertical"></div>
 
         <!-- Help table -->
 
@@ -141,7 +142,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             </tr>
         </table>
         
-        <div id="about" onclick="hideAbout()" class="dialog panel">
+        <div id="progress" class="float-center panel-style">
+            <p>
+                <label for="slicing">Slicing progress:</label>
+                <progress id="slicing" value="0" max="100"> 32% </progress>
+            </p>
+            <p>
+                
+            </p>
+            <details>
+                <summary>Show Details
+                    <button id="progressBtn">Download GCODE</button>
+                </summary>
+                <pre id="console">Console Output</pre>
+            </details>
+        </div>
+        
+        <div id="about" onclick="hideAbout()" class="float-center panel-style">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
             <h1>Simple Slicer V0.1</h1>
             <p>
@@ -207,18 +224,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             slicer = new SlicerInterface();
 
             // Cura interface
-            /*function clearLog() {
-                document.getElementById('log').textContent = '';
+            var log = document.getElementById('console');
+            function clearConsole() {
+                log.textContent = '';
             }
 
-            function onConsoleMessage(str) {
-                document.getElementById('log').textContent += str + '\n';
-            }*/
+            slicer.onStdoutOutput = function(str) {
+                log.textContent += str + '\n';
+            }
+            slicer.onStderrOutput = slicer.onStdoutOutput;
 
             slicer.onFileReceived = function(data) {
-                var blob = new Blob([data], {type: "application/octet-stream"});
-                var fileName = "cura.gcode";
-                saveAs(blob, fileName);
+                readyToDownload(data);
             }
         </script>
     </body>

@@ -1,7 +1,6 @@
 /**
  * WebSlicer
- * Copyright (C) 2016  Marcio Teixeira
- * Copyright (C) 2020  SynDaver Labs, Inc.
+ * Copyright (C) 2016 Marcio Teixeira
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,12 +15,38 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#toolbar {
-    padding:            0px;
+
+body {
+    font-family:        Tahoma, Verdana, Segoe, sans-serif;
 }
 
-#toolbar.vertical {
-    display:            flex;
-    flex-direction:     column;
-    flex-wrap:          wrap;
+summary:focus {
+    outline:            0;
+}
+
+.panel-style {
+    color:              #002e62;
+    background-color:   LightGoldenRodYellow;
+    border:             1px solid #002e62;
+    box-shadow:         5px 5px 10px #222222;
+}
+
+#about a:link, #about a:visited {
+    color:              #96172e;
+}
+
+#toolbar img {
+    mix-blend-mode:     darken;
+    opacity:            25%;
+    filter:             url(#colorize-blue);
+}
+
+#toolbar img:hover {
+    mix-blend-mode:     normal;
+    opacity:            100%;
+}
+
+#console {
+    background:         black;
+    color:              #ffdd77;
 }

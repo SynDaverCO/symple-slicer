@@ -16,36 +16,37 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-.panel {
-    color:              #002e62;
-    background-color:   LightGoldenRodYellow ;
-    border:             1px solid #002e62;
-    box-shadow:         5px 5px 10px #222222;
-}
-
-#toolbar img {
-    filter: url(#colorize-blue);
-}
-
 .dock-left {
-    left:               10px;
+    position:           absolute;
+    left:               1em;
 }
 
 .dock-right {
-    right:              10px;
+    position:           absolute;
+    right:              1em;
 }
 
 .dock-top {
-    top:                15px;
+    position:           absolute;
+    top:                1em;
 }
 
 .dock-bottom {
-    bottom:             15px;
+    position:           absolute;
+    bottom:             1em;
+}
+
+.float-center {
+    position:           absolute;
+    top:                50%;
+    left:               50%;
+    transform:          translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px));
 }
 
 .defs-only {
-    position: absolute;
-    height: 0; width: 0;
-    overflow: none;
-    left: -100%;
+    position:           absolute;
+    height:             0;
+    width:              0;
+    overflow:           none;
+    left:              -100%;
 }

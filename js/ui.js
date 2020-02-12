@@ -99,7 +99,7 @@ function settingsInit(id) {
      .option(                   "raft", "Raft")
      .option(                   "none", "None");
     s.separator();
-    s.button(              onSaveGcode, "Slice");
+    s.button(           onSliceClicked, "Slice");
     s.buttonHelp("Click this button to save<br>gcode for your 3D printer.");
 
     s.page(            "settings-help", "Help");
@@ -148,8 +148,34 @@ function onClearPlatform() {
     stage.removeObjects();
 }
 
-function onSaveGcode() {
+function onSliceClicked() {
+    showProgressBar();
     stage.getAllGeometry().forEach((geo,i) => slicer.loadFromGeometry(geo, 'input' + i || '' + '.stl'));
+    slicer.slice();
+}
+
+function showProgressBar() {
+    clearConsole();
+    $("#progress").show();
+    $("#progress progress").attr("value",0);
+    $("#downloadGcode").hide();
+}
+
+function readyToDownload(data) {
+    var blob = new Blob([data], {type: "application/octet-stream"});
+    var fileName = "cura.gcode";
+
+    $("#progress progress").attr("value",100);
+    $("#progressBtn").html("Download GCODE").unbind().click(
+        function() {
+            saveAs(blob, fileName);
+            $("#progressBtn").html("Close").unbind().click(afterDownload);
+        }
+    ).show();
+}
+
+function afterDownload() {
+    $("#progress").hide();
 }
 
 function showAbout() {

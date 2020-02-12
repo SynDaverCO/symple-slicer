@@ -16,27 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#settings {
-    position:           absolute;
+.settings-ui {
     padding:            10px;
     min-width:          200px;
     vertical-align:     middle;
-}
-
-#settings.dock-left {
-    left:               10px;
-}
-
-#settings.dock-right {
-    right:              10px;
-}
-
-#settings.dock-top {
-    top:                15px;
-}
-
-#settings.dock-bottom {
-    bottom:             15px;
 }
 
 .settings-panel {
@@ -46,6 +29,7 @@
 .settings-panel h1 {
     font-size:          13px;
     font-weight:        bold;
+    cursor:             default;
 }
 
 .settings-panel th {
@@ -82,10 +66,12 @@
     right:              10px;
     font-size:          11px;
     border:             1px solid;
+    cursor:             pointer;
 }
 
 .settings-panel button {
     margin:             5px;
+    cursor:             pointer;
 }
 
 .settings-panel textarea {
