@@ -150,7 +150,7 @@ function onClearPlatform() {
 
 function onSliceClicked() {
     showProgressBar();
-    stage.getAllGeometry().forEach((geo,i) => slicer.loadFromGeometry(geo, 'input' + i || '' + '.stl'));
+    stage.getAllGeometry().forEach((geo,i) => slicer.loadFromGeometry(geo, 'input' + (i || '') + '.stl'));
     slicer.slice();
 }
 

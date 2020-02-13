@@ -329,16 +329,18 @@ function Stage() {
     }
 
     /**
-     * This function returns a list of ready to print geometries objects with
-     * all the transformations already baked in
+     * This function returns a list of ready to slice geometries with
+     * all the transformations already baked in.
      */
     this.getAllGeometry = function() {
         return printableObjects.map(obj => {
             var geometry = obj.getGeometry().clone();
             var transform = obj.getMatrixWorld().clone();
             var worldToPrintVolume = new THREE.Matrix4();
-            transform.multiply(worldToPrintVolume.getInverse(printVolume.matrixWorld));
+            transform.premultiply(worldToPrintVolume.getInverse(printVolume.matrixWorld));
             geometry.applyMatrix(transform);
+            geometry.computeBoundingBox();
+            console.log(geometry.boundingBox);
             return geometry;
         });
     }
@@ -355,6 +357,7 @@ function Stage() {
     }
 
     this.removeObjects = function() {
+        selectNone();
         printableObjects.forEach(printable => {
             printVolume.remove(printable.getTHREESceneObject());
         });
