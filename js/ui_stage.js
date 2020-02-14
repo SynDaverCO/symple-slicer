@@ -23,18 +23,19 @@ function Stage() {
     // Private:
 
     this.printer = {
-        circular:    false,
-        z_height:    300,
-        bed_radius:  150, // when circular
-        bed_depth:   300, // when rectangular
-        bed_width:   300
+        circular:          false,
+        origin_at_center:  false,
+        x_width:           300,
+        y_depth:           300,
+        z_height:          300
     };
 
     var printableObjects = [];
-    var printVolume = new THREE.Object3D();
+    var printerRepresentation = new THREE.Object3D();
+    var bedRelative = new THREE.Object3D();
     var selectedGroup = new SelectionGroup();
     var dragging;
-    
+
     this.onObjectTransformed = function() {
         dropObjectToFloor(selectedGroup);
         dragging = true;
@@ -43,8 +44,8 @@ function Stage() {
     /********************** OBJECT INITIALIZATION **********************/
 
     // Set to printer coordinates (Z goes up)
-    printVolume.rotateX(-90 * Math.PI / 180);
-    printVolume.rotateZ(180 * Math.PI / 180);
+    printerRepresentation.rotateX(-90 * Math.PI / 180);
+    printerRepresentation.rotateZ(180 * Math.PI / 180);
 
     // Checkerboard material
     var uniforms = {
@@ -64,50 +65,44 @@ function Stage() {
     var geometry;
     if (this.printer.circular) {
         var segments = 64;
-        geometry = new THREE.CircleBufferGeometry( this.printer.bed_radius, segments );
+         var bed_radius = min(this.printer.x_width, this.printer.y_depth);
+        geometry = new THREE.CircleBufferGeometry( bed_radius, segments );
     } else {
-        geometry = new THREE.PlaneBufferGeometry( this.printer.bed_width, this.printer.bed_depth, 1 );
+        geometry = new THREE.PlaneBufferGeometry( this.printer.x_width, this.printer.y_depth, 1 );
     }
 
     // Shadow receiver
     var mesh = new THREE.Mesh( geometry, new THREE.ShadowMaterial({opacity: 0.25}) );
     mesh.position.z = 0.1;
     mesh.receiveShadow = true;
-    printVolume.add(mesh);
+    printerRepresentation.add(mesh);
     var floorPlane = mesh;
 
     // Checkered floor
     var mesh = new THREE.Mesh( geometry, checkerboardMaterial );
     mesh.position.z = 0.05;
-    printVolume.add(mesh);
+    printerRepresentation.add(mesh);
 
     // Walls
 
-    var box = new THREE.BoxGeometry( this.printer.bed_width, this.printer.bed_depth, this.printer.z_height );
+    var box = new THREE.BoxGeometry( this.printer.x_width, this.printer.y_depth, this.printer.z_height );
     geometry = new THREE.EdgesGeometry( box ); // or WireframeGeometry( geometry )
     material = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
     var wireframe = new THREE.LineSegments( geometry, material );
     wireframe.position.z = this.printer.z_height / 2;
-    printVolume.add(wireframe);
+    printerRepresentation.add(wireframe);
 
     // Light for casting shadows
-    
+
     var light = new THREE.DirectionalLight( 0xffffff, 0 );
     light.position.set( 0, 0, this.printer.z_height );
     light.castShadow = true;
-    printVolume.add(light);
+    printerRepresentation.add(light);
 
-    if (this.printer.circular) {
-        light.shadow.camera.left   = -this.printer.bed_radius;
-        light.shadow.camera.right  =  this.printer.bed_radius;
-        light.shadow.camera.top    = -this.printer.bed_radius;
-        light.shadow.camera.bottom =  this.printer.bed_radius;
-    } else {
-        light.shadow.camera.left   = -this.printer.bed_width / 2;
-        light.shadow.camera.right  =  this.printer.bed_width / 2;
-        light.shadow.camera.top    = -this.printer.bed_depth / 2;
-        light.shadow.camera.bottom =  this.printer.bed_depth / 2;
-    }
+    light.shadow.camera.left   = -this.printer.x_width / 2;
+    light.shadow.camera.right  =  this.printer.x_width / 2;
+    light.shadow.camera.top    = -this.printer.y_depth / 2;
+    light.shadow.camera.bottom =  this.printer.y_depth / 2;
 
     //Set up shadow properties for the light
     light.shadow.mapSize.width  = 512;
@@ -117,13 +112,21 @@ function Stage() {
 
     this.shadowLight = light;
 
+    // Create a bed relative coordinate system.
+
+    printerRepresentation.add(bedRelative);
+    if (!this.printer.origin_at_center) {
+        bedRelative.position.x -= this.printer.x_width / 2;
+        bedRelative.position.y -= this.printer.y_depth / 2;
+    }
+
     // Axis
     var axesHelper = new THREE.AxesHelper( 25 );
     var a = 225;
     //axesHelper.position.x = this.printer.radius * 1.2 * Math.cos(a * Math.PI / 180);
     //axesHelper.position.y = this.printer.radius * 1.2 * Math.sin(a * Math.PI / 180);
     //axesHelper.position.z = 0;
-    printVolume.add( axesHelper );
+    bedRelative.add( axesHelper );
 
     /********************** PRIVATE METHODS **********************/
 
@@ -150,13 +153,13 @@ function Stage() {
     function findPrintableObject(obj) {
         return isPrintableObject(obj) ? printableObjects[obj.printableObjectIdx] : null;
     }
-    
+
     /**
      * Converts a vector in object coordinates to print bed
      * coordinates
      */
     function localToBed(child, vector) {
-        printVolume.worldToLocal(child.localToWorld(vector));
+        bedRelative.worldToLocal(child.localToWorld(vector));
     }
 
     /**
@@ -261,7 +264,7 @@ function Stage() {
     }
 
     function addObjectToSelection(obj) {
-        printVolume.add(selectedGroup);
+        bedRelative.add(selectedGroup);
         selectedGroup.addToSelection(obj);
         outlinePass.selectedObjects = [selectedGroup];
         mine.transformControl.attach(selectedGroup);
@@ -319,13 +322,13 @@ function Stage() {
             break; // Stop on first intersection
         }
     }
-    
+
     this.onViewChanged = function() {
         dragging = true;
     }
 
-    this.getPrintVolume = function() {
-        return printVolume;
+    this.getPrinterRepresentation = function() {
+        return printerRepresentation;
     }
 
     /**
@@ -336,8 +339,8 @@ function Stage() {
         return printableObjects.map(obj => {
             var geometry = obj.getGeometry().clone();
             var transform = obj.getMatrixWorld().clone();
-            var worldToPrintVolume = new THREE.Matrix4();
-            transform.premultiply(worldToPrintVolume.getInverse(printVolume.matrixWorld));
+            var worldToPrinterRepresentation = new THREE.Matrix4();
+            transform.premultiply(worldToPrinterRepresentation.getInverse(bedRelative.matrixWorld));
             geometry.applyMatrix(transform);
             geometry.computeBoundingBox();
             console.log(geometry.boundingBox);
@@ -350,7 +353,7 @@ function Stage() {
         printableObjects.push(printable);
         var sceneObj = printable.getTHREESceneObject();
         sceneObj.printableObjectIdx = printableObjects.length - 1;
-        printVolume.add(sceneObj);
+        bedRelative.add(sceneObj);
         //arrangeObjectsOnPlatform();
         dropObjectToFloor(sceneObj);
         this.render();
@@ -359,14 +362,14 @@ function Stage() {
     this.removeObjects = function() {
         selectNone();
         printableObjects.forEach(printable => {
-            printVolume.remove(printable.getTHREESceneObject());
+            bedRelative.remove(printable.getTHREESceneObject());
         });
         printableObjects = [];
         this.render();
     }
 
     this.addEdges = function(edges) {
-        printVolume.add(model);
+        bedRelative.add(model);
     }
 
     /**

@@ -35,7 +35,7 @@ function RenderEngine(canvas, stage) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     var scene = new THREE.Scene();
-    scene.add(stage.getPrintVolume());
+    scene.add(stage.getPrinterRepresentation());
 
     // Ambient light
     var ambientLight = new THREE.AmbientLight( 0x404040, 0.9 ); // soft white light
