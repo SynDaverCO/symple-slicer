@@ -94,6 +94,22 @@
         {
             "default_value": 500
         },
+        "acceleration_ironing":
+        {
+            "default_value": 500
+        },
+        "acceleration_roofing":
+        {
+            "default_value": 500
+        },
+        "acceleration_support_bottom":
+        {
+            "default_value": 500
+        },
+        "acceleration_support_roof":
+        {
+            "default_value": 500
+        },
         "jerk_print":
         {
             "default_value": 12
@@ -152,6 +168,22 @@
             "default_value": 12
         },
         "jerk_skirt_brim":
+        {
+            "default_value": 12
+        },
+        "jerk_ironing":
+        {
+            "default_value": 12
+        },
+        "jerk_roofing":
+        {
+            "default_value": 12
+        },
+        "jerk_support_bottom":
+        {
+            "default_value": 12
+        },
+        "jerk_support_roof":
         {
             "default_value": 12
         },
