@@ -29,8 +29,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/jquery/jquery.js"></script>
         <script src="lib/jquery/jquery.easing.1.3.js"></script>
         <script src="lib/FileSaver/FileSaver.js"></script>
+        <script src="lib/toml-js/toml.js"></script>
         <script src="lib/geometry-lib/StlReader.js"></script>
         <script src="lib/geometry-lib/GeometrySerialize.js"></script>
+        <script src="lib/geometry-lib/FetchFile.js"></script>
         <script src="lib/three/ConvexHull.js"></script>
         <script src="lib/three/ConvexGeometry.js"></script>
 
@@ -59,6 +61,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="js/ui.js"></script>
 
         <script src="lib/cura-engine/cura-interface.js"></script>
+        <script src="lib/cura-engine/cura-configuration.js"></script>
 
         <!-- Shader for drawing a checkered floor -->
 
@@ -179,6 +182,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         <td><a target="_blank" href="https://github.com/eligrey/FileSaver.js/">Source</a></td>
                     </tr>
                     <tr>
+                        <td>toml.js</td>
+                        <td><a target="_blank" href="https://github.com/alexbeletsky/toml-js">MIT</a></td>
+                        <td><a target="_blank" href="https://github.com/alexbeletsky/toml-js">Source</a></td>
+                    </tr>
+                    <tr>
                         <td>JavaScript Clipper</td>
                         <td><a target="_blank" href="http://www.boost.org/LICENSE_1_0.txt">Boost</a></td>
                         <td><a target="_blank" href="https://sourceforge.net/projects/jsclipper/">Source</a></td>
@@ -221,7 +229,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             settingsInit("settings");
 
-            slicer = new SlicerInterface();
+            slicer = new SlicerInterface("src-cura/resources/");
 
             // Cura interface
             var log = document.getElementById('console');
@@ -237,6 +245,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             slicer.onFileReceived = function(data) {
                 readyToDownload(data);
             }
+            
+            // Read Toml file
+            fetchText("config/PolyLite_PLA_(Polymaker)_High_speed.toml", (data) => {
+                var config = toml.parse(data);
+                console.log(config);
+            });
         </script>
     </body>
 </html>
