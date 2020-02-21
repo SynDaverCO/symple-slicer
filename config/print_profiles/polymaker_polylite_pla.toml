@@ -1,0 +1,39 @@
+[general]
+name                               = "PolyLite PLA (Polymaker) Standard"
+
+[settings]
+backlash_fading_distance           = 1.0
+bottom_thickness                   = 1
+brim_line_count                    = 10
+cool_fan_full_layer                = 5
+cool_fan_speed_min                 = 60
+cool_min_layer_time                = 30
+cool_min_layer_time_fan_speed_max  = 30
+default_material_print_temperature = 205
+infill_before_walls                = false
+infill_sparse_density              = 20
+layer_0_z_overlap                  = 0.5
+layer_height                       = 0.25
+layer_height_0                     = 0.4
+line_width                         = 0.5
+material_bed_temperature           = 60
+material_final_print_temperature   = 215
+material_initial_print_temperature = 215
+material_part_removal_temperature  = 45
+material_print_temperature         = 220
+prime_tower_size                   = 7.75
+raft_airgap                        = 0.5
+retraction_amount                  = 1.75
+retraction_speed                   = 10
+skirt_brim_minimal_length          = 250
+speed_infill                       = 40
+speed_layer_0                      = 15
+speed_topbottom                    = 30
+speed_travel                       = 175
+speed_wall_0                       = 30
+speed_wall_x                       = 30
+support_infill_rate                = 30
+support_xy_distance                = 1.5
+top_thickness                      = 1
+wall_thickness                     = 1
+
