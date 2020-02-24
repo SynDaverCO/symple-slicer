@@ -21,6 +21,29 @@ var settings;
 function settingsInit(id) {
     var s = new SettingsUI(id);
 
+    /**
+     * Helper function for obtaining UI parameters from the slicer engine
+     */
+    s.fromSlicer = function(key) {
+        var desc = slicer.config.getSettingDescriptor(key);
+        var label = desc.label + (desc.unit ? " (" + desc.unit + "):" : ":");
+        switch(desc.type) {
+            case 'float':
+            case 'int':
+                s.value(key, label, 0);
+                break;
+            case 'bool':
+                s.toggle(key, label);
+                break;
+            case 'enum':
+                var o = s.choice(key,label);
+                for(const [value, label] of Object.entries(desc.options)) {
+                    o.option(value, label);
+                }
+                break;
+        }
+    }
+
     function onFileChange(file) {
         if(file) {
             $('#add_to_platform').attr('disabled', false);
@@ -48,15 +71,15 @@ function settingsInit(id) {
     s.buttonHelp("Loading new settings will<br>overwrite all modified values.");
 
     s.page(            "settings-machine", "Machine Settings");
+    
     s.category(                            "Hot End");
-    s.parameter(      "printerNozzleSize", "Nozzle Size (mm)",         0.4);
+    s.fromSlicer(                          "machine_nozzle_size");
+    
     s.category(                            "Build Volume");
-    s.choice(       "platformStyleSelect", "Shape")
-     .option(               "rectangular", "Rectangular")
-     .option(               "circular",    "Circular");
-    s.parameter(        "printerMaxWidth", "Maximum width (mm)",  300);
-    s.parameter(        "printerMaxDepth", "Maximum depth (mm)",  300);
-    s.parameter(       "printerMaxHeight", "Maximum height (mm)", 300);
+    s.fromSlicer(                          "machine_shape");
+    s.fromSlicer(                          "machine_width");
+    s.fromSlicer(                          "machine_depth");
+    s.fromSlicer(                          "machine_height");
     s.category(                            "Start/End Template");
     s.choice(             "editGcodeMenu", "Edit template")
      .option(                      "none", "...")
@@ -74,34 +97,34 @@ function settingsInit(id) {
     s.button(            doneEditingGcode, "Done");
                    
     s.page(              "settings-print", "Slice and Print");
+    
     s.category(                            "Print Strength");
-    s.choice(                  "infill",   "Infill Pattern:")
-     .option(                      "grid", "Grid")
-     .option(                     "lines", "Lines")
-     .option(                    "gyroid", "Gyroid");
-    s.parameter(          "infillDensity", "Infill Density (%):",           30);
-    s.parameter(           "wallLineCount","Wall Line Count:",           2);
+    s.fromSlicer(                          "infill_pattern");
+    s.fromSlicer(                          "infill_sparse_density");
+    s.fromSlicer(                          "wall_line_count");
+    
     s.category(                            "Scaffolding");
-    s.choice(                  "supports", "Support Material:")
-     .option(                      "none", "None")
-     .option(                "everywhere", "Everywhere")
-     .option(      "touching-build-plate", "Touching Build Plate");
-    s.parameter(          "infillDensity", "Support Angle:",           30);
-    s.choice(                  "adhesion", "Bed Adhesion:")
-     .option(                     "skirt", "Skirt")
-     .option(                      "brim", "Brim")
-     .option(                      "raft", "Raft")
-     .option(                      "none", "None");
+    s.fromSlicer(                          "support_enable");
+    s.fromSlicer(                          "support_type");
+    s.fromSlicer(                          "support_pattern");
+    s.fromSlicer(                          "support_infill_rate");
+    s.fromSlicer(                          "support_angle");
+    s.fromSlicer(                          "adhesion_type");
+
     s.category(                            "Temperature and Speed");
-    s.parameter(       "printTemperature", "Printing temperature (C):",     200);
-    s.parameter(         "bedTemperature", "Bed temperature (C):",     200);
-    s.parameter(             "printSpeed", "Print speed (mm/s):",           50);
-    s.parameter(            "layerHeight", "Layer Height (mm):",           0.25);
+    s.fromSlicer(                          "default_material_print_temperature");
+    s.fromSlicer(                          "material_bed_temperature");
+    s.fromSlicer(                          "speed_print");
+    s.fromSlicer(                          "layer_height");
+    
     s.category(                            "Filament");
-    s.choice(          "filamentDiameter", "Filament Diameter (mm):")
-     .option(                      "1.75", "1.75")
-     .option(                      "3.00", "3.00");
-    s.parameter(           "filamentFlow", "Flow (%):",                     100);
+    s.fromSlicer(                          "material_diameter");
+    s.fromSlicer(                          "material_flow");
+    
+    s.category(                            "Special Modes");
+    s.fromSlicer(                          "magic_spiralize");
+    s.fromSlicer(                          "magic_fuzzy_skin_enabled");
+
     s.category();
     s.separator();
     s.button(              onSliceClicked, "Slice");
@@ -130,9 +153,9 @@ function onEditGcodeSelect() {
 }
 
 function onLoadPresetClicked() {
-    slicer.loadDefaults();
-    slicer.loadProfile("machine", $("#machinePresetSelect").val() + ".toml");
-    slicer.loadProfile("print",   $("#materialPresetSelect").val() + ".toml");
+    slicer.config.loadDefaults();
+    slicer.config.loadProfile("machine", $("#machinePresetSelect").val() + ".toml");
+    slicer.config.loadProfile("print",   $("#materialPresetSelect").val() + ".toml");
 }
 
 function doneEditingGcode() {

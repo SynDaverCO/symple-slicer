@@ -63,13 +63,6 @@
     font-size:          13px;
 }
 
-.settings-panel input:not([type=file]) {
-    padding:            1px 2px;
-    width:              40px;
-    font-size:          11px;
-    border:             1px solid;
-}
-
 .settings-panel select {
     font-size:          11px;
     border:             1px solid;
@@ -91,8 +84,20 @@
     vertical-align:     middle;
 }
 
+.settings-panel input[type=text],
+.settings-panel input[type=number] {
+    padding:            1px 2px;
+    width:              40px;
+    font-size:          11px;
+    border:             1px solid;
+}
+
 .settings-panel input[type=submit] {
     vertical-align:     middle;
+}
+
+.settings-panel input[type="checkbox"] {
+    margin:            0;
 }
 
 .settings-panel .drop-area {
