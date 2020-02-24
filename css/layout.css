@@ -30,6 +30,11 @@ hr {
     border-width:       0;
 }
 
+.settings-panel summary {
+    margin-top: 5px;
+    margin-top: 3px;
+}
+
 #about {
     padding:            2vw;
     padding-top:        0;

@@ -46,8 +46,12 @@
     text-align:         center;
 }
 
-.settings-panel > div {
+.settings-panel .parameter {
     margin:             4px;
+}
+
+.settings-panel summary > h1 {
+    display:            inline;
 }
 
 .settings-panel label {
