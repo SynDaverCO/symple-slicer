@@ -25,21 +25,28 @@ function settingsInit(id) {
      * Helper function for obtaining UI parameters from the slicer engine
      */
     s.fromSlicer = function(key) {
-        var desc = slicer.config.getSettingDescriptor(key);
-        var label = desc.label;
-        switch(desc.type) {
+        var sd = slicer.config.getSettingDescriptor(key);
+        var label = sd.label;
+        var el;
+        switch(sd.type) {
             case 'float':
             case 'int':
-                s.number(key, label, desc.unit ? {units: desc.unit} : null);
+                el = s.number(key, label, sd.unit ? {units: sd.unit} : null);
+                sd.onValueChanged = (key, val) => {el.value = val;}
+                el.addEventListener('change', (event) => slicer.config.set(key, parseFloat(event.target.value)));
                 break;
             case 'bool':
-                s.toggle(key, label);
+                el = s.toggle(key, label);
+                sd.onValueChanged = (key, val) => {el.checked = val;}
+                el.addEventListener('change', (event) => slicer.config.set(key,el.checked));
                 break;
             case 'enum':
                 var o = s.choice(key,label);
-                for(const [value, label] of Object.entries(desc.options)) {
+                for(const [value, label] of Object.entries(sd.options)) {
                     o.option(value, label);
                 }
+                sd.onValueChanged = (key, val) => {o.element.value = val;}
+                o.element.addEventListener('change', (event) => slicer.config.set(key, event.target.value));
                 break;
         }
     }
@@ -143,6 +150,8 @@ function settingsInit(id) {
     document.getElementById("editGcodeMenu").onchange        = onEditGcodeSelect;
 
     onFileChange(); // Disable buttons
+
+    slicer.config.loadDefaults(true);
 }
 
 function onEditGcodeSelect() {
