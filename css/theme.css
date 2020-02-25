@@ -31,6 +31,12 @@ summary:focus {
     box-shadow:         5px 5px 10px #222222;
 }
 
+hr {
+    background-color:   #002e62;
+    height:             1px;
+    border:             none;
+}
+
 #about a:link, #about a:visited {
     color:              #96172e;
 }
