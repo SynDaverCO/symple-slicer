@@ -64,6 +64,7 @@
 }
 
 .settings-panel select {
+    width:              calc(4px + 11em);
     font-size:          11px;
     border:             1px solid;
     cursor:             pointer;
@@ -86,10 +87,30 @@
 
 .settings-panel input[type=text],
 .settings-panel input[type=number] {
-    padding:            1px 2px;
-    width:              40px;
+    padding:            1px 3em 1px 2px; /* Allow 3em for units */
+    width:              8em;
     font-size:          11px;
     border:             1px solid;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance:   none;
+  margin:               0;
+}
+
+input[type=number] {
+  -moz-appearance:textfield;
+}
+
+.has_units {
+    position:           relative;
+}
+
+.has_units span {
+    position:           absolute;
+    right:              3px;
+    font-size:          11px;
 }
 
 .settings-panel input[type=submit] {
@@ -97,7 +118,7 @@
 }
 
 .settings-panel input[type="checkbox"] {
-    margin:            0;
+    margin:             0;
 }
 
 .settings-panel .drop-area {

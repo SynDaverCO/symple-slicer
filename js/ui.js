@@ -26,11 +26,11 @@ function settingsInit(id) {
      */
     s.fromSlicer = function(key) {
         var desc = slicer.config.getSettingDescriptor(key);
-        var label = desc.label + (desc.unit ? " (" + desc.unit + "):" : ":");
+        var label = desc.label;
         switch(desc.type) {
             case 'float':
             case 'int':
-                s.value(key, label, 0);
+                s.number(key, label, desc.unit ? {units: desc.unit} : null);
                 break;
             case 'bool':
                 s.toggle(key, label);
