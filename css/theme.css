@@ -50,3 +50,7 @@ summary:focus {
     background:         black;
     color:              #ffdd77;
 }
+
+input, select {
+    background:         transparent;
+}
