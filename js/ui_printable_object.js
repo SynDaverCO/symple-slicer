@@ -36,7 +36,7 @@ function PrintableObject(geometry) {
     // Initialze things
     this.geometry = geometry;
     this.geometry.mergeVertices();
-    this.geometry.computeBoundingBox();
+    this.geometry.computeBoundingSphere();
     this.geometry.computeFaceNormals();
     this.mesh = new THREE.Mesh(this.geometry, material);
     this.mesh.hull = new THREE.ConvexGeometry(this.geometry.vertices);
@@ -90,10 +90,6 @@ function PrintableObject(geometry) {
             mine.object = getSceneObjectFromSlices(slices);
         }
         return mine.object;
-    }
-
-    this.getBoundingBox = function () {
-        return geometry.boundingBox;
     }
 
     this.sliceObject = function() {

@@ -34,7 +34,7 @@ function Stage() {
     var printerRepresentation = new THREE.Object3D();
     var bedRelative = new THREE.Object3D();
     var selectedGroup = new SelectionGroup();
-    var dragging;
+    var dragging, packer;
 
     this.onObjectTransformed = function() {
         dropObjectToFloor(selectedGroup);
@@ -121,26 +121,99 @@ function Stage() {
     }
 
     // Axis
-    var axesHelper = new THREE.AxesHelper( 25 );
-    var a = 225;
-    //axesHelper.position.x = this.printer.radius * 1.2 * Math.cos(a * Math.PI / 180);
-    //axesHelper.position.y = this.printer.radius * 1.2 * Math.sin(a * Math.PI / 180);
-    //axesHelper.position.z = 0;
-    bedRelative.add( axesHelper );
+    bedRelative.add( new THREE.AxesHelper( 25 ) );
 
     /********************** PRIVATE METHODS **********************/
 
-    function arrangeObjectsOnPlatform() {
-        for( var i = 0; i < printableObjects.length; i++) {
-            var object = printableObjects[i];
-            var bounds = object.getBoundingBox();
+    /**
+     * Returns the bounding sphere of an object in bed coordinates
+     */
+    function getObjectBoundingSphere(object) {
+        var sphere = object.geometry.boundingSphere.clone();
+        localToBed(object, sphere.center);
+        return sphere;
+    }
 
-            object.object.position.set(
-                -(bounds.min.x + bounds.max.x)/2,
-                -(bounds.min.y + bounds.max.y)/2,
-                -bounds.min.z
-            );
+    /**
+     * Positions an object in the center of the bed. If fudge
+     * is non-zero, it adds a random element to the position
+     * in order to aid with the packing algorithm
+     */
+    function centerObjectOnPlatform(object, fudge) {
+        var sphere = object.geometry.boundingSphere;
+        var vector = new THREE.Vector3();
+        var delta = localToBed(object, vector.copy(sphere.center));
+        if(!mine.printer.origin_at_center) {
+            delta.x -= mine.printer.x_width/2;
+            delta.y -= mine.printer.y_depth/2;
         }
+        object.position.x -= delta.x;
+        object.position.y -= delta.y;
+        if(fudge) {
+            object.position.x += (Math.random() - 0.5) * fudge;
+            object.position.y += (Math.random() - 0.5) * fudge;
+        }
+    }
+
+    function arrangeObjectsOnPlatform() {
+        if(packer) packingFinished();
+        
+        selectNone();
+
+        var circles = [];
+        var objects = printableObjects.map(x => x.object);
+
+        // Create an array of circles for the packing algorithm
+
+        for(const [index, object] of objects.entries()) {
+            var sphere = getObjectBoundingSphere(object);
+            var circle = {
+                id:       'c' + index,
+                radius:   sphere.radius,
+                position: {x: sphere.center.x, y: sphere.center.y},
+            };
+            if(mine.printer.origin_at_center) {
+                // The circle packing algorithm works only with positive coordinates,
+                // so shift the coordinate system.
+                circle.position.x += mine.printer.x_width/2;
+                circle.position.y += mine.printer.y_depth/2;
+            }
+            circles.push(circle);
+        }
+
+        // Function for repositioning the objects on the bed
+
+        function packingUpdate(updatedCircles) {
+            for (let id in updatedCircles) {
+                const index = parseInt(id.substring(1));
+                const object = objects[index];
+                const circle = updatedCircles[id];
+                object.position.x += circle.delta.x;
+                object.position.y += circle.delta.y;
+            }
+            mine.render();
+        };
+        
+        function packingFinished() {
+            packer.destroy();
+            packer = null;
+        };
+
+        // Run the packing algorithm
+
+        packer = new CirclePacker({
+            target:               {x:     mine.printer.x_width/2, y:      mine.printer.y_depth/2},
+            bounds:               {width: mine.printer.x_width,   height: mine.printer.y_depth  },
+            circles,
+            continuousMode:       true,
+            collisionPasses:       5,
+            centeringPasses:       3,
+            onMove:               packingUpdate,
+            onMoveEnd:            packingFinished
+        });
+        packer.update();
+
+
     }
 
     function isPrintableObject(obj) {
@@ -160,6 +233,7 @@ function Stage() {
      */
     function localToBed(child, vector) {
         bedRelative.worldToLocal(child.localToWorld(vector));
+        return vector;
     }
 
     /**
@@ -354,8 +428,9 @@ function Stage() {
         var sceneObj = printable.getTHREESceneObject();
         sceneObj.printableObjectIdx = printableObjects.length - 1;
         bedRelative.add(sceneObj);
-        //arrangeObjectsOnPlatform();
         dropObjectToFloor(sceneObj);
+        centerObjectOnPlatform(sceneObj, 1);
+        arrangeObjectsOnPlatform();
         this.render();
     }
 
