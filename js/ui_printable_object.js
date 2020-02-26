@@ -17,93 +17,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-function PrintableObject(geometry) {
-
-    var mine = this;
-
-    var RenderStyles = Object.freeze({
-        "volume" : 1,
-        "slices" : 2
-    });
-
-    /********************** OBJECT INITIALIZATION **********************/
-
-    var renderStyle = RenderStyles.volume;
-    var paths;
-
-    var material = new THREE.MeshLambertMaterial( { color: 0xfafad2 } );
-
-    // Initialze things
-    this.geometry = geometry;
-    this.geometry.mergeVertices();
-    this.geometry.computeBoundingSphere();
-    this.geometry.computeFaceNormals();
-    this.mesh = new THREE.Mesh(this.geometry, material);
-    this.mesh.hull = new THREE.ConvexGeometry(this.geometry.vertices);
-    this.mesh.hull.computeFaceNormals();
-    this.mesh.castShadow = true;
-
-    /********************** PRIVATE METHODS **********************/
-
-    function renderPathsToGeometry(geometry, paths, z, hue) {
-        SlicerOps.forEachSegment(paths, function(start,end) {
-            geometry.vertices.push(
-                new THREE.Vector3(start.x, start.y, z),
-                new THREE.Vector3(end.x,   end.y,   z)
-            );
-
-            // Compute the edge color
-            var a = Math.atan2(start.y, start.x);
-            a = Math.sin(a) /4 + 0.5;
-
-            var color = new THREE.Color(0xFFFFFF);
-            color.setHSL(hue,1,a);
-            geometry.colors.push(color);
-            geometry.colors.push(color);
-        });
-    }
-
-    function getSceneObjectFromSlices(slices) {
-        var geometry = new THREE.Geometry();
-
-        for( i = 0; i < slices.length; i++) {
-            //renderPathsToGeometry(geometry, slices[i].outer_shell, slices[i].z, 0.5);
-            for( j = 0; j < slices[i].inner_shell.length; j++) {
-                renderPathsToGeometry(geometry, slices[i].inner_shell[j], slices[i].z, 0.3);
-            }
-            //renderPathsToGeometry(geometry, slices[i].infill, slices[i].z, 0.9);
-        }
-
-        var material = new THREE.LineBasicMaterial( {
-            opacity:1.0,
-            linewidth: 1.0,
-            vertexColors: THREE.VertexColors} );
-        return new THREE.LineSegments(geometry, material);      
-    }
-
-    /********************** PUBLIC METHODS **********************/
-
-    this.getTHREESceneObject = function() {
-        if(renderStyle === RenderStyles.volume) {
-            mine.object = mine.mesh;
-        } else {
-            mine.object = getSceneObjectFromSlices(slices);
-        }
-        return mine.object;
-    }
-
-    this.sliceObject = function() {
-        var slicer = new MeshSlicer(geometry);
-        //slicer.setGeometry(geometry);
-        slices = slicer.getSlices();
-        renderStyle = RenderStyles.slices;
-    }
-
-    this.getGeometry = function() {
-        return mine.mesh.geometry;
-    }
-
-    this.getMatrixWorld = function() {
-        return mine.mesh.matrixWorld;
+class PrintableObject extends THREE.Mesh {
+    static material = new THREE.MeshLambertMaterial( { color: 0xfafad2 } );
+    
+    constructor(geometry) {
+        geometry.mergeVertices();
+        geometry.computeBoundingSphere();
+        geometry.computeFaceNormals();
+        super(geometry, PrintableObject.material);
+        this.hull = new THREE.ConvexGeometry(this.geometry.vertices);
+        this.hull.computeFaceNormals();
+        this.castShadow = true;
     }
 }

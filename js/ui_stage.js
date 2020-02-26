@@ -30,7 +30,7 @@ function Stage() {
         z_height:          300
     };
 
-    var printableObjects = [];
+    var objects = [];
     var printerRepresentation = new THREE.Object3D();
     var bedRelative = new THREE.Object3D();
     var selectedGroup = new SelectionGroup();
@@ -161,7 +161,6 @@ function Stage() {
         selectNone();
 
         var circles = [];
-        var objects = printableObjects.map(x => x.object);
 
         // Create an array of circles for the packing algorithm
 
@@ -212,19 +211,6 @@ function Stage() {
             onMoveEnd:            packingFinished
         });
         packer.update();
-
-
-    }
-
-    function isPrintableObject(obj) {
-        return obj.hasOwnProperty("printableObjectIdx")
-    }
-
-    /**
-     * Returns the PrintableObject associated with a 3D object
-     */
-    function findPrintableObject(obj) {
-        return isPrintableObject(obj) ? printableObjects[obj.printableObjectIdx] : null;
     }
 
     /**
@@ -272,7 +258,7 @@ function Stage() {
         var vector = new THREE.Vector3();
         obj.traverse(function(child) {
             if (child instanceof THREE.Mesh) {
-                lowestPoint = findLowestPoint(vector, child, child.hull || child.geometry, lowestPoint);
+                lowestPoint = findLowestPoint(vector, child, child.hull, lowestPoint);
             }
         });
         obj.position.z -= lowestPoint.z;
@@ -334,7 +320,7 @@ function Stage() {
     }
 
     function onLayFlatClicked() {
-        selectedGroup.children.forEach((obj) => {layObjectFlat(obj);});
+        selectedGroup.children.forEach(layObjectFlat);
     }
 
     function addObjectToSelection(obj) {
@@ -391,8 +377,8 @@ function Stage() {
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
             if (obj instanceof THREE.TransformControlsPlane)  continue; // Skip to next intersection
+            if (obj instanceof PrintableObject)               this.onObjectClicked(obj);
             if (obj == floorPlane)                            this.onFloorClicked();
-            if (isPrintableObject(obj))                       this.onObjectClicked(obj);
             break; // Stop on first intersection
         }
     }
@@ -410,9 +396,9 @@ function Stage() {
      * all the transformations already baked in.
      */
     this.getAllGeometry = function() {
-        return printableObjects.map(obj => {
-            var geometry = obj.getGeometry().clone();
-            var transform = obj.getMatrixWorld().clone();
+        return objects.map(obj => {
+            var geometry = obj.geometry.clone();
+            var transform = obj.matrixWorld.clone();
             var worldToPrinterRepresentation = new THREE.Matrix4();
             transform.premultiply(worldToPrinterRepresentation.getInverse(bedRelative.matrixWorld));
             geometry.applyMatrix(transform);
@@ -423,23 +409,19 @@ function Stage() {
     }
 
     this.addGeometry = function(geometry) {
-        var printable = new PrintableObject(geometry);
-        printableObjects.push(printable);
-        var sceneObj = printable.getTHREESceneObject();
-        sceneObj.printableObjectIdx = printableObjects.length - 1;
-        bedRelative.add(sceneObj);
-        dropObjectToFloor(sceneObj);
-        centerObjectOnPlatform(sceneObj, 1);
+        var obj = new PrintableObject(geometry);
+        objects.push(obj);
+        bedRelative.add(obj);
+        dropObjectToFloor(obj);
+        centerObjectOnPlatform(obj, 1);
         arrangeObjectsOnPlatform();
         this.render();
     }
 
     this.removeObjects = function() {
         selectNone();
-        printableObjects.forEach(printable => {
-            bedRelative.remove(printable.getTHREESceneObject());
-        });
-        printableObjects = [];
+        objects.forEach(obj => {bedRelative.remove(obj);});
+        objects = [];
         this.render();
     }
 
