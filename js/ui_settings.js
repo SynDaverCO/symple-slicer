@@ -149,10 +149,6 @@ function settingsInit(id) {
 
     settings = s;
 
-    // Set the callbacks
-
-    document.getElementById("editGcodeMenu").onchange        = onEditGcodeSelect;
-
     onFileChange(); // Disable buttons
 
     slicer.config.loadDefaults(true);
