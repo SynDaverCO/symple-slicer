@@ -122,26 +122,26 @@ function RenderEngine(canvas, stage) {
         stage.onViewChanged();
     }
 
-    function onDocumentMouseDown( event ) {
+    function onMouseDown( event ) {
         raycaster.setFromCamera( mouse, camera );
         stage.onMouseDown(raycaster, scene);
     }
 
-    function onDocumentMouseUp( event ) {
+    function onMouseUp( event ) {
         raycaster.setFromCamera( mouse, camera );
         stage.onMouseUp(raycaster, scene);
     }
 
-    function onDocumentMouseMove( event ) {
+    function onMouseMove( event ) {
         event.preventDefault();
 
         mouse.x =   ( event.clientX / window.innerWidth )  * 2 - 1;
         mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     }
 
-    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-    document.addEventListener( 'mouseup', onDocumentMouseUp, false );
-    document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    canvas.addEventListener( 'mousedown', onMouseDown, false );
+    canvas.addEventListener( 'mouseup', onMouseUp, false );
+    canvas.addEventListener( 'mousemove', onMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
 
     // Start animation and/or render initial frame

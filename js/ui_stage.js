@@ -17,36 +17,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-function Stage() {
-    var mine = this;
+class Stage {
+    constructor() {
+        this.printer = {
+            circular:          false,
+            origin_at_center:  false,
+            x_width:           300,
+            y_depth:           300,
+            z_height:          300
+        };
 
-    // Private:
-
-    this.printer = {
-        circular:          false,
-        origin_at_center:  false,
-        x_width:           300,
-        y_depth:           300,
-        z_height:          300
-    };
-
-    var objects = [];
-    var printerRepresentation = new PrinterRepresentation(this.printer);
-    var bedRelative = printerRepresentation.bedRelative;
-    var selectedGroup = new SelectionGroup();
-    var dragging, packer;
-
-    this.onObjectTransformed = function() {
-        dropObjectToFloor(selectedGroup);
-        dragging = true;
+        this.objects = [];
+        this.printerRepresentation = new PrinterRepresentation(this.printer);
+        this.bedRelative = this.printerRepresentation.bedRelative;
+        this.selectedGroup = new SelectionGroup();
+        this.dragging = false;
+        this.packer = null;
     }
 
     /**
      * Returns the bounding sphere of an object in bed coordinates
      */
-    function getObjectBoundingSphere(object) {
+    getObjectBoundingSphere(object) {
         var sphere = object.geometry.boundingSphere.clone();
-        localToBed(object, sphere.center);
+        this.localToBed(object, sphere.center);
         return sphere;
     }
 
@@ -55,13 +49,13 @@ function Stage() {
      * is non-zero, it adds a random element to the position
      * in order to aid with the packing algorithm
      */
-    function centerObjectOnPlatform(object, fudge) {
+    centerObjectOnPlatform(object, fudge) {
         var sphere = object.geometry.boundingSphere;
         var vector = new THREE.Vector3();
-        var delta = localToBed(object, vector.copy(sphere.center));
-        if(!mine.printer.origin_at_center) {
-            delta.x -= mine.printer.x_width/2;
-            delta.y -= mine.printer.y_depth/2;
+        var delta = this.localToBed(object, vector.copy(sphere.center));
+        if(!this.printer.origin_at_center) {
+            delta.x -= this.printer.x_width/2;
+            delta.y -= this.printer.y_depth/2;
         }
         object.position.x -= delta.x;
         object.position.y -= delta.y;
@@ -71,54 +65,60 @@ function Stage() {
         }
     }
 
-    function arrangeObjectsOnPlatform() {
-        if(packer) packingFinished();
-        
-        selectNone();
-
+    /**
+     * Arrange objects on the platform such that there is no overlap.
+     * Currently this uses the object's bounding sphere to determine
+     * a circular footprint of the the object on the print bed.
+     * However, this could be improved for tall and skinny objects
+     * by only computing the bounding circle in X and Y.
+     */
+    arrangeObjectsOnPlatform() {
         var circles = [];
+        var packingFinished = () => {
+            this.packer.destroy();
+            this.packer = null;
+        };
+        
+        if(this.packer) packingFinished();
+        
+        this.selectNone();
 
         // Create an array of circles for the packing algorithm
 
-        for(const [index, object] of objects.entries()) {
-            var sphere = getObjectBoundingSphere(object);
+        for(const [index, object] of this.objects.entries()) {
+            var sphere = this.getObjectBoundingSphere(object);
             var circle = {
                 id:       'c' + index,
                 radius:   sphere.radius,
                 position: {x: sphere.center.x, y: sphere.center.y},
             };
-            if(mine.printer.origin_at_center) {
+            if(this.printer.origin_at_center) {
                 // The circle packing algorithm works only with positive coordinates,
                 // so shift the coordinate system.
-                circle.position.x += mine.printer.x_width/2;
-                circle.position.y += mine.printer.y_depth/2;
+                circle.position.x += this.printer.x_width/2;
+                circle.position.y += this.printer.y_depth/2;
             }
             circles.push(circle);
         }
 
         // Function for repositioning the objects on the bed
 
-        function packingUpdate(updatedCircles) {
+        var packingUpdate = (updatedCircles) => {
             for (let id in updatedCircles) {
                 const index = parseInt(id.substring(1));
-                const object = objects[index];
+                const object = this.objects[index];
                 const circle = updatedCircles[id];
                 object.position.x += circle.delta.x;
                 object.position.y += circle.delta.y;
             }
-            mine.render();
-        };
-        
-        function packingFinished() {
-            packer.destroy();
-            packer = null;
+            this.render();
         };
 
         // Run the packing algorithm
 
-        packer = new CirclePacker({
-            target:               {x:     mine.printer.x_width/2, y:      mine.printer.y_depth/2},
-            bounds:               {width: mine.printer.x_width,   height: mine.printer.y_depth  },
+        this.packer = new CirclePacker({
+            target:               {x:     this.printer.x_width/2, y:      this.printer.y_depth/2},
+            bounds:               {width: this.printer.x_width,   height: this.printer.y_depth  },
             circles,
             continuousMode:       true,
             collisionPasses:       5,
@@ -126,15 +126,15 @@ function Stage() {
             onMove:               packingUpdate,
             onMoveEnd:            packingFinished
         });
-        packer.update();
+        this.packer.update();
     }
 
     /**
      * Converts a vector in object coordinates to print bed
      * coordinates
      */
-    function localToBed(child, vector) {
-        bedRelative.worldToLocal(child.localToWorld(vector));
+    localToBed(child, vector) {
+        this.bedRelative.worldToLocal(child.localToWorld(vector));
         return vector;
     }
 
@@ -147,13 +147,13 @@ function Stage() {
      *  geometry     - Geometry to tranverse
      *  lowestPoint - Pass result from previous call to continue search
      */
-    function findLowestPoint(vector, object, geometry, lowestPoint) {
-        geometry.vertices.forEach(function(v, i) {
-            localToBed(object, vector.copy(v));
+    findLowestPoint(vector, object, geometry, lowestPoint) {
+        geometry.vertices.forEach((v, i) => {
+            this.localToBed(object, vector.copy(v));
             if (!lowestPoint) {
                 lowestPoint = {object: object, vertex: v, index: i, z: vector.z};
             } else {
-                localToBed(object, vector.copy(v));
+                this.localToBed(object, vector.copy(v));
                 if(vector.z < lowestPoint.z) {
                     lowestPoint.object = object;
                     lowestPoint.vertex = v;
@@ -168,29 +168,31 @@ function Stage() {
     /**
      * Drops an object so it touches the print platform
      */
-    function dropObjectToFloor(obj) {
+    dropObjectToFloor(obj) {
         obj.updateMatrixWorld();
         var lowestPoint;
         var vector = new THREE.Vector3();
-        obj.traverse(function(child) {
+        obj.traverse((child) => {
             if (child instanceof THREE.Mesh) {
-                lowestPoint = findLowestPoint(vector, child, child.hull, lowestPoint);
+                lowestPoint = this.findLowestPoint(vector, child, child.hull, lowestPoint);
             }
         });
-        obj.position.z -= lowestPoint.z;
+        if(lowestPoint) {
+            obj.position.z -= lowestPoint.z;
+        }
     }
 
     /**
      * Lays an object flat on the print bed
      */
-    function layObjectFlat(obj) {
-        selectNone();
+    layObjectFlat(obj) {
+        this.selectNone();
 
         var vector = new THREE.Vector3();
         var quaternion = new THREE.Quaternion();
 
         // Step 1: Find the lowest point in the convex hull
-        var pivot = findLowestPoint(vector, obj, obj.hull);
+        var pivot = this.findLowestPoint(vector, obj, obj.hull);
 
         // Step 2: Obtain the world quaternion of the object
         obj.matrixWorld.decompose( vector, quaternion, vector );
@@ -214,7 +216,7 @@ function Stage() {
         });
 
         // Step 4: Find the normal which is closest to horizontal
-        candidates.sort(function(a, b){return a.angle-b.angle});
+        candidates.sort((a, b) => {return a.angle-b.angle});
 
         // Step 5: Transform the downVector into object coordinates
         downVector.applyQuaternion(quaternion.inverse());
@@ -231,55 +233,120 @@ function Stage() {
         obj.quaternion.multiply(quaternion);
 
         // Step 7: Bring the object down to the print plate
-        dropObjectToFloor(obj);
-        mine.render();
+        this.dropObjectToFloor(obj);
+        this.render();
     }
 
-    function onLayFlatClicked() {
-        selectedGroup.children.forEach(layObjectFlat);
+    addObjectToSelection(obj) {
+        this.bedRelative.add(this.selectedGroup);
+        this.selectedGroup.addToSelection(obj);
+        outlinePass.selectedObjects = [this.selectedGroup];
+        this.transformControl.attach(this.selectedGroup);
+        this.render();
     }
 
-    function addObjectToSelection(obj) {
-        bedRelative.add(selectedGroup);
-        selectedGroup.addToSelection(obj);
-        outlinePass.selectedObjects = [selectedGroup];
-        mine.transformControl.attach(selectedGroup);
-        mine.render();
-    }
-
-    function selectNone() {
-        selectedGroup.selectNone();
+    selectNone() {
+        this.selectedGroup.selectNone();
         outlinePass.selectedObjects = [];
-        mine.transformControl.detach();
-        mine.render();
+        this.transformControl.detach();
+        this.render();
+    }
+    
+    getPrinterRepresentation() {
+        return this.printerRepresentation;
     }
 
-    /********************** PUBLIC METHODS **********************/
+    /**
+     * This function returns a list of ready to slice geometries with
+     * all the transformations already baked in.
+     */
+    getAllGeometry() {
+        return this.objects.map(obj => {
+            var geometry = obj.geometry.clone();
+            var transform = obj.matrixWorld.clone();
+            var worldToPrinterRepresentation = new THREE.Matrix4();
+            transform.premultiply(worldToPrinterRepresentation.getInverse(this.bedRelative.matrixWorld));
+            geometry.applyMatrix(transform);
+            geometry.computeBoundingBox();
+            console.log(geometry.boundingBox);
+            return geometry;
+        });
+    }
 
-    this.onTranformToolChanged = function(tool) {
+    addGeometry(geometry) {
+        var obj = new PrintableObject(geometry);
+        this.objects.push(obj);
+        this.bedRelative.add(obj);
+        this.dropObjectToFloor(obj);
+        this.centerObjectOnPlatform(obj, 1);
+        this.arrangeObjectsOnPlatform();
+        this.render();
+    }
+
+    removeObjects() {
+        this.selectNone();
+        this.objects.forEach(obj => {this.bedRelative.remove(obj);});
+        this.objects = [];
+        this.render();
+    }
+
+    addEdges(edges) {
+        this.bedRelative.add(model);
+    }
+
+    /**
+     * Attaches a special handler for the TransformControl. Since the control
+     * does not have a "mirror" mode, we use a custom "mouseDown" handler to
+     * modify the behavior of the "translate" mode to act as if it were a
+     * "mirror".
+     */
+    setTransformControl(control) {
+        this.transformControl = control;
+        this.transformControl.space = "local";
+
+        this.transformControl.addEventListener( 'mouseDown', ( event ) => {
+            if(this.currentTool == "mirror") {
+                this.transformControl.dragging = false;
+                switch(this.transformControl.axis) {
+                    case 'X': this.selectedGroup.scale.x = this.selectedGroup.scale.x < 0 ? 1 : -1; break;
+                    case 'Y': this.selectedGroup.scale.y = this.selectedGroup.scale.y < 0 ? 1 : -1; break;
+                    case 'Z': this.selectedGroup.scale.z = this.selectedGroup.scale.z < 0 ? 1 : -1; break;
+                }
+            }
+        } );
+    }
+
+    // Event handlers
+
+    onTranformToolChanged(tool) {
         this.transformControl.enabled = false;
-        selectedGroup.recompute();
+        this.selectedGroup.recompute();
         this.currentTool = tool;
         switch(tool) {
             case "move":    this.transformControl.setMode("translate"); break;
             case "rotate":  this.transformControl.setMode("rotate"); break;
             case "scale":   this.transformControl.setMode("scale"); break;
             case "mirror":  this.transformControl.setMode("translate"); break;
-            case "layflat": onLayFlatClicked(); break;
+            case "layflat": this.onLayFlatClicked(); break;
         }
         this.transformControl.enabled = true;
     }
 
-    this.onObjectClicked = function(obj) {
-        addObjectToSelection(obj);
+    onObjectTransformed() {
+        this.dropObjectToFloor(this.selectedGroup);
+        this.dragging = true;
     }
 
-    this.onFloorClicked = function(obj) {
-        selectNone();
+    onObjectClicked(obj) {
+        this.addObjectToSelection(obj);
     }
 
-    this.onMouseDown = function( raycaster, scene ) {
-        dragging = false;
+    onFloorClicked(obj) {
+        this.selectNone();
+    }
+
+    onMouseDown( raycaster, scene ) {
+        this.dragging = false;
     }
 
     /**
@@ -287,8 +354,8 @@ function Stage() {
      * It evaluates the intersections from the raycaster and
      * determines what to do.
      */
-    this.onMouseUp = function( raycaster, scene ) {
-        if(dragging) return;
+    onMouseUp( raycaster, scene ) {
+        if(this.dragging) return;
         var intersects = raycaster.intersectObject( scene, true );
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
@@ -301,77 +368,17 @@ function Stage() {
                 return;
             }
             // Stop on first intersection
-            break;
+            return;
         }
         // If nothing selected
         this.onFloorClicked();
     }
 
-    this.onViewChanged = function() {
-        dragging = true;
+    onViewChanged() {
+        this.dragging = true;
     }
 
-    this.getPrinterRepresentation = function() {
-        return printerRepresentation;
-    }
-
-    /**
-     * This function returns a list of ready to slice geometries with
-     * all the transformations already baked in.
-     */
-    this.getAllGeometry = function() {
-        return objects.map(obj => {
-            var geometry = obj.geometry.clone();
-            var transform = obj.matrixWorld.clone();
-            var worldToPrinterRepresentation = new THREE.Matrix4();
-            transform.premultiply(worldToPrinterRepresentation.getInverse(bedRelative.matrixWorld));
-            geometry.applyMatrix(transform);
-            geometry.computeBoundingBox();
-            console.log(geometry.boundingBox);
-            return geometry;
-        });
-    }
-
-    this.addGeometry = function(geometry) {
-        var obj = new PrintableObject(geometry);
-        objects.push(obj);
-        bedRelative.add(obj);
-        dropObjectToFloor(obj);
-        centerObjectOnPlatform(obj, 1);
-        arrangeObjectsOnPlatform();
-        this.render();
-    }
-
-    this.removeObjects = function() {
-        selectNone();
-        objects.forEach(obj => {bedRelative.remove(obj);});
-        objects = [];
-        this.render();
-    }
-
-    this.addEdges = function(edges) {
-        bedRelative.add(model);
-    }
-
-    /**
-     * Attaches a special handler for the TransformControl. Since the control
-     * does not have a "mirror" mode, we use a custom "mouseDown" handler to
-     * modify the behavior of the "translate" mode to act as if it were a
-     * "mirror".
-     */
-    this.setTransformControl = function(control) {
-        this.transformControl = control;
-        this.transformControl.space = "local";
-
-        this.transformControl.addEventListener( 'mouseDown', function ( event ) {
-            if(mine.currentTool == "mirror") {
-                mine.transformControl.dragging = false;
-                switch(mine.transformControl.axis) {
-                    case 'X': selectedGroup.scale.x = selectedGroup.scale.x < 0 ? 1 : -1; break;
-                    case 'Y': selectedGroup.scale.y = selectedGroup.scale.y < 0 ? 1 : -1; break;
-                    case 'Z': selectedGroup.scale.z = selectedGroup.scale.z < 0 ? 1 : -1; break;
-                }
-            }
-        } );
+    onLayFlatClicked() {
+        this.selectedGroup.children.forEach(obj => this.layObjectFlat(obj));
     }
 }
