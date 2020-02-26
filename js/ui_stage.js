@@ -1,7 +1,7 @@
 /**
  * WebSlicer
- * Copyright (C) 2016  Marcio Teixeira
  * Copyright (C) 2020  SynDaver Labs, Inc.
+ * Copyright (C) 2016  Marcio Teixeira
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,8 +31,8 @@ function Stage() {
     };
 
     var objects = [];
-    var printerRepresentation = new THREE.Object3D();
-    var bedRelative = new THREE.Object3D();
+    var printerRepresentation = new PrinterRepresentation(this.printer);
+    var bedRelative = printerRepresentation.bedRelative;
     var selectedGroup = new SelectionGroup();
     var dragging, packer;
 
@@ -40,90 +40,6 @@ function Stage() {
         dropObjectToFloor(selectedGroup);
         dragging = true;
     }
-
-    /********************** OBJECT INITIALIZATION **********************/
-
-    // Set to printer coordinates (Z goes up)
-    printerRepresentation.rotateX(-90 * Math.PI / 180);
-    printerRepresentation.rotateZ(180 * Math.PI / 180);
-
-    // Checkerboard material
-    var uniforms = {
-        checkSize: { type: "f", value: 15 },
-        color1: { type: "v4", value: new THREE.Vector4(0.55, 0.55, 0.55, 1) },
-        color2: { type: "v4", value: new THREE.Vector4(0.50, 0.50, 0.50, 1) },
-    };
-
-    var checkerboardMaterial = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        vertexShader:   document.getElementById('checkersVertexShader'  ).innerHTML,
-        fragmentShader: document.getElementById('checkersFragmentShader').innerHTML,
-        side: THREE.DoubleSide,
-    });
-
-    // Print bed representation
-    var geometry;
-    if (this.printer.circular) {
-        var segments = 64;
-         var bed_radius = min(this.printer.x_width, this.printer.y_depth);
-        geometry = new THREE.CircleBufferGeometry( bed_radius, segments );
-    } else {
-        geometry = new THREE.PlaneBufferGeometry( this.printer.x_width, this.printer.y_depth, 1 );
-    }
-
-    // Shadow receiver
-    var mesh = new THREE.Mesh( geometry, new THREE.ShadowMaterial({opacity: 0.25}) );
-    mesh.position.z = 0.1;
-    mesh.receiveShadow = true;
-    printerRepresentation.add(mesh);
-    var floorPlane = mesh;
-
-    // Checkered floor
-    var mesh = new THREE.Mesh( geometry, checkerboardMaterial );
-    mesh.position.z = 0.05;
-    printerRepresentation.add(mesh);
-
-    // Walls
-
-    var box = new THREE.BoxGeometry( this.printer.x_width, this.printer.y_depth, this.printer.z_height );
-    geometry = new THREE.EdgesGeometry( box ); // or WireframeGeometry( geometry )
-    material = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
-    var wireframe = new THREE.LineSegments( geometry, material );
-    wireframe.position.z = this.printer.z_height / 2;
-    printerRepresentation.add(wireframe);
-
-    // Light for casting shadows
-
-    var light = new THREE.DirectionalLight( 0xffffff, 0 );
-    light.position.set( 0, 0, this.printer.z_height );
-    light.castShadow = true;
-    printerRepresentation.add(light);
-
-    light.shadow.camera.left   = -this.printer.x_width / 2;
-    light.shadow.camera.right  =  this.printer.x_width / 2;
-    light.shadow.camera.top    = -this.printer.y_depth / 2;
-    light.shadow.camera.bottom =  this.printer.y_depth / 2;
-
-    //Set up shadow properties for the light
-    light.shadow.mapSize.width  = 512;
-    light.shadow.mapSize.height = 512;
-    light.shadow.camera.near    = 0;
-    light.shadow.camera.far     = this.printer.z_height + 1;
-
-    this.shadowLight = light;
-
-    // Create a bed relative coordinate system.
-
-    printerRepresentation.add(bedRelative);
-    if (!this.printer.origin_at_center) {
-        bedRelative.position.x -= this.printer.x_width / 2;
-        bedRelative.position.y -= this.printer.y_depth / 2;
-    }
-
-    // Axis
-    bedRelative.add( new THREE.AxesHelper( 25 ) );
-
-    /********************** PRIVATE METHODS **********************/
 
     /**
      * Returns the bounding sphere of an object in bed coordinates
@@ -376,11 +292,19 @@ function Stage() {
         var intersects = raycaster.intersectObject( scene, true );
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
-            if (obj instanceof THREE.TransformControlsPlane)  continue; // Skip to next intersection
-            if (obj instanceof PrintableObject)               this.onObjectClicked(obj);
-            if (obj == floorPlane)                            this.onFloorClicked();
-            break; // Stop on first intersection
+            if (obj instanceof THREE.TransformControlsPlane) {
+                // Disregard clicks on the control object
+                continue;
+            }
+            if (obj instanceof PrintableObject) {
+                this.onObjectClicked(obj);
+                return;
+            }
+            // Stop on first intersection
+            break;
         }
+        // If nothing selected
+        this.onFloorClicked();
     }
 
     this.onViewChanged = function() {

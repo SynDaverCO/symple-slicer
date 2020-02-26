@@ -55,6 +55,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <script src="lib/ui/settings/settings.js"></script>
         <script src="lib/ui/toolbar/toolbar.js"></script>
+        <script src="js/ui_printer_representation.js"></script>
         <script src="js/ui_printable_object.js"></script>
         <script src="js/ui_selection_group.js"></script>
         <script src="js/ui_render.js"></script>
@@ -63,39 +64,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <script src="lib/cura-engine/cura-interface.js"></script>
         <script src="lib/cura-engine/cura-configuration.js"></script>
-
-        <!-- Shader for drawing a checkered floor -->
-
-        <script id="checkersVertexShader" type="x-shader/x-vertex">
-            varying vec2 vUv;
- 
-            void main() {
-                vUv = uv;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        </script>
-
-        <script id="checkersFragmentShader" type="x-shader/x-fragment">
-            varying vec2  vUv;
-            uniform float checkSize;
-            uniform vec4  color1;
-            uniform vec4  color2;
-
-            vec4 checker(in float u, in float v) {
-                float fmodResult = mod(floor(checkSize * u) + floor(checkSize * v), 2.0);
-
-                if (fmodResult < 1.0) {
-                    return color1;
-                } else {
-                    return color2;
-                }
-            }
-
-            void main() {
-                vec2 position = -1.0 + 2.0 * vUv;
-                gl_FragColor = checker(vUv.x, vUv.y);
-            }
-        </script>
 
         <!-- Trick for colorizing images: https://css-tricks.com/color-filters-can-turn-your-gray-skies-blue/
              The target color is rgb(0.00 0.18 0.38) but for some reason we need to use (0.00, 0.03, 0.12) in
