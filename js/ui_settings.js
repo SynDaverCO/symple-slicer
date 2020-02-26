@@ -35,6 +35,11 @@ function settingsInit(id) {
                 sd.onValueChanged = (key, val) => {el.value = val;}
                 el.addEventListener('change', (event) => slicer.config.set(key, parseFloat(event.target.value)));
                 break;
+            case 'str':
+                el = s.textarea(key);
+                sd.onValueChanged = (key, val) => {el.value = val;}
+                el.addEventListener('change', (event) => slicer.config.set(key, event.target.value));
+                break;
             case 'bool':
                 el = s.toggle(key, label);
                 sd.onValueChanged = (key, val) => {el.checked = val;}
@@ -88,19 +93,18 @@ function settingsInit(id) {
     s.fromSlicer(                          "machine_depth");
     s.fromSlicer(                          "machine_height");
     s.category(                            "Start/End Template");
-    s.choice(             "editGcodeMenu", "Edit template")
-     .option(                      "none", "...")
-     .option(               "start-gcode", "start")
-     .option(                 "end-gcode", "end");
+    s.buttonHelp("Template to edit:");
+    s.button(            onEditStartGcode, "Start");
+    s.button(              onEditEndGcode, "End");
 
     s.page(                 "start-gcode");
     s.heading(                             "Start GCode template:");
-    s.textarea(              "startGcode");
+    s.fromSlicer(                          "machine_start_gcode");
     s.button(            doneEditingGcode, "Done");
                    
     s.page(                   "end-gcode");
     s.heading(                             "End GCode template:");
-    s.textarea(                "endGcode");
+    s.fromSlicer(                          "machine_end_gcode");
     s.button(            doneEditingGcode, "Done");
                    
     s.page(              "settings-print", "Slice and Print");
@@ -154,11 +158,12 @@ function settingsInit(id) {
     slicer.config.loadDefaults(true);
 }
 
-function onEditGcodeSelect() {
-    var choice = $("#editGcodeMenu").val();
-    if(choice != "none") {
-        settings.gotoPage(choice);
-    }
+function onEditStartGcode() {
+    settings.gotoPage("start-gcode");
+}
+
+function onEditEndGcode() {
+    settings.gotoPage("end-gcode");
 }
 
 function onLoadPresetClicked() {

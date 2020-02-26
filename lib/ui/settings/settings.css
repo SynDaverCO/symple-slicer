@@ -23,7 +23,7 @@
 }
 
 .settings-panel {
-    display: none;
+    display:            none;
 }
 
 .settings-panel .parameter {
@@ -76,8 +76,8 @@
 }
 
 .settings-panel textarea {
-    width:              500px;
-    height:             200px;
+    width:              75vw;
+    height:             75vh;
 }
 
 .settings-panel .button-label {
