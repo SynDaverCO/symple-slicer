@@ -28,29 +28,30 @@ function settingsInit(id) {
         var sd = slicer.config.getSettingDescriptor(key);
         var label = sd.label;
         var el;
+        var attr = {
+            units:   sd.unit,
+            tooltip: sd.description
+        };
         switch(sd.type) {
             case 'float':
             case 'int':
-                var attr = {
-                    step: sd.type == 'int' ? 1 : 0.01,
-                    units: sd.unit
-                };
+                attr.step = (sd.type == 'int') ? 1 : 0.01;
                 el = s.number(key, label, attr);
                 sd.onValueChanged = (key, val) => {el.value = val;}
                 el.addEventListener('change', (event) => slicer.config.set(key, parseFloat(event.target.value)));
                 break;
             case 'str':
-                el = s.textarea(key);
+                el = s.textarea(key, label, attr);
                 sd.onValueChanged = (key, val) => {el.value = val;}
                 el.addEventListener('change', (event) => slicer.config.set(key, event.target.value));
                 break;
             case 'bool':
-                el = s.toggle(key, label);
+                el = s.toggle(key, label, attr);
                 sd.onValueChanged = (key, val) => {el.checked = val;}
                 el.addEventListener('change', (event) => slicer.config.set(key,el.checked));
                 break;
             case 'enum':
-                var o = s.choice(key,label);
+                var o = s.choice(key, label, attr);
                 for(const [value, label] of Object.entries(sd.options)) {
                     o.option(value, label);
                 }
@@ -102,12 +103,10 @@ function settingsInit(id) {
     s.button(              onEditEndGcode, "End");
 
     s.page(                 "start-gcode");
-    s.heading(                             "Start GCode template:");
     s.fromSlicer(                          "machine_start_gcode");
     s.button(            doneEditingGcode, "Done");
                    
     s.page(                   "end-gcode");
-    s.heading(                             "End GCode template:");
     s.fromSlicer(                          "machine_end_gcode");
     s.button(            doneEditingGcode, "Done");
                    
