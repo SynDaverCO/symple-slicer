@@ -31,7 +31,11 @@ function settingsInit(id) {
         switch(sd.type) {
             case 'float':
             case 'int':
-                el = s.number(key, label, sd.unit ? {units: sd.unit} : null);
+                var attr = {
+                    step: sd.type == 'int' ? 1 : 0.01,
+                    units: sd.unit
+                };
+                el = s.number(key, label, attr);
                 sd.onValueChanged = (key, val) => {el.value = val;}
                 el.addEventListener('change', (event) => slicer.config.set(key, parseFloat(event.target.value)));
                 break;
