@@ -64,7 +64,7 @@
 }
 
 .settings-panel select {
-    width:              calc(4px + 11em);
+    min-width:          calc(4px + 11em);
     font-size:          11px;
     border:             1px solid;
     cursor:             pointer;
