@@ -1,11 +1,13 @@
 {
-    "name": "Extra parameters missing in upstream Ultimaker definition files",
+    "name": "Fixes to upstream Ultimaker definition files",
     "author": "SynDaver Labs, Inc.",
     "settings":
     {
         "brim_gap":                         {"default_value": 0},
         "machine_extruders_share_heater":   {"default_value": false},
         "skin_edge_support_layers":         {"default_value": 0},
-        "bridge_sparse_infill_max_density": {"default_value": 1}
+        "bridge_sparse_infill_max_density": {"default_value": 1},
+        "mesh_position_x":                  {"value":         "0 if center_object else -machine_width"},
+        "mesh_position_y":                  {"value":         "0 if center_object else -machine_depth"}
     }
 }
