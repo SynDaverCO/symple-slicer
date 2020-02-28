@@ -37,11 +37,26 @@
             "settable_per_mesh": false,
             "settable_per_extruder": false
         },
+        "machine_probe_type":
+        {
+            "label": "Probe Type",
+            "description": "The type of probe used on the machine",
+            "default_value": "bltouch",
+            "type": "enum",
+            "options":
+            {
+                "bltouch": "BL Touch",
+                "nozzle": "Nozzle Conductivity"
+            },
+            "settable_per_mesh": false,
+            "settable_per_extruder": false,
+            "settable_per_meshgroup": false
+        },
         "material_probe_temperature":
         {
             "settable_per_extruder": true,
             "minimum_value": "0",
-            "enabled": true,
+            "enabled": "machine_probe_type == 'nozzle'",
             "description": "The nozzle temperature used before probing.",
             "label": "Probe Temperature",
             "unit": "\u00b0C",
@@ -55,7 +70,7 @@
         {
             "settable_per_extruder": true,
             "minimum_value": "0",
-            "enabled": true,
+            "enabled": "machine_probe_type == 'nozzle'",
             "description": "The nozzle temperature used before z-axis homing.",
             "label": "Soften Temperature",
             "unit": "\u00b0C",
@@ -69,7 +84,7 @@
         {
             "settable_per_extruder": true,
             "minimum_value": "0",
-            "enabled": true,
+            "enabled": "machine_probe_type == 'nozzle'",
             "description": "The nozzle temperature used before nozzle wiping.",
             "label": "Wipe Temperature",
             "unit": "\u00b0C",

@@ -71,11 +71,11 @@ function settingsInit(id) {
 
     s.page(             "settings-design",  "Place Objects");
     s.file(                  "fileSelect", {'binary': true, 'text': "Drop STL file here", 'callback': onFileChange});
-                 
+
     s.separator(     "br");
     s.button(             onAddToPlatform, "Add Object",    {'id': "add_to_platform"});
     s.button(             onClearPlatform, "Clear Objects", {'id': "clear_platform"});
-    
+
     s.page(          "settings-profiles",  "Load Settings");
     s.choice(       "machinePresetSelect", "Printer:")
      .option( "lulzbot_taz_we_aero_0.5mm", "Lulzbot TAZ Workhorse Aero 0.5 mm")
@@ -88,10 +88,13 @@ function settingsInit(id) {
     s.buttonHelp("Loading new settings will<br>overwrite all modified values.");
 
     s.page(            "settings-machine", "Machine Settings");
-    
+
     s.category(                            "Hot End");
     s.fromSlicer(                          "machine_nozzle_size");
-    
+
+    s.category(                            "Auto Leveling");
+    s.fromSlicer(                          "machine_probe_type");
+
     s.category(                            "Build Volume");
     s.fromSlicer(                          "machine_shape");
     s.fromSlicer(                          "machine_width");
@@ -105,18 +108,30 @@ function settingsInit(id) {
     s.page(                 "start-gcode");
     s.fromSlicer(                          "machine_start_gcode");
     s.button(            doneEditingGcode, "Done");
-                   
+
     s.page(                   "end-gcode");
     s.fromSlicer(                          "machine_end_gcode");
     s.button(            doneEditingGcode, "Done");
-                   
+
     s.page(              "settings-print", "Slice and Print");
-    
+
     s.category(                            "Print Strength");
     s.fromSlicer(                          "infill_pattern");
     s.fromSlicer(                          "infill_sparse_density");
     s.fromSlicer(                          "wall_line_count");
-    
+
+    s.category(                            "Print Speed");
+    s.fromSlicer(                          "speed_print");
+    s.fromSlicer(                          "layer_height");
+
+    s.category(                            "Temperatures");
+    s.fromSlicer(                          "default_material_print_temperature");
+    s.fromSlicer(                          "material_bed_temperature");
+    s.fromSlicer(                          "material_part_removal_temperature");
+    s.fromSlicer(                          "material_probe_temperature");
+    s.fromSlicer(                          "material_soften_temperature");
+    s.fromSlicer(                          "material_wipe_temperature");
+
     s.category(                            "Scaffolding");
     s.fromSlicer(                          "support_enable");
     s.fromSlicer(                          "support_type");
@@ -125,16 +140,10 @@ function settingsInit(id) {
     s.fromSlicer(                          "support_angle");
     s.fromSlicer(                          "adhesion_type");
 
-    s.category(                            "Temperature and Speed");
-    s.fromSlicer(                          "default_material_print_temperature");
-    s.fromSlicer(                          "material_bed_temperature");
-    s.fromSlicer(                          "speed_print");
-    s.fromSlicer(                          "layer_height");
-    
     s.category(                            "Filament");
     s.fromSlicer(                          "material_diameter");
     s.fromSlicer(                          "material_flow");
-    
+
     s.category(                            "Special Modes");
     s.fromSlicer(                          "magic_spiralize");
     s.fromSlicer(                          "magic_fuzzy_skin_enabled");

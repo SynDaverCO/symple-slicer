@@ -15,7 +15,22 @@ modified to make it easy to replace them whenever the CuraEngine is upgraded.
 
 In the case that a setting is required by CuraEngine but is otherwise missing
 from the official Ultimaker Cura definitions files, they may be defined in
-"fdmprinter_errata.def.json"
+"fdmprinter_errata.def.json". This file may also be used to correct formulas
+which are incorrect upstream.
+
+Additional settings which may be used in start/end GCODE may be placed in
+"fdmprinter_extras.def.json".
+
+What is used from the Cura definition files?
+============================================
+
+In standard Cura, the definition files not only define the various printer
+settings and the formulas used to update those settings, but it also sorts
+those settings into categories and sets the hierarchy that is used in the
+Cura UI. For simplicity, Symple Slicer does not use the categories and
+settings hierarchy from standard Cura. Hence, the child/parent relationships
+in "fdmprinter.def.json" are ignored. The settings and categories used by
+Symple Slicer are instead hard coded in the file "ui_settings.js".
 
 Symple Slicer Machine and Print Profiles
 ========================================
