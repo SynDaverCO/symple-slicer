@@ -78,8 +78,8 @@ function settingsInit(id) {
     
     s.page(          "settings-profiles",  "Load Settings");
     s.choice(       "machinePresetSelect", "Printer:")
-     .option( "lulzbot_mini2_aero_0.5mm" , "Lulzbot Mini 2 Aero 0.5 mm")
-     .option( "lulzbot_taz_we_aero_0.5mm", "Lulzbot TAZ Workhorse Aero 0.5 mm");
+     .option( "lulzbot_taz_we_aero_0.5mm", "Lulzbot TAZ Workhorse Aero 0.5 mm")
+     .option( "lulzbot_mini2_aero_0.5mm" , "Lulzbot Mini 2 Aero 0.5 mm");
 
     s.choice(      "materialPresetSelect", "Material:")
      .option(    "polymaker_polylite_pla", "Polymaker Polylite PLA");
@@ -153,6 +153,7 @@ function settingsInit(id) {
     settings = s;
 
     onFileChange(); // Disable buttons
+    onLoadPresetClicked(); // Load initial preset.
 
     slicer.config.loadDefaults(true);
 }

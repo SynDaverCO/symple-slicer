@@ -22,9 +22,9 @@ class Stage {
         this.printer = {
             circular:          false,
             origin_at_center:  false,
-            x_width:           300,
-            y_depth:           300,
-            z_height:          300
+            x_width:           282,
+            y_depth:           282,
+            z_height:          286
         };
 
         this.objects = [];
