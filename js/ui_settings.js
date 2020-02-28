@@ -141,6 +141,8 @@ function settingsInit(id) {
 
     s.category();
     s.separator();
+    s.text(                 "gcode_filename", "Save as:", {default_value: "output.gcode"});
+    s.separator();
     s.button(              onSliceClicked, "Slice");
     s.buttonHelp("Click this button to save<br>gcode for your 3D printer.");
 
@@ -190,6 +192,9 @@ function onAddToPlatform() {
     var stlData = settings.get("fileSelect");
     var geometry = GEOMETRY_READERS.readStl(stlData, GEOMETRY_READERS.THREEGeometryCreator);
     stage.addGeometry(geometry);
+
+    var filename = settings.get("fileSelect_filename");
+    document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
 }
 
 function onClearPlatform() {
@@ -219,7 +224,7 @@ function showProgressBar() {
 
 function readyToDownload(data) {
     var blob = new Blob([data], {type: "application/octet-stream"});
-    var fileName = "cura.gcode";
+    var fileName = settings.get("gcode_filename");
 
     $("#progress progress").attr("value",100);
     $("#progressBtn").html("Download GCODE").unbind().click(
