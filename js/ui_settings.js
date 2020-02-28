@@ -198,9 +198,14 @@ function onClearPlatform() {
 function onSliceClicked() {
     var geometries = stage.getAllGeometry();
     if(geometries.length) {
+        var geometries = stage.getAllGeometry();
+        var filenames  = geometries.map((geo,i) => {
+            var filename = 'input_' + i + '.stl';
+            slicer.loadFromGeometry(geo, filename);
+            return filename;
+        });
         showProgressBar();
-        stage.getAllGeometry().forEach((geo,i) => slicer.loadFromGeometry(geo, 'input' + (i || '') + '.stl'));
-        slicer.slice();
+        slicer.slice(filenames);
     }
 }
 

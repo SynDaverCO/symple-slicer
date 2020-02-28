@@ -267,8 +267,6 @@ class Stage {
             var worldToPrinterRepresentation = new THREE.Matrix4();
             transform.premultiply(worldToPrinterRepresentation.getInverse(this.bedRelative.matrixWorld));
             geometry.applyMatrix(transform);
-            geometry.computeBoundingBox();
-            console.log(geometry.boundingBox);
             return geometry;
         });
     }
