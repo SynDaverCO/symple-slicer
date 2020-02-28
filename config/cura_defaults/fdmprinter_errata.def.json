@@ -5,7 +5,7 @@
     {
         "brim_gap":                         {"default_value": 0},
         "machine_extruders_share_heater":   {"default_value": false},
-        "skin_edge_support_layers":         {"default_value": 1},
+        "skin_edge_support_layers":         {"default_value": 0},
         "bridge_sparse_infill_max_density": {"default_value": 1}
     }
 }
