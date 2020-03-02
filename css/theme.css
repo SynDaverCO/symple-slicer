@@ -46,8 +46,15 @@ hr {
     filter:             url(#colorize-blue);
 }
 
+@supports not (mix-blend-mode: darken) {
+    #toolbar img {
+        opacity:        0.25;
+    }
+}
+
 #toolbar img:hover {
     mix-blend-mode:     normal;
+    opacity:            1;
 }
 
 #console {
