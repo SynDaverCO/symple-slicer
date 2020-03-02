@@ -43,13 +43,11 @@ hr {
 
 #toolbar img {
     mix-blend-mode:     darken;
-    opacity:            25%;
     filter:             url(#colorize-blue);
 }
 
 #toolbar img:hover {
     mix-blend-mode:     normal;
-    opacity:            100%;
 }
 
 #console {

@@ -71,9 +71,8 @@ class RenderEngine {
         // Set up the controls
 
         this.orbit = new THREE.OrbitControls( camera, canvas );
-        this.orbit.keys = [ 65, 83, 68 ];
-
         this.orbit.addEventListener( 'change', onViewChanged );
+        this.orbit.screenSpacePanning = true;
 
         var control = new THREE.TransformControls( camera, renderer.domElement );
         scene.add( control );

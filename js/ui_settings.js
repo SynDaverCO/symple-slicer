@@ -101,7 +101,7 @@ function settingsInit(id) {
     s.fromSlicer(                          "machine_depth");
     s.fromSlicer(                          "machine_height");
     s.fromSlicer(                          "machine_center_is_zero");
-    s.button(        onPrinterSizeChanged, "Update");
+    s.button(        onPrinterSizeChanged, "Save Changes");
     s.category(                            "Start/End Template");
     s.buttonHelp("Template to edit:");
     s.button(            onEditStartGcode, "Start");
