@@ -67,7 +67,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <!-- Trick for colorizing images: https://css-tricks.com/color-filters-can-turn-your-gray-skies-blue/
              The target color is rgb(0.00 0.18 0.38) but for some reason we need to use (0.00, 0.03, 0.12) in
-             the last column of the matrix to get that color. 
+             the last column of the matrix to get that color.
         -->
         <svg class="defs-only">
             <filter id="colorize-blue">
@@ -113,14 +113,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <td>D</td>
             </tr>
         </table>
-        
+
         <div id="progress" class="float-center panel-style">
             <p>
                 <label for="slicing">Slicing progress:</label>
                 <progress id="slicing" value="0" max="100"> 32% </progress>
             </p>
             <p>
-                
+
             </p>
             <details>
                 <summary>Show Details
@@ -129,7 +129,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <pre id="console">Console Output</pre>
             </details>
         </div>
-        
+
         <div id="about" onclick="hideAbout()" class="float-center panel-style">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
             <h1>Symple Slicer V0.1</h1>
@@ -188,6 +188,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var stage        = new Stage();
             var renderEngine = new RenderEngine(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
+
+            stage.setEyeLevel();
 
             //toolbar.addIcon("open-file",         "Open File",       "images/open-file.png",);
             toolbar.addIcon("move",              "Move Object",     "images/scale.png");

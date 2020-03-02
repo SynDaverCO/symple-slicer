@@ -100,6 +100,8 @@ function settingsInit(id) {
     s.fromSlicer(                          "machine_width");
     s.fromSlicer(                          "machine_depth");
     s.fromSlicer(                          "machine_height");
+    s.fromSlicer(                          "machine_center_is_zero");
+    s.button(        onPrinterSizeChanged, "Update");
     s.category(                            "Start/End Template");
     s.buttonHelp("Template to edit:");
     s.button(            onEditStartGcode, "Start");
@@ -177,9 +179,19 @@ function onEditEndGcode() {
     settings.gotoPage("end-gcode");
 }
 
+function onPrinterSizeChanged() {
+    var circular         = $("#machine_shape").val() == "elliptic";
+    var origin_at_center = $("#machine_center_is_zero").is(':checked');
+    var x_width          = parseFloat($("#machine_width").val());
+    var y_depth          = parseFloat($("#machine_depth").val());
+    var z_height         = parseFloat($("#machine_height").val());
+    
+    stage.setPrinterCharacteristics(circular, origin_at_center, x_width, y_depth, z_height);
+}
+
 function onLoadPresetClicked() {
     slicer.config.loadDefaults();
-    slicer.config.loadProfile("machine", $("#machinePresetSelect").val() + ".toml");
+    slicer.config.loadProfile("machine", $("#machinePresetSelect").val() + ".toml", onPrinterSizeChanged);
     slicer.config.loadProfile("print",   $("#materialPresetSelect").val() + ".toml");
 }
 

@@ -35,6 +35,26 @@ class Stage {
         this.packer = null;
     }
 
+    setEyeLevel() {
+        renderEngine.setEyeLevel(this.printer.z_height / 2);
+    }
+
+    render() {
+        renderEngine.render();
+    }
+
+    setPrinterCharacteristics(circular, origin_at_center, x_width, y_depth, z_height) {
+        this.printer.circular         = circular;
+        this.printer.origin_at_center = origin_at_center;
+        this.printer.x_width          = x_width;
+        this.printer.y_depth          = y_depth;
+        this.printer.z_height         = z_height;
+        this.printerRepresentation.update(this.printer);
+        this.setEyeLevel();
+        this.arrangeObjectsOnPlatform();
+        this.render();
+    }
+
     /**
      * Returns the bounding sphere of an object in bed coordinates
      */
@@ -78,9 +98,9 @@ class Stage {
             this.packer.destroy();
             this.packer = null;
         };
-        
+
         if(this.packer) packingFinished();
-        
+
         this.selectNone();
 
         // Create an array of circles for the packing algorithm
@@ -240,18 +260,18 @@ class Stage {
     addObjectToSelection(obj) {
         this.bedRelative.add(this.selectedGroup);
         this.selectedGroup.addToSelection(obj);
-        outlinePass.selectedObjects = [this.selectedGroup];
+        renderEngine.outlinePass.selectedObjects = [this.selectedGroup];
         this.transformControl.attach(this.selectedGroup);
         this.render();
     }
 
     selectNone() {
         this.selectedGroup.selectNone();
-        outlinePass.selectedObjects = [];
+        renderEngine.outlinePass.selectedObjects = [];
         this.transformControl.detach();
         this.render();
     }
-    
+
     getPrinterRepresentation() {
         return this.printerRepresentation;
     }

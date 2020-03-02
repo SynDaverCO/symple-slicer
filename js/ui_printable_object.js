@@ -18,8 +18,6 @@
  */
 
 class PrintableObject extends THREE.Mesh {
-    static material = new THREE.MeshLambertMaterial( { color: 0xfafad2 } );
-    
     constructor(geometry) {
         geometry.mergeVertices();
         geometry.computeBoundingSphere();
@@ -30,3 +28,5 @@ class PrintableObject extends THREE.Mesh {
         this.castShadow = true;
     }
 }
+
+PrintableObject.material = new THREE.MeshLambertMaterial( { color: 0xfafad2 } );
