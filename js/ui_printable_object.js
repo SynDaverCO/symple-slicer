@@ -29,4 +29,4 @@ class PrintableObject extends THREE.Mesh {
     }
 }
 
-PrintableObject.material = new THREE.MeshLambertMaterial( { color: 0xfafad2 } );
+PrintableObject.material = new THREE.MeshLambertMaterial( { color: 0xfafad2, side: THREE.DoubleSide } );
