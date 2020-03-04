@@ -76,7 +76,7 @@ function settingsInit(id) {
     s.button(             onAddToPlatform, "Add Object",    {'id': "add_to_platform"});
     s.button(             onClearPlatform, "Clear Objects", {'id': "clear_platform"});
 
-    s.page(          "settings-profiles",  "Load Settings");
+    s.page(          "settings-profiles",  "Manage Presets");
     s.choice(       "machinePresetSelect", "Printer:")
      .option( "lulzbot_taz_we_aero_0.5mm", "Lulzbot TAZ Workhorse Aero 0.5 mm")
      .option( "lulzbot_mini2_aero_0.5mm" , "Lulzbot Mini 2 Aero 0.5 mm");
@@ -84,8 +84,20 @@ function settingsInit(id) {
     s.choice(      "materialPresetSelect", "Material:")
      .option(    "polymaker_polylite_pla", "Polymaker Polylite PLA");
     s.separator();
-    s.button(         onLoadPresetClicked, "Load");
-    s.buttonHelp("Loading new settings will<br>overwrite all modified values.");
+    s.button(         onLoadPresetClicked, "Apply");
+    s.buttonHelp("Applying new presets will<br>overwrite all settings.");
+    s.separator();
+    s.category(                            "Export Settings");
+    s.toggle(       "export_with_choices", "Annotate settings with units and choices");
+    s.toggle(  "export_with_descriptions", "Annotate settings with descriptions");
+    s.toggle(      "export_with_defaults", "Include (unchanged) default values");
+    s.text(             "export_filename", "Save as:", {default_value: "config.toml"});
+    s.separator();
+    s.button(         onExportClicked,     "Export");
+    s.buttonHelp("Click this button to save changed<br>settings to your computer.");
+    
+    s.category(                            "Import Settings");
+    s.file(                "importSelect", {'text': "Drop settings file here", 'callback': onImportChanged});
 
     s.page(            "settings-machine", "Machine Settings");
 
@@ -166,9 +178,31 @@ function settingsInit(id) {
     settings = s;
 
     onFileChange(); // Disable buttons
-    onLoadPresetClicked(); // Load initial preset.
+    loadStartupProfile();
+}
 
+function loadStartupProfile() {
+    // Always start with defaults.
     slicer.config.loadDefaults(true);
+
+    if (typeof(Storage) !== "undefined") {
+        // Install handler for saving profile
+        window.onunload = function() {
+            console.log("Saved setting to local storage");
+            localStorage.setItem("startup_config", slicer.config.saveProfileStr());
+        }
+
+        var stored_config = localStorage.getItem("startup_config");
+        if(stored_config) {
+            console.log("Loaded settings from local storage");
+            slicer.config.loadProfileStr(stored_config);
+            onPrinterSizeChanged();
+            return;
+        }
+    }
+
+    // If no local profile is found, reload starting profile
+    onLoadPresetClicked();
 }
 
 function onEditStartGcode() {
@@ -193,6 +227,24 @@ function onLoadPresetClicked() {
     slicer.config.loadDefaults();
     slicer.config.loadProfile("machine", $("#machinePresetSelect").val() + ".toml", onPrinterSizeChanged);
     slicer.config.loadProfile("print",   $("#materialPresetSelect").val() + ".toml");
+}
+
+function onImportChanged() {
+    console.log("Imported settings");
+    var stored_config = settings.get("importSelect");
+    slicer.config.loadProfileStr(stored_config);
+    onPrinterSizeChanged();
+}
+
+function onExportClicked() {
+    var config = slicer.config.saveProfileStr({
+        descriptions: $("#export_with_descriptions").is(':checked'),
+        defaults:     $("#export_with_defaults").is(':checked'),
+        choices:      $("#export_with_choices").is(':checked')
+    });
+    var blob = new Blob([config], {type: "text/plain;charset=utf-8"});
+    var filename = settings.get("export_filename");
+    saveAs(blob, filename);
 }
 
 function doneEditingGcode() {

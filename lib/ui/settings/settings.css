@@ -50,6 +50,15 @@
     margin:             4px;
 }
 
+.settings-panel details {
+    margin-top:    0.25em;
+    margin-bottom: 0.5em;
+}
+
+.settings-panel summary {
+    margin-bottom: 0.5em;
+}
+
 .settings-panel summary > h1 {
     display:            inline;
 }
