@@ -61,14 +61,6 @@ function settingsInit(id) {
         }
     }
 
-    function onFileChange(file) {
-        if(file) {
-            $('#add_to_platform').attr('disabled', false);
-        } else {
-            $('#add_to_platform').attr('disabled', true);
-        }
-    }
-
     s.page(              "settings-place",  "Place Objects");
     s.file(                  "fileSelect", {'binary': true, 'text': "Drop STL file here", 'callback': onFileChange});
 
@@ -89,7 +81,7 @@ function settingsInit(id) {
      .option(    "polymaker_polylite_pla", "Polymaker Polylite PLA");
     s.separator("br");
     s.button(         onLoadPresetClicked, "Apply");
-    s.buttonHelp("Applying new presets will<br>overwrite all settings.");
+    s.buttonHelp("Applying presets resets all printer &amp; material settings<br>to defaults, including modified or imported settings.");
     s.category(                            "Export Settings");
     s.toggle(       "export_with_choices", "Annotate settings with units and choices");
     s.toggle(  "export_with_descriptions", "Annotate settings with descriptions");
@@ -101,7 +93,10 @@ function settingsInit(id) {
     s.buttonHelp("Click this button to save changed<br>settings to your computer.");
     
     s.category(                            "Import Settings");
-    s.file(                "importSelect", {'text': "Drop settings file here", 'callback': onImportChanged});
+    s.file(                "importSelect", {'text': "Drop settings file here", 'callback': onImportChange});
+    s.separator("br");
+    s.button(         onImportClicked, "Apply", {'id': "import_settings"});
+    s.buttonHelp("Importing settings from a file will override<br>all printer &amp; material presets.");
 
     s.page(            "settings-machine", "Machine Settings");
 
@@ -200,6 +195,7 @@ function settingsInit(id) {
     settings = s;
 
     onFileChange(); // Disable buttons
+    onImportChange(); // Disable buttons
     $('#done_placing').attr('disabled', true);
     loadStartupProfile();
 }
@@ -262,10 +258,15 @@ function onLoadPresetClicked() {
     slicer.config.loadDefaults();
     slicer.config.loadProfile("machine", $("#machinePresetSelect").val() + ".toml", onPrinterSizeChanged);
     slicer.config.loadProfile("print",   $("#materialPresetSelect").val() + ".toml");
+    alert("The new presets have been applied.");
 }
 
-function onImportChanged() {
-    console.log("Imported settings");
+function onImportChange(file) {
+    $('#import_settings').attr('disabled', file ? false : true);
+}
+
+function onImportClicked() {
+    alert("The new settings have been applied.");
     var stored_config = settings.get("importSelect");
     slicer.config.loadProfileStr(stored_config);
     onPrinterSizeChanged();
@@ -284,6 +285,10 @@ function onExportClicked() {
 
 function doneEditingGcode() {
     settings.gotoPage("settings-machine");
+}
+
+function onFileChange(file) {
+    $('#add_to_platform').attr('disabled', file ? false : true);
 }
 
 function onAddToPlatform() {
