@@ -225,6 +225,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             slicer.onFileReceived = function(data) {
                 readyToDownload(data);
             }
+
+            slicer.onProgress = function(progress) {
+                setProgress(progress);
+            }
         </script>
     </body>
 </html>

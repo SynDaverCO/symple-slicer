@@ -322,6 +322,10 @@ function showProgressBar() {
     $("#downloadGcode").hide();
 }
 
+function setProgress(value) {
+    $("#progress-dialog progress").attr("value",value);
+}
+
 function hideProgressBar() {
     $("#progress-dialog").hide();
 }
