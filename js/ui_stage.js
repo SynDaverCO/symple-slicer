@@ -29,10 +29,13 @@ class Stage {
 
         this.objects = [];
         this.printerRepresentation = new PrinterRepresentation(this.printer);
-        this.bedRelative = this.printerRepresentation.bedRelative;
+        this.bedRelative   = this.printerRepresentation.bedRelative;
+        this.placedObjects = new THREE.Object3D();
         this.selectedGroup = new SelectionGroup();
         this.dragging = false;
         this.packer = null;
+        
+        this.bedRelative.add(this.placedObjects);
     }
 
     setEyeLevel() {
@@ -258,7 +261,7 @@ class Stage {
     }
 
     addObjectToSelection(obj) {
-        this.bedRelative.add(this.selectedGroup);
+        this.placedObjects.add(this.selectedGroup);
         this.selectedGroup.addToSelection(obj);
         renderEngine.outlinePass.selectedObjects = [this.selectedGroup];
         this.transformControl.attach(this.selectedGroup);
@@ -294,7 +297,7 @@ class Stage {
     addGeometry(geometry) {
         var obj = new PrintableObject(geometry);
         this.objects.push(obj);
-        this.bedRelative.add(obj);
+        this.placedObjects.add(obj);
         this.dropObjectToFloor(obj);
         this.centerObjectOnPlatform(obj, 1);
         this.arrangeObjectsOnPlatform();
@@ -303,13 +306,9 @@ class Stage {
 
     removeObjects() {
         this.selectNone();
-        this.objects.forEach(obj => {this.bedRelative.remove(obj);});
+        this.objects.forEach(obj => {this.placedObjects.remove(obj);});
         this.objects = [];
         this.render();
-    }
-
-    addEdges(edges) {
-        this.bedRelative.add(model);
     }
 
     /**
@@ -332,6 +331,29 @@ class Stage {
                 }
             }
         } );
+    }
+
+    setGcodePath(gcode_path) {
+        if(gcode_path) {
+            this.toolpath = new Toolpath(gcode_path);
+            this.toolpath.visible = false;
+            this.bedRelative.add(this.toolpath);
+        } else if(this.toolpath) {
+            this.showGcodePath(false);
+            this.bedRelative.remove(this.toolpath);
+            this.toolpath.dispose();
+        }
+    }
+
+    showGcodePath(enabled) {
+        if(enabled && this.toolpath) {
+            this.toolpath.visible      = true;
+            this.placedObjects.visible = false;
+        } else {
+            this.toolpath.visible      = false;
+            this.placedObjects.visible = true;
+        }
+        this.render();
     }
 
     // Event handlers

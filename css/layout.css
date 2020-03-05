@@ -57,20 +57,15 @@ hr {
     border-spacing:     1em 2px;
 }
 
-#progress {
+#log-dialog, #progress-dialog {
     padding:            1em;
-    display:            none;
-}
-
-#progress button {
-    float:              right;
     display:            none;
 }
 
 #console {
     padding:            1em;
-    height:             200px;
-    width:              500px;
+    height:             80vh;
+    width:              85vw;
     resize:             both;
     overflow:           auto;
     white-space:        pre-wrap;

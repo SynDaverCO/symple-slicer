@@ -69,12 +69,15 @@ function settingsInit(id) {
         }
     }
 
-    s.page(             "settings-design",  "Place Objects");
+    s.page(              "settings-place",  "Place Objects");
     s.file(                  "fileSelect", {'binary': true, 'text': "Drop STL file here", 'callback': onFileChange});
 
     s.separator(     "br");
     s.button(             onAddToPlatform, "Add Object",    {'id': "add_to_platform"});
     s.button(             onClearPlatform, "Clear Objects", {'id': "clear_platform"});
+    s.separator();
+    s.button(          onGotoSliceClicked, "Next",          {'id': "done_placing"});
+    s.buttonHelp("Click this button to when<br>you are done placing objects.");
 
     s.page(          "settings-profiles",  "Manage Presets");
     s.choice(       "machinePresetSelect", "Printer:")
@@ -83,7 +86,7 @@ function settingsInit(id) {
 
     s.choice(      "materialPresetSelect", "Material:")
      .option(    "polymaker_polylite_pla", "Polymaker Polylite PLA");
-    s.separator();
+    s.separator("br");
     s.button(         onLoadPresetClicked, "Apply");
     s.buttonHelp("Applying new presets will<br>overwrite all settings.");
     s.separator();
@@ -127,7 +130,7 @@ function settingsInit(id) {
     s.fromSlicer(                          "machine_end_gcode");
     s.button(            doneEditingGcode, "Done");
 
-    s.page(              "settings-print", "Slice and Print");
+    s.page(              "settings-slice", "Slice Objects");
 
     s.category(                            "Print Strength");
     s.fromSlicer(                          "infill_pattern");
@@ -164,20 +167,40 @@ function settingsInit(id) {
 
     s.category();
     s.separator();
-    s.text(                 "gcode_filename", "Save as:", {default_value: "output.gcode"});
-    s.separator();
     s.button(              onSliceClicked, "Slice");
+    s.buttonHelp("Click this button to prepare<br>the model for printing.");
+    
+    s.page(                 "settings-print", "Print and Preview");
+
+    s.category(                               "Preview Options");
+    s.toggle(                "show_toolpath", "Show toolpath",  {onclick: onUpdatePreview});
+    /*s.toggle(                "show_travel", "Show travel",  {onclick: onUpdatePreview});
+    s.toggle(                   "show_shell", "Show shell",   {onclick: onUpdatePreview});
+    s.toggle(                 "show_helpers", "Show helpers", {onclick: onUpdatePreview});
+    s.toggle(                  "show_infill", "Show infill",  {onclick: onUpdatePreview});*/
+    s.category(                               "Advanced Options");
+    s.button(            onShowLogClicked,    "Show Log");
+    s.buttonHelp("Click this button to show<br>slicing engine output.");
+    s.category(                               "Save Options");
+    s.text(                 "gcode_filename", "Save as:", {default_value: "output.gcode"});
+    s.category();
+    s.separator();
+    s.button(              onDownloadClicked, "Save");
     s.buttonHelp("Click this button to save<br>gcode for your 3D printer.");
 
-    s.page(               "settings-help", "Help");
-    s.heading(                             "View Controls:");
-    s.element(                             "viewport-help");
+    s.page(              "settings-finished", "Final Steps");
+    s.element(                                "help-post-print");
+    
+    s.page(               "settings-help",    "Help");
+    s.heading(                                "View Controls:");
+    s.element(                                "help-viewport");
 
     s.done();
 
     settings = s;
 
     onFileChange(); // Disable buttons
+    $('#done_placing').attr('disabled', true);
     loadStartupProfile();
 }
 
@@ -211,6 +234,18 @@ function onEditStartGcode() {
 
 function onEditEndGcode() {
     settings.gotoPage("end-gcode");
+}
+
+function onGotoSliceClicked() {
+    settings.gotoPage("settings-slice");
+}
+
+function onShowLogClicked() {
+    $("#log-dialog").show();
+}
+
+function onHideLogClicked() {
+    $("#log-dialog").hide();
 }
 
 function onPrinterSizeChanged() {
@@ -251,16 +286,6 @@ function doneEditingGcode() {
     settings.gotoPage("settings-machine");
 }
 
-function entitiesToModel(entities) {
-    model = new Model();
-    for(var i = 0; i < entities.lines.length; i++) {
-        var pts = entities.lines[i].points;
-        model.addEdge(pts[0][0],pts[0][1],pts[0][2],pts[1][0],pts[1][1],pts[1][2]);
-    }
-    model.center();
-    stage.setModel(model);
-}
-
 function onAddToPlatform() {
     var stlData = settings.get("fileSelect");
     var geometry = GEOMETRY_READERS.readStl(stlData, GEOMETRY_READERS.THREEGeometryCreator);
@@ -268,10 +293,12 @@ function onAddToPlatform() {
 
     var filename = settings.get("fileSelect_filename");
     document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
+     $('#done_placing').attr('disabled', false);
 }
 
 function onClearPlatform() {
     stage.removeObjects();
+    $('#done_placing').attr('disabled', true);
 }
 
 function onSliceClicked() {
@@ -290,26 +317,42 @@ function onSliceClicked() {
 
 function showProgressBar() {
     clearConsole();
-    $("#progress").show();
-    $("#progress progress").attr("value",0);
+    $("#progress-dialog").show();
+    $("#progress-dialog progress").attr("value",0);
     $("#downloadGcode").hide();
 }
 
-function readyToDownload(data) {
-    var blob = new Blob([data], {type: "application/octet-stream"});
-    var fileName = settings.get("gcode_filename");
-
-    $("#progress progress").attr("value",100);
-    $("#progressBtn").html("Download GCODE").unbind().click(
-        function() {
-            saveAs(blob, fileName);
-            $("#progressBtn").html("Close").unbind().click(afterDownload);
-        }
-    ).show();
+function hideProgressBar() {
+    $("#progress-dialog").hide();
 }
 
-function afterDownload() {
-    $("#progress").hide();
+var gcode_blob;
+
+function readyToDownload(data) {
+    gcode_blob = new Blob([data], {type: "application/octet-stream"});
+    hideProgressBar();
+    settings.gotoPage("settings-print");
+
+    // Show the filament pathname
+    var decoder = new TextDecoder();
+    var path = new GCodePath();
+    path.parse(decoder.decode(data));
+    stage.setGcodePath(path);
+}
+
+function onDownloadClicked() {
+    var fileName = settings.get("gcode_filename");
+    saveAs(gcode_blob, fileName);
+    stage.setGcodePath(null);
+    settings.gotoPage("settings-finished");
+}
+
+function onUpdatePreview() {
+    stage.showGcodePath($("#show_toolpath").is(':checked'));
+}
+
+function onDoItAgainClicked() {
+    settings.gotoPage("settings-place");
 }
 
 function showAbout() {

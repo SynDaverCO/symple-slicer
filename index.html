@@ -36,7 +36,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/geometry-lib/FetchFile.js"></script>
         <script src="lib/three/ConvexHull.js"></script>
         <script src="lib/three/ConvexGeometry.js"></script>
-
+        <script src="lib/gcode-viewer/toolpath.js"></script>
+        <script src="lib/gcode-viewer/gcode.js"></script>
+        
         <!-- ***************** Prequisites for OutlinePass.js *****************
              We need all the following files to give selected objects a halo -->
         <script src="lib/three/Pass.js"></script>
@@ -91,8 +93,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <div id="toolbar"  class="panel-style dock-left  dock-bottom vertical"></div>
 
         <!-- Help table -->
+        
+        <div id = "help-post-print">
+            <img src="images/celebration-party-hats.jpg">
+            <p>
+                Well done! You can now take the file to your printer for printing!
+            </p>
+            <button onclick="onDoItAgainClicked()">Do it again!</button>
+        </div>
 
-        <table id="viewport-help">
+        <table id="help-viewport">
             <tr>
                 <th></th>
                 <th>Mouse Button</th>
@@ -111,25 +121,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             </tr>
         </table>
 
-        <div id="progress" class="float-center panel-style">
-            <p>
-                <label for="slicing">Slicing progress:</label>
-                <progress id="slicing" value="0" max="100"> 32% </progress>
-            </p>
-            <p>
-
-            </p>
-            <details>
-                <summary>Show Details
-                    <button id="progressBtn">Download GCODE</button>
-                </summary>
-                <pre id="console">Console Output</pre>
-            </details>
+        <div id="progress-dialog" class="float-center panel-style">
+            <label for="slicing">Slicing progress:</label>
+            <progress id="slicing" value="0" max="100"> 32% </progress>
+        </div>
+        
+        <div id="log-dialog" class="float-center panel-style">
+            <pre id="console">Console Output</pre>
+            <button onclick="onHideLogClicked()">Close</button>
         </div>
 
         <div id="about" onclick="hideAbout()" class="float-center panel-style">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
-            <h1>Symple Slicer V0.3</h1>
+            <h1>Symple Slicer V0.4</h1>
             <p>
                 Symple Slicer is maintained by SynDaver Labs, Inc. for use with SynDaver printers.
             </p>
