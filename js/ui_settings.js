@@ -80,6 +80,7 @@ function settingsInit(id) {
     s.buttonHelp("Click this button to when<br>you are done placing objects.");
 
     s.page(          "settings-profiles",  "Manage Presets");
+    s.category(                            "Printer &amp; Material", {open: "open"});
     s.choice(       "machinePresetSelect", "Printer:")
      .option( "lulzbot_taz_we_aero_0.5mm", "Lulzbot TAZ Workhorse Aero 0.5 mm")
      .option( "lulzbot_mini2_aero_0.5mm" , "Lulzbot Mini 2 Aero 0.5 mm");
@@ -89,13 +90,13 @@ function settingsInit(id) {
     s.separator("br");
     s.button(         onLoadPresetClicked, "Apply");
     s.buttonHelp("Applying new presets will<br>overwrite all settings.");
-    s.separator();
     s.category(                            "Export Settings");
     s.toggle(       "export_with_choices", "Annotate settings with units and choices");
     s.toggle(  "export_with_descriptions", "Annotate settings with descriptions");
     s.toggle(      "export_with_defaults", "Include (unchanged) default values");
+    s.separator("br");
     s.text(             "export_filename", "Save as:", {default_value: "config.toml"});
-    s.separator();
+    s.separator("br");
     s.button(         onExportClicked,     "Export");
     s.buttonHelp("Click this button to save changed<br>settings to your computer.");
     
@@ -171,17 +172,16 @@ function settingsInit(id) {
     s.buttonHelp("Click this button to prepare<br>the model for printing.");
     
     s.page(                 "settings-print", "Print and Preview");
-
-    s.category(                               "Preview Options");
+    s.category(                               "Advanced Options");
+    s.button(            onShowLogClicked,    "Show Log");
+    s.buttonHelp("Click this button to show<br>slicing engine output.");
+    s.category(                               "Preview Options", {open: "open"});
     s.toggle(                "show_toolpath", "Show toolpath",  {onclick: onUpdatePreview});
     /*s.toggle(                "show_travel", "Show travel",  {onclick: onUpdatePreview});
     s.toggle(                   "show_shell", "Show shell",   {onclick: onUpdatePreview});
     s.toggle(                 "show_helpers", "Show helpers", {onclick: onUpdatePreview});
     s.toggle(                  "show_infill", "Show infill",  {onclick: onUpdatePreview});*/
-    s.category(                               "Advanced Options");
-    s.button(            onShowLogClicked,    "Show Log");
-    s.buttonHelp("Click this button to show<br>slicing engine output.");
-    s.category(                               "Save Options");
+    s.category(                               "Save Options", {open: "open"});
     s.text(                 "gcode_filename", "Save as:", {default_value: "output.gcode"});
     s.category();
     s.separator();
