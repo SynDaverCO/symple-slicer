@@ -172,7 +172,7 @@ function settingsInit(id) {
     s.button(            onShowLogClicked,    "Show Log");
     s.buttonHelp("Click this button to show<br>slicing engine output.");
     s.category(                               "Preview Options",  {open: "open"});
-    s.toggle(                   "show_shell", "Show shell",       {onclick: onUpdatePreview});
+    s.toggle(                   "show_shell", "Show shell",       {onclick: onUpdatePreview, checked: 'checked'});
     s.toggle(                  "show_infill", "Show infill",      {onclick: onUpdatePreview});
     s.toggle(                 "show_support", "Show scaffolding", {onclick: onUpdatePreview});
     s.toggle(                  "show_travel", "Show travel",      {onclick: onUpdatePreview});

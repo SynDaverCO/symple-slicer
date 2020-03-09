@@ -338,6 +338,7 @@ class Stage {
             this.showGcodePath(false);
             this.bedRelative.remove(this.toolpath);
             this.toolpath.dispose();
+            this.placedObjects.visible = true;
         }
     }
 
