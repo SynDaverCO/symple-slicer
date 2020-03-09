@@ -19,6 +19,7 @@
 var settings;
 
 function settingsInit(id) {
+
     var s = new SettingsUI(id);
 
     /**
@@ -91,7 +92,7 @@ function settingsInit(id) {
     s.separator("br");
     s.button(         onExportClicked,     "Export");
     s.buttonHelp("Click this button to save changed<br>settings to your computer.");
-    
+
     s.category(                            "Import Settings");
     s.file(                "importSelect", {'text': "Drop settings file here", 'callback': onImportChange});
     s.separator("br");
@@ -165,19 +166,19 @@ function settingsInit(id) {
     s.separator();
     s.button(              onSliceClicked, "Slice");
     s.buttonHelp("Click this button to prepare<br>the model for printing.");
-    
+
     s.page(                 "settings-print", "Print and Preview");
     s.category(                               "Advanced Options");
     s.button(            onShowLogClicked,    "Show Log");
     s.buttonHelp("Click this button to show<br>slicing engine output.");
-    s.category(                               "Preview Options", {open: "open"});
-    s.toggle(                "show_toolpath", "Show toolpath",  {onclick: onUpdatePreview});
-    /*s.toggle(                "show_travel", "Show travel",  {onclick: onUpdatePreview});
-    s.toggle(                   "show_shell", "Show shell",   {onclick: onUpdatePreview});
-    s.toggle(                 "show_helpers", "Show helpers", {onclick: onUpdatePreview});
-    s.toggle(                  "show_infill", "Show infill",  {onclick: onUpdatePreview});*/
-    s.category(                               "Save Options", {open: "open"});
-    s.text(                 "gcode_filename", "Save as:", {default_value: "output.gcode"});
+    s.category(                               "Preview Options",  {open: "open"});
+    s.toggle(                   "show_shell", "Show shell",       {onclick: onUpdatePreview});
+    s.toggle(                  "show_infill", "Show infill",      {onclick: onUpdatePreview});
+    s.toggle(                 "show_support", "Show scaffolding", {onclick: onUpdatePreview});
+    s.toggle(                  "show_travel", "Show travel",      {onclick: onUpdatePreview});
+    s.slider(                "preview_layer", "Show layer",       {oninput: onUpdateLayer});
+    s.category(                               "Save Options",     {open: "open"});
+    s.text(                 "gcode_filename", "Save as:",         {default_value: "output.gcode"});
     s.category();
     s.separator();
     s.button(              onDownloadClicked, "Save");
@@ -185,7 +186,7 @@ function settingsInit(id) {
 
     s.page(              "settings-finished", "Final Steps");
     s.element(                                "help-post-print");
-    
+
     s.page(               "settings-help",    "Help");
     s.heading(                                "View Controls:");
     s.element(                                "help-viewport");
@@ -250,7 +251,7 @@ function onPrinterSizeChanged() {
     var x_width          = parseFloat($("#machine_width").val());
     var y_depth          = parseFloat($("#machine_depth").val());
     var z_height         = parseFloat($("#machine_height").val());
-    
+
     stage.setPrinterCharacteristics(circular, origin_at_center, x_width, y_depth, z_height);
 }
 
@@ -298,7 +299,7 @@ function onAddToPlatform() {
 
     var filename = settings.get("fileSelect_filename");
     document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
-     $('#done_placing').attr('disabled', false);
+    $('#done_placing').attr('disabled', false);
 }
 
 function onClearPlatform() {
@@ -344,9 +345,11 @@ function readyToDownload(data) {
 
     // Show the filament pathname
     var decoder = new TextDecoder();
-    var path = new GCodePath();
-    path.parse(decoder.decode(data));
+    var path = new GCodeParser(decoder.decode(data));
     stage.setGcodePath(path);
+    var max = stage.getGcodeLayers() - 1;
+    $("#preview_layer").attr("max", max).val(max);
+    onUpdatePreview();
 }
 
 function onDownloadClicked() {
@@ -357,7 +360,26 @@ function onDownloadClicked() {
 }
 
 function onUpdatePreview() {
-    stage.showGcodePath($("#show_toolpath").is(':checked'));
+    stage.showGcodePath("TRAVEL",            $("#show_travel").is(':checked'));
+    stage.showGcodePath("SKIN",              $("#show_shell").is(':checked'));
+    stage.showGcodePath("DEFAULT",           $("#show_shell").is(':checked'));
+    stage.showGcodePath("WALL-OUTER",        $("#show_shell").is(':checked'));
+    stage.showGcodePath("WALL-INNER",        $("#show_shell").is(':checked'));
+    stage.showGcodePath("FILL",              $("#show_infill").is(':checked'));
+    stage.showGcodePath("SKIRT",             $("#show_support").is(':checked'));
+    stage.showGcodePath("SUPPORT",           $("#show_support").is(':checked'));
+    stage.showGcodePath("SUPPORT-INTERFACE", $("#show_support").is(':checked'));
+    if(stage.isGcodePathVisible) {
+        $('#preview_layer').removeAttr('disabled');
+    } else {
+        var max = stage.getGcodeLayers() - 1;
+        $('#preview_layer').attr('disabled','disabled').val(max);
+    }
+}
+
+function onUpdateLayer() {
+    var val = parseInt($("#preview_layer").val());
+    stage.setGcodeLayer(val);
 }
 
 function onDoItAgainClicked() {

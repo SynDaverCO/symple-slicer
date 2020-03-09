@@ -34,7 +34,7 @@ class Stage {
         this.selectedGroup = new SelectionGroup();
         this.dragging = false;
         this.packer = null;
-        
+
         this.bedRelative.add(this.placedObjects);
     }
 
@@ -333,27 +333,51 @@ class Stage {
         } );
     }
 
-    setGcodePath(gcode_path) {
-        if(gcode_path) {
-            this.toolpath = new Toolpath(gcode_path);
-            this.toolpath.visible = false;
-            this.bedRelative.add(this.toolpath);
-        } else if(this.toolpath) {
+    clearGcodePath() {
+        if(this.toolpath) {
             this.showGcodePath(false);
             this.bedRelative.remove(this.toolpath);
             this.toolpath.dispose();
         }
     }
 
-    showGcodePath(enabled) {
-        if(enabled && this.toolpath) {
-            this.toolpath.visible      = true;
-            this.placedObjects.visible = false;
-        } else {
-            this.toolpath.visible      = false;
-            this.placedObjects.visible = true;
+    setGcodePath(gcode_path) {
+        this.clearGcodePath();
+        if(gcode_path) {
+            this.toolpath = new Toolpath(gcode_path);
+            this.toolpath.visible = false;
+            this.bedRelative.add(this.toolpath);
         }
-        this.render();
+    }
+
+    showGcodePath(which, enabled) {
+        if(this.toolpath) {
+            this.toolpath.setVisibility(which, enabled);
+            if(this.toolpath.isVisible) {
+                this.toolpath.visible      = true;
+                this.placedObjects.visible = false;
+            } else {
+                this.toolpath.visible      = false;
+                this.placedObjects.visible = true;
+            }
+            this.render();
+        }
+    }
+
+    setGcodeLayer(value) {
+        if(this.toolpath) {
+            this.toolpath.setGcodeLayer(value);
+            this.render();
+        }
+    }
+
+    get isGcodePathVisible() {
+        return this.toolpath && this.toolpath.isVisible;
+    }
+
+    // Returns a count of gcode layers
+    getGcodeLayers() {
+        return this.toolpath ? this.toolpath.nLayers : 0;
     }
 
     // Event handlers
