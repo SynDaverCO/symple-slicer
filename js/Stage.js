@@ -55,6 +55,7 @@ class Stage {
         this.printer.z_height         = z_height;
         this.printerRepresentation.update(this.printer);
         this.arrangeObjectsOnPlatform();
+        this.adjustViewpoint();
         this.render();
     }
 

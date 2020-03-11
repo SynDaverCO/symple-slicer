@@ -34,7 +34,7 @@ class PrinterRepresentation extends THREE.Object3D {
 
         this.constructRepresentation(printer);
     }
-    
+
     constructRepresentation(printer) {
         if (printer.circular) {
             var segments = 64;
@@ -54,6 +54,8 @@ class PrinterRepresentation extends THREE.Object3D {
         this.checkers = new THREE.Mesh( this.bed_geometry, PrinterRepresentation.checkerboardMaterial );
         this.checkers.position.z = 0.05;
         this.add(this.checkers);
+
+        PrinterRepresentation.checkerboardMaterial.uniforms.checkSize.value = new THREE.Vector2(printer.x_width/10, printer.y_depth/10);
 
         // Walls
 
@@ -94,7 +96,7 @@ class PrinterRepresentation extends THREE.Object3D {
         this.remove(this.floor);
         this.remove(this.checkers);
         this.remove(this.box_frame);
-                
+
         this.box_geometry.dispose();
         this.edge_geometry.dispose();
     }
@@ -109,12 +111,12 @@ class PrinterRepresentation extends THREE.Object3D {
 
 PrinterRepresentation.checkersFragmentShader = `
         varying vec2  vUv;
-        uniform float checkSize;
+        uniform vec2 checkSize;
         uniform vec4  color1;
         uniform vec4  color2;
 
         vec4 checker(in float u, in float v) {
-            float fmodResult = mod(floor(checkSize * u) + floor(checkSize * v), 2.0);
+            float fmodResult = mod(floor(checkSize.x * u) + floor(checkSize.y * v), 2.0);
 
             if (fmodResult < 1.0) {
                 return color1;
@@ -140,9 +142,9 @@ PrinterRepresentation.checkersVertexShader = `
 
 PrinterRepresentation.checkerboardMaterial = new THREE.ShaderMaterial({
     uniforms: {
-        checkSize: { type: "f", value: 15 },
-        color1: { type: "v4", value: new THREE.Vector4(0.55, 0.55, 0.55, 1) },
-        color2: { type: "v4", value: new THREE.Vector4(0.50, 0.50, 0.50, 1) },
+        checkSize: { type: "v2", value: new THREE.Vector2(15,15) },
+        color1:    { type: "v4", value: new THREE.Vector4(0.55, 0.55, 0.55, 1) },
+        color2:    { type: "v4", value: new THREE.Vector4(0.50, 0.50, 0.50, 1) },
     },
     vertexShader:   PrinterRepresentation.checkersVertexShader,
     fragmentShader: PrinterRepresentation.checkersFragmentShader,
