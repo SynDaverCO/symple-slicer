@@ -70,3 +70,8 @@ hr {
     overflow:           auto;
     white-space:        pre-wrap;
 }
+
+#print_time, #print_filament {
+    pointer-events:     none;
+    border:             none;
+}

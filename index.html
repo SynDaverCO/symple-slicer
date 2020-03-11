@@ -31,13 +31,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/FileSaver/FileSaver.js"></script>
         <script src="lib/jakwings-toml-j0.4/toml-browser.js"></script>
         <script src="lib/circlepacker/circlepacker.min.js"></script>
-        <script src="lib/geometry-lib/StlReader.js"></script>
-        <script src="lib/geometry-lib/GeometrySerialize.js"></script>
-        <script src="lib/geometry-lib/FetchFile.js"></script>
         <script src="lib/three/ConvexHull.js"></script>
         <script src="lib/three/ConvexGeometry.js"></script>
-        <script src="lib/gcode-viewer/toolpath.js"></script>
-        <script src="lib/gcode-viewer/gcode.js"></script>
+        <script src="lib/util/geometry/GeometrySerialize.js"></script>
+        <script src="lib/util/gcode/Toolpath.js"></script>
+        <script src="lib/util/gcode/GCodeParser.js"></script>
+        <script src="lib/util/io/StlReader.js"></script>
+        <script src="lib/util/io/FetchFile.js"></script>
+        <script src="lib/util/misc/ResettableTimer.js"></script>
+        <script src="lib/util/ui/settings/settings.js"></script>
+        <script src="lib/util/ui/toolbar/toolbar.js"></script>
+        <script src="lib/cura-engine/cura-interface.js"></script>
+        <script src="lib/cura-engine/cura-configuration.js"></script>
+        
+        <link rel="stylesheet" type="text/css" href="lib/util/ui/ui.css">
+        <link rel="stylesheet" type="text/css" href="lib/util/ui/settings/settings.css">
+        <link rel="stylesheet" type="text/css" href="lib/util/ui/toolbar/toolbar.css">
         
         <!-- ***************** Prequisites for OutlinePass.js *****************
              We need all the following files to give selected objects a halo -->
@@ -51,21 +60,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <link rel="stylesheet" type="text/css" href="css/layout.css">
         <link rel="stylesheet" type="text/css" href="css/theme.css">
-        <link rel="stylesheet" type="text/css" href="lib/ui/ui.css">
-        <link rel="stylesheet" type="text/css" href="lib/ui/settings/settings.css">
-        <link rel="stylesheet" type="text/css" href="lib/ui/toolbar/toolbar.css">
 
-        <script src="lib/ui/settings/settings.js"></script>
-        <script src="lib/ui/toolbar/toolbar.js"></script>
-        <script src="js/ui_printer_representation.js"></script>
-        <script src="js/ui_printable_object.js"></script>
-        <script src="js/ui_selection_group.js"></script>
-        <script src="js/ui_render.js"></script>
-        <script src="js/ui_stage.js"></script>
-        <script src="js/ui_settings.js"></script>
-
-        <script src="lib/cura-engine/cura-interface.js"></script>
-        <script src="lib/cura-engine/cura-configuration.js"></script>
+        <script src="js/PrinterRepresentation.js"></script>
+        <script src="js/PrintableObject.js"></script>
+        <script src="js/SelectionGroup.js"></script>
+        <script src="js/RenderLoop.js"></script>
+        <script src="js/Stage.js"></script>
+        <script src="js/SettingsPanel.js"></script>
 
         <!-- Trick for colorizing images: https://css-tricks.com/color-filters-can-turn-your-gray-skies-blue/
              The target color is rgb(0.00 0.18 0.38) but for some reason we need to use (0.00, 0.03, 0.12) in
@@ -133,7 +134,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <div id="about" onclick="hideAbout()" class="float-center panel-style">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
-            <h1>Symple Slicer V0.7</h1>
+            <h1>Symple Slicer V0.8</h1>
             <p>
                 Symple Slicer is maintained by SynDaver Labs, Inc. for use with SynDaver printers.
             </p>
@@ -191,7 +192,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script>
             var canvas       = document.getElementById("webgl");
             var stage        = new Stage();
-            var renderEngine = new RenderEngine(canvas, stage);
+            var renderLoop   = new RenderLoop(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
 
             stage.setEyeLevel();
@@ -228,6 +229,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             slicer.onProgress = function(progress) {
                 setProgress(progress);
+            }
+            
+            slicer.onPrintStats = function(stats) {
+                setPrintTime(stats.time_hms);
+                setPrintFilament(stats.filament);
             }
         </script>
     </body>

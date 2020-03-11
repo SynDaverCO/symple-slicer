@@ -83,21 +83,6 @@ function settingsInit(id) {
     s.separator("br");
     s.button(         onLoadPresetClicked, "Apply");
     s.buttonHelp("Applying presets resets all printer &amp; material settings<br>to defaults, including modified or imported settings.");
-    s.category(                            "Export Settings");
-    s.toggle(       "export_with_choices", "Annotate settings with units and choices");
-    s.toggle(  "export_with_descriptions", "Annotate settings with descriptions");
-    s.toggle(      "export_with_defaults", "Include (unchanged) default values");
-    s.separator("br");
-    s.text(             "export_filename", "Save as:", {default_value: "config.toml"});
-    s.separator("br");
-    s.button(         onExportClicked,     "Export");
-    s.buttonHelp("Click this button to save changed<br>settings to your computer.");
-
-    s.category(                            "Import Settings");
-    s.file(                "importSelect", {'text': "Drop settings file here", 'callback': onImportChange});
-    s.separator("br");
-    s.button(         onImportClicked, "Apply", {'id': "import_settings"});
-    s.buttonHelp("Importing settings from a file will override<br>all printer &amp; material presets.");
 
     s.page(            "settings-machine", "Machine Settings");
 
@@ -139,7 +124,7 @@ function settingsInit(id) {
     s.fromSlicer(                          "layer_height");
 
     s.category(                            "Temperatures");
-    s.fromSlicer(                          "default_material_print_temperature");
+    s.fromSlicer(                          "material_print_temperature");
     s.fromSlicer(                          "material_bed_temperature");
     s.fromSlicer(                          "material_part_removal_temperature");
     s.fromSlicer(                          "material_probe_temperature");
@@ -168,9 +153,9 @@ function settingsInit(id) {
     s.buttonHelp("Click this button to prepare<br>the model for printing.");
 
     s.page(                 "settings-print", "Print and Preview");
-    s.category(                               "Advanced Options");
-    s.button(            onShowLogClicked,    "Show Log");
-    s.buttonHelp("Click this button to show<br>slicing engine output.");
+    s.category(                               "Print Statistics", {open: "open"});
+    s.text(                     "print_time", "Print time");
+    s.number(               "print_filament", "Filament used", {units: "mm²"});
     s.category(                               "Preview Options",  {open: "open"});
     s.toggle(                   "show_shell", "Show shell",       {onclick: onUpdatePreview, checked: 'checked'});
     s.toggle(                  "show_infill", "Show infill",      {onclick: onUpdatePreview});
@@ -186,6 +171,27 @@ function settingsInit(id) {
 
     s.page(              "settings-finished", "Final Steps");
     s.element(                                "help-post-print");
+    
+    s.page(              "settings-advanced", "Advanced Features");
+    s.category(                               "Slicer Output");
+    s.button(            onShowLogClicked,    "Show");
+    s.buttonHelp("Click this button to show<br>slicing engine logs.");
+    
+    s.category(                            "Export Settings");
+    s.toggle(       "export_with_choices", "Annotate settings with units and choices");
+    s.toggle(  "export_with_descriptions", "Annotate settings with descriptions");
+    s.toggle(      "export_with_defaults", "Include (unchanged) default values");
+    s.separator("br");
+    s.text(             "export_filename", "Save as:", {default_value: "config.toml"});
+    s.separator("br");
+    s.button(         onExportClicked,     "Export");
+    s.buttonHelp("Click this button to save changed<br>settings to your computer.");
+
+    s.category(                            "Import Settings");
+    s.file(                "importSelect", {'text': "Drop settings file here", 'callback': onImportChange});
+    s.separator("br");
+    s.button(         onImportClicked, "Apply", {'id': "import_settings"});
+    s.buttonHelp("Importing settings from a file will override<br>all printer &amp; material presets.");
 
     s.page(               "settings-help",    "Help");
     s.heading(                                "View Controls:");
@@ -222,7 +228,7 @@ function loadStartupProfile() {
     }
 
     // If no local profile is found, reload starting profile
-    onLoadPresetClicked();
+    onLoadPresetClicked(true);
 }
 
 function onEditStartGcode() {
@@ -255,11 +261,11 @@ function onPrinterSizeChanged() {
     stage.setPrinterCharacteristics(circular, origin_at_center, x_width, y_depth, z_height);
 }
 
-function onLoadPresetClicked() {
+function onLoadPresetClicked(noAlert) {
     slicer.config.loadDefaults();
     slicer.config.loadProfile("machine", $("#machinePresetSelect").val() + ".toml", onPrinterSizeChanged);
     slicer.config.loadProfile("print",   $("#materialPresetSelect").val() + ".toml");
-    alert("The new presets have been applied.");
+    if(!noAlert) alert("The new presets have been applied.");
 }
 
 function onImportChange(file) {
@@ -334,6 +340,14 @@ function setProgress(value) {
 
 function hideProgressBar() {
     $("#progress-dialog").hide();
+}
+
+function setPrintTime(value) {
+    $("#print_time").attr("value",value);
+}
+
+function setPrintFilament(value) {
+    $("#print_filament").attr("value",value);
 }
 
 var gcode_blob;

@@ -34,16 +34,17 @@ class Stage {
         this.selectedGroup = new SelectionGroup();
         this.dragging = false;
         this.packer = null;
+        this.timer = new ResettableTimeout();
 
         this.bedRelative.add(this.placedObjects);
     }
 
     setEyeLevel() {
-        renderEngine.setEyeLevel(this.printer.z_height / 2);
+        renderLoop.setEyeLevel(this.printer.z_height / 2);
     }
 
     render() {
-        renderEngine.render();
+        renderLoop.render();
     }
 
     setPrinterCharacteristics(circular, origin_at_center, x_width, y_depth, z_height) {
@@ -98,8 +99,11 @@ class Stage {
     arrangeObjectsOnPlatform() {
         var circles = [];
         var packingFinished = () => {
-            this.packer.destroy();
-            this.packer = null;
+            if(this.packer) {
+                var p = this.packer;
+                this.packer = null;
+                p.destroy();
+            }
         };
 
         if(this.packer) packingFinished();
@@ -150,6 +154,8 @@ class Stage {
             onMoveEnd:            packingFinished
         });
         this.packer.update();
+        // Packing might run continuously, to abort after a few seconds.
+        this.timer.start(packingFinished, 5000);
     }
 
     /**
@@ -263,14 +269,14 @@ class Stage {
     addObjectToSelection(obj) {
         this.placedObjects.add(this.selectedGroup);
         this.selectedGroup.addToSelection(obj);
-        renderEngine.outlinePass.selectedObjects = [this.selectedGroup];
+        renderLoop.outlinePass.selectedObjects = [this.selectedGroup];
         this.transformControl.attach(this.selectedGroup);
         this.render();
     }
 
     selectNone() {
         this.selectedGroup.selectNone();
-        renderEngine.outlinePass.selectedObjects = [];
+        renderLoop.outlinePass.selectedObjects = [];
         this.transformControl.detach();
         this.render();
     }

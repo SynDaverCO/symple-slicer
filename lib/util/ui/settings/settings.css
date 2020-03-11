@@ -24,6 +24,7 @@
 
 .settings-panel {
     display:            none;
+    user-select:        none;
 }
 
 .settings-panel .parameter {

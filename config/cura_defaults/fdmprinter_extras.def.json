@@ -22,7 +22,7 @@
             "type": "bool",
             "default_value": true,
             "resolve": "any(extruderValues('material_keep_part_removal_temperature'))",
-            "enabled": "True",
+            "enabled": "machine_heated_bed",
             "settable_per_mesh": false,
             "settable_per_extruder": false
         },
@@ -33,7 +33,7 @@
             "type": "float",
             "default_value": "material_part_removal_temperature",
             "resolve": "material_part_removal_temperature if material_keep_part_removal_temperature else 0",
-            "enabled": "False",
+            "enabled": "machine_heated_bed",
             "settable_per_mesh": false,
             "settable_per_extruder": false
         },
