@@ -346,6 +346,7 @@ class Stage {
             this.toolpath.dispose();
             this.placedObjects.visible = true;
         }
+        this.render();
     }
 
     setGcodePath(gcode_path) {
@@ -355,6 +356,7 @@ class Stage {
             this.toolpath.visible = false;
             this.bedRelative.add(this.toolpath);
         }
+        this.render();
     }
 
     showGcodePath(which, enabled) {

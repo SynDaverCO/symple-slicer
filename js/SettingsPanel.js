@@ -171,12 +171,12 @@ function settingsInit(id) {
 
     s.page(              "settings-finished", "Final Steps");
     s.element(                                "help-post-print");
-    
+
     s.page(              "settings-advanced", "Advanced Features");
     s.category(                               "Slicer Output");
     s.button(            onShowLogClicked,    "Show");
     s.buttonHelp("Click this button to show<br>slicing engine logs.");
-    
+
     s.category(                            "Export Settings");
     s.toggle(       "export_with_choices", "Annotate settings with units and choices");
     s.toggle(  "export_with_descriptions", "Annotate settings with descriptions");
@@ -198,6 +198,8 @@ function settingsInit(id) {
     s.element(                                "help-viewport");
 
     s.done();
+
+    s.onPageExit = onPageExit;
 
     settings = s;
 
@@ -369,8 +371,13 @@ function readyToDownload(data) {
 function onDownloadClicked() {
     var fileName = settings.get("gcode_filename");
     saveAs(gcode_blob, fileName);
-    stage.setGcodePath(null);
     settings.gotoPage("settings-finished");
+}
+
+function onPageExit(page) {
+    if(page == "settings-print") {
+        stage.setGcodePath(null);
+    }
 }
 
 function onUpdatePreview() {
