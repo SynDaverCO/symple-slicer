@@ -39,8 +39,8 @@ class Stage {
         this.bedRelative.add(this.placedObjects);
     }
 
-    setEyeLevel() {
-        renderLoop.setEyeLevel(this.printer.z_height / 2);
+    adjustViewpoint() {
+        renderLoop.adjustViewpoint(this.printerRepresentation);
     }
 
     render() {
@@ -54,7 +54,6 @@ class Stage {
         this.printer.y_depth          = y_depth;
         this.printer.z_height         = z_height;
         this.printerRepresentation.update(this.printer);
-        this.setEyeLevel();
         this.arrangeObjectsOnPlatform();
         this.render();
     }

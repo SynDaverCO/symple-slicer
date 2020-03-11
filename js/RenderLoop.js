@@ -19,7 +19,7 @@
 class RenderLoop {
     constructor(canvas, stage) {
         var mine = this;
-        
+
         var debugShadowLight = false;
         var backgroundColor = 0x757575;
 
@@ -29,7 +29,7 @@ class RenderLoop {
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        var camera   = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 10, 3000 );
+        var camera   = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 10, 3000 );
         camera.position.z = -600;
         this.camera = camera;
 
@@ -46,7 +46,7 @@ class RenderLoop {
         var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.9 );
         camera.add(directionalLight);
         scene.add(camera);
-        
+
         // For debugging: Show the shadow camera that is used to project
         // shadows on the build plane.
         if (debugShadowLight) {
@@ -107,7 +107,7 @@ class RenderLoop {
             mine.orbit.update();
             mine.render();
         }
-        
+
         function onViewChanged( event ) {
             mine.render();
             stage.onViewChanged();
@@ -134,16 +134,65 @@ class RenderLoop {
         canvas.addEventListener( 'mouseup', onMouseUp, false );
         canvas.addEventListener( 'mousemove', onMouseMove, false );
         window.addEventListener( 'resize', onWindowResize, false );
-
-        // Start animation and/or render initial frame
-        //animate();
-        this.render();
     }
-    
-    setEyeLevel(eyeHeight) {
-        this.camera.position.y = eyeHeight;
-        this.orbit.target.set(0,eyeHeight,0);
+
+    /**
+     * Translates the coordinate system so that a point in 3D projects to the
+     * exact center of the screen.
+     */
+    centerOnScreen(x, y, z) {
+        this.camera.clearViewOffset();
+
+        this.camera.updateMatrixWorld();
+        this.camera.updateProjectionMatrix();
+
+        // get the normalized screen coordinate of that position
+        // x and y will be in the -1 to +1 range with x = -1 being
+        // on the left and y = -1 being on the bottom
+        var position = new THREE.Vector3(x, y, z);
+        position.project(this.camera);
+
+        // convert the normalized position to CSS coordinates
+        var w = canvas.clientWidth;
+        var h = canvas.clientHeight;
+        
+        x = (position.x *  .5 + .5) * w;
+        y = (position.y * -.5 + .5) * h;
+
+        var offset_x = 0;
+        var offset_y = y - h/2;
+
+        this.camera.setViewOffset(w, h, offset_x, offset_y, w, h);
+    }
+
+    /**
+     * Adjusts the viewpoint to correspond to a new print volume.
+     * We want the print volume to fill the screen. We want the
+     * center of the print volume to be in the center of the
+     * screen, but we want the camera to be looking at the center
+     * of the print bed
+     */
+    adjustViewpoint(object) {
+        const boundingBox = new THREE.Box3();
+        boundingBox.setFromObject(object);
+
+        const size = boundingBox.getSize(new THREE.Vector3());
+
+        // Back awsy the camera so the entire print volume fits on the screen
+        const maxDim = Math.max( size.x, size.y, size.z );
+        const fov = this.camera.fov * (Math.PI / 180);
+        const offset = 1.25;
+        this.camera.position.z = -Math.abs( maxDim / 2 / Math.tan( fov / 2 ) ) * offset - size.z/2;
+
+        // Set the eye level to 1/4 up on the object
+        this.camera.position.y = size.y/2;
+
+        // Look at the origin
+        this.orbit.target.set(0,10,0);
         this.orbit.update();
+
+        // Now translate the canvas so the center of the print volume lies in the center of the screen
+        this.centerOnScreen(0, size.y / 2, -size.z);
     }
 
     render() {

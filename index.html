@@ -43,11 +43,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/util/ui/toolbar/toolbar.js"></script>
         <script src="lib/cura-engine/cura-interface.js"></script>
         <script src="lib/cura-engine/cura-configuration.js"></script>
-        
+
         <link rel="stylesheet" type="text/css" href="lib/util/ui/ui.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/settings/settings.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/toolbar/toolbar.css">
-        
+
         <!-- ***************** Prequisites for OutlinePass.js *****************
              We need all the following files to give selected objects a halo -->
         <script src="lib/three/Pass.js"></script>
@@ -94,7 +94,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <div id="toolbar"  class="panel-style dock-left  dock-bottom vertical"></div>
 
         <!-- Help table -->
-        
+
         <div id = "help-post-print">
             <img src="images/celebration-party-hats.jpg">
             <p>
@@ -126,7 +126,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <label for="slicing">Slicing progress:</label>
             <progress id="slicing" value="0" max="100"> 32% </progress>
         </div>
-        
+
         <div id="log-dialog" class="float-center panel-style">
             <pre id="console">Console Output</pre>
             <button onclick="onHideLogClicked()">Close</button>
@@ -134,7 +134,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <div id="about" onclick="hideAbout()" class="float-center panel-style">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
-            <h1>Symple Slicer V0.8</h1>
+            <h1>Symple Slicer V0.9</h1>
             <p>
                 Symple Slicer is maintained by SynDaver Labs, Inc. for use with SynDaver printers.
             </p>
@@ -195,7 +195,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var renderLoop   = new RenderLoop(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
 
-            stage.setEyeLevel();
+            stage.adjustViewpoint();
+            renderLoop.render();
 
             //toolbar.addIcon("open-file",         "Open File",       "images/open-file.png",);
             toolbar.addIcon("move",              "Move Object",     "images/scale.png");
@@ -230,7 +231,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             slicer.onProgress = function(progress) {
                 setProgress(progress);
             }
-            
+
             slicer.onPrintStats = function(stats) {
                 setPrintTime(stats.time_hms);
                 setPrintFilament(stats.filament);
