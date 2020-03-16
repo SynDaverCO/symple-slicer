@@ -25,6 +25,8 @@ function settingsInit(id) {
     /**
      * Helper function for obtaining UI parameters from the slicer engine
      */
+    var valueSetter = {};
+    
     s.fromSlicer = function(key) {
         var sd = slicer.getOptionDescriptor(key);
         var label = sd.label;
@@ -38,17 +40,17 @@ function settingsInit(id) {
             case 'int':
                 attr.step = (sd.type == 'int') ? 1 : 0.01;
                 el = s.number(key, label, attr);
-                sd.onValueChanged = (key, val) => {el.value = val;}
+                valueSetter[key] = (key, val) => {el.value = val;}
                 el.addEventListener('change', (event) => slicer.setOption(key, parseFloat(event.target.value)));
                 break;
             case 'str':
                 el = s.textarea(key, label, attr);
-                sd.onValueChanged = (key, val) => {el.value = val;}
+                valueSetter[key] = (key, val) => {el.value = val;}
                 el.addEventListener('change', (event) => slicer.setOption(key, event.target.value));
                 break;
             case 'bool':
                 el = s.toggle(key, label, attr);
-                sd.onValueChanged = (key, val) => {el.checked = val;}
+                valueSetter[key] = (key, val) => {el.checked = val;}
                 el.addEventListener('change', (event) => slicer.setOption(key,el.checked));
                 break;
             case 'enum':
@@ -56,11 +58,13 @@ function settingsInit(id) {
                 for(const [value, label] of Object.entries(sd.options)) {
                     o.option(value, label);
                 }
-                sd.onValueChanged = (key, val) => {o.element.value = val;}
+                valueSetter[key] = (key, val) => {o.element.value = val;}
                 o.element.addEventListener('change', (event) => slicer.setOption(key, event.target.value));
                 break;
         }
     }
+
+    slicer.onOptionChanged = (name, val) => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val)};
 
     s.page(              "settings-place",  "Place Objects");
     s.file(                  "fileSelect", {'binary': true, 'text': "Drop STL file here", 'callback': onFileChange});

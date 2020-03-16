@@ -38,11 +38,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/util/gcode/GCodeParser.js"></script>
         <script src="lib/util/io/StlReader.js"></script>
         <script src="lib/util/io/FetchFile.js"></script>
+        <script src="lib/util/io/LoadResource.js"></script>
         <script src="lib/util/misc/ResettableTimer.js"></script>
         <script src="lib/util/ui/settings/settings.js"></script>
         <script src="lib/util/ui/toolbar/toolbar.js"></script>
         <script src="lib/cura-engine/cura-interface.js"></script>
-        <script src="lib/cura-engine/cura-configuration.js"></script>
 
         <link rel="stylesheet" type="text/css" href="lib/util/ui/ui.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/settings/settings.css">
@@ -210,8 +210,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             toolbar.onChange = function(id) {stage.onTranformToolChanged(id);};
 
-            slicer = new SlicerInterface("lib/cura-engine/cura-worker.js", "config/cura_defaults/");
-            slicer.config.onLoaded = () => settingsInit("settings");
+            slicer = new SlicerInterface(
+                "lib/cura-engine/cura-worker.js",
+                "lib/cura-engine/cura-configuration.js",
+                "../../config/cura_defaults/",
+                () => settingsInit("settings")
+            );
 
             // Cura interface
             var log = document.getElementById('console');
