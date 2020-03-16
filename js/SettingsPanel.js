@@ -26,7 +26,7 @@ function settingsInit(id) {
      * Helper function for obtaining UI parameters from the slicer engine
      */
     s.fromSlicer = function(key) {
-        var sd = slicer.config.getSettingDescriptor(key);
+        var sd = slicer.getOptionDescriptor(key);
         var label = sd.label;
         var el;
         var attr = {
@@ -39,17 +39,17 @@ function settingsInit(id) {
                 attr.step = (sd.type == 'int') ? 1 : 0.01;
                 el = s.number(key, label, attr);
                 sd.onValueChanged = (key, val) => {el.value = val;}
-                el.addEventListener('change', (event) => slicer.config.set(key, parseFloat(event.target.value)));
+                el.addEventListener('change', (event) => slicer.setOption(key, parseFloat(event.target.value)));
                 break;
             case 'str':
                 el = s.textarea(key, label, attr);
                 sd.onValueChanged = (key, val) => {el.value = val;}
-                el.addEventListener('change', (event) => slicer.config.set(key, event.target.value));
+                el.addEventListener('change', (event) => slicer.setOption(key, event.target.value));
                 break;
             case 'bool':
                 el = s.toggle(key, label, attr);
                 sd.onValueChanged = (key, val) => {el.checked = val;}
-                el.addEventListener('change', (event) => slicer.config.set(key,el.checked));
+                el.addEventListener('change', (event) => slicer.setOption(key,el.checked));
                 break;
             case 'enum':
                 var o = s.choice(key, label, attr);
@@ -57,7 +57,7 @@ function settingsInit(id) {
                     o.option(value, label);
                 }
                 sd.onValueChanged = (key, val) => {o.element.value = val;}
-                o.element.addEventListener('change', (event) => slicer.config.set(key, event.target.value));
+                o.element.addEventListener('change', (event) => slicer.setOption(key, event.target.value));
                 break;
         }
     }
@@ -212,19 +212,19 @@ function settingsInit(id) {
 
 function loadStartupProfile() {
     // Always start with defaults.
-    slicer.config.loadDefaults(true);
+    slicer.loadDefaults(true);
 
     if (typeof(Storage) !== "undefined") {
         // Install handler for saving profile
         window.onunload = function() {
             console.log("Saved setting to local storage");
-            localStorage.setItem("startup_config", slicer.config.saveProfileStr());
+            localStorage.setItem("startup_config", slicer.saveProfileStr());
         }
 
         var stored_config = localStorage.getItem("startup_config");
         if(stored_config) {
             console.log("Loaded settings from local storage");
-            slicer.config.loadProfileStr(stored_config);
+            slicer.loadProfileStr(stored_config);
             onPrinterSizeChanged();
             return;
         }
@@ -265,9 +265,9 @@ function onPrinterSizeChanged() {
 }
 
 function onLoadPresetClicked(noAlert) {
-    slicer.config.loadDefaults();
-    slicer.config.loadProfile("machine", $("#machinePresetSelect").val() + ".toml", onPrinterSizeChanged);
-    slicer.config.loadProfile("print",   $("#materialPresetSelect").val() + ".toml");
+    slicer.loadDefaults();
+    slicer.loadProfile("machine", $("#machinePresetSelect").val() + ".toml", onPrinterSizeChanged);
+    slicer.loadProfile("print",   $("#materialPresetSelect").val() + ".toml");
     if(!noAlert) alert("The new presets have been applied.");
 }
 
@@ -278,12 +278,12 @@ function onImportChange(file) {
 function onImportClicked() {
     alert("The new settings have been applied.");
     var stored_config = settings.get("importSelect");
-    slicer.config.loadProfileStr(stored_config);
+    slicer.loadProfileStr(stored_config);
     onPrinterSizeChanged();
 }
 
 function onExportClicked() {
-    var config = slicer.config.saveProfileStr({
+    var config = slicer.saveProfileStr({
         descriptions: $("#export_with_descriptions").is(':checked'),
         defaults:     $("#export_with_defaults").is(':checked'),
         choices:      $("#export_with_choices").is(':checked')

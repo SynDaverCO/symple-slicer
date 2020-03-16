@@ -210,7 +210,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             toolbar.onChange = function(id) {stage.onTranformToolChanged(id);};
 
-            slicer = new SlicerInterface("config/cura_defaults/");
+            slicer = new SlicerInterface("lib/cura-engine/cura-worker.js", "config/cura_defaults/");
             slicer.config.onLoaded = () => settingsInit("settings");
 
             // Cura interface
