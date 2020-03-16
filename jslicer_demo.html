@@ -17,347 +17,347 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Web Slicer Demonstration</title>
-		<style>
-			html, body {
-				position:  relative;
-				width:     100%;
-				height:    100%;
-				margin:    0;
-				padding:   0;
-				overflow:  hidden;
-				background: black;
-			}
-			
-			#myCanvas {
-				display:    block;
-				background: black;
-			}
-			
-			#statusBar {
-				position:      absolute;
-				left:          0px;
-				top:           2em;
-				width:         100%;
-				
-				z-index:       15;
-				padding:       5px;
-				
-				font-size:     4em;
-				font-family:   'Arial Black', 'Arial Bold', Gadget, sans-serif;
-				text-shadow:   4px 4px 4px #333333;
-				text-align:    center;
-				
-				color: 	cyan;
-				-webkit-text-fill-color: #009999;
-				-webkit-text-stroke-width: 2px;
-				-webkit-text-stroke-color: #00CCCC;	
-				
-				display:       none;
-			}
-			
-			.dashedAndRound {
-				color:              cyan;
-				border:             3px dashed cyan;
-				border-radius:      15px;
-				padding:            10px;
-			}
-			
-			#dropBox {
-				position:           absolute;
-				z-index:            15;
-				width:              60px;
-				bottom:             30px;
-				right:              30px;
-				background:         black;
+    <head>
+        <title>Web Slicer Demonstration</title>
+        <style>
+            html, body {
+                position:  relative;
+                width:     100%;
+                height:    100%;
+                margin:    0;
+                padding:   0;
+                overflow:  hidden;
+                background: black;
+            }
 
-				font-family:        Verdana, Geneva, sans-serif;				
-				text-align:         center;
-			}
-			
-			.dashedAndRound:hover {
-				-ms-transform:     rotate(-3deg) scale(1.1); /* IE 9 */
-				-webkit-transform: rotate(-3deg) scale(1.1); /* Chrome, Safari, Opera */
-				transform:         rotate(-3deg) scale(1.1);
-			}
-			
-			#credits {
-				position:           absolute;
-				color:              cyan;
-				z-index:            15;
-				bottom:             30px;
-				left:               30px;
-				padding:            10px;
-				font-family:        Verdana, Geneva, sans-serif;
-				
-				border:             2px solid cyan;
-			}
-			
-			#credits a {
-				text-decoration: none;
-				color: cyan;
-			}
-	
-			.transition {
-				-webkit-transition: 0.2s ease-in-out;
-				-moz-transition:    0.2s ease-in-out;
-				-o-transition:      0.2s ease-in-out;
-				transition:         0.2s ease-in-out;
-			}
-			
-			.tiltLeft {
-				-ms-transform: rotate(-1deg); /* IE 9 */
-				-webkit-transform: rotate(-1deg); /* Chrome, Safari, Opera */
-				transform: rotate(-1deg);
-			}
-			
-			.tiltRight {
-				-ms-transform: rotate(1deg); /* IE 9 */
-				-webkit-transform: rotate(1deg); /* Chrome, Safari, Opera */
-				transform: rotate(1deg);
-			}
-			
-			.tiltRightMore {
-				-ms-transform: rotate(2deg); /* IE 9 */
-				-webkit-transform: rotate(2deg); /* Chrome, Safari, Opera */
-				transform: rotate(2deg);
-			}
-		</style>
-	</head>
-	
-	<body>
-		
-		<canvas id="myCanvas">
-			Your browser does not support the HTML5 canvas tag.
-		</canvas>
-		
-		<div id="statusBar" class="tiltRight"></div>
-		
-		<div id="dropBox" class="tiltRightMore dashedAndRound transition">
-			Drag STL file here.
-		</div>
-		
-		<div id="credits" class="tiltLeft dashedAndRound"><a href="http://marciot.freeshell.org">marciot.freeshell.org</a></div>
+            #myCanvas {
+                display:    block;
+                background: black;
+            }
 
-		<script src="/lib/three/three.min.js"></script>
-		<script src="/lib/jquery/jquery.js"></script>
-        <script src="/lib/geometry-lib/GeometrySerialize.js"></script>
-		
-		<script src="/lib/jslicer-engine/worker/SlicerInterface.js"></script>
-		<script src="/lib/jslicer-engine/core/ClipperPath.js"></script>
-		
-		<script>
-			var canvas   = document.getElementById('myCanvas');
-			var origin_x = 300;
-			var origin_y = 300;
-			var scale    = 15.0;
-			var layer    = 0;
-			
-			var geometry, newGeometryAsJson;
-			var slices;
+            #statusBar {
+                position:      absolute;
+                left:          0px;
+                top:           2em;
+                width:         100%;
 
-			function RotateFiles() {
-				var passes = 0;
-				var file   = 0;
-				var files  = [
-					"/stl/demo1.stl",
-					"/stl/demo2.stl",
-					"/stl/demo3.stl"
-				];
-				var autorotate = true;
-				
-				this.fetchNext = function() {
-					console.log("Getting " + files[file]);
-					slicer.loadFileFromUrl(files[file]);
-					
-					passes = 0;
-					
-					file++;
-					if(file == files.length) {
-						file = 0;
-					}
-				}
-				
-				this.scheduleNext = function(seconds) {
-					setTimeout(this.fetchNext, seconds * 1000);
-				}
-				
-				this.onePass = function() {
-					if(!autorotate)
-						return;
-					passes++;
-					if(passes == 2) {
-						rot.fetchNext();
-					}
-				}
-				
-				this.stopRotation = function() {
-					autorotate = false;
-				}
-			}
-			
+                z-index:       15;
+                padding:       5px;
+
+                font-size:     4em;
+                font-family:   'Arial Black', 'Arial Bold', Gadget, sans-serif;
+                text-shadow:   4px 4px 4px #333333;
+                text-align:    center;
+
+                color:  cyan;
+                -webkit-text-fill-color: #009999;
+                -webkit-text-stroke-width: 2px;
+                -webkit-text-stroke-color: #00CCCC;
+
+                display:       none;
+            }
+
+            .dashedAndRound {
+                color:              cyan;
+                border:             3px dashed cyan;
+                border-radius:      15px;
+                padding:            10px;
+            }
+
+            #dropBox {
+                position:           absolute;
+                z-index:            15;
+                width:              60px;
+                bottom:             30px;
+                right:              30px;
+                background:         black;
+
+                font-family:        Verdana, Geneva, sans-serif;
+                text-align:         center;
+            }
+
+            .dashedAndRound:hover {
+                -ms-transform:     rotate(-3deg) scale(1.1); /* IE 9 */
+                -webkit-transform: rotate(-3deg) scale(1.1); /* Chrome, Safari, Opera */
+                transform:         rotate(-3deg) scale(1.1);
+            }
+
+            #credits {
+                position:           absolute;
+                color:              cyan;
+                z-index:            15;
+                bottom:             30px;
+                left:               30px;
+                padding:            10px;
+                font-family:        Verdana, Geneva, sans-serif;
+
+                border:             2px solid cyan;
+            }
+
+            #credits a {
+                text-decoration: none;
+                color: cyan;
+            }
+
+            .transition {
+                -webkit-transition: 0.2s ease-in-out;
+                -moz-transition:    0.2s ease-in-out;
+                -o-transition:      0.2s ease-in-out;
+                transition:         0.2s ease-in-out;
+            }
+
+            .tiltLeft {
+                -ms-transform: rotate(-1deg); /* IE 9 */
+                -webkit-transform: rotate(-1deg); /* Chrome, Safari, Opera */
+                transform: rotate(-1deg);
+            }
+
+            .tiltRight {
+                -ms-transform: rotate(1deg); /* IE 9 */
+                -webkit-transform: rotate(1deg); /* Chrome, Safari, Opera */
+                transform: rotate(1deg);
+            }
+
+            .tiltRightMore {
+                -ms-transform: rotate(2deg); /* IE 9 */
+                -webkit-transform: rotate(2deg); /* Chrome, Safari, Opera */
+                transform: rotate(2deg);
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <canvas id="myCanvas">
+            Your browser does not support the HTML5 canvas tag.
+        </canvas>
+
+        <div id="statusBar" class="tiltRight"></div>
+
+        <div id="dropBox" class="tiltRightMore dashedAndRound transition">
+            Drag STL file here.
+        </div>
+
+        <div id="credits" class="tiltLeft dashedAndRound"><a href="http://marciot.freeshell.org">marciot.freeshell.org</a></div>
+
+        <script src="/lib/three/three.min.js"></script>
+        <script src="/lib/jquery/jquery.js"></script>
+        <script src="/lib/util/geometry/GeometrySerialize.js"></script>
+
+        <script src="/lib/jslicer-engine/worker/SlicerInterface.js"></script>
+        <script src="/lib/jslicer-engine/core/ClipperPath.js"></script>
+
+        <script>
+            var canvas   = document.getElementById('myCanvas');
+            var origin_x = 300;
+            var origin_y = 300;
+            var scale    = 15.0;
+            var layer    = 0;
+
+            var geometry, newGeometryAsJson;
+            var slices;
+
+            function RotateFiles() {
+                var passes = 0;
+                var file   = 0;
+                var files  = [
+                    "/stl/demo1.stl",
+                    "/stl/demo2.stl",
+                    "/stl/demo3.stl"
+                ];
+                var autorotate = true;
+
+                this.fetchNext = function() {
+                    console.log("Getting " + files[file]);
+                    slicer.loadFileFromUrl(files[file]);
+
+                    passes = 0;
+
+                    file++;
+                    if(file == files.length) {
+                        file = 0;
+                    }
+                }
+
+                this.scheduleNext = function(seconds) {
+                    setTimeout(this.fetchNext, seconds * 1000);
+                }
+
+                this.onePass = function() {
+                    if(!autorotate)
+                        return;
+                    passes++;
+                    if(passes == 2) {
+                        rot.fetchNext();
+                    }
+                }
+
+                this.stopRotation = function() {
+                    autorotate = false;
+                }
+            }
+
             var slicer = new SlicerInterface();
-            
-			slicer.onStdoutOutput = function(status) {
-				var tiltRight = $("#statusBar").hasClass("tiltLeft");
-				$("#statusBar").fadeIn().html(status)
-					.toggleClass("tiltLeft", !tiltRight).toggleClass("tiltRight", tiltRight);
-				console.log(status);
-			}
-            
+
+            slicer.onStdoutOutput = function(status) {
+                var tiltRight = $("#statusBar").hasClass("tiltLeft");
+                $("#statusBar").fadeIn().html(status)
+                    .toggleClass("tiltLeft", !tiltRight).toggleClass("tiltRight", tiltRight);
+                console.log(status);
+            }
+
             slicer.onGeometryLoaded = function(json) {
-				console.log("Received geometry");
-				newGeometryAsJson = json;
-			}
-            
+                console.log("Received geometry");
+                newGeometryAsJson = json;
+            }
+
             slicer.onSlicingFinished = function(sl) {
-				console.log("Received slices");
-				setTimeout(function(){postProcessData(sl);}, 100);
-			}
-			
-			function postProcessData(sl) {
-				console.log("Begin post processing");
-				layer = 0;
-				loops = 0;
-				geometry = jsonToGeometry(newGeometryAsJson);
-				geometry.computeBoundingBox();
-				slices = sl;
-				startAnimation();
-				resizeCanvas();
-				$("#statusBar").fadeOut("slow");
-			}
-			
-			function setUpDragAndDrop(func) {
-			
-				function readFile(evt) {
-					evt.stopPropagation();
-					evt.preventDefault();
-					var f = ('dataTransfer' in evt) ?
-						(evt.dataTransfer.files[0]) :
-						(evt.target.files[0]);
-					if (f) {
-						var r = new FileReader();
-						r.onload = function(e) {
-							func(e.target.result);
-						}
-						r.readAsArrayBuffer(f);
-					}
-				}
-				
-				function handleDragOver(evt) {
-					evt.stopPropagation();
-					evt.preventDefault();
-					evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-				}
-				
-				var da = document.getElementById('dropBox');
-				da.addEventListener('dragover', handleDragOver, false);
-				da.addEventListener('drop',     readFile,       false);
-			}
-			
-			function resizeCanvas() {
-				canvas.width  = window.innerWidth;
-				canvas.height = window.innerHeight;
-				origin_x      = canvas.width/2;
-				origin_y      = canvas.height/2;
-				
-				if(geometry) {
-					var model_width     = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
-					var model_height    = geometry.boundingBox.max.y - geometry.boundingBox.min.y;
-					
-					scale = Math.min(
-						canvas.width  / model_width,
-						canvas.height / model_height
-					) * 0.9;
-					
-					var model_cx = (geometry.boundingBox.max.x + geometry.boundingBox.min.x)/2;
-					var model_cy = (geometry.boundingBox.max.y + geometry.boundingBox.min.y)/2;
-					
-					origin_x -= model_cx * scale;
-					origin_y -= model_cy * scale;
-				}
-				
-				paintCanvas(); 
-			}
-				
-			function setupResizeHandler() {
-				window.addEventListener('resize', resizeCanvas, false);
-				resizeCanvas();
-			}
-			
-			function paintLayer(layer) {
-				if(!slices) {
-					return;
-				}
-				
-				var nozzleSize = 0.4;
-				var c          = document.getElementById("myCanvas");
-				var ctx        = c.getContext("2d");
-				
-				ctx.lineCap    = "round";
-				ctx.lineJoin   = "round";
-				
-				var slice = slices[layer];
-				var fade = true;
-				
-				if(fade) {
-					ctx.lineWidth = nozzleSize * 0.9 * scale;
-					ctx.globalAlpha=0.4;
-					ctx.fillStyle="#000000";
-					ctx.fillRect(0,0,c.width,c.height);
-					ctx.globalAlpha=1.0;
-				} else {
-					ctx.clearRect(0,0,c.width,c.height);
-				}
+                console.log("Received slices");
+                setTimeout(function(){postProcessData(sl);}, 100);
+            }
 
-				ctx.strokeStyle = "yellow";
-				SlicerOps.strokePath(ctx, slice.infill, origin_x, origin_y, scale);
-				
-				ctx.strokeStyle = "red";
-				SlicerOps.strokePath(ctx, slice.inner_shell, origin_x, origin_y, scale);
-				
-				ctx.strokeStyle = "white";
-				SlicerOps.strokePath(ctx, slice.outer_shell, origin_x, origin_y, scale);
-			}
-        
-			function paintCanvas() {
-				paintLayer(layer);
-			}
-			
-			function startAnimation() {
-				var last = new Date().getTime();
-				
-				function animate() {
-					if(!slices) return;
-					paintCanvas();
-					
-					layer++;
-					if(layer == slices.length) {
-						layer = 0;
-						rot.onePass();
-					}
-					
-					setTimeout( function() {
-						requestAnimationFrame(animate);
-					}, 100);
-				}
-				animate();
-			}
-			
-			setUpDragAndDrop(function(blob) {
-				slicer.loadFileFromBlob(blob);
-				rot.stopRotation();
-			});
-			setupResizeHandler();
-			
-			var rot = new RotateFiles();
-			rot.fetchNext();
-		</script>
+            function postProcessData(sl) {
+                console.log("Begin post processing");
+                layer = 0;
+                loops = 0;
+                geometry = jsonToGeometry(newGeometryAsJson);
+                geometry.computeBoundingBox();
+                slices = sl;
+                startAnimation();
+                resizeCanvas();
+                $("#statusBar").fadeOut("slow");
+            }
 
-		<!-- The following will enable Google Analytics if the .include file exists -->
-		<!--#include virtual="/googleAnalytics.include"-->
-		<!-- End of Google Analytics -->
+            function setUpDragAndDrop(func) {
 
-	</body>
+                function readFile(evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    var f = ('dataTransfer' in evt) ?
+                        (evt.dataTransfer.files[0]) :
+                        (evt.target.files[0]);
+                    if (f) {
+                        var r = new FileReader();
+                        r.onload = function(e) {
+                            func(e.target.result);
+                        }
+                        r.readAsArrayBuffer(f);
+                    }
+                }
+
+                function handleDragOver(evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+                }
+
+                var da = document.getElementById('dropBox');
+                da.addEventListener('dragover', handleDragOver, false);
+                da.addEventListener('drop',     readFile,       false);
+            }
+
+            function resizeCanvas() {
+                canvas.width  = window.innerWidth;
+                canvas.height = window.innerHeight;
+                origin_x      = canvas.width/2;
+                origin_y      = canvas.height/2;
+
+                if(geometry) {
+                    var model_width     = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
+                    var model_height    = geometry.boundingBox.max.y - geometry.boundingBox.min.y;
+
+                    scale = Math.min(
+                        canvas.width  / model_width,
+                        canvas.height / model_height
+                    ) * 0.9;
+
+                    var model_cx = (geometry.boundingBox.max.x + geometry.boundingBox.min.x)/2;
+                    var model_cy = (geometry.boundingBox.max.y + geometry.boundingBox.min.y)/2;
+
+                    origin_x -= model_cx * scale;
+                    origin_y -= model_cy * scale;
+                }
+
+                paintCanvas();
+            }
+
+            function setupResizeHandler() {
+                window.addEventListener('resize', resizeCanvas, false);
+                resizeCanvas();
+            }
+
+            function paintLayer(layer) {
+                if(!slices) {
+                    return;
+                }
+
+                var nozzleSize = 0.4;
+                var c          = document.getElementById("myCanvas");
+                var ctx        = c.getContext("2d");
+
+                ctx.lineCap    = "round";
+                ctx.lineJoin   = "round";
+
+                var slice = slices[layer];
+                var fade = true;
+
+                if(fade) {
+                    ctx.lineWidth = nozzleSize * 0.9 * scale;
+                    ctx.globalAlpha=0.4;
+                    ctx.fillStyle="#000000";
+                    ctx.fillRect(0,0,c.width,c.height);
+                    ctx.globalAlpha=1.0;
+                } else {
+                    ctx.clearRect(0,0,c.width,c.height);
+                }
+
+                ctx.strokeStyle = "yellow";
+                SlicerOps.strokePath(ctx, slice.infill, origin_x, origin_y, scale);
+
+                ctx.strokeStyle = "red";
+                SlicerOps.strokePath(ctx, slice.inner_shell, origin_x, origin_y, scale);
+
+                ctx.strokeStyle = "white";
+                SlicerOps.strokePath(ctx, slice.outer_shell, origin_x, origin_y, scale);
+            }
+
+            function paintCanvas() {
+                paintLayer(layer);
+            }
+
+            function startAnimation() {
+                var last = new Date().getTime();
+
+                function animate() {
+                    if(!slices) return;
+                    paintCanvas();
+
+                    layer++;
+                    if(layer == slices.length) {
+                        layer = 0;
+                        rot.onePass();
+                    }
+
+                    setTimeout( function() {
+                        requestAnimationFrame(animate);
+                    }, 100);
+                }
+                animate();
+            }
+
+            setUpDragAndDrop(function(blob) {
+                slicer.loadFileFromBlob(blob);
+                rot.stopRotation();
+            });
+            setupResizeHandler();
+
+            var rot = new RotateFiles();
+            rot.fetchNext();
+        </script>
+
+        <!-- The following will enable Google Analytics if the .include file exists -->
+        <!--#include virtual="/googleAnalytics.include"-->
+        <!-- End of Google Analytics -->
+
+    </body>
 </html>
