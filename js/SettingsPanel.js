@@ -26,7 +26,7 @@ function settingsInit(id) {
      * Helper function for obtaining UI parameters from the slicer engine
      */
     var valueSetter = {};
-    
+
     s.fromSlicer = function(key) {
         var sd = slicer.getOptionDescriptor(key);
         var label = sd.label;
@@ -64,7 +64,8 @@ function settingsInit(id) {
         }
     }
 
-    slicer.onOptionChanged = (name, val) => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val)};
+    slicer.onOptionChanged =    (name, val)  => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val);};
+    slicer.onAttributeChanged = (name, attr) => {s.setVisibility(name, attr.enabled);};
 
     s.page(              "settings-place",  "Place Objects");
     s.file(                  "fileSelect", {'binary': true, 'text': "Drop STL file here", 'callback': onFileChange});
