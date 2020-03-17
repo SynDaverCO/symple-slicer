@@ -29,7 +29,7 @@ function settingsInit(id) {
 
     s.fromSlicer = function(key) {
         var sd = slicer.getOptionDescriptor(key);
-        var label = sd.label;
+        var label = sd.hasOwnProperty("label") ? sd.label : key;
         var el;
         var attr = {
             units:   sd.unit,
@@ -184,9 +184,9 @@ function settingsInit(id) {
     s.buttonHelp("Click this button to show<br>slicing engine logs.");
 
     s.category(                            "Export Settings");
-    s.toggle(       "export_with_choices", "Annotate settings with units and choices");
-    s.toggle(  "export_with_descriptions", "Annotate settings with descriptions");
-    s.toggle(      "export_with_defaults", "Include (unchanged) default values");
+    s.toggle(       "export_with_choices", "Show units and values as comments");
+    s.toggle(  "export_with_descriptions", "Show units descriptions as comments");
+    s.toggle(      "export_with_defaults", "Show default values as comments");
     s.separator("br");
     s.text(             "export_filename", "Save as:", {default_value: "config.toml"});
     s.separator("br");
