@@ -283,6 +283,7 @@ function onImportChange(file) {
 function onImportClicked() {
     alert("The new settings have been applied.");
     var stored_config = settings.get("importSelect");
+    slicer.loadDefaults();
     slicer.loadProfileStr(stored_config);
     onPrinterSizeChanged();
 }
