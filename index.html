@@ -26,6 +26,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/three/three.min.js"></script>
         <script src="lib/three/OrbitControls.js"></script>
         <script src="lib/three/TransformControls.js"></script>
+        <script src="lib/three/OBJLoader.js"></script>
+        <script src="lib/three/3MFLoader.js"></script>
+        <script src="lib/jszip/jszip.min.js"></script>
         <script src="lib/jquery/jquery.js"></script>
         <script src="lib/jquery/jquery.easing.1.3.js"></script>
         <script src="lib/FileSaver/FileSaver.js"></script>
@@ -135,7 +138,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <div id="about" onclick="hideAbout()" class="float-center panel-style">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
-            <h1>Symple Slicer V0.9.2</h1>
+            <h1>Symple Slicer V0.9.3</h1>
             <p>
                 Symple Slicer is maintained by SynDaver Labs, Inc. for use with SynDaver printers.
             </p>
@@ -167,6 +170,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     <td>emscripten</td>
                     <td><a target="_blank" href="https://github.com/emscripten-core/emscripten/blob/master/LICENSE">MIT</a></td>
                     <td><a target="_blank" href="https://emscripten.org/">Source</a></td>
+                </tr>
+                <tr>
+                    <td>jszip</td>
+                    <td><a target="_blank" href="lib/jszip/LICENSE.markdown">MIT/GPLv3</a></td>
+                    <td><a target="_blank" href="https://stuk.github.io/jszip/">Source</a></td>
                 </tr>
                 <tr>
                     <td>JavaScript Clipper</td>

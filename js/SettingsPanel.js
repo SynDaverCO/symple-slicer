@@ -68,7 +68,7 @@ function settingsInit(id) {
     slicer.onAttributeChanged = (name, attr) => {s.setVisibility(name, attr.enabled);};
 
     s.page(              "settings-place",  "Place Objects");
-    s.file(                  "fileSelect", {'binary': true, 'text': "Drop STL file here", 'callback': onFileChange});
+    s.file(                  "fileSelect", {'binary': true, 'text': "Drop model file here<br><small>(STL, OBJ or 3MF)</small>", 'callback': onFileChange});
 
     s.separator(     "br");
     s.button(             onAddToPlatform, "Add Object",    {'id': "add_to_platform"});
@@ -308,13 +308,44 @@ function onFileChange(file) {
 }
 
 function onAddToPlatform() {
-    var stlData = settings.get("fileSelect");
-    var geometry = GEOMETRY_READERS.readStl(stlData, GEOMETRY_READERS.THREEGeometryCreator);
-    stage.addGeometry(geometry);
+    const filename = settings.get("fileSelect_filename");
+    const fileData = settings.get("fileSelect");
+    const extension = filename.split('.').pop().toLowerCase();
+    var geometry;
+    switch(extension) {
+      case 'obj': addFromObj(fileData); break;
+      case '3mf': addFrom3MF(fileData); break;
+      default:
+        // Assume STL
+        geometry = GEOMETRY_READERS.readStl(stlData, GEOMETRY_READERS.THREEGeometryCreator);
+        stage.addGeometry(geometry);
+        break;
+    }
 
-    var filename = settings.get("fileSelect_filename");
     document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
     $('#done_placing').attr('disabled', false);
+}
+
+function addFromObj(data) {
+  const ldr = new THREE.OBJLoader();
+  const dec = new TextDecoder();
+  const str = dec.decode(data);
+  const obj = ldr.parse(str);
+  obj.traverse( node => {
+    if (node instanceof THREE.Mesh) {
+      stage.addGeometry(new THREE.Geometry().fromBufferGeometry(node.geometry));
+    }
+  });
+}
+
+function addFrom3MF(data) {
+  const ldr = new THREE.ThreeMFLoader();
+  const obj = ldr.parse(data);
+  obj.traverse( node => {
+    if (node instanceof THREE.Mesh) {
+      stage.addGeometry(new THREE.Geometry().fromBufferGeometry(node.geometry));
+    }
+  });
 }
 
 function onClearPlatform() {
