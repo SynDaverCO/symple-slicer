@@ -67,6 +67,9 @@ class SelectionGroup extends THREE.Object3D {
         this.selectNone();
         if(objs.length == 0)
             return;
+        // Copy the rotation and scaling factors from the first object
+        this.rotation.copy(objs[0].rotation);
+        this.scale.copy(objs[0].scale);
         // Set SelectionGroup origin to center of all selected objects.
         this.boundingBox.setFromObject(objs[0]);
         objs.forEach(obj => this.boundingBox.expandByObject(obj));

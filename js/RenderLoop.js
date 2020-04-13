@@ -76,7 +76,10 @@ class RenderLoop {
 
         var control = new THREE.TransformControls( camera, renderer.domElement );
         scene.add( control );
-        control.addEventListener( 'change', this.render.bind(this) );
+        control.addEventListener( 'change', event => {
+          this.render();
+          SettingsPanel.onObjectTransforming(stage.tranformMode);
+        } );
         control.addEventListener( 'dragging-changed', event => {
             this.orbit.enabled = ! event.value;
             if (!event.value) stage.onObjectTransformed();

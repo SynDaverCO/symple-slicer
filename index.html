@@ -71,6 +71,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="js/RenderLoop.js"></script>
         <script src="js/Stage.js"></script>
         <script src="js/SettingsPanel.js"></script>
+        <script src="js/OtherUI.js"></script>
 
         <!-- Trick for colorizing images: https://css-tricks.com/color-filters-can-turn-your-gray-skies-blue/
              The target color is rgb(0.00 0.18 0.38) but for some reason we need to use (0.00, 0.03, 0.12) in
@@ -104,7 +105,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <p>
                 Well done! You can now take the file to your printer for printing!
             </p>
-            <button onclick="onDoItAgainClicked()">Do it again!</button>
+            <button onclick="SettingsPanel.onDoItAgainClicked()">Do it again!</button>
         </div>
 
         <table id="help-viewport">
@@ -226,7 +227,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         "lib/slicing-engines/JSSlicer/worker/SlicerWorker.js",
                         "lib/slicing-engines/JSSlicer/worker/SlicerConfiguration.js",
                         "config/jsslicer_defaults/",
-                        () => settingsInit("settings")
+                        () => SettingsPanel.init("settings")
                     );
                     break;
                 default:
@@ -234,7 +235,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         "lib/slicing-engines/CuraEngine/SlicerWorker.js",
                         "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
                         "config/cura_defaults/",
-                        () => settingsInit("settings")
+                        () => SettingsPanel.init("settings")
                     );
             }
 
@@ -250,7 +251,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             slicer.onStderrOutput = slicer.onStdoutOutput;
 
             slicer.onFileReceived = function(data) {
-                readyToDownload(data);
+                SettingsPanel.readyToDownload(data);
             }
 
             slicer.onProgress = function(progress) {
@@ -258,8 +259,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
 
             slicer.onPrintStats = function(stats) {
-                setPrintTime(stats.time_hms);
-                setPrintFilament(stats.filament);
+                SettingsPanel.setPrintTime(stats.time_hms);
+                SettingsPanel.setPrintFilament(stats.filament);
             }
         </script>
     </body>

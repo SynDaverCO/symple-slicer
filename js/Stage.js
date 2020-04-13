@@ -389,6 +389,10 @@ class Stage {
         return this.toolpath ? this.toolpath.nLayers : 0;
     }
 
+    get tranformMode() {
+        return this.currentTool == "mirror" ? "scale" : this.transformControl.mode;
+    }
+
     // Event handlers
 
     onTranformToolChanged(tool) {
@@ -402,6 +406,7 @@ class Stage {
             case "mirror":  this.transformControl.setMode("translate"); break;
             case "layflat": this.onLayFlatClicked(); break;
         }
+        SettingsPanel.onTransformModeChanged(stage.tranformMode);
         this.transformControl.enabled = true;
     }
 
@@ -410,12 +415,21 @@ class Stage {
         this.dragging = true;
     }
 
+    onTransformationEdit(dropToFloor = true) {
+        if (dropToFloor) {
+            this.dropObjectToFloor(this.selectedGroup);
+        }
+        this.render();
+    }
+
     onObjectClicked(obj) {
         this.addObjectToSelection(obj);
+        SettingsPanel.onObjectSelected();
     }
 
     onFloorClicked(obj) {
         this.selectNone();
+        SettingsPanel.onObjectUnselected();
     }
 
     onMouseDown( raycaster, scene ) {
