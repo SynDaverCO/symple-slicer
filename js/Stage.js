@@ -325,8 +325,6 @@ class Stage {
      */
     setTransformControl(control) {
         this.transformControl = control;
-        this.transformControl.space = "local";
-
         this.transformControl.addEventListener( 'mouseDown', ( event ) => {
             if(this.currentTool == "mirror") {
                 this.transformControl.dragging = false;

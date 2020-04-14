@@ -89,15 +89,15 @@ class SettingsPanel {
         s.number(         "Z",                                       {id: "xform_position_z", units: "mm", onchange: SettingsPanel.onEditPosition});
 
         s.category(   "Scale",                                       {id: "xform_scale"});
-        s.number(         "X",                                       {id: "xform_scale_x_pct", units: "%", onchange: SettingsPanel.onEditScalePct});
-        s.number(         "Y",                                       {id: "xform_scale_y_pct", units: "%", onchange: SettingsPanel.onEditScalePct});
-        s.number(         "Z",                                       {id: "xform_scale_z_pct", units: "%", onchange: SettingsPanel.onEditScalePct});
-        s.separator(                                                 {type: "br"});
+        s.number(         "X",                                       {id: "xform_scale_x_pct", units: "%", onchange: evt => SettingsPanel.onEditScale("X%")});
+        s.number(         "Y",                                       {id: "xform_scale_y_pct", units: "%", onchange: evt => SettingsPanel.onEditScale("Y%")});
+        s.number(         "Z",                                       {id: "xform_scale_z_pct", units: "%", onchange: evt => SettingsPanel.onEditScale("Z%")});
+        /*s.separator(                                                 {type: "br"});
         s.number(         "X",                                       {id: "xform_scale_x_abs", units: "mm"});
         s.number(         "Y",                                       {id: "xform_scale_y_abs", units: "mm"});
-        s.number(         "Z",                                       {id: "xform_scale_z_abs", units: "mm"});
+        s.number(         "Z",                                       {id: "xform_scale_z_abs", units: "mm"});*/
         s.separator(                                                 {type: "br"});
-        s.toggle(     "Uniform Scaling",                             {id: "xform_scale_uniform"});
+        s.toggle(     "Uniform Scaling",                             {id: "xform_scale_uniform", checked: "checked"});
 
         s.category(   "Rotation",                                    {id: "xform_rotate"});
         s.number(         "X",                                       {id: "xform_rotation_x", units: "°", onchange: SettingsPanel.onEditRotation});
@@ -425,10 +425,24 @@ class SettingsPanel {
         stage.onTransformationEdit(false);
     }
 
-    static onEditScalePct() {
-        stage.selectedGroup.scale.x = settings.get("xform_scale_x_pct") / 100;
-        stage.selectedGroup.scale.y = settings.get("xform_scale_y_pct") / 100;
-        stage.selectedGroup.scale.z = settings.get("xform_scale_z_pct") / 100;
+    static onEditScale(axis) {
+        var x_percent = settings.get("xform_scale_x_pct") / 100;
+        var y_percent = settings.get("xform_scale_y_pct") / 100;
+        var z_percent = settings.get("xform_scale_z_pct") / 100;
+        const uniform = settings.get("xform_scale_uniform");
+        if(uniform) {
+            switch(axis) {
+                case "X%": y_percent = z_percent = x_percent; break;
+                case "Y%": x_percent = z_percent = y_percent; break;
+                case "Z%": x_percent = y_percent = z_percent; break;
+            }
+        }
+        stage.selectedGroup.scale.x = x_percent;
+        stage.selectedGroup.scale.y = y_percent;
+        stage.selectedGroup.scale.z = z_percent;
+        if(uniform) {
+            SettingsPanel.onObjectTransforming("scale");
+        }
         stage.onTransformationEdit();
     }
 
