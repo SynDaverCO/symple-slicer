@@ -118,12 +118,12 @@ class RenderLoop {
 
         function onMouseDown( event ) {
             raycaster.setFromCamera( mouse, camera );
-            stage.onMouseDown(raycaster, scene);
+            stage.onMouseDown(raycaster, scene, event);
         }
 
         function onMouseUp( event ) {
             raycaster.setFromCamera( mouse, camera );
-            stage.onMouseUp(raycaster, scene);
+            stage.onMouseUp(raycaster, scene, event);
         }
 
         function onMouseMove( event ) {
@@ -141,9 +141,10 @@ class RenderLoop {
 
     /**
      * Translates the coordinate system so that a point in 3D projects to the
-     * exact center of the screen.
+     * exact center of the screen. If cx or cy are provided, the exact point
+     * can be specified.
      */
-    centerOnScreen(x, y, z) {
+    centerOnScreen(x, y, z, cx = 0.5, cy = 0.5) {
         this.camera.clearViewOffset();
 
         this.camera.updateMatrixWorld();
@@ -162,8 +163,8 @@ class RenderLoop {
         x = (position.x *  .5 + .5) * w;
         y = (position.y * -.5 + .5) * h;
 
-        var offset_x = 0;
-        var offset_y = y - h/2;
+        var offset_x = x - w * cx;
+        var offset_y = y - h * cy;
 
         this.camera.setViewOffset(w, h, offset_x, offset_y, w, h);
     }
@@ -195,7 +196,7 @@ class RenderLoop {
         this.orbit.update();
 
         // Now translate the canvas so the center of the print volume lies in the center of the screen
-        this.centerOnScreen(0, size.y / 2, -size.z);
+        this.centerOnScreen(0, size.y / 2, -size.z, 0.4, 0.5);
     }
 
     render() {

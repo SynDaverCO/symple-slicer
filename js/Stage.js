@@ -266,9 +266,13 @@ class Stage {
         this.render();
     }
 
-    addObjectToSelection(obj) {
+    modifySelection(obj, addObject) {
         this.placedObjects.add(this.selectedGroup);
-        this.selectedGroup.addToSelection(obj);
+        if(addObject) {
+            this.selectedGroup.addToSelection(obj);
+        } else {
+            this.selectedGroup.setSelection([obj]);
+        }
         renderLoop.outlinePass.selectedObjects = [this.selectedGroup];
         this.transformControl.attach(this.selectedGroup);
         this.render();
@@ -420,8 +424,8 @@ class Stage {
         this.render();
     }
 
-    onObjectClicked(obj) {
-        this.addObjectToSelection(obj);
+    onObjectClicked(obj, event) {
+        this.modifySelection(obj, event.shiftKey);
         SettingsPanel.onObjectSelected();
     }
 
@@ -430,7 +434,7 @@ class Stage {
         SettingsPanel.onObjectUnselected();
     }
 
-    onMouseDown( raycaster, scene ) {
+    onMouseDown( raycaster, scene, event ) {
         this.dragging = false;
     }
 
@@ -439,7 +443,7 @@ class Stage {
      * It evaluates the intersections from the raycaster and
      * determines what to do.
      */
-    onMouseUp( raycaster, scene ) {
+    onMouseUp( raycaster, scene, event ) {
         if(this.dragging) return;
         var intersects = raycaster.intersectObject( scene, true );
         for (var i = 0; i < intersects.length; i++) {
@@ -449,7 +453,7 @@ class Stage {
                 continue;
             }
             if (obj instanceof PrintableObject) {
-                this.onObjectClicked(obj);
+                this.onObjectClicked(obj, event);
                 return;
             }
             // Stop on first intersection
