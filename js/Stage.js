@@ -59,12 +59,18 @@ class Stage {
         this.render();
     }
 
+    getBedMatrixWorldInverse() {
+        var inv = new THREE.Matrix4();
+        return inv.getInverse(this.bedRelative.matrixWorld);
+    }
+
     /**
      * Returns the bounding sphere of an object in bed coordinates
      */
-    getObjectBoundingSphere(object) {
+    getObjectBoundingSphere(object, bedMatrixWorldInverse) {
         var sphere = object.geometry.boundingSphere.clone();
-        this.localToBed(object, sphere.center);
+        sphere.applyMatrix4(object.matrixWorld);
+        sphere.applyMatrix4(bedMatrixWorldInverse ? bedMatrixWorldInverse : this.getBedMatrixWorldInverse());
         return sphere;
     }
 
@@ -112,8 +118,9 @@ class Stage {
 
         // Create an array of circles for the packing algorithm
 
+        const inv = this.getBedMatrixWorldInverse();
         for(const [index, object] of this.objects.entries()) {
-            var sphere = this.getObjectBoundingSphere(object);
+            var sphere = this.getObjectBoundingSphere(object, inv);
             var circle = {
                 id:       'c' + index,
                 radius:   sphere.radius,
@@ -311,7 +318,6 @@ class Stage {
         this.dropObjectToFloor(obj);
         this.centerObjectOnPlatform(obj, 1);
         this.arrangeObjectsOnPlatform();
-        this.render();
     }
 
     removeObjects() {

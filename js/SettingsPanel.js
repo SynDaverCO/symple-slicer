@@ -67,7 +67,7 @@ class SettingsPanel {
         }
 
         slicer.onOptionChanged =    (name, val)  => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val);};
-        slicer.onAttributeChanged = (name, attr) => {s.setVisibility(name, attr.enabled);};
+        slicer.onAttributeChanged = (name, attr) => {s.setVisibility("#" + name, attr.enabled);};
 
         s.page("Place Objects",                                      {id: "page_place"});
 
@@ -76,9 +76,10 @@ class SettingsPanel {
 
         s.separator(                                                 {type: "br"});
         s.button(     "Add Object",                                  {id: "add_to_platform", onclick: SettingsPanel.onAddToPlatform});
-        s.button(     "Clear Objects",                               {id: "clear_platform", onclick: SettingsPanel.onClearPlatform});
+        s.button(     "Clear",                                       {className: "requires_objects", onclick: SettingsPanel.onClearPlatform});
+        s.button(     "Rearrange",                                   {className: "requires_objects", onclick: SettingsPanel.onRearrangePlatform});
         s.footer();
-        s.button(     "Next",                                        {id: "done_placing", onclick: SettingsPanel.onGotoSliceClicked});
+        s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
         s.buttonHelp( "Click this button to when<br>you are done placing objects.");
 
         s.page(       "Transform Objects",                           {id: "page_transform"});
@@ -276,7 +277,7 @@ class SettingsPanel {
 
         SettingsPanel.onFileChange(); // Disable buttons
         SettingsPanel.onImportChange(); // Disable buttons
-        settings.enable("done_placing", false);
+        settings.enable(".requires_objects", false);
         SettingsPanel.loadStartupProfile();
     }
 
@@ -341,7 +342,7 @@ class SettingsPanel {
     }
 
     static onImportChange(file) {
-        settings.enable("import_settings", file);
+        settings.enable("#import_settings", file);
     }
 
     static onImportClicked() {
@@ -372,7 +373,7 @@ class SettingsPanel {
     }
 
     static onFileChange(file) {
-        settings.enable('add_to_platform', file);
+        settings.enable('#add_to_platform', file);
     }
 
     static onAddToPlatform() {
@@ -392,7 +393,7 @@ class SettingsPanel {
         }
 
         document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
-        settings.enable("done_placing", true);
+        settings.enable(".requires_objects", true);
     }
 
     static addFromObj(data) {
@@ -419,7 +420,11 @@ class SettingsPanel {
 
     static onClearPlatform() {
         stage.removeObjects();
-        settings.enable("done_placing", false);
+        settings.enable(".requires_objects", false);
+    }
+
+    static onRearrangePlatform() {
+        stage.arrangeObjectsOnPlatform();
     }
 
     static onObjectSelected() {
@@ -564,7 +569,7 @@ class SettingsPanel {
         stage.showGcodePath("SKIRT",             settings.get("show_support"));
         stage.showGcodePath("SUPPORT",           settings.get("show_support"));
         stage.showGcodePath("SUPPORT-INTERFACE", settings.get("show_support"));
-        settings.enable("preview_layer", stage.isGcodePathVisible);
+        settings.enable("#preview_layer", stage.isGcodePathVisible);
         $('#preview_layer').val(stage.getGcodeLayers() - 1);
     }
 
