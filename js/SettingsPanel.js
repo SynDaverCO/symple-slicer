@@ -77,7 +77,7 @@ class SettingsPanel {
         s.separator(                                                 {type: "br"});
         s.button(     "Add Object",                                  {id: "add_to_platform", onclick: SettingsPanel.onAddToPlatform});
         s.button(     "Clear Objects",                               {id: "clear_platform", onclick: SettingsPanel.onClearPlatform});
-        s.separator();
+        s.footer();
         s.button(     "Next",                                        {id: "done_placing", onclick: SettingsPanel.onGotoSliceClicked});
         s.buttonHelp( "Click this button to when<br>you are done placing objects.");
 
@@ -113,7 +113,7 @@ class SettingsPanel {
 
         s.choice(     "Material:",                                   {id: "material_select"})
          .option(         "Polymaker Polylite PLA",                  {id: "polymaker_polylite_pla"});
-        s.separator(                                                 {type: "br"});
+        s.footer();
         s.button(     "Apply",                                       {onclick: SettingsPanel.onApplyPreset});
         s.buttonHelp( "Applying presets resets all printer &amp; material settings<br>to defaults, including modified or imported settings.");
 
@@ -147,32 +147,64 @@ class SettingsPanel {
         s.fromSlicer(     "machine_end_gcode");
         s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
 
-        s.page(       "Slice Objects",                               {id: "page_slice"});
+        s.page(       "Slice Objects",                               {id: "page_slice", className: "scrollable"});
 
         s.category(   "Print Strength");
-        s.fromSlicer(       "infill_pattern");
         s.fromSlicer(       "infill_sparse_density");
-        s.fromSlicer(       "wall_line_count");
+        s.fromSlicer(       "infill_pattern");
 
         s.category(   "Print Speed");
-        s.fromSlicer(       "speed_print");
         s.fromSlicer(       "layer_height");
+        s.fromSlicer(       "speed_print");
+        s.fromSlicer(       "speed_layer_0");
+        s.fromSlicer(       "speed_travel");
+
+        s.category(   "Shell");
+        s.fromSlicer(       "wall_line_count");
+        s.fromSlicer(       "top_layers");
+        s.fromSlicer(       "bottom_layers");
+        s.fromSlicer(       "initial_bottom_layers");
+        s.fromSlicer(       "top_bottom_pattern");
+        s.fromSlicer(       "top_bottom_pattern_0");
+        s.fromSlicer(       "z_seam_type");
+        s.fromSlicer(       "ironing_enabled");
+
+        s.category(   "Retraction");
+        s.fromSlicer(       "retraction_enable");
+        s.fromSlicer(       "retraction_amount");
+        s.fromSlicer(       "retraction_speed");
+        s.fromSlicer(       "retraction_combing");
 
         s.category(   "Temperatures");
         s.fromSlicer(       "material_print_temperature");
+        s.fromSlicer(       "material_print_temperature_layer_0");
         s.fromSlicer(       "material_bed_temperature");
         s.fromSlicer(       "material_part_removal_temperature");
         s.fromSlicer(       "material_probe_temperature");
         s.fromSlicer(       "material_soften_temperature");
         s.fromSlicer(       "material_wipe_temperature");
 
-        s.category(   "Scaffolding");
+        s.category(   "Cooling");
+        s.fromSlicer(       "cool_fan_enabled");
+        s.fromSlicer(       "cool_fan_speed_min");
+        s.fromSlicer(       "cool_fan_speed_max");
+        s.fromSlicer(       "cool_min_layer_time_fan_speed_max");
+        s.fromSlicer(       "cool_min_layer_time");
+        s.fromSlicer(       "cool_min_speed");
+
+        s.category(   "Support &amp; Adhesion");
         s.fromSlicer(       "support_enable");
         s.fromSlicer(       "support_type");
         s.fromSlicer(       "support_pattern");
         s.fromSlicer(       "support_infill_rate");
         s.fromSlicer(       "support_angle");
         s.fromSlicer(       "adhesion_type");
+        s.fromSlicer(       "brim_line_count");
+        s.fromSlicer(       "brim_gap");
+        s.fromSlicer(       "raft_airgap");
+        s.fromSlicer(       "raft_surface_layers");
+        s.fromSlicer(       "skirt_line_count");
+        s.fromSlicer(       "support_brim_enable");
 
         s.category(   "Filament");
         s.fromSlicer(       "material_diameter");
@@ -182,8 +214,7 @@ class SettingsPanel {
         s.fromSlicer(       "magic_spiralize");
         s.fromSlicer(       "magic_fuzzy_skin_enabled");
 
-        s.category();
-        s.separator();
+        s.footer();
         s.button(     "Slice",                                       {onclick: SettingsPanel.onSliceClicked});
         s.buttonHelp( "Click this button to prepare<br>the model for printing.");
 
@@ -196,14 +227,14 @@ class SettingsPanel {
         s.category(   "Preview Options",                             {open: "open"});
         s.toggle(         "Show shell",                              {id: "show_shell", onclick: SettingsPanel.onUpdatePreview, checked: 'checked'});
         s.toggle(         "Show infill",                             {id: "show_infill", onclick: SettingsPanel.onUpdatePreview});
-        s.toggle(         "Show scaffolding",                        {id: "show_support", onclick: SettingsPanel.onUpdatePreview});
+        s.toggle(         "Show supports",                           {id: "show_support", onclick: SettingsPanel.onUpdatePreview});
         s.toggle(         "Show travel",                             {id: "show_travel", onclick: SettingsPanel.onUpdatePreview});
         s.slider(         "Show layer",                              {id: "preview_layer", oninput: SettingsPanel.onUpdateLayer});
 
         s.category(   "Save Options",                                {open: "open"});
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode"});
-        s.category();
-        s.separator();
+        
+        s.footer();
         s.button(     "Save",                                        {onclick: SettingsPanel.onDownloadClicked});
         s.buttonHelp( "Click this button to save<br>gcode for your 3D printer.");
 
@@ -397,12 +428,12 @@ class SettingsPanel {
         SettingsPanel.onObjectTransforming("scale");
         SettingsPanel.onTransformModeChanged(stage.tranformMode);
     }
-    
+
     static onTransformModeChanged(mode) {
         settings.expand("xform_position", mode == "translate");
         settings.expand("xform_rotate",    mode == "rotate");
         settings.expand("xform_scale",     mode == "scale");
-        settings.gotoPage("page_transform");        
+        settings.gotoPage("page_transform");
     }
 
     static onObjectUnselected() {

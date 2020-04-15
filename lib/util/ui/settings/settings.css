@@ -18,13 +18,33 @@
  */
 .settings-ui {
     padding:            10px;
+    box-sizing:         border-box; /* Don't add padding to height */
+
     min-width:          200px;
-    vertical-align:     middle;
+    max-height:         calc(100% - 2em);
+
+    display:            flex;
+    flex-direction:     column;
+}
+
+body.debug .setting-ui {
+    outline:            5px solid cyan;
+    outline-offset:     -5px;
 }
 
 .settings-panel {
-    display:            none;
     user-select:        none;
+    
+    flex-basis:         auto;
+    flex-grow:          1;
+    flex-shrink:        1;
+    overflow:           auto;
+}
+
+.settings-panel.footer {
+    flex-basis:         auto;
+    flex-grow:          0;
+    flex-shrink:        0;
 }
 
 .settings-panel .parameter {
