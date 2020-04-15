@@ -383,8 +383,8 @@ class SettingsPanel {
 
         var geometry;
         switch(extension) {
-          case 'obj': addFromObj(fileData); break;
-          case '3mf': addFrom3MF(fileData); break;
+          case 'obj': SettingsPanel.addFromObj(fileData); break;
+          case '3mf': SettingsPanel.addFrom3MF(fileData); break;
           default:
             // Assume STL
             geometry = GEOMETRY_READERS.readStl(fileData, GEOMETRY_READERS.THREEGeometryCreator);

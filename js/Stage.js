@@ -306,7 +306,7 @@ class Stage {
             var transform = obj.matrixWorld.clone();
             var worldToPrinterRepresentation = new THREE.Matrix4();
             transform.premultiply(worldToPrinterRepresentation.getInverse(this.bedRelative.matrixWorld));
-            geometry.applyMatrix(transform);
+            geometry.applyMatrix4(transform);
             return geometry;
         });
     }
@@ -343,6 +343,8 @@ class Stage {
                     case 'Y': this.selectedGroup.scale.y = this.selectedGroup.scale.y < 0 ? 1 : -1; break;
                     case 'Z': this.selectedGroup.scale.z = this.selectedGroup.scale.z < 0 ? 1 : -1; break;
                 }
+                this.render();
+                SettingsPanel.onObjectTransforming("scale");
             }
         } );
     }
@@ -407,11 +409,12 @@ class Stage {
         this.transformControl.enabled = false;
         this.selectedGroup.recompute();
         this.currentTool = tool;
+        const cntl = this.transformControl;
         switch(tool) {
-            case "move":    this.transformControl.setMode("translate"); break;
-            case "rotate":  this.transformControl.setMode("rotate"); break;
-            case "scale":   this.transformControl.setMode("scale"); break;
-            case "mirror":  this.transformControl.setMode("translate"); break;
+            case "move":    cntl.setMode("translate"); cntl.setSpace("world"); break;
+            case "rotate":  cntl.setMode("rotate");    cntl.setSpace("world"); break;
+            case "scale":   cntl.setMode("scale");     cntl.setSpace("local"); break;
+            case "mirror":  cntl.setMode("translate"); cntl.setSpace("local"); break;
             case "layflat": this.onLayFlatClicked(); break;
         }
         SettingsPanel.onTransformModeChanged(stage.tranformMode);
