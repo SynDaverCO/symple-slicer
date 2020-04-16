@@ -89,6 +89,10 @@ body.debug .setting-ui {
     margin-right:       1em;
 }
 
+.settings-panel label[title] {
+    cursor:             help;
+}
+
 .settings-panel .button-label {
     font-size:          13px;
 }

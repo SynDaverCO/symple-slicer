@@ -41,6 +41,10 @@ hr {
     color:              #96172e;
 }
 
+#about {
+    user-select:        none;
+}
+
 #toolbar img {
     mix-blend-mode:     darken;
     filter:             url(#colorize-blue);
@@ -75,4 +79,12 @@ input, select {
     margin:             1em;
     mix-blend-mode:     darken;
     width:              150px;
+}
+
+.close-box::after {
+    content:            "\002716";
+    position:           absolute;
+    top:                1vw;
+    right:              1.5vw;
+    font-size:          150%;
 }
