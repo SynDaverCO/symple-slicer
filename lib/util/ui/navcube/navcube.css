@@ -23,16 +23,16 @@
 }
 
 #navCube {
-    width:                   10vmin;
-    height:                  10vmin;
+    width:                   60px;
+    height:                  60px;
     transform-style:         preserve-3d;
     -moz-transform-style:    preserve-3d;
     -webkit-transform-style: preserve-3d;
 
-    font-size:               3vmin;
+    font-size:               14px;
     font-weight:             bold;
     text-align:              center;
-    line-height:             10vmin;
+    line-height:             60px;
 }
 
 #navCube .animate {
@@ -42,8 +42,8 @@
 
 #navCube > div {
     position:                absolute;
-    width:                   10vmin;
-    height:                  10vmin;
+    width:                   60px;
+    height:                  60px;
 
     overflow:                hidden;
     opacity:                 0.75;
@@ -55,38 +55,37 @@
 }
 
 #navCube > #top {
-    transform:               rotatex(90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -moz-transform:          rotatex(90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -webkit-transform:       rotatex(90deg) translateX(0px) translateY(0px) translateZ(5vmin);
+    transform:               rotatex(90deg) translateX(0px) translateY(0px) translateZ(30px);
+    -moz-transform:          rotatex(90deg) translateX(0px) translateY(0px) translateZ(30px);
+    -webkit-transform:       rotatex(90deg) translateX(0px) translateY(0px) translateZ(30px);
 }
 
 #navCube > #left {
-    transform:               rotateY(-90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -moz-transform:          rotateY(-90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -webkit-transform:       rotateY(-90deg) translateX(0px) translateY(0px) translateZ(5vmin);
+    transform:               rotateY(-90deg) translateX(0px) translateY(0px) translateZ(30px);
+    -moz-transform:          rotateY(-90deg) translateX(0px) translateY(0px) translateZ(30px);
+    -webkit-transform:       rotateY(-90deg) translateX(0px) translateY(0px) translateZ(30px);
 }
 
 #navCube > #front {
-    transform:               translateX(0px) translateY(0px) translateZ(5vmin);
-    -moz-transform:          translateX(0px) translateY(0px) translateZ(5vmin);
-    -webkit-transform:       translateX(0px) translateY(0px) translateZ(5vmin);
+    transform:               translateX(0px) translateY(0px) translateZ(30px);
+    -moz-transform:          translateX(0px) translateY(0px) translateZ(30px);
+    -webkit-transform:       translateX(0px) translateY(0px) translateZ(30px);
 }
 
 #navCube > #right {
-    transform:               rotateY(90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -moz-transform:          rotateY(90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -webkit-transform:       rotateY(90deg) translateX(0px) translateY(0px) translateZ(5vmin);
+    transform:               rotateY(90deg) translateX(0px) translateY(0px) translateZ(30px);
+    -moz-transform:          rotateY(90deg) translateX(0px) translateY(0px) translateZ(30px);
+    -webkit-transform:       rotateY(90deg) translateX(0px) translateY(0px) translateZ(30px);
 }
 
 #navCube > #back {
-    transform:               rotateY(180deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -moz-transform:          rotateY(180deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -webkit-transform:       rotateY(180deg) translateX(0px) translateY(0px) translateZ(5vmin);
+    transform:               rotateY(180deg) translateX(0px) translateY(0px) translateZ(30px);
+    -moz-transform:          rotateY(180deg) translateX(0px) translateY(0px) translateZ(30px);
+    -webkit-transform:       rotateY(180deg) translateX(0px) translateY(0px) translateZ(30px);
 }
 
 #navCube > #bottom {
-    transform:               rotateX(-90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -moz-transform:          rotateX(-90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    -webkit-transform:       rotateX(-90deg) translateX(0px) translateY(0px) translateZ(5vmin);
-    font-size:               2vmin;
+    transform:               rotateX(-90deg) translateX(0px) translateY(0px) translateZ(30px);
+    -moz-transform:          rotateX(-90deg) translateX(0px) translateY(0px) translateZ(30px);
+    -webkit-transform:       rotateX(-90deg) translateX(0px) translateY(0px) translateZ(30px);
 }

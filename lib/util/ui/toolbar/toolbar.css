@@ -25,3 +25,8 @@
     flex-direction:     column;
     flex-wrap:          wrap;
 }
+
+#toolbar img {
+    width:              60px;
+    height:             auto;
+}

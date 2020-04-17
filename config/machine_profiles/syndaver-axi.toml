@@ -4,20 +4,21 @@ extruder_prime_pos_abs                           = true
 gantry_height                                    = 286
 machine_depth                                    = 282
 machine_end_gcode                                = """
-M400                                                                 ; wait for moves to finish
-M140 S{material_part_removal_temperature}                            ; start bed cooling
-M104 S0                                                              ; disable hotend
-M107                                                                 ; disable fans
-M117 Cooling please wait                                             ; progress indicator message on LCD
-G1 X5 Y5 F3000                                                       ; move to cooling position
-M190 R{material_part_removal_temperature}                            ; wait for bed to cool down to removal temp
-G1 X145 F1000                                                        ; move extruder out of the way
-G1 Y260 F1000                                                        ; present finished print
-M140 S{material_keep_part_removal_temperature_t}                     ; keep temperature or cool down
-M77                                                                  ; End LCD Print Timer
-G90                                                                  ; absolute positioning
-M18 X Y E                                                            ; turn off x y and e axis
-M117 Print Complete.                                                 ; print complete message
+M400                                               ; wait for moves to finish
+M140 S{material_part_removal_temperature}          ; start bed cooling
+M104 S0                                            ; disable hotend
+M107                                               ; disable fans
+M117 Cooling please wait
+G91                                                ; relative positioning
+G1 Z5 F3000                                        ; move Z up 5mm so it wont drag on the print
+G90                                                ; absolute positioning
+G1 X5 Y5 F3000                                     ; move to cooling position
+M190 R{material_part_removal_temperature}          ; wait for bed to cool down to removal temp
+G1 X145 Y260 F1000                                 ; present finished print
+M140 S{material_keep_part_removal_temperature_t}   ; keep temperature or cool down
+M77                                                ; End LCD Print Timer
+M18 X Y E                                          ; turn off x y and e axis
+M117 Print Complete.
 """
 machine_extruder_start_pos_abs                   = true
 machine_feeder_wheel_diameter                    = 8.27              # mm
@@ -43,45 +44,40 @@ machine_nozzle_size                              = 0.5               # mm
 machine_nozzle_tip_outer_diameter                = 1.25              # mm
 machine_start_gcode                              = """
 ;This G-Code has been generated specifically for Syndaver AXI with Hemera toolhead
-M73 P0                                                               ; clear LCD progress bar
-M75                                                                  ; Start LCD Print Timer
-M107                                                                 ; disable fans
-M420 S0                                                              ; disable leveling matrix
-G90                                                                  ; absolute positioning
-M82                                                                  ; set extruder to absolute mode
-G92 E0                                                               ; set extruder position to 0
-M140 S{material_bed_temperature_layer_0}                             ; start bed heating up
-G28                                                                  ; home all axes
-G0 X145 Y187 Z10 F3000                                               ; move away from endstops
-M117 AXI Heating Up...                                               ; progress indicator message on LCD
-M109 R{material_wipe_temperature}                                    ; wait for extruder to reach probe temp
-M420 S1                                                              ; enable leveling matrix
-G4 S1                                                                ; pause
-G29 L1
-G29 J
-G29 A
-M400                                                                 ; wait for moves to finish
-G1 X-16.5 Y100 Z10 F3000                                             ; move above wiper pad
-M109 R{material_wipe_temperature}                                    ; wait for extruder to reach wiping temp
-M117 AXI Wiping Nozzle...                                            ; progress indicator message on LCD
-G1 Z-3                                                               ; lower nozzle
-G1 Y80 F1000                                                         ; slow wipe
-G1 Y65 F1000
-G1 Y80 F1000
-G1 Y65 F1000
-G1 Y55 F1000
-G1 E0 F750
-G1 Y20 F3000                                                         ; fast wipe
-G1 Y55 F3000
-G1 Y20 F3000
-G1 Y55 F3000
-G1 Z10                                                               ; raise extruder
-M117 AXI Wiping Complete.                                            ; progress indicator message on LCD
-G1 E0
-M117 Heating...                                                      ; progress indicator message on LCD
-M109 R{material_print_temperature_layer_0}                           ; wait for extruder to reach initial printing temp
-M190 R{material_bed_temperature_layer_0}                             ; wait for bed to reach printing temp
-M117 AXI printing                                                    ; progress indicator message on LCD
+M73 P0                                       ; clear LCD progress bar
+M75                                          ; Start LCD Print Timer
+M107                                         ; disable fans
+M420 S0                                      ; disable leveling matrix
+M82                                          ; set extruder to absolute mode
+G92 E0                                       ; set extruder position to 0
+M140 S{material_bed_temperature_layer_0}     ; start bed heating up
+M104 S{material_wipe_temperature}            ; start nozzle heating up
+G28                                          ; home all axes
+G0 X145 Y187 Z10 F3000                       ; move away from endstops
+M117 AXI Heating Up...
+G29 L1                                       ; load leveling matrix slot 1
+G29 J                                        ; 3 point tilt leveling
+G29 A                                        ; ensure mesh is enabled
+M400                                         ; wait for moves to finish
+G1 X-16.5 Y100 Z10 F3000                     ; move above wiper pad
+M109 R{material_wipe_temperature}            ; wait for extruder to reach wiping temp
+M117 AXI Wiping Nozzle...
+G1 Z-3                                       ; lower nozzle
+G1 Y80 F1000                                 ; slow wipe
+G1 Y65 F1000                                 ; slow wipe
+G1 Y80 F1000                                 ; slow wipe
+G1 Y65 F1000                                 ; slow wipe
+G1 Y55 F1000                                 ; slow wipe
+G1 Y20 F3000                                 ; fast wipe
+G1 Y55 F3000                                 ; fast wipe
+G1 Y20 F3000                                 ; fast wipe
+G1 Y55 F3000                                 ; fast wipe
+M117 AXI Wiping Complete.
+G1 Z10                                       ; raise extruder
+M117 Heating...
+M109 R{material_print_temperature_layer_0}   ; wait for extruder to reach initial printing temp
+M190 R{material_bed_temperature_layer_0}     ; wait for bed to reach printing temp
+M117 AXI printing
 """
 machine_steps_per_mm_e                           = 400
 machine_steps_per_mm_x                           = 100

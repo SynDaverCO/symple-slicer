@@ -30,8 +30,8 @@ class RenderLoop {
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         var camera   = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 10, 3000 );
-        camera.position.z = -600;
         this.camera = camera;
+        this.resetCamera();
 
         var raycaster = new THREE.Raycaster();
         var mouse = new THREE.Vector2();
@@ -141,6 +141,12 @@ class RenderLoop {
         canvas.addEventListener( 'mouseup', onMouseUp, false );
         canvas.addEventListener( 'mousemove', onMouseMove, false );
         window.addEventListener( 'resize', onWindowResize, false );
+    }
+
+    resetCamera() {
+        this.camera.position.x = 0;
+        this.camera.position.y = 0;
+        this.camera.position.z = -600;
     }
 
     /**
