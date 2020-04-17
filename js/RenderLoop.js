@@ -114,6 +114,10 @@ class RenderLoop {
         function onViewChanged( event ) {
             mine.render();
             stage.onViewChanged();
+
+            const az = mine.orbit.getAzimuthalAngle() / Math.PI * 180;
+            const po = mine.orbit.getPolarAngle()     / Math.PI * 180;
+            navCube.update(po - 80, 180 - az,0);
         }
 
         function onMouseDown( event ) {
@@ -159,7 +163,7 @@ class RenderLoop {
         // convert the normalized position to CSS coordinates
         var w = canvas.clientWidth;
         var h = canvas.clientHeight;
-        
+
         x = (position.x *  .5 + .5) * w;
         y = (position.y * -.5 + .5) * h;
 

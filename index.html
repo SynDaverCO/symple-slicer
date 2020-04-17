@@ -46,11 +46,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/util/misc/ParseQuery.js"></script>
         <script src="lib/util/ui/settings/settings.js"></script>
         <script src="lib/util/ui/toolbar/toolbar.js"></script>
+        <script src="lib/util/ui/navcube/navcube.js"></script>
         <script src="lib/slicing-engines/SlicerInterface.js"></script>
 
         <link rel="stylesheet" type="text/css" href="lib/util/ui/ui.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/settings/settings.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/toolbar/toolbar.css">
+        <link rel="stylesheet" type="text/css" href="lib/util/ui/navcube/navcube.css">
 
         <!-- ***************** Prequisites for OutlinePass.js *****************
              We need all the following files to give selected objects a halo -->
@@ -98,6 +100,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <div id="settings" class="panel-style dock-right dock-bottom"></div>
         <div id="toolbar"  class="panel-style dock-left  dock-bottom vertical"></div>
 
+        <!-- Orientation cube -->
+        <div id="navCubeContainer">
+            <div id="navCube">
+                <div id="top">Top</div>
+                <div id="left">Left</div>
+                <div id="front">Front</div>
+                <div id="right">Right</div>
+                <div id="back">Back</div>
+                <div id="bottom">Bottom</div>
+            </div>
+        </div>
+
         <!-- Help table -->
 
         <div id = "help-post-print">
@@ -139,7 +153,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <div id="about" onclick="hideAbout()" class="float-center panel-style close-box">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
-            <h1>Symple Slicer V0.9.4</h1>
+            <h1>Symple Slicer V0.9.5</h1>
             <p>
                 Symple Slicer is maintained by SynDaver Labs, Inc. for use with SynDaver printers.
             </p>
@@ -204,6 +218,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var stage        = new Stage();
             var renderLoop   = new RenderLoop(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
+            var navCube      = new NavCube("navCube");
             var query        = parseQuery();
 
             stage.adjustViewpoint();
