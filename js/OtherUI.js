@@ -48,7 +48,7 @@ function hideAbout() {
 }
 
 function enterFullscreen() {
-    var el = document.getElementById("main");
+    var el = document.getElementsByTagName("BODY")[0];
     if (el.requestFullscreen) {
         el.requestFullscreen();
     } else if (el.mozRequestFullScreen) {
