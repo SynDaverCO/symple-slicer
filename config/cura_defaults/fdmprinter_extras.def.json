@@ -84,7 +84,6 @@
         {
             "settable_per_extruder": true,
             "minimum_value": "0",
-            "enabled": "machine_probe_type == 'nozzle'",
             "description": "The nozzle temperature used before nozzle wiping.",
             "label": "Wipe Temperature",
             "unit": "\u00b0C",

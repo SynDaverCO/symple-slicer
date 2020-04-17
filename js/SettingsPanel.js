@@ -109,11 +109,12 @@ class SettingsPanel {
 
         s.category(   "Printer &amp; Material",                      {open: "open"});
         s.choice(     "Printer:",                                    {id: "preset_select"})
-         .option(         "Lulzbot TAZ Workhorse Aero 0.5 mm",       {id: "lulzbot_taz_we_aero_0.5mm"})
-         .option(         "Lulzbot Mini 2 Aero 0.5 mm",              {id: "lulzbot_mini2_aero_0.5mm"});
+         .option(         "SynDaver AXI",                            {id: "syndaver-axi"})
+         .option(         "Cura Defaults",                           {id: "cura-defaults"});
 
         s.choice(     "Material:",                                   {id: "material_select"})
-         .option(         "Polymaker Polylite PLA",                  {id: "polymaker_polylite_pla"});
+         .option(         "PLA (matte finish)",                      {id: "pla-matte-finish"})
+         .option(         "Cura Defaults",                           {id: "cura-defaults"});
         s.footer();
         s.button(     "Apply",                                       {onclick: SettingsPanel.onApplyPreset});
         s.buttonHelp( "Applying presets resets all printer &amp; material settings<br>to defaults, including modified or imported settings.");
@@ -161,7 +162,7 @@ class SettingsPanel {
         s.fromSlicer(       "speed_travel");
 
         s.category(   "Shell");
-        s.fromSlicer(       "wall_line_count");
+        s.fromSlicer(       "wall_thickness");
         s.fromSlicer(       "top_layers");
         s.fromSlicer(       "bottom_layers");
         s.fromSlicer(       "initial_bottom_layers");
@@ -180,6 +181,7 @@ class SettingsPanel {
         s.fromSlicer(       "material_print_temperature");
         s.fromSlicer(       "material_print_temperature_layer_0");
         s.fromSlicer(       "material_bed_temperature");
+        s.fromSlicer(       "material_bed_temperature_layer_0");
         s.fromSlicer(       "material_part_removal_temperature");
         s.fromSlicer(       "material_probe_temperature");
         s.fromSlicer(       "material_soften_temperature");
@@ -200,7 +202,7 @@ class SettingsPanel {
         s.fromSlicer(       "support_infill_rate");
         s.fromSlicer(       "support_angle");
         s.fromSlicer(       "adhesion_type");
-        s.fromSlicer(       "brim_line_count");
+        s.fromSlicer(       "brim_width");
         s.fromSlicer(       "brim_gap");
         s.fromSlicer(       "raft_airgap");
         s.fromSlicer(       "raft_surface_layers");
