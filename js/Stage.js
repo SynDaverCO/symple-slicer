@@ -184,15 +184,32 @@ class Stage {
      *  lowestPoint - Pass result from previous call to continue search
      */
     findLowestPoint(vector, object, geometry, lowestPoint) {
-        geometry.vertices.forEach((v, i) => {
+        // Helper function for iterating through vertices, regardless of geometry type.
+        const forEachVertex = (geom, lambda) => {
+            if(geom instanceof THREE.BufferGeometry) {
+                const positions = geom.getAttribute('position');
+                const vector = new THREE.Vector3();
+                for(var i = 0; i < positions.count; i++) {
+                    vector.set(
+                        positions.array[i * 3 + 0],
+                        positions.array[i * 3 + 1],
+                        positions.array[i * 3 + 2]
+                    );
+                    lambda(vector);
+                }
+            } else {
+                geom.vertices.forEach(lambda);  
+            }
+        }
+
+        forEachVertex(geometry, (v, i) => {
             this.localToBed(object, vector.copy(v));
             if (!lowestPoint) {
-                lowestPoint = {object: object, vertex: v, index: i, z: vector.z};
+                lowestPoint = {object: object, index: i, z: vector.z};
             } else {
                 this.localToBed(object, vector.copy(v));
                 if(vector.z < lowestPoint.z) {
                     lowestPoint.object = object;
-                    lowestPoint.vertex = v;
                     lowestPoint.index  = i;
                     lowestPoint.z      = vector.z;
                 }
@@ -232,11 +249,25 @@ class Stage {
 
         // Step 2: Obtain the world quaternion of the object
         obj.matrixWorld.decompose( vector, quaternion, vector );
+        
+        // Helper function for iterating through faces, regardless of geometry type.
+        const forEachFace = (geom, lambda) => {
+            if(geom instanceof THREE.BufferGeometry) {
+                console.log("Lay flat: Is buffer geometry");
+                console.log(geom);
+                console.log(geom.getIndex());
+                if(geom.getIndex()) {
+                    console.log("Is indexed");
+                }
+            } else {
+                geom.faces.forEach(lambda);  
+            }
+        }
 
         // Step 3: For all faces that share this vertex, compute the angle of that face to the horizontal.
         var downVector = new THREE.Vector3(0, -1, 0);
         var candidates = [];
-        obj.hull.faces.forEach((face) => {
+        forEachFace(obj.hull, (face) => {
             if(pivot.index == face.a ||
                pivot.index == face.b ||
                pivot.index == face.c) {

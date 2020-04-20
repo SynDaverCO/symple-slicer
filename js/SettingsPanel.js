@@ -383,15 +383,10 @@ class SettingsPanel {
         const fileData = settings.get("model_select");
         const extension = filename.split('.').pop().toLowerCase();
 
-        var geometry;
         switch(extension) {
           case 'obj': SettingsPanel.addFromObj(fileData); break;
           case '3mf': SettingsPanel.addFrom3MF(fileData); break;
-          default:
-            // Assume STL
-            geometry = GEOMETRY_READERS.readStl(fileData, GEOMETRY_READERS.THREEGeometryCreator);
-            stage.addGeometry(geometry);
-            break;
+          default:    SettingsPanel.addFromSTL(fileData); break;
         }
 
         document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
@@ -405,7 +400,7 @@ class SettingsPanel {
       const obj = ldr.parse(str);
       obj.traverse( node => {
         if (node instanceof THREE.Mesh) {
-          stage.addGeometry(new THREE.Geometry().fromBufferGeometry(node.geometry));
+          stage.addGeometry(node.geometry);
         }
       });
     }
@@ -415,9 +410,19 @@ class SettingsPanel {
       const obj = ldr.parse(data);
       obj.traverse( node => {
         if (node instanceof THREE.Mesh) {
-          stage.addGeometry(new THREE.Geometry().fromBufferGeometry(node.geometry));
+          node.geometry.computeVertexNormals();
+          stage.addGeometry(node.geometry);
         }
       });
+    }
+
+    static addFromSTL(data) {
+        var geometry = GEOMETRY_READERS.readStl(data, GEOMETRY_READERS.THREEGeometryCreator);
+        geometry.computeFaceNormals();
+        geometry.mergeVertices();
+        var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
+        bufferGeometry = THREE.BufferGeometryUtils.mergeVertices(bufferGeometry);
+        stage.addGeometry(bufferGeometry);
     }
 
     static onClearPlatform() {

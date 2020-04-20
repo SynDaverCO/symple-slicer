@@ -19,13 +19,35 @@
 
 class PrintableObject extends THREE.Mesh {
     constructor(geometry) {
-        geometry.mergeVertices();
+        if(!geometry instanceof THREE.BufferGeometry) {
+            geometry.mergeVertices();
+        } else {
+            console.log("Is buffer geometry");
+        }
         geometry.computeBoundingSphere();
-        geometry.computeFaceNormals();
+        //geometry.computeFaceNormals();
         super(geometry, PrintableObject.material);
-        this.hull = new THREE.ConvexGeometry(this.geometry.vertices);
-        this.hull.computeFaceNormals();
+        this.generateConvexHull();
         this.castShadow = true;
+    }
+
+    generateConvexHull() {
+        var vertices;
+        if(!this.geometry instanceof THREE.BufferGeometry) {
+            vertices = this.geometry.vertices;
+        } else {
+            const positions = this.geometry.getAttribute('position');
+            vertices = [];
+            for(var i = 0; i < positions.count; i++) {
+                vertices.push(new THREE.Vector3(
+                    positions.array[i * 3 + 0],
+                    positions.array[i * 3 + 1],
+                    positions.array[i * 3 + 2]
+                ));
+            }
+        }
+        this.hull = new THREE.ConvexGeometry(vertices);
+        this.hull.computeFaceNormals();
     }
 }
 
