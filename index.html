@@ -29,8 +29,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/three/OBJLoader.js"></script>
         <script src="lib/three/3MFLoader.js"></script>
         <script src="lib/jszip/jszip.min.js"></script>
-        <script src="lib/jquery/jquery.js"></script>
+        <script src="lib/jquery/jquery-3.5.0.min.js"></script>
         <script src="lib/jquery/jquery.easing.1.3.js"></script>
+        <script src="lib/jquery/contextmenu/jquery.contextMenu.min.js"></script>
         <script src="lib/FileSaver/FileSaver.js"></script>
         <script src="lib/jakwings-toml-j0.4/toml-browser.js"></script>
         <script src="lib/circlepacker/circlepacker.min.js"></script>
@@ -49,6 +50,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/util/ui/navcube/navcube.js"></script>
         <script src="lib/slicing-engines/SlicerInterface.js"></script>
 
+        <link rel="stylesheet" type="text/css" href="lib/jquery/contextmenu/jquery.contextMenu.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/ui.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/settings/settings.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/toolbar/toolbar.css">
@@ -225,6 +227,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             renderLoop.render();
 
             $("#navCube").click(() => {renderLoop.resetCamera(); stage.adjustViewpoint();});
+
+            $.contextMenu('html5');
 
             //toolbar.addIcon("open-file",         "Open File",       "images/open-file.png",);
             toolbar.addIcon("move",              "Move Object",     "images/scale.png");
