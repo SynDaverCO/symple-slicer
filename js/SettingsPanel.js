@@ -247,7 +247,7 @@ class SettingsPanel {
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
         s.category(   "Slicer Output");
-        s.button(     "Show",                                        {onclick: SettingsPanel.onShowLogClicked});
+        s.button(     "Show",                                        {onclick: onShowLogClicked});
         s.buttonHelp( "Click this button to show<br>slicing engine logs.");
 
         s.category(   "Export Settings");
