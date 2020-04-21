@@ -17,21 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-function showProgressBar() {
-    clearConsole();
-    $("#progress-dialog").show();
-    $("#progress-dialog progress").attr("value",0);
-    $("#downloadGcode").hide();
-}
-
-function setProgress(value) {
-    $("#progress-dialog progress").attr("value",value);
-}
-
-function hideProgressBar() {
-    $("#progress-dialog").hide();
-}
-    
 function onShowLogClicked() {
     $("#log-dialog").show();
 }

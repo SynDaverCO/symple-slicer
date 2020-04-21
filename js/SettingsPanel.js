@@ -236,7 +236,7 @@ class SettingsPanel {
 
         s.category(   "Save Options",                                {open: "open"});
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode"});
-        
+
         s.footer();
         s.button(     "Save",                                        {onclick: SettingsPanel.onDownloadClicked});
         s.buttonHelp( "Click this button to save<br>gcode for your 3D printer.");
@@ -379,50 +379,17 @@ class SettingsPanel {
     }
 
     static onAddToPlatform() {
-        const filename = settings.get("model_select_filename");
-        const fileData = settings.get("model_select");
+        const filename  = settings.get("model_select_filename");
+        const fileData  = settings.get("model_select");
         const extension = filename.split('.').pop().toLowerCase();
-
-        switch(extension) {
-          case 'obj': SettingsPanel.addFromObj(fileData); break;
-          case '3mf': SettingsPanel.addFrom3MF(fileData); break;
-          default:    SettingsPanel.addFromSTL(fileData); break;
-        }
-
+        geoLoader.load(filename, fileData);
         document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
+    }
+
+    static onGeometryLoaded(geometry) {
+        stage.addGeometry(geometry);
         settings.enable(".requires_objects", true);
-    }
-
-    static addFromObj(data) {
-      const ldr = new THREE.OBJLoader();
-      const dec = new TextDecoder();
-      const str = dec.decode(data);
-      const obj = ldr.parse(str);
-      obj.traverse( node => {
-        if (node instanceof THREE.Mesh) {
-          stage.addGeometry(node.geometry);
-        }
-      });
-    }
-
-    static addFrom3MF(data) {
-      const ldr = new THREE.ThreeMFLoader();
-      const obj = ldr.parse(data);
-      obj.traverse( node => {
-        if (node instanceof THREE.Mesh) {
-          node.geometry.computeVertexNormals();
-          stage.addGeometry(node.geometry);
-        }
-      });
-    }
-
-    static addFromSTL(data) {
-        var geometry = GEOMETRY_READERS.readStl(data, GEOMETRY_READERS.THREEGeometryCreator);
-        geometry.computeFaceNormals();
-        geometry.mergeVertices();
-        var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
-        bufferGeometry = THREE.BufferGeometryUtils.mergeVertices(bufferGeometry);
-        stage.addGeometry(bufferGeometry);
+        ProgressBar.hide();
     }
 
     static onClearPlatform() {
@@ -527,7 +494,9 @@ class SettingsPanel {
                 slicer.loadFromGeometry(geo, filename);
                 return filename;
             });
-            showProgressBar();
+            clearConsole();
+            ProgressBar.message("Slicing...");
+            ProgressBar.progress(0);
             slicer.slice(filenames);
         }
     }
@@ -542,7 +511,7 @@ class SettingsPanel {
 
     static readyToDownload(data) {
         gcode_blob = new Blob([data], {type: "application/octet-stream"});
-        hideProgressBar();
+        ProgressBar.hide();
         settings.gotoPage("page_print");
 
         // Show the filament pathname

@@ -25,7 +25,6 @@ class PrintableObject extends THREE.Mesh {
             console.log("Is buffer geometry");
         }
         geometry.computeBoundingSphere();
-        //geometry.computeFaceNormals();
         super(geometry, PrintableObject.material);
         this.generateConvexHull();
         this.castShadow = true;
@@ -51,4 +50,4 @@ class PrintableObject extends THREE.Mesh {
     }
 }
 
-PrintableObject.material = new THREE.MeshLambertMaterial( { color: 0xfafad2, side: THREE.DoubleSide } );
+PrintableObject.material = new THREE.MeshPhongMaterial( { color: 0xfafad2, side: THREE.DoubleSide, flatShading: true } );
