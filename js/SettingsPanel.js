@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-var settings, gcode_blob;
+var settings, gcode_blob, loaded_geometry;
 
 class SettingsPanel {
     static init(id) {
@@ -75,8 +75,8 @@ class SettingsPanel {
                                                                      {id: "model_select", onchange: SettingsPanel.onFileChange, binary: true});
 
         s.separator(                                                 {type: "br"});
-        s.button(     "Add Object",                                  {id: "add_to_platform", onclick: SettingsPanel.onAddToPlatform});
-        s.button(     "Clear",                                       {className: "requires_objects", onclick: SettingsPanel.onClearPlatform});
+        s.button(     "Add Another",                                 {id: "add_another", onclick: SettingsPanel.onAddToPlatform});
+        s.button(     "Clear All",                                   {className: "requires_objects", onclick: SettingsPanel.onClearPlatform});
         s.button(     "Rearrange",                                   {className: "requires_objects", onclick: SettingsPanel.onRearrangePlatform});
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
@@ -375,21 +375,29 @@ class SettingsPanel {
     }
 
     static onFileChange(file) {
-        settings.enable('#add_to_platform', file);
-    }
-
-    static onAddToPlatform() {
-        const filename  = settings.get("model_select_filename");
-        const fileData  = settings.get("model_select");
-        const extension = filename.split('.').pop().toLowerCase();
-        geoLoader.load(filename, fileData);
-        document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
+        if(file) {
+            const filename  = settings.get("model_select_filename");
+            const fileData  = settings.get("model_select");
+            const extension = filename.split('.').pop().toLowerCase();
+            ProgressBar.message("Preparing model");
+            geoLoader.load(filename, fileData);
+            document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
+        } else {
+            settings.enable('#add_another', false);
+            loaded_geometry = false;
+        }
     }
 
     static onGeometryLoaded(geometry) {
-        stage.addGeometry(geometry);
-        settings.enable(".requires_objects", true);
+        loaded_geometry = geometry;
+        settings.enable('#add_another', true);
         ProgressBar.hide();
+        SettingsPanel.onAddToPlatform(); // Place the first object automatically
+    }
+ 
+    static onAddToPlatform() {
+        stage.addGeometry(loaded_geometry);
+        settings.enable(".requires_objects", true);
     }
 
     static onClearPlatform() {

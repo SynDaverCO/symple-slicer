@@ -19,11 +19,6 @@
 
 class PrintableObject extends THREE.Mesh {
     constructor(geometry) {
-        if(!geometry instanceof THREE.BufferGeometry) {
-            geometry.mergeVertices();
-        } else {
-            console.log("Is buffer geometry");
-        }
         geometry.computeBoundingSphere();
         super(geometry, PrintableObject.material);
         this.generateConvexHull();

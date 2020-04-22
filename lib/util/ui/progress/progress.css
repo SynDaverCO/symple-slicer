@@ -23,3 +23,12 @@
     user-select:          none;
     cursor:               pointer;
 }
+
+#progress-dialog img {
+    position:             absolute;
+    bottom:               1em;
+    right:                1em;
+    
+    height:               1em;
+    width:                auto;
+}
