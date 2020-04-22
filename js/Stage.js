@@ -478,6 +478,12 @@ class Stage {
         this.dragging = false;
     }
 
+    isControlObject(obj) {
+        return obj instanceof THREE.TransformControls ?
+            true :
+            obj.parent ? this.isControlObject(obj.parent) : false;
+    }
+
     /**
      * This method is called when the user clicks on an object.
      * It evaluates the intersections from the raycaster and
@@ -488,7 +494,7 @@ class Stage {
         var intersects = raycaster.intersectObject( scene, true );
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
-            if (obj instanceof THREE.TransformControlsPlane) {
+            if (this.isControlObject(obj)) {
                 // Disregard clicks on the control object
                 continue;
             }
