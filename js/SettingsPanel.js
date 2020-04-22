@@ -160,6 +160,7 @@ class SettingsPanel {
         s.fromSlicer(       "speed_print");
         s.fromSlicer(       "speed_layer_0");
         s.fromSlicer(       "speed_travel");
+        s.fromSlicer(       "speed_travel_layer_0");
 
         s.category(   "Shell");
         s.fromSlicer(       "wall_thickness");
