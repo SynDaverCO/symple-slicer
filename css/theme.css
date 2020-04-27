@@ -24,6 +24,15 @@ summary:focus {
     outline:            0;
 }
 
+.context-menu-list {
+    background-color:   LightGoldenRodYellow;
+}
+
+.context-menu-item {
+    background-color:   LightGoldenRodYellow;
+}
+
+
 .panel-style {
     color:              #002e62;
     background-color:   LightGoldenRodYellow;

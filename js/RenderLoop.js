@@ -31,7 +31,7 @@ class RenderLoop {
 
         var camera   = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 10, 3000 );
         this.camera = camera;
-        this.resetCamera();
+        this.camera.position.set(0,0,-600);
 
         var raycaster = new THREE.Raycaster();
         var mouse = new THREE.Vector2();
@@ -143,10 +143,14 @@ class RenderLoop {
         window.addEventListener( 'resize', onWindowResize, false );
     }
 
-    resetCamera() {
-        this.camera.position.x = 0;
-        this.camera.position.y = 0;
-        this.camera.position.z = -600;
+    resetCamera(view) {
+        switch(view) {
+            case "left":   this.camera.position.set(  600,    0,    0);   break;
+            case "right":  this.camera.position.set( -600,    0,    0);   break;
+            case "back":   this.camera.position.set(    0,    0,  600);   break;
+            default:       this.camera.position.set(    0,    0, -600);   break;
+        }
+        this.orbit.update();
     }
 
     /**
@@ -196,7 +200,8 @@ class RenderLoop {
         const maxDim = Math.max( size.x, size.y, size.z );
         const fov = this.camera.fov * (Math.PI / 180);
         const offset = 1.25;
-        this.camera.position.z = -Math.abs( maxDim / 2 / Math.tan( fov / 2 ) ) * offset - size.z/2;
+        const distance = Math.abs( maxDim / 2 / Math.tan( fov / 2 ) ) * offset + maxDim/2;
+        this.camera.position.setLength(distance);
 
         // Set the eye level to 1/4 up on the object
         this.camera.position.y = size.y/2;
@@ -206,7 +211,7 @@ class RenderLoop {
         this.orbit.update();
 
         // Now translate the canvas so the center of the print volume lies in the center of the screen
-        this.centerOnScreen(0, size.y / 2, -size.z, 0.4, 0.5);
+        this.centerOnScreen(0, size.y / 2, 0, 0.4, 0.5);
     }
 
     render() {

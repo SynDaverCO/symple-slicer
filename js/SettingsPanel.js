@@ -80,7 +80,7 @@ class SettingsPanel {
         s.button(     "Rearrange",                                   {className: "requires_objects", onclick: SettingsPanel.onRearrangePlatform});
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
-        s.buttonHelp( "Click this button to when<br>you are done placing objects.");
+        s.buttonHelp( "Click this button when<br>you are done placing objects.");
 
         s.page(       "Transform Objects",                           {id: "page_transform"});
 

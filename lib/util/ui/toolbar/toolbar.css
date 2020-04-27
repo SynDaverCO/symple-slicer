@@ -24,6 +24,9 @@
     display:            flex;
     flex-direction:     column;
     flex-wrap:          wrap;
+    
+    max-height:         calc(100% - 60px - 2em);
+    overflow: hidden;
 }
 
 #toolbar img {

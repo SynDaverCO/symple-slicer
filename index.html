@@ -108,7 +108,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <!-- Orientation cube -->
         <div id="navCubeContainer">
-            <div id="navCube" title="Click to reset view">
+            <div id="navCube" title="Left click for front view; Right click for other views">
                 <div id="top">Top</div>
                 <div id="left">Left</div>
                 <div id="front">Front</div>
@@ -225,15 +225,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var stage        = new Stage();
             var renderLoop   = new RenderLoop(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
-            var navCube      = new NavCube("navCube");
+            var navCube      = new NavCube("#navCube");
             var query        = parseQuery();
 
             stage.adjustViewpoint();
             renderLoop.render();
 
-            $("#navCube").click(() => {renderLoop.resetCamera(); stage.adjustViewpoint();});
-
-            $.contextMenu('html5');
+            navCube.onViewSelected = view => {
+                renderLoop.resetCamera(view);
+                stage.adjustViewpoint();
+            };
 
             //toolbar.addIcon("open-file",         "Open File",       "images/open-file.png",);
             toolbar.addIcon("move",              "Move Object",     "images/scale.png");
