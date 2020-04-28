@@ -326,6 +326,10 @@ class SettingsPanel {
         settings.gotoPage("page_slice");
     }
 
+    static onObjectCountChanged(count) {
+        settings.enable(".requires_objects", count > 0);
+    }
+
     static onPrinterSizeChanged() {
         var circular         = settings.get("machine_shape") == "elliptic";
         var origin_at_center = settings.get("machine_center_is_zero");
@@ -395,15 +399,13 @@ class SettingsPanel {
         ProgressBar.hide();
         SettingsPanel.onAddToPlatform(); // Place the first object automatically
     }
- 
+
     static onAddToPlatform() {
         stage.addGeometry(loaded_geometry);
-        settings.enable(".requires_objects", true);
     }
 
     static onClearPlatform() {
-        stage.removeObjects();
-        settings.enable(".requires_objects", false);
+        stage.removeAll();
     }
 
     static onRearrangePlatform() {
@@ -565,4 +567,5 @@ class SettingsPanel {
     static onDoItAgainClicked() {
         settings.gotoPage("page_place");
     }
+}  }
 }

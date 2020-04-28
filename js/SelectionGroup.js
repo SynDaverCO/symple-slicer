@@ -28,40 +28,12 @@ class SelectionGroup extends THREE.Object3D {
     }
 
     /**
-     * Forces a call to "setSelection()" to compute a new center
-     * for the current selection.
-     */
-    recompute() {
-        this.setSelection(this.children.slice(0));
-    }
-
-    /**
-     * Adds a single object to the selection. This is done
-     * via "setSelection()" to compute a new center.
-     */
-    addToSelection(obj) {
-        var objs = this.children.slice(0); // Clone array
-        objs.push(obj);
-        this.setSelection(objs);
-    }
-
-    /**
-     * Removes an object from the selection. This is done
-     * via "setSelection()" to compute a new center.
-     */
-    removeFromSelection(obj) {
-        this.parent.attach(obj);
-        // Force a recomputation of the center:
-        this.setSelection(this.children.slice(0));
-    }
-
-    /**
      * This method adjusts the SelectionGroup to include a collection
      * of items. The origin for the SelectionGroup is made to coincide
      * with the center of all the selected objects prior to adding the
      * objects as children.
      */
-    setSelection(objs) {
+    _set(objs) {
         // We remove all existing objects from the selection so we
         // can reposition the SelectionGroup to the new center.
         this.selectNone();
@@ -79,6 +51,49 @@ class SelectionGroup extends THREE.Object3D {
     }
 
     /**
+     * Forces a call to "setSelection()" to compute a new center
+     * for the current selection.
+     */
+    recompute() {
+        this._set(this.children.slice(0));
+    }
+
+    /**
+     * Adds a single object to the selection. This is done
+     * via "setSelection()" to compute a new center.
+     */
+    addToSelection(obj) {
+        var objs = this.children.slice(0); // Clone array
+        objs.push(obj);
+        this._set(objs);
+    }
+
+    /**
+     * Selects an object if it is not already selected, otherwise deselects it.
+     */
+    addOrRemove(obj) {
+        if(this.isSelected(obj)) {
+            this.removeFromSelection(obj);
+        } else {
+            this.addToSelection(obj);
+        }
+    }
+
+    /**
+     * Removes an object from the selection. This is done
+     * via "setSelection()" to compute a new center.
+     */
+    removeFromSelection(obj) {
+        this.parent.attach(obj);
+        // Force a recomputation of the center:
+        this._set(this.children.slice(0));
+    }
+
+    setSelection(objs) {
+        this._set(objs);
+    }
+
+    /**
      * Removes all objects from the selection group. Also resets the transform
      * for the now empty SelectionGroup
      */
@@ -89,5 +104,9 @@ class SelectionGroup extends THREE.Object3D {
         this.position.set(0,0,0);
         this.rotation.set(0,0,0);
         this.scale.set(1,1,1);
+    }
+
+    isSelected(obj) {
+        return this.children.indexOf(obj) > -1;
     }
 }

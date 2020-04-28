@@ -36,7 +36,24 @@ class Stage {
         this.packer = null;
         this.timer = new ResettableTimeout();
 
+        this.placedObjects.add(this.selectedGroup);
         this.bedRelative.add(this.placedObjects);
+
+        $.contextMenu({
+            trigger: 'none',
+            selector: 'canvas',
+            callback: (evt, key, options) => {
+                switch(key) {
+                    case "select_all" : this.selectAll(); break;
+                    case "delete_some": this.removeSelectedObjects(); break;
+                }
+            },
+            items: {
+                delete_some: {name: "Delete Selected Objects", icon: "delete"},
+                separator1: "-----",
+                select_all: {name: "Select All Objects"}
+            }
+        });
     }
 
     adjustViewpoint() {
@@ -68,6 +85,7 @@ class Stage {
      * Returns the bounding sphere of an object in bed coordinates
      */
     getObjectBoundingSphere(object, bedMatrixWorldInverse) {
+        object.updateMatrixWorld();
         var sphere = object.geometry.boundingSphere.clone();
         sphere.applyMatrix4(object.matrixWorld);
         sphere.applyMatrix4(bedMatrixWorldInverse ? bedMatrixWorldInverse : this.getBedMatrixWorldInverse());
@@ -198,7 +216,7 @@ class Stage {
                     lambda(vector);
                 }
             } else {
-                geom.vertices.forEach(lambda);  
+                geom.vertices.forEach(lambda);
             }
         }
 
@@ -249,7 +267,7 @@ class Stage {
 
         // Step 2: Obtain the world quaternion of the object
         obj.matrixWorld.decompose( vector, quaternion, vector );
-        
+
         // Helper function for iterating through faces, regardless of geometry type.
         const forEachFace = (geom, lambda) => {
             if(geom instanceof THREE.BufferGeometry) {
@@ -260,7 +278,7 @@ class Stage {
                     console.log("Is indexed");
                 }
             } else {
-                geom.faces.forEach(lambda);  
+                geom.faces.forEach(lambda);
             }
         }
 
@@ -304,25 +322,6 @@ class Stage {
         this.render();
     }
 
-    modifySelection(obj, addObject) {
-        this.placedObjects.add(this.selectedGroup);
-        if(addObject) {
-            this.selectedGroup.addToSelection(obj);
-        } else {
-            this.selectedGroup.setSelection([obj]);
-        }
-        renderLoop.outlinePass.selectedObjects = [this.selectedGroup];
-        this.transformControl.attach(this.selectedGroup);
-        this.render();
-    }
-
-    selectNone() {
-        this.selectedGroup.selectNone();
-        renderLoop.outlinePass.selectedObjects = [];
-        this.transformControl.detach();
-        this.render();
-    }
-
     getPrinterRepresentation() {
         return this.printerRepresentation;
     }
@@ -344,18 +343,66 @@ class Stage {
 
     addGeometry(geometry) {
         var obj = new PrintableObject(geometry);
-        this.objects.push(obj);
-        this.placedObjects.add(obj);
+        this.addObjects([obj]);
         this.dropObjectToFloor(obj);
         this.centerObjectOnPlatform(obj, 1);
         this.arrangeObjectsOnPlatform();
+        this.render();
     }
 
-    removeObjects() {
-        this.selectNone();
-        this.objects.forEach(obj => {this.placedObjects.remove(obj);});
-        this.objects = [];
+    get numObjects() {
+        return this.objects.length;
+    }
+
+    addObjects(objs) {
+        objs.forEach(obj => {
+            this.objects.push(obj);
+            this.placedObjects.add(obj);
+        });
+        SettingsPanel.onObjectCountChanged(this.objects.length);
+    }
+
+    removeObjects(objs) {
+        objs.forEach(obj => {
+            this.selectedGroup.removeFromSelection(obj);
+            this.placedObjects.remove(obj);
+            var index = this.objects.indexOf(obj);
+            if (index > -1) {
+                this.objects.splice(index, 1);
+            }
+        });
+        SettingsPanel.onObjectCountChanged(this.objects.length);
+    }
+
+    updateSelection() {
+        if(this.selectedGroup.children.length > 0) {
+            renderLoop.outlinePass.selectedObjects = [this.selectedGroup];
+        } else {
+            renderLoop.outlinePass.selectedObjects = [];
+            this.transformControl.detach();
+        }
+    }
+    
+    removeSelectedObjects() {
+        this.removeObjects(this.selectedGroup.children.slice());
+        this.updateSelection();
         this.render();
+    }
+
+    removeAll() {
+        this.removeObjects(this.objects);
+        this.updateSelection();
+        this.render();
+    }
+
+    selectAll() {
+        this.selectedGroup.setSelection(this.objects);
+        this.updateSelection();
+        this.render();
+    }
+
+    selectNone() {
+        this.selectedGroup.selectNone();
     }
 
     /**
@@ -449,6 +496,8 @@ class Stage {
             case "layflat": this.onLayFlatClicked(); break;
         }
         SettingsPanel.onTransformModeChanged(stage.tranformMode);
+        SettingsPanel.onObjectSelected();
+        this.transformControl.attach(this.selectedGroup);
         this.transformControl.enabled = true;
     }
 
@@ -464,14 +513,33 @@ class Stage {
         this.render();
     }
 
-    onObjectClicked(obj, event) {
-        this.modifySelection(obj, event.shiftKey);
-        SettingsPanel.onObjectSelected();
+    showContextMenu(event) {
+        $('canvas').contextMenu({x: event.clientX, y: event.clientY});
     }
 
-    onFloorClicked(obj) {
-        this.selectNone();
-        SettingsPanel.onObjectUnselected();
+    onObjectClicked(obj, event) {
+        if(event.button == 2) {
+            this.showContextMenu(event);
+        } else if(event.shiftKey) {
+            this.selectedGroup.addOrRemove(obj);
+            this.updateSelection();
+            this.render();
+        } else {
+            this.selectedGroup.setSelection([obj]);
+            this.updateSelection();
+            this.render();
+        }
+    }
+
+    onFloorClicked(event) {
+        if(event.button == 2) {
+            this.showContextMenu(event);
+        } else {
+            this.selectNone();
+            this.updateSelection();
+            this.render();
+            SettingsPanel.onObjectUnselected();
+        }
     }
 
     onMouseDown( raycaster, scene, event ) {
@@ -503,10 +571,9 @@ class Stage {
                 return;
             }
             // Stop on first intersection
-            return;
+            this.onFloorClicked(event);
+            break;
         }
-        // If nothing selected
-        this.onFloorClicked();
     }
 
     onViewChanged() {
