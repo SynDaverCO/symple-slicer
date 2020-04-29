@@ -261,7 +261,7 @@ class SettingsPanel {
         s.button(     "Export",                                      {onclick: SettingsPanel.onExportClicked});
         s.buttonHelp( "Click this button to save changed<br>settings to your computer.");
 
-        s.category(   "Import Settings");
+        s.category(   "Import Settings",                             {id: "import_settings"});
         s.file(           "Drop settings file here",                 {id: "import_select", onchange: SettingsPanel.onImportChange});
         s.separator(                                                 {type: "br"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: SettingsPanel.onImportClicked});
@@ -282,6 +282,13 @@ class SettingsPanel {
         SettingsPanel.onImportChange(); // Disable buttons
         settings.enable(".requires_objects", false);
         SettingsPanel.loadStartupProfile();
+
+        // Set up the global drag and drop handler
+        window.addEventListener("dragover",function(e){
+            e = e || event;
+            e.preventDefault();
+        },false);
+        window.addEventListener("drop", SettingsPanel.onWindowDrop);
     }
 
     static loadStartupProfile() {
@@ -354,7 +361,7 @@ class SettingsPanel {
 
     static onImportClicked() {
         try {
-            var stored_config = settings.get("import_select");
+            var stored_config = settings.get("import_select_clear");
             slicer.loadDefaults();
             slicer.loadProfileStr(stored_config);
             SettingsPanel.onPrinterSizeChanged();
@@ -567,5 +574,33 @@ class SettingsPanel {
     static onDoItAgainClicked() {
         settings.gotoPage("page_place");
     }
-}  }
+
+    /**
+     * If the user drops a file anywhere other than the drop boxes,
+     * then try to dispatchEvent it to the correct handler.
+     */
+    static onWindowDrop(e) {
+        e = e || event;
+        const files = e.dataTransfer.files;
+        for (var i = 0; i < files.length; i++) {
+            const extension = files[i].name.split('.').pop().toLowerCase();
+            var id;
+            switch (extension) {
+                case 'stl':
+                case 'obj':
+                case '3mf':
+                    id = "model_select_drophandler";
+                    break;
+                case 'toml':
+                    settings.gotoPage("page_advanced");
+                    settings.expand("import_settings");
+                    id = "import_select_drophandler";
+                    break;
+            }
+            if(id) {
+                settings.get(id)(e);
+            }
+        }
+        e.preventDefault();
+    }
 }
