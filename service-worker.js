@@ -34,6 +34,7 @@ const filesToCache = [
     'lib/jquery/jquery-3.5.0.min.js',
     'lib/jquery/jquery.easing.1.3.js',
     'lib/jquery/contextmenu/jquery.contextMenu.min.js',
+    'lib/jquery/contextmenu/font/context-menu-icons.woff2?4wdhf',
     'lib/FileSaver/FileSaver.js',
     'lib/jakwings-toml-j0.4/toml-browser.js',
     'lib/circlepacker/circlepacker.min.js',
