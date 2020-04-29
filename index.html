@@ -23,6 +23,42 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <title>SynDaver Symple Slicer</title>
     </head>
     <body>
+        <script>
+            let newWorker;
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/service-worker.js').then(reg => {
+                    reg.addEventListener('updatefound', () => {
+                        // A wild service worker has appeared in reg.installing!
+                        newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                        // Has network.state changed?
+                        switch (newWorker.state) {
+                            case 'installed':
+                                if (navigator.serviceWorker.controller) {
+                                    // new update available
+                                    $("#update-app-dialog").show();
+                                }
+                                // No update available
+                                break;
+                        }
+                        });
+                    });
+                });
+
+                let refreshing;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (refreshing) return;
+                    window.location.reload();
+                    refreshing = true;
+                });
+            }
+
+            function refreshWebApp() {
+                newWorker.postMessage({ action: 'skipWaiting' });
+            }
+        </script>
+        
         <script src="lib/three/three.min.js"></script>
         <script src="lib/three/OrbitControls.js"></script>
         <script src="lib/three/TransformControls.js"></script>
@@ -160,7 +196,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <div id="about" onclick="hideAbout()" class="float-center panel-style close-box">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
-            <h1>Symple Slicer V0.9.7</h1>
+            <h1>Symple Slicer V0.9.8</h1>
             <p>
                 Symple Slicer is maintained by SynDaver Labs, Inc. for use with SynDaver printers.
             </p>
@@ -218,6 +254,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 Symple Slicer is licensed under the <a href="LICENSE.txt">AGPL</a>
                 (<a target="_blank" href="https://github.com/SynDaverCO/web-cura">Source</a>).
             </p>
+        </div>
+
+        <div id="update-app-dialog" class="float-center panel-style">
+            <p>
+                A new version of SynDaver Symple Slicer available.
+            </p>
+            <button onclick="refreshWebApp()">Update!</button>
         </div>
 
         <script>

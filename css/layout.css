@@ -72,7 +72,7 @@ hr {
     border-spacing:     1em 2px;
 }
 
-#log-dialog, #progress-dialog {
+#log-dialog, #progress-dialog, #update-app-dialog {
     padding:            1em;
     display:            none;
 }
