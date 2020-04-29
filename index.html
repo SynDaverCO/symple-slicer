@@ -27,7 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             let newWorker;
             
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/service-worker.js').then(reg => {
+                navigator.serviceWorker.register('service-worker.js').then(reg => {
                     reg.addEventListener('updatefound', () => {
                         // A wild service worker has appeared in reg.installing!
                         newWorker = reg.installing;
