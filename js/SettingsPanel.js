@@ -113,7 +113,10 @@ class SettingsPanel {
          .option(         "Cura Defaults",                           {id: "cura-defaults"});
 
         s.choice(     "Material:",                                   {id: "material_select"})
-         .option(         "PLA (matte finish)",                      {id: "pla-matte-finish"})
+         .option(         "PLA (matte finish)",                      {id: "PLA-PROFILE-AXI-STANDARD-STABLE-4292020"})
+         .option(         "ABS",                                     {id: "ABS-PROFILE-AXI-STANDARD-STABLE-4292020"})
+         .option(         "TPU (shore hardness 85)",                 {id: "TPU85-PROFILE-AXI-STANDARD-STABLE-4292020"})
+         .option(         "TPU (shore hardness 95)",                 {id: "TPU95-PROFILE-AXI-STANDARD-STABLE-4292020"})
          .option(         "Cura Defaults",                           {id: "cura-defaults"});
         s.footer();
         s.button(     "Apply",                                       {onclick: SettingsPanel.onApplyPreset});

@@ -61,6 +61,7 @@ G29 A                                        ; ensure mesh is enabled
 M400                                         ; wait for moves to finish
 G1 X-16.5 Y100 Z10 F3000                     ; move above wiper pad
 M109 R{material_wipe_temperature}            ; wait for extruder to reach wiping temp
+G1 E-10 F70                                  ; retract filament
 M117 AXI Wiping Nozzle...
 G1 Z-3                                       ; lower nozzle
 G1 Y80 F1000                                 ; slow wipe
@@ -77,6 +78,7 @@ G1 Z10                                       ; raise extruder
 M117 Heating...
 M109 R{material_print_temperature_layer_0}   ; wait for extruder to reach initial printing temp
 M190 R{material_bed_temperature_layer_0}     ; wait for bed to reach printing temp
+G1 E0 F70                                    ; prime nozzle
 M117 AXI printing
 """
 machine_steps_per_mm_e                           = 400
@@ -86,10 +88,3 @@ machine_steps_per_mm_z                           = 100
 machine_width                                    = 282
 material_diameter                                = 1.75              # mm
 material_probe_temperature                       = 0                 # °C
-
-# These settings were deleted:
-
-#meshfix_extensive_stitching                      = true
-#meshfix_maximum_deviation                        = 0.00              # mm
-#meshfix_maximum_travel_resolution                = 0.5               # mm
-#line_width                                       = 0.5               # inherits from machine_nozzle_size

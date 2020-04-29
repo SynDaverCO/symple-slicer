@@ -24,7 +24,7 @@
 
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
-const cacheName = 'v0.9.8 r1';
+const cacheName = 'v0.9.8 r2';
 
 const filesToCache = [
     '',
@@ -95,7 +95,14 @@ const filesToCache = [
     'lib/slicing-engines/CuraEngine/CuraEngine.data',
     'lib/slicing-engines/CuraEngine/CuraEngine.wasm',
     'lib/three/BufferGeometryUtils.js',
-    'lib/util/io/StlReader.js'
+    'lib/util/io/StlReader.js',
+    'config/machine_profiles/cura-default.toml',
+    'config/machine_profiles/syndaver-axi.toml',
+    'config/print_profiles/cura-default.toml',
+    'config/print_profiles/ABS-PROFILE-AXI-STANDARD-STABLE-4292020.toml',
+    'config/print_profiles/PLA-PROFILE-AXI-STANDARD-STABLE-4292020.toml',
+    'config/print_profiles/TPU85-PROFILE-AXI-STANDARD-STABLE-4292020.toml',
+    'config/print_profiles/TPU95-PROFILE-AXI-STANDARD-STABLE-4292020.toml'
 ];
 
 self.addEventListener('install', event => {
