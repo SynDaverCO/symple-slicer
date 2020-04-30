@@ -82,7 +82,11 @@ class RenderLoop {
         } );
         control.addEventListener( 'dragging-changed', event => {
             this.orbit.enabled = ! event.value;
-            if (!event.value) stage.onObjectTransformed();
+            if (event.value) {
+                stage.onTransformBegin();
+            } else {
+                stage.onTransformEnd();
+            }
         } );
 
         stage.setTransformControl(control);

@@ -32,7 +32,8 @@ class Stage {
         this.bedRelative   = this.printerRepresentation.bedRelative;
         this.placedObjects = new THREE.Object3D();
         this.selectedGroup = new SelectionGroup();
-        this.dragging = false;
+        this.dragging      = false;
+        this.transforming  = false;
         this.packer = null;
         this.timer = new ResettableTimeout();
 
@@ -509,9 +510,13 @@ class Stage {
         this.transformControl.enabled = true;
     }
 
-    onObjectTransformed() {
+    onTransformBegin() {
+        this.transforming = true;
+    }
+
+    onTransformEnd() {
         this.dropObjectToFloor(this.selectedGroup);
-        this.dragging = true;
+        this.transforming = false;
     }
 
     onTransformationEdit(dropToFloor = true) {
@@ -566,7 +571,7 @@ class Stage {
      * determines what to do.
      */
     onMouseUp( raycaster, scene, event ) {
-        if(this.dragging) return;
+        if(this.dragging || this.transforming) return;
         var intersects = raycaster.intersectObject( scene, true );
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
