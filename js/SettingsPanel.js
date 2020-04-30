@@ -71,7 +71,7 @@ class SettingsPanel {
 
         s.page("Place Objects",                                      {id: "page_place"});
 
-        s.file("Drop model file here<br><small>(STL, OBJ or 3MF)</small>",
+        s.file("Drop and drop models<br><small>(STL, OBJ or 3MF)</small>",
                                                                      {id: "model_select", onchange: SettingsPanel.onFileChange, binary: true});
 
         s.separator(                                                 {type: "br"});
@@ -265,7 +265,7 @@ class SettingsPanel {
         s.buttonHelp( "Click this button to save changed<br>settings to your computer.");
 
         s.category(   "Import Settings",                             {id: "import_settings"});
-        s.file(           "Drop settings file here",                 {id: "import_select", onchange: SettingsPanel.onImportChange});
+        s.file(       "Drop and drop settings<br><small>(.TOML)</small>", {id: "import_select", onchange: SettingsPanel.onImportChange});
         s.separator(                                                 {type: "br"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: SettingsPanel.onImportClicked});
         s.buttonHelp( "Importing settings from a file will override<br>all printer &amp; material presets.");

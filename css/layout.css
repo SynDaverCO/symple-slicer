@@ -77,6 +77,23 @@ hr {
     display:            none;
 }
 
+/* Trick to keep iframe responsive from https://benmarshall.me/responsive-iframes */
+
+.iframe-container {
+    overflow:           hidden;
+    padding-top:        56.25%;
+    position:           relative;
+}
+
+.iframe-container  iframe {
+    position:           absolute;
+    background:         white;
+    height:             100%;
+    width:              100%;
+    left:               0;
+    top:                0;
+}
+
 #console {
     padding:            1em;
     height:             80vh;
