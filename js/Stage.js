@@ -100,7 +100,7 @@ class Stage {
     centerObjectOnPlatform(object, fudge) {
         var sphere = object.geometry.boundingSphere;
         var vector = new THREE.Vector3();
-        var delta = this.localToBed(object, vector.copy(sphere.center));
+        var delta = this.objectToBed(object, vector.copy(sphere.center));
         if(!this.printer.origin_at_center) {
             delta.x -= this.printer.x_width/2;
             delta.y -= this.printer.y_depth/2;
@@ -187,9 +187,18 @@ class Stage {
      * Converts a vector in object coordinates to print bed
      * coordinates
      */
-    localToBed(child, vector) {
-        this.bedRelative.worldToLocal(child.localToWorld(vector));
-        return vector;
+    objectToBed(child, vector) {
+        return this.bedRelative.worldToLocal(child.localToWorld(vector));
+    }
+
+    /**
+     * Generates a matrix for converting from object coordinates
+     * to print bed coordinates
+     */
+    objectToBedMatrix(child) {
+        return new THREE.Matrix4()
+            .getInverse(this.bedRelative.matrixWorld)
+            .multiply(child.matrixWorld);
     }
 
     /**
@@ -220,12 +229,12 @@ class Stage {
             }
         }
 
+        const objectToBed = this.objectToBedMatrix(object);
         forEachVertex(geometry, (v, i) => {
-            this.localToBed(object, vector.copy(v));
+            vector.copy(v).applyMatrix4(objectToBed);
             if (!lowestPoint) {
                 lowestPoint = {object: object, index: i, z: vector.z};
             } else {
-                this.localToBed(object, vector.copy(v));
                 if(vector.z < lowestPoint.z) {
                     lowestPoint.object = object;
                     lowestPoint.index  = i;
@@ -242,10 +251,9 @@ class Stage {
     dropObjectToFloor(obj) {
         obj.updateMatrixWorld();
         var lowestPoint;
-        var vector = new THREE.Vector3();
         obj.traverse((child) => {
-            if (child instanceof THREE.Mesh) {
-                lowestPoint = this.findLowestPoint(vector, child, child.hull, lowestPoint);
+            if (child instanceof PrintableObject) {
+                lowestPoint = child.findLowestPoint(this.objectToBedMatrix(child), lowestPoint);
             }
         });
         if(lowestPoint) {

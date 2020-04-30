@@ -43,6 +43,16 @@ class PrintableObject extends THREE.Mesh {
         this.hull = new THREE.ConvexGeometry(vertices);
         this.hull.computeFaceNormals();
     }
+
+    /**
+     * Finds the lowest point in the object.
+     *
+     *  transform   - Matrix to apply to geometry
+     *  lowestPoint - (optional) Pass result from previous call to continue search
+     */
+    findLowestPoint(transform, lowestPoint) {
+        return GeometryAlgorithms.findLowestPoint(this.hull, transform, lowestPoint, this);
+    }
 }
 
 PrintableObject.material = new THREE.MeshPhongMaterial( { color: 0xfafad2, side: THREE.DoubleSide, flatShading: true } );
