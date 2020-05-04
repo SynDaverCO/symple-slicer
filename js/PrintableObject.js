@@ -45,13 +45,23 @@ class PrintableObject extends THREE.Mesh {
     }
 
     /**
-     * Finds the lowest point in the object.
+     * Finds the lowest point on an object
      *
-     *  transform   - Matrix to apply to geometry
-     *  lowestPoint - (optional) Pass result from previous call to continue search
+     * obj        - The object for which we wish to find the lowest point.
+     * relativeTo - Define "lowest" relative to this object's coordinate system.
      */
-    findLowestPoint(transform, lowestPoint) {
-        return GeometryAlgorithms.findLowestPoint(this.hull, transform, lowestPoint, this);
+    static findLowestPoint(obj, relativeTo) {
+        var inverse   = new THREE.Matrix4().getInverse(relativeTo.matrixWorld);
+        var transform = new THREE.Matrix4();
+        var lowestPoint;
+        obj.traverse(child => {
+            if (child.hasOwnProperty("hull")) {
+                child.updateMatrixWorld();
+                transform.copy(inverse).multiply(child.matrixWorld);
+                lowestPoint = GeometryAlgorithms.findLowestPoint(child.hull, transform, lowestPoint, child);
+            }
+        });
+        return lowestPoint;
     }
 }
 

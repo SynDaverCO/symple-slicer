@@ -193,73 +193,24 @@ class Stage {
     }
 
     /**
-     * Generates a matrix for converting from object coordinates
-     * to print bed coordinates
-     */
-    objectToBedMatrix(child) {
-        return new THREE.Matrix4()
-            .getInverse(this.bedRelative.matrixWorld)
-            .multiply(child.matrixWorld);
-    }
-
-    /**
-     * Helper function for finding the point in an object closest
-     * to the print bed.
-     *
-     *  vector       - Scratch Vector3 for use in computation
-     *  object       - Parent object for geometry
-     *  geometry     - Geometry to tranverse
-     *  lowestPoint - Pass result from previous call to continue search
-     */
-    findLowestPoint(vector, object, geometry, lowestPoint) {
-        // Helper function for iterating through vertices, regardless of geometry type.
-        const forEachVertex = (geom, lambda) => {
-            if(geom instanceof THREE.BufferGeometry) {
-                const positions = geom.getAttribute('position');
-                const vector = new THREE.Vector3();
-                for(var i = 0; i < positions.count; i++) {
-                    vector.set(
-                        positions.array[i * 3 + 0],
-                        positions.array[i * 3 + 1],
-                        positions.array[i * 3 + 2]
-                    );
-                    lambda(vector);
-                }
-            } else {
-                geom.vertices.forEach(lambda);
-            }
-        }
-
-        const objectToBed = this.objectToBedMatrix(object);
-        forEachVertex(geometry, (v, i) => {
-            vector.copy(v).applyMatrix4(objectToBed);
-            if (!lowestPoint) {
-                lowestPoint = {object: object, index: i, z: vector.z};
-            } else {
-                if(vector.z < lowestPoint.z) {
-                    lowestPoint.object = object;
-                    lowestPoint.index  = i;
-                    lowestPoint.z      = vector.z;
-                }
-            }
-        });
-        return lowestPoint;
-    }
-
-    /**
      * Drops an object so it touches the print platform
      */
     dropObjectToFloor(obj) {
-        obj.updateMatrixWorld();
-        var lowestPoint;
-        obj.traverse((child) => {
-            if (child instanceof PrintableObject) {
-                lowestPoint = child.findLowestPoint(this.objectToBedMatrix(child), lowestPoint);
-            }
-        });
+        const lowestPoint = PrintableObject.findLowestPoint(obj, this.bedRelative);
         if(lowestPoint) {
             obj.position.z -= lowestPoint.z;
         }
+    }
+    
+    /**
+     * The center of the selected objects is used for positioning, but when
+     * presenting editable values to the user, we want to use the lowest
+     * point on the object as the Z reference point. This method computes
+     * the correction applied to the Z value text box. 
+     */
+    get selectionHeightAdjustment() {
+        const lowestPoint = PrintableObject.findLowestPoint(this.selectedGroup, this.bedRelative);
+        return lowestPoint ? this.selectedGroup.position.z - lowestPoint.z : 0;
     }
 
     /**

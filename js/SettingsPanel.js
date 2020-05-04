@@ -430,7 +430,7 @@ class SettingsPanel {
     }
 
     static onTransformModeChanged(mode) {
-        settings.expand("xform_position", mode == "translate");
+        settings.expand("xform_position",  mode == "translate");
         settings.expand("xform_rotate",    mode == "rotate");
         settings.expand("xform_scale",     mode == "scale");
         settings.gotoPage("page_transform");
@@ -452,7 +452,7 @@ class SettingsPanel {
     static onEditPosition() {
         stage.selectedGroup.position.x = settings.get("xform_position_x");
         stage.selectedGroup.position.y = settings.get("xform_position_y");
-        stage.selectedGroup.position.z = settings.get("xform_position_z");
+        stage.selectedGroup.position.z = settings.get("xform_position_z") + stage.selectionHeightAdjustment;
         stage.onTransformationEdit(false);
     }
 
@@ -489,9 +489,10 @@ class SettingsPanel {
         const toDeg = rad => (rad * 180 / Math.PI).toFixed(0);
         switch(mode) {
             case "translate":
-                $('#xform_position_x').val(stage.selectedGroup.position.x.toFixed(2));
-                $('#xform_position_y').val(stage.selectedGroup.position.y.toFixed(2));
-                $('#xform_position_z').val(stage.selectedGroup.position.z.toFixed(2));
+                const pos = stage.selectedGroup.position;
+                $('#xform_position_x').val( pos.x.toFixed(2));
+                $('#xform_position_y').val( pos.y.toFixed(2));
+                $('#xform_position_z').val((pos.z - stage.selectionHeightAdjustment).toFixed(2));
                 break;
             case "rotate":
                 $('#xform_rotation_x').val(toDeg(stage.selectedGroup.rotation.x));
