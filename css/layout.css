@@ -51,17 +51,17 @@ hr {
 }
 
 #about {
-    padding:            2vw;
+    padding:            2em;
     padding-top:        0;
-    padding-left:       15vw;
+    padding-left:       14em;
     overflow:           auto;
 }
 
 #about img {
-    width:              10vw;
+    width:              10em;
     position:           absolute;
-    left:               2vw;
-    top:                2vw;
+    left:               2em;
+    top:                2em;
 }
 
 #about table {
