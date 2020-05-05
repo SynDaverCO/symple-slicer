@@ -25,7 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     <body>
         <script>
             let newWorker;
-            
+
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('service-worker.js').then(reg => {
                     reg.addEventListener('updatefound', () => {
@@ -52,13 +52,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     window.location.reload();
                     refreshing = true;
                 });
+
+                if(navigator.serviceWorker.controller) {
+                    /* Fetch the version string from the service worker and put it in the about box */
+                    navigator.serviceWorker.addEventListener('message', event => {
+                        if(event.data.cmd == 'serviceWorkerVersion') {
+                            $("#serviceWorkerVersion").html("V" + event.data.version);
+                        }
+                    });
+
+                    navigator.serviceWorker.controller.postMessage({cmd: 'getVersion'});
+                }
             }
 
             function refreshWebApp() {
-                newWorker.postMessage({ action: 'skipWaiting' });
+                newWorker.postMessage({cmd: 'skipWaiting'});
             }
         </script>
-        
+
         <script src="lib/three/three.min.js"></script>
         <script src="lib/three/OrbitControls.js"></script>
         <script src="lib/three/TransformControls.js"></script>
@@ -197,7 +208,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <div id="about" onclick="hideAbout()" class="float-center panel-style close-box">
             <a href="www.syndaver.com"><img src="images/logo.png"></a>
-            <h1>Symple Slicer V0.9.9</h1>
+            <h1>Symple Slicer <span id="serviceWorkerVersion"></span></h1>
             <p>
                 Symple Slicer is maintained by SynDaver Labs, Inc. for use with SynDaver printers.
             </p>

@@ -24,10 +24,15 @@
 
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
-const cacheName = 'v0.9.8 r2';
+const version   = '0.9.92';
+const release   = 1;
+
+const cacheName = 'v' + version + "r" + release;
+
+self.version = version;
 
 const filesToCache = [
-    '',
+    '.',
     'lib/three/three.min.js',
     'lib/three/OrbitControls.js',
     'lib/three/TransformControls.js',
@@ -116,8 +121,13 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('message', event => {
-    if (event.data.action === 'skipWaiting') {
-        self.skipWaiting();
+    switch(event.data.cmd) {
+        case 'skipWaiting':
+            self.skipWaiting();
+            break;
+        case 'getVersion':
+            event.source.postMessage({cmd: 'serviceWorkerVersion', version: version, release: release});
+            break;
     }
 });
 
