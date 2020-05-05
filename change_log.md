@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v0.9.93
+------------------------------
+
+- Added the ability to make lithophanes out of images.
+
 SynDaver Symple Slicer v0.9.92
 ------------------------------
 

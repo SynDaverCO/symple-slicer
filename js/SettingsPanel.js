@@ -72,7 +72,7 @@ class SettingsPanel {
         s.page("Place Objects",                                      {id: "page_place"});
 
         s.file("Drop and drop models<br><small>(STL, OBJ or 3MF)</small>",
-                                                                     {id: "model_select", onchange: SettingsPanel.onFileChange, binary: true});
+                                                                     {id: "model_select", onchange: SettingsPanel.onFileChange, mode: 'binary'});
 
         s.separator(                                                 {type: "br"});
         s.button(     "Add Another",                                 {id: "add_another", onclick: SettingsPanel.onAddToPlatform});
@@ -81,6 +81,21 @@ class SettingsPanel {
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
         s.buttonHelp( "Click this button when<br>you are done placing objects.");
+
+
+        s.page("Make Lithophane",                                    {id: "page_lithophane"});
+
+        s.file("Drop and drop images<br><small>(JPG, PNG, BMP or GIF)</small>",
+                                                                     {id: "image_select", onchange: SettingsPanel.onFileChange, mode: 'file'});
+
+        s.separator(                                                 {type: "br"});
+
+        s.button(     "Add Another",                                 {id: "add_another", onclick: SettingsPanel.onAddToPlatform});
+        s.footer();
+        s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
+        s.buttonHelp( "Click this button when<br>you are done placing objects.");
+
+
 
         s.page(       "Transform Objects",                           {id: "page_transform"});
 
@@ -265,7 +280,7 @@ class SettingsPanel {
         s.buttonHelp( "Click this button to save changed<br>settings to your computer.");
 
         s.category(   "Import Settings",                             {id: "import_settings"});
-        s.file(       "Drop and drop settings<br><small>(.TOML)</small>", {id: "import_select", onchange: SettingsPanel.onImportChange});
+        s.file(       "Drop and drop settings<br><small>(.TOML)</small>", {id: "import_select", onchange: SettingsPanel.onImportChange, mode: 'text'});
         s.separator(                                                 {type: "br"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: SettingsPanel.onImportClicked});
         s.buttonHelp( "Importing settings from a file will override<br>all printer &amp; material presets.");
@@ -389,14 +404,12 @@ class SettingsPanel {
         settings.gotoPage("page_machine");
     }
 
-    static onFileChange(file) {
-        if(file) {
-            const filename  = settings.get("model_select_filename");
-            const fileData  = settings.get("model_select");
+    static onFileChange(data, filename) {
+        if(data) {
             const extension = filename.split('.').pop().toLowerCase();
             ProgressBar.message("Preparing model");
-            geoLoader.load(filename, fileData);
-            document.getElementById("gcode_filename").value = filename.replace(".stl", ".gcode");
+            geoLoader.load(filename, data);
+            document.getElementById("gcode_filename").value = filename.replace(extension, "gcode");
         } else {
             settings.enable('#add_another', false);
             loaded_geometry = false;
@@ -404,10 +417,12 @@ class SettingsPanel {
     }
 
     static onGeometryLoaded(geometry) {
-        loaded_geometry = geometry;
-        settings.enable('#add_another', true);
+        if(geometry) {
+            loaded_geometry = geometry;
+            settings.enable('#add_another', true);
+            SettingsPanel.onAddToPlatform(); // Place the first object automatically
+        }
         ProgressBar.hide();
-        SettingsPanel.onAddToPlatform(); // Place the first object automatically
     }
 
     static onAddToPlatform() {
@@ -599,6 +614,14 @@ class SettingsPanel {
                     settings.gotoPage("page_advanced");
                     settings.expand("import_settings");
                     id = "import_select_drophandler";
+                    break;
+                case 'jpg':
+                case 'jpeg':
+                case 'png':
+                case 'bmp':
+                case 'gif':
+                    settings.gotoPage("page_lithophane");
+                    id = "image_select_drophandler";
                     break;
             }
             if(id) {

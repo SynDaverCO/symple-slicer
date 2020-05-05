@@ -24,7 +24,7 @@
 
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
-const version   = '0.9.92';
+const version   = '0.9.93';
 const release   = 1;
 
 const cacheName = 'v' + version + "r" + release;
