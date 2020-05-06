@@ -20,6 +20,7 @@
 class PrintableObject extends THREE.Mesh {
     constructor(geometry) {
         geometry.computeBoundingSphere();
+        geometry.computeBoundingBox();
         super(geometry, PrintableObject.material);
         this.generateConvexHull();
         this.castShadow = true;
@@ -51,6 +52,7 @@ class PrintableObject extends THREE.Mesh {
      * relativeTo - Define "lowest" relative to this object's coordinate system.
      */
     static findLowestPoint(obj, relativeTo) {
+        relativeTo.updateMatrixWorld();
         var inverse   = new THREE.Matrix4().getInverse(relativeTo.matrixWorld);
         var transform = new THREE.Matrix4();
         var lowestPoint;

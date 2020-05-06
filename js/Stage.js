@@ -99,9 +99,8 @@ class Stage {
      * in order to aid with the packing algorithm
      */
     centerObjectOnPlatform(object, fudge) {
-        var sphere = object.geometry.boundingSphere;
-        var vector = new THREE.Vector3();
-        var delta = this.objectToBed(object, vector.copy(sphere.center));
+        const center = object.geometry.boundingBox.getCenter(new THREE.Vector3());
+        const delta = this.objectToBed(object, center);
         if(!this.printer.origin_at_center) {
             delta.x -= this.printer.x_width/2;
             delta.y -= this.printer.y_depth/2;
@@ -112,6 +111,22 @@ class Stage {
             object.position.x += (Math.random() - 0.5) * fudge;
             object.position.y += (Math.random() - 0.5) * fudge;
         }
+    }
+
+    /**
+     * Shrinks an object to fit the print volume.
+     */
+    scaleObjectToFit(object) {
+        const size = object.geometry.boundingBox.getSize(new THREE.Vector3());
+        const scale = Math.min(
+            this.printer.x_width / size.x,
+            this.printer.y_depth / size.y,
+            this.printer.z_height / size.z,
+            1
+        );
+        object.scale.x = scale;
+        object.scale.y = scale;
+        object.scale.z = scale;
     }
 
     /**
@@ -304,9 +319,12 @@ class Stage {
     addGeometry(geometry) {
         var obj = new PrintableObject(geometry);
         this.addObjects([obj]);
+        this.scaleObjectToFit(obj);
         this.dropObjectToFloor(obj);
         this.centerObjectOnPlatform(obj, 1);
-        this.arrangeObjectsOnPlatform();
+        if(this.numObjects > 1) {
+            this.arrangeObjectsOnPlatform();
+        }
         this.render();
     }
 

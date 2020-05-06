@@ -69,28 +69,26 @@ class SettingsPanel {
         slicer.onOptionChanged =    (name, val)  => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val);};
         slicer.onAttributeChanged = (name, attr) => {s.setVisibility("#" + name, attr.enabled);};
 
-        s.page("Place Objects",                                      {id: "page_place"});
+        s.page("Place Models",                                       {id: "page_place"});
 
         s.file("Drop and drop models<br><small>(STL, OBJ or 3MF)</small>",
-                                                                     {id: "model_select", onchange: SettingsPanel.onFileChange, mode: 'binary'});
+                                                                     {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary'});
 
         s.separator(                                                 {type: "br"});
-        s.button(     "Add Another",                                 {id: "add_another", onclick: SettingsPanel.onAddToPlatform});
+        s.button(     "Add Another",                                 {className: "add_another",      onclick: SettingsPanel.onAddToPlatform});
         s.button(     "Clear All",                                   {className: "requires_objects", onclick: SettingsPanel.onClearPlatform});
         s.button(     "Rearrange",                                   {className: "requires_objects", onclick: SettingsPanel.onRearrangePlatform});
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
-        s.buttonHelp( "Click this button when<br>you are done placing objects.");
+        s.buttonHelp( "Click this button when<br>you are done placing models.");
 
-
-        s.page("Make Lithophane",                                    {id: "page_lithophane"});
+        s.page("Place Lithophane",                                   {id: "page_lithophane"});
 
         s.file("Drop and drop images<br><small>(JPG, PNG, BMP or GIF)</small>",
-                                                                     {id: "image_select", onchange: SettingsPanel.onFileChange, mode: 'file'});
+                                                                     {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file'});
 
         s.separator(                                                 {type: "br"});
-
-        s.button(     "Add Another",                                 {id: "add_another", onclick: SettingsPanel.onAddToPlatform});
+        s.button(     "Create",                                      {id: "add_litho", onclick: SettingsPanel.onAddLitho});
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
         s.buttonHelp( "Click this button when<br>you are done placing objects.");
@@ -280,7 +278,7 @@ class SettingsPanel {
         s.buttonHelp( "Click this button to save changed<br>settings to your computer.");
 
         s.category(   "Import Settings",                             {id: "import_settings"});
-        s.file(       "Drop and drop settings<br><small>(.TOML)</small>", {id: "import_select", onchange: SettingsPanel.onImportChange, mode: 'text'});
+        s.file(       "Drop and drop settings<br><small>(.TOML)</small>", {id: "toml_file", onchange: SettingsPanel.onImportChange, mode: 'text'});
         s.separator(                                                 {type: "br"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: SettingsPanel.onImportClicked});
         s.buttonHelp( "Importing settings from a file will override<br>all printer &amp; material presets.");
@@ -296,7 +294,8 @@ class SettingsPanel {
 
         settings = s;
 
-        SettingsPanel.onFileChange(); // Disable buttons
+        SettingsPanel.onDropModel();    // Disable buttons
+        SettingsPanel.onDropImage();    // Disable buttons
         SettingsPanel.onImportChange(); // Disable buttons
         settings.enable(".requires_objects", false);
         SettingsPanel.loadStartupProfile();
@@ -379,9 +378,10 @@ class SettingsPanel {
 
     static onImportClicked() {
         try {
-            var stored_config = settings.get("import_select_clear");
+            const el = settings.get("toml_file");
+            el.clear();
             slicer.loadDefaults();
-            slicer.loadProfileStr(stored_config);
+            slicer.loadProfileStr(el.data);
             SettingsPanel.onPrinterSizeChanged();
             alert("The new settings have been applied.");
         } catch(e) {
@@ -404,23 +404,45 @@ class SettingsPanel {
         settings.gotoPage("page_machine");
     }
 
-    static onFileChange(data, filename) {
+    static setOutputGcodeName(filename) {
+        const extension = filename.split('.').pop().toLowerCase();
+        document.getElementById("gcode_filename").value = filename.replace(extension, "gcode");
+    }
+
+    static onDropModel(data, filename) {
         if(data) {
-            const extension = filename.split('.').pop().toLowerCase();
+            SettingsPanel.setOutputGcodeName(filename);
             ProgressBar.message("Preparing model");
             geoLoader.load(filename, data);
-            document.getElementById("gcode_filename").value = filename.replace(extension, "gcode");
         } else {
-            settings.enable('#add_another', false);
-            loaded_geometry = false;
+            SettingsPanel.onGeometryLoaded(null);
         }
+    }
+
+    static onDropImage(data, filename) {
+        if(data) {
+            SettingsPanel.setOutputGcodeName(filename);
+        } else {
+            SettingsPanel.onGeometryLoaded(null);
+        }
+        settings.enable("#add_litho", data !== undefined);
+    }
+
+    static onAddLitho() {
+        const filename = settings.get("image_file").filename;
+        const data     = settings.get("image_file").data;
+        ProgressBar.message("Preparing model");
+        geoLoader.load(filename, data);
     }
 
     static onGeometryLoaded(geometry) {
         if(geometry) {
             loaded_geometry = geometry;
-            settings.enable('#add_another', true);
+            settings.enable('.add_another', true);
             SettingsPanel.onAddToPlatform(); // Place the first object automatically
+        } else {
+            settings.enable('.add_another', false);
+            loaded_geometry = false;
         }
         ProgressBar.hide();
     }
@@ -608,12 +630,12 @@ class SettingsPanel {
                 case 'stl':
                 case 'obj':
                 case '3mf':
-                    id = "model_select_drophandler";
+                    id = "model_file";
                     break;
                 case 'toml':
                     settings.gotoPage("page_advanced");
                     settings.expand("import_settings");
-                    id = "import_select_drophandler";
+                    id = "toml_file";
                     break;
                 case 'jpg':
                 case 'jpeg':
@@ -621,11 +643,11 @@ class SettingsPanel {
                 case 'bmp':
                 case 'gif':
                     settings.gotoPage("page_lithophane");
-                    id = "image_select_drophandler";
+                    id = "image_file";
                     break;
             }
             if(id) {
-                settings.get(id)(e);
+                settings.get(id).drophandler(e);
             }
         }
         e.preventDefault();

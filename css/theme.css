@@ -46,6 +46,10 @@ hr {
     border:             none;
 }
 
+button[disabled] {
+    cursor:             not-allowed;
+}
+
 #about a:link, #about a:visited {
     color:              #96172e;
 }
