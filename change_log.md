@@ -4,6 +4,7 @@ SynDaver Symple Slicer v0.9.93
 - Added the ability to make lithophanes out of images.
 - Reduce size of extremely large objects to fit
 - Fixed objects not falling to the bed.
+- Updated PLA profile to PLA-PROFILE-AXI-STANDARD-STABLE-552020
 
 SynDaver Symple Slicer v0.9.92
 ------------------------------

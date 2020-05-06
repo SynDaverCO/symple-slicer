@@ -1,0 +1,38 @@
+# PLA-PROFILE-AXI-STANDARD-STABLE-552020.toml
+
+[settings]
+
+adhesion_type = "skirt"
+cool_min_layer_time = 20
+cool_min_layer_time_fan_speed_max = 30
+cool_min_speed = 20
+infill_before_walls = false
+layer_0_z_overlap = 0
+layer_height = 0.25
+layer_height_0 = 0.25
+material_bed_temperature = 65
+material_bed_temperature_layer_0 = 70
+material_print_temperature = 195
+material_print_temperature_layer_0 = 205
+retraction_amount = 1
+retraction_prime_speed = 20
+retraction_retract_speed = 20
+retraction_speed = 20
+speed_infill = 40
+speed_ironing = 20
+speed_layer_0 = 20
+speed_prime_tower = 40
+speed_print = 40
+speed_print_layer_0 = 20
+speed_roofing = 40
+speed_support = 40
+speed_support_bottom = 40
+speed_support_infill = 40
+speed_support_interface = 40
+speed_support_roof = 40
+speed_topbottom = 40
+speed_travel = 160
+speed_travel_layer_0 = 50
+speed_wall = 40
+speed_wall_0 = 40
+speed_wall_x = 40

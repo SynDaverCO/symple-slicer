@@ -106,10 +106,10 @@ const filesToCache = [
     'config/machine_profiles/cura-default.toml',
     'config/machine_profiles/syndaver-axi.toml',
     'config/print_profiles/cura-default.toml',
-    'config/print_profiles/ABS-PROFILE-AXI-STANDARD-STABLE-4292020.toml',
-    'config/print_profiles/PLA-PROFILE-AXI-STANDARD-STABLE-4292020.toml',
-    'config/print_profiles/TPU85-PROFILE-AXI-STANDARD-STABLE-4292020.toml',
-    'config/print_profiles/TPU95-PROFILE-AXI-STANDARD-STABLE-4292020.toml'
+    'config/print_profiles/ABS-PROFILE-AXI-STANDARD-STABLE.toml',
+    'config/print_profiles/PLA-PROFILE-AXI-STANDARD-STABLE.toml',
+    'config/print_profiles/TPU85-PROFILE-AXI-STANDARD-STABLE.toml',
+    'config/print_profiles/TPU95-PROFILE-AXI-STANDARD-STABLE.toml'
 ];
 
 self.addEventListener('install', event => {
