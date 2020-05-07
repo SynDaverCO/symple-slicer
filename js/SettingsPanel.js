@@ -71,7 +71,7 @@ class SettingsPanel {
 
         s.page("Place Models",                                       {id: "page_place"});
 
-        s.file("Drop and drop models<br><small>(STL, OBJ or 3MF)</small>",
+        s.file("Drag and drop models<br><small>(STL, OBJ or 3MF)</small>",
                                                                      {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary'});
 
         s.separator(                                                 {type: "br"});
@@ -84,7 +84,7 @@ class SettingsPanel {
 
         s.page("Place Lithophane",                                   {id: "page_lithophane"});
 
-        s.file("Drop and drop images<br><small>(JPG, PNG, BMP or GIF)</small>",
+        s.file("Drag and drop images<br><small>(JPG, PNG, BMP or GIF)</small>",
                                                                      {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file'});
 
         s.separator(                                                 {type: "br"});
@@ -278,7 +278,7 @@ class SettingsPanel {
         s.buttonHelp( "Click this button to save changed<br>settings to your computer.");
 
         s.category(   "Import Settings",                             {id: "import_settings"});
-        s.file(       "Drop and drop settings<br><small>(.TOML)</small>", {id: "toml_file", onchange: SettingsPanel.onImportChange, mode: 'text'});
+        s.file(       "Drag and drop settings<br><small>(.TOML)</small>", {id: "toml_file", onchange: SettingsPanel.onImportChange, mode: 'text'});
         s.separator(                                                 {type: "br"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: SettingsPanel.onImportClicked});
         s.buttonHelp( "Importing settings from a file will override<br>all printer &amp; material presets.");
@@ -463,7 +463,6 @@ class SettingsPanel {
         SettingsPanel.onObjectTransforming("translate");
         SettingsPanel.onObjectTransforming("rotate");
         SettingsPanel.onObjectTransforming("scale");
-        SettingsPanel.onTransformModeChanged(stage.tranformMode);
     }
 
     static onTransformModeChanged(mode) {
@@ -487,9 +486,9 @@ class SettingsPanel {
     }
 
     static onEditPosition() {
-        stage.selectedGroup.position.x = settings.get("xform_position_x");
-        stage.selectedGroup.position.y = settings.get("xform_position_y");
-        stage.selectedGroup.position.z = settings.get("xform_position_z") + stage.selectionHeightAdjustment;
+        stage.selectionGroup.position.x = settings.get("xform_position_x");
+        stage.selectionGroup.position.y = settings.get("xform_position_y");
+        stage.selectionGroup.position.z = settings.get("xform_position_z") + stage.selectionHeightAdjustment;
         stage.onTransformationEdit(false);
     }
 
@@ -505,9 +504,9 @@ class SettingsPanel {
                 case "Z%": x_percent = y_percent = z_percent; break;
             }
         }
-        stage.selectedGroup.scale.x = x_percent;
-        stage.selectedGroup.scale.y = y_percent;
-        stage.selectedGroup.scale.z = z_percent;
+        stage.selectionGroup.scale.x = x_percent;
+        stage.selectionGroup.scale.y = y_percent;
+        stage.selectionGroup.scale.z = z_percent;
         if(uniform) {
             SettingsPanel.onObjectTransforming("scale");
         }
@@ -516,9 +515,9 @@ class SettingsPanel {
 
     static onEditRotation() {
         const toRad = deg => deg * Math.PI / 180;
-        stage.selectedGroup.rotation.x = toRad(settings.get("xform_rotation_x"));
-        stage.selectedGroup.rotation.y = toRad(settings.get("xform_rotation_y"));
-        stage.selectedGroup.rotation.z = toRad(settings.get("xform_rotation_z"));
+        stage.selectionGroup.rotation.x = toRad(settings.get("xform_rotation_x"));
+        stage.selectionGroup.rotation.y = toRad(settings.get("xform_rotation_y"));
+        stage.selectionGroup.rotation.z = toRad(settings.get("xform_rotation_z"));
         stage.onTransformationEdit();
     }
 
@@ -526,20 +525,20 @@ class SettingsPanel {
         const toDeg = rad => (rad * 180 / Math.PI).toFixed(0);
         switch(mode) {
             case "translate":
-                const pos = stage.selectedGroup.position;
+                const pos = stage.selectionGroup.position;
                 $('#xform_position_x').val( pos.x.toFixed(2));
                 $('#xform_position_y').val( pos.y.toFixed(2));
                 $('#xform_position_z').val((pos.z - stage.selectionHeightAdjustment).toFixed(2));
                 break;
             case "rotate":
-                $('#xform_rotation_x').val(toDeg(stage.selectedGroup.rotation.x));
-                $('#xform_rotation_y').val(toDeg(stage.selectedGroup.rotation.y));
-                $('#xform_rotation_z').val(toDeg(stage.selectedGroup.rotation.z));
+                $('#xform_rotation_x').val(toDeg(stage.selectionGroup.rotation.x));
+                $('#xform_rotation_y').val(toDeg(stage.selectionGroup.rotation.y));
+                $('#xform_rotation_z').val(toDeg(stage.selectionGroup.rotation.z));
                 break;
             case "scale":
-                $('#xform_scale_x_pct').val((stage.selectedGroup.scale.x * 100).toFixed(2));
-                $('#xform_scale_y_pct').val((stage.selectedGroup.scale.y * 100).toFixed(2));
-                $('#xform_scale_z_pct').val((stage.selectedGroup.scale.z * 100).toFixed(2));
+                $('#xform_scale_x_pct').val((stage.selectionGroup.scale.x * 100).toFixed(2));
+                $('#xform_scale_y_pct').val((stage.selectionGroup.scale.y * 100).toFixed(2));
+                $('#xform_scale_z_pct').val((stage.selectionGroup.scale.z * 100).toFixed(2));
                 break;
         }
     }

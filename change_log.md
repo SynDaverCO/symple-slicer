@@ -1,10 +1,19 @@
+SynDaver Symple Slicer v0.9.95
+------------------------------
+- Fix lay flat tool.
+
+SynDaver Symple Slicer v0.9.94
+------------------------------
+- Fixed typos in UI
+- Updated PLA profile to release 5/7/2020
+
 SynDaver Symple Slicer v0.9.93
 ------------------------------
 
 - Added the ability to make lithophanes out of images.
 - Reduce size of extremely large objects to fit
 - Fixed objects not falling to the bed.
-- Updated PLA profile to PLA-PROFILE-AXI-STANDARD-STABLE-552020
+- Updated PLA profile to release 5/5/2020
 
 SynDaver Symple Slicer v0.9.92
 ------------------------------

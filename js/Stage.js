@@ -31,13 +31,18 @@ class Stage {
         this.printerRepresentation = new PrinterRepresentation(this.printer);
         this.bedRelative   = this.printerRepresentation.bedRelative;
         this.placedObjects = new THREE.Object3D();
-        this.selectedGroup = new SelectionGroup();
         this.dragging      = false;
-        this.transforming  = false;
         this.packer = null;
         this.timer = new ResettableTimeout();
 
-        this.placedObjects.add(this.selectedGroup);
+        this.selectionGroup = new SelectionGroup();
+        this.selectionGroup.onObjectTransforming = mode => {
+            this.render();
+            SettingsPanel.onObjectTransforming(mode);
+        }
+        this.selectionGroup.onTransformEnd = () => {this.dropObjectToFloor(this.selectionGroup);};
+
+        this.placedObjects.add(this.selectionGroup);
         this.bedRelative.add(this.placedObjects);
 
         $.contextMenu({
@@ -224,8 +229,8 @@ class Stage {
      * the correction applied to the Z value text box. 
      */
     get selectionHeightAdjustment() {
-        const lowestPoint = PrintableObject.findLowestPoint(this.selectedGroup, this.bedRelative);
-        return lowestPoint ? this.selectedGroup.position.z - lowestPoint.z : 0;
+        const lowestPoint = PrintableObject.findLowestPoint(this.selectionGroup, this.bedRelative);
+        return lowestPoint ? this.selectionGroup.position.z - lowestPoint.z : 0;
     }
 
     /**
@@ -238,29 +243,15 @@ class Stage {
         var quaternion = new THREE.Quaternion();
 
         // Step 1: Find the lowest point in the convex hull
-        var pivot = this.findLowestPoint(vector, obj, obj.hull);
+        var pivot = PrintableObject.findLowestPoint(obj, this.bedRelative);
 
         // Step 2: Obtain the world quaternion of the object
         obj.matrixWorld.decompose( vector, quaternion, vector );
 
-        // Helper function for iterating through faces, regardless of geometry type.
-        const forEachFace = (geom, lambda) => {
-            if(geom instanceof THREE.BufferGeometry) {
-                console.log("Lay flat: Is buffer geometry");
-                console.log(geom);
-                console.log(geom.getIndex());
-                if(geom.getIndex()) {
-                    console.log("Is indexed");
-                }
-            } else {
-                geom.faces.forEach(lambda);
-            }
-        }
-
         // Step 3: For all faces that share this vertex, compute the angle of that face to the horizontal.
         var downVector = new THREE.Vector3(0, -1, 0);
         var candidates = [];
-        forEachFace(obj.hull, (face) => {
+        obj.hull.faces.forEach(face => {
             if(pivot.index == face.a ||
                pivot.index == face.b ||
                pivot.index == face.c) {
@@ -342,7 +333,7 @@ class Stage {
 
     removeObjects(objs) {
         objs.forEach(obj => {
-            this.selectedGroup.removeFromSelection(obj);
+            this.selectionGroup.removeFromSelection(obj);
             this.placedObjects.remove(obj);
             var index = this.objects.indexOf(obj);
             if (index > -1) {
@@ -352,57 +343,28 @@ class Stage {
         SettingsPanel.onObjectCountChanged(this.objects.length);
     }
 
-    updateSelection() {
-        if(this.selectedGroup.children.length > 0) {
-            renderLoop.outlinePass.selectedObjects = [this.selectedGroup];
-        } else {
-            renderLoop.outlinePass.selectedObjects = [];
-            this.transformControl.detach();
-        }
-    }
-    
     removeSelectedObjects() {
-        this.removeObjects(this.selectedGroup.children.slice());
-        this.updateSelection();
+        this.removeObjects(this.selectionGroup.children.slice());
+        this.selectionGroup.updateSelection();
         this.render();
     }
 
     removeAll() {
         this.removeObjects(this.objects);
-        this.updateSelection();
+        this.selectionGroup.updateSelection();
         this.render();
     }
 
     selectAll() {
-        this.selectedGroup.setSelection(this.objects);
-        this.updateSelection();
+        this.selectionGroup.setSelection(this.objects);
+        this.selectionGroup.updateSelection();
         this.render();
     }
 
     selectNone() {
-        this.selectedGroup.selectNone();
-    }
-
-    /**
-     * Attaches a special handler for the TransformControl. Since the control
-     * does not have a "mirror" mode, we use a custom "mouseDown" handler to
-     * modify the behavior of the "translate" mode to act as if it were a
-     * "mirror".
-     */
-    setTransformControl(control) {
-        this.transformControl = control;
-        this.transformControl.addEventListener( 'mouseDown', ( event ) => {
-            if(this.currentTool == "mirror") {
-                this.transformControl.dragging = false;
-                switch(this.transformControl.axis) {
-                    case 'X': this.selectedGroup.scale.x = this.selectedGroup.scale.x < 0 ? 1 : -1; break;
-                    case 'Y': this.selectedGroup.scale.y = this.selectedGroup.scale.y < 0 ? 1 : -1; break;
-                    case 'Z': this.selectedGroup.scale.z = this.selectedGroup.scale.z < 0 ? 1 : -1; break;
-                }
-                this.render();
-                SettingsPanel.onObjectTransforming("scale");
-            }
-        } );
+        this.selectionGroup.selectNone();
+        this.selectionGroup.updateSelection();
+        this.currentTool = null;
     }
 
     clearGcodePath() {
@@ -455,42 +417,23 @@ class Stage {
         return this.toolpath ? this.toolpath.nLayers : 0;
     }
 
-    get tranformMode() {
-        return this.currentTool == "mirror" ? "scale" : this.transformControl.mode;
-    }
-
     // Event handlers
 
     onTranformToolChanged(tool) {
-        this.transformControl.enabled = false;
-        this.selectedGroup.recompute();
-        this.currentTool = tool;
-        const cntl = this.transformControl;
-        switch(tool) {
-            case "move":    cntl.setMode("translate"); cntl.setSpace("world"); break;
-            case "rotate":  cntl.setMode("rotate");    cntl.setSpace("world"); break;
-            case "scale":   cntl.setMode("scale");     cntl.setSpace("local"); break;
-            case "mirror":  cntl.setMode("translate"); cntl.setSpace("local"); break;
-            case "layflat": this.onLayFlatClicked(); break;
+        if(this.selectionGroup.count) {
+            if(tool == "layflat") {
+                this.onLayFlatClicked();
+            } else {
+                this.selectionGroup.setTransformMode(tool);
+                SettingsPanel.onTransformModeChanged(this.selectionGroup.tranformMode);
+                SettingsPanel.onObjectSelected();
+            }
         }
-        SettingsPanel.onTransformModeChanged(stage.tranformMode);
-        SettingsPanel.onObjectSelected();
-        this.transformControl.attach(this.selectedGroup);
-        this.transformControl.enabled = true;
-    }
-
-    onTransformBegin() {
-        this.transforming = true;
-    }
-
-    onTransformEnd() {
-        this.dropObjectToFloor(this.selectedGroup);
-        this.transforming = false;
     }
 
     onTransformationEdit(dropToFloor = true) {
         if (dropToFloor) {
-            this.dropObjectToFloor(this.selectedGroup);
+            this.dropObjectToFloor(this.selectionGroup);
         }
         this.render();
     }
@@ -503,12 +446,12 @@ class Stage {
         if(event.button == 2) {
             this.showContextMenu(event);
         } else if(event.shiftKey) {
-            this.selectedGroup.addOrRemove(obj);
-            this.updateSelection();
+            this.selectionGroup.addOrRemove(obj);
+            this.selectionGroup.updateSelection();
             this.render();
         } else {
-            this.selectedGroup.setSelection([obj]);
-            this.updateSelection();
+            this.selectionGroup.setSelection([obj]);
+            this.selectionGroup.updateSelection();
             this.render();
         }
     }
@@ -518,7 +461,7 @@ class Stage {
             this.showContextMenu(event);
         } else {
             this.selectNone();
-            this.updateSelection();
+            this.selectionGroup.updateSelection();
             this.render();
             SettingsPanel.onObjectUnselected();
         }
@@ -528,23 +471,17 @@ class Stage {
         this.dragging = false;
     }
 
-    isControlObject(obj) {
-        return obj instanceof THREE.TransformControls ?
-            true :
-            obj.parent ? this.isControlObject(obj.parent) : false;
-    }
-
     /**
      * This method is called when the user clicks on an object.
      * It evaluates the intersections from the raycaster and
      * determines what to do.
      */
     onMouseUp( raycaster, scene, event ) {
-        if(this.dragging || this.transforming) return;
+        if(this.dragging || this.selectionGroup.isTransforming) return;
         var intersects = raycaster.intersectObject( scene, true );
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
-            if (this.isControlObject(obj)) {
+            if (SelectionGroup.isControlObject(obj)) {
                 // Disregard clicks on the control object
                 continue;
             }
@@ -563,6 +500,6 @@ class Stage {
     }
 
     onLayFlatClicked() {
-        this.selectedGroup.children.forEach(obj => this.layObjectFlat(obj));
+        this.selectionGroup.children.forEach(obj => this.layObjectFlat(obj));
     }
 }

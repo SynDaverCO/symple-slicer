@@ -76,26 +76,9 @@ class RenderLoop {
 
         var control = new THREE.TransformControls( camera, renderer.domElement );
         scene.add( control );
-        control.addEventListener( 'change', event => {
-          this.render();
-          SettingsPanel.onObjectTransforming(stage.tranformMode);
-        } );
-        control.addEventListener( 'dragging-changed', event => {
-            this.orbit.enabled = ! event.value;
-            if (event.value) {
-                stage.onTransformBegin();
-            } else {
-                stage.onTransformEnd();
-            }
-        } );
 
-        stage.setTransformControl(control);
-
-        // https://stackoverflow.com/questions/41000983/using-transformcontrols-with-outlinepass-in-three-js?noredirect=1&lq=1
-        // Fix for transform controls being updated in OutlinePass
-        control.traverse((obj) => { // To be detected correctly by OutlinePass.
-            obj.isTransformControls = true;
-        });
+        stage.selectionGroup.setTransformControl(control);
+        stage.selectionGroup.setViewControl(this.orbit);
 
         // Animate loop for control
         function animate() {

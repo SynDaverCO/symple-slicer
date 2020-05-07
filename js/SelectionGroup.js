@@ -25,6 +25,7 @@ class SelectionGroup extends THREE.Object3D {
     constructor() {
         super();
         this.boundingBox = new THREE.Box3();
+        this.isTransforming = false;
     }
 
     /**
@@ -109,4 +110,103 @@ class SelectionGroup extends THREE.Object3D {
     isSelected(obj) {
         return this.children.indexOf(obj) > -1;
     }
+
+    get count() {
+        return this.children.length;
+    }
+
+    setTransformControl(control) {
+        this.transformControl = control;
+
+        // Since the control does not have a "mirror" mode, we use a custom
+        // "mouseDown" handler to modify the behavior of the "translate" mode.
+        this.transformControl.addEventListener( 'mouseDown', event => {
+            if(this.currentTool == "mirror") {
+                this.transformControl.dragging = false;
+                switch(this.transformControl.axis) {
+                    case 'X': this.scale.x = this.scale.x < 0 ? 1 : -1; break;
+                    case 'Y': this.scale.y = this.scale.y < 0 ? 1 : -1; break;
+                    case 'Z': this.scale.z = this.scale.z < 0 ? 1 : -1; break;
+                }
+                this.onObjectTransforming("scale");
+            }
+        } );
+
+        this.transformControl.addEventListener( 'change', event => {
+          this.onObjectTransforming(this.tranformMode);
+        });
+
+        control.addEventListener( 'dragging-changed', event => {
+            if(this.viewControl) {
+                this.viewControl.enabled = ! event.value;
+            }
+            if (event.value) {
+                this.isTransforming = true;
+                this.onTransformBegin();
+            } else {
+                this.isTransforming = false;
+                this.onTransformEnd();
+            }
+        } );
+
+        // https://stackoverflow.com/questions/41000983/using-transformcontrols-with-outlinepass-in-three-js?noredirect=1&lq=1
+        // Fix for transform controls being updated in OutlinePass
+        this.transformControl.traverse(obj => { // To be detected correctly by OutlinePass.
+            obj.isTransformControls = true;
+        });
+    }
+
+    setViewControl(control) {
+        this.viewControl = control;
+    }
+
+    setTransformMode(mode) {
+        if(this.count) {
+            this.transformControl.enabled = false;
+            this.recompute();
+            this.currentTool = mode;
+            switch(mode) {
+                case "move":    this.setTransformModeAndSpace("translate", "world"); break;
+                case "rotate":  this.setTransformModeAndSpace("rotate",    "world"); break;
+                case "scale":   this.setTransformModeAndSpace("scale",     "local"); break;
+                case "mirror":  this.setTransformModeAndSpace("translate", "local"); break;
+            }
+            this.updateSelection();
+            this.transformControl.enabled = true;
+        }
+    }
+
+    setTransformModeAndSpace(mode, space) {
+        this.transformControl.setMode(mode);
+        this.transformControl.setSpace(space);
+    }
+
+    updateSelection() {
+        if(this.count > 0) {
+            renderLoop.outlinePass.selectedObjects = [this];
+        } else {
+            renderLoop.outlinePass.selectedObjects = [];
+        }
+
+        if(this.count > 0 && this.currentTool) {
+            this.transformControl.attach(this);
+        } else {
+            this.transformControl.detach();
+        }
+    }
+
+    get tranformMode() {
+        return this.currentTool == "mirror" ? "scale" : this.transformControl.mode;
+    }
+
+    static isControlObject(obj) {
+        return obj instanceof THREE.TransformControls ?
+            true :
+            obj.parent ? SelectionGroup.isControlObject(obj.parent) : false;
+    }
+
+    // Event call backs
+    onObjectTransforming(mode) {}
+    onTransformBegin() {}
+    onTransformEnd() {}
 }
