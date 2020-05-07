@@ -1,4 +1,7 @@
-# PLA-PROFILE-AXI-STANDARD-STABLE-552020.toml
+[metadata]
+
+label = "PLA (matte finish)"
+date = "5/7/2020"
 
 [settings]
 
@@ -15,9 +18,9 @@ material_bed_temperature_layer_0 = 70
 material_print_temperature = 195
 material_print_temperature_layer_0 = 205
 retraction_amount = 1
-retraction_prime_speed = 20
-retraction_retract_speed = 20
-retraction_speed = 20
+retraction_prime_speed = 25
+retraction_retract_speed = 25
+retraction_speed = 25
 speed_infill = 40
 speed_ironing = 20
 speed_layer_0 = 20

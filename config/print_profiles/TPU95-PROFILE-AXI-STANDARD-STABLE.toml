@@ -1,4 +1,7 @@
-# TPU95-PROFILE-AXI-STANDARD-STABLE-4292020.toml
+[metadata]
+
+label = "TPU (shore hardness 95)"
+date = "4/29/2020"
 
 [settings]
 
