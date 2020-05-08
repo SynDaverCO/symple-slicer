@@ -89,6 +89,7 @@ const filesToCache = [
     'lib/slicing-engines/CuraEngine/SlicerConfiguration.js',
     'lib/slicing-engines/CuraEngine/SlicerWorker.js',
     'lib/util/io/GeometryLoaderWorker.js',
+    'images/favicon.ico',
     'images/scale.png',
     'images/scale-max.png',
     'images/rotate.png',
