@@ -1,7 +1,13 @@
+SynDaver Symple Slicer v0.9.96
+------------------------------
+- Fix to web manifest
+
 SynDaver Symple Slicer v0.9.95
 ------------------------------
 - Fix lay flat tool
 - Profile menus now dynamically populated
+- Added SynDaver favicon
+- Made it installable as a desktop app
 
 SynDaver Symple Slicer v0.9.94
 ------------------------------
