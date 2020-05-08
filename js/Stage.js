@@ -35,14 +35,14 @@ class Stage {
         this.packer = null;
         this.timer = new ResettableTimeout();
 
-        this.selectionGroup = new SelectionGroup();
-        this.selectionGroup.onObjectTransforming = mode => {
+        this.selection = new SelectionGroup();
+        this.selection.onTransformChange = mode => {
             this.render();
-            SettingsPanel.onObjectTransforming(mode);
+            SettingsPanel.onTransformChange(mode);
         }
-        this.selectionGroup.onTransformEnd = () => {this.dropObjectToFloor(this.selectionGroup);};
+        this.selection.onTransformEnd = () => {this.dropObjectToFloor(this.selection);};
 
-        this.placedObjects.add(this.selectionGroup);
+        this.placedObjects.add(this.selection);
         this.bedRelative.add(this.placedObjects);
 
         $.contextMenu({
@@ -229,8 +229,8 @@ class Stage {
      * the correction applied to the Z value text box. 
      */
     get selectionHeightAdjustment() {
-        const lowestPoint = PrintableObject.findLowestPoint(this.selectionGroup, this.bedRelative);
-        return lowestPoint ? this.selectionGroup.position.z - lowestPoint.z : 0;
+        const lowestPoint = PrintableObject.findLowestPoint(this.selection, this.bedRelative);
+        return lowestPoint ? this.selection.position.z - lowestPoint.z : 0;
     }
 
     /**
@@ -332,8 +332,8 @@ class Stage {
     }
 
     removeObjects(objs) {
+        this.selection.removeFromSelection(objs);
         objs.forEach(obj => {
-            this.selectionGroup.removeFromSelection(obj);
             this.placedObjects.remove(obj);
             var index = this.objects.indexOf(obj);
             if (index > -1) {
@@ -344,27 +344,22 @@ class Stage {
     }
 
     removeSelectedObjects() {
-        this.removeObjects(this.selectionGroup.children.slice());
-        this.selectionGroup.updateSelection();
+        this.removeObjects(this.selection.children.slice());
         this.render();
     }
 
     removeAll() {
         this.removeObjects(this.objects);
-        this.selectionGroup.updateSelection();
         this.render();
     }
 
     selectAll() {
-        this.selectionGroup.setSelection(this.objects);
-        this.selectionGroup.updateSelection();
+        this.selection.setSelection(this.objects);
         this.render();
     }
 
     selectNone() {
-        this.selectionGroup.selectNone();
-        this.selectionGroup.updateSelection();
-        this.currentTool = null;
+        this.selection.selectNone();
     }
 
     clearGcodePath() {
@@ -420,12 +415,12 @@ class Stage {
     // Event handlers
 
     onTranformToolChanged(tool) {
-        if(this.selectionGroup.count) {
+        if(this.selection.count) {
             if(tool == "layflat") {
                 this.onLayFlatClicked();
             } else {
-                this.selectionGroup.setTransformMode(tool);
-                SettingsPanel.onTransformModeChanged(this.selectionGroup.tranformMode);
+                this.selection.setTransformMode(tool);
+                SettingsPanel.onTransformModeChanged(this.selection.tranformMode);
                 SettingsPanel.onObjectSelected();
             }
         }
@@ -433,7 +428,7 @@ class Stage {
 
     onTransformationEdit(dropToFloor = true) {
         if (dropToFloor) {
-            this.dropObjectToFloor(this.selectionGroup);
+            this.dropObjectToFloor(this.selection);
         }
         this.render();
     }
@@ -446,12 +441,10 @@ class Stage {
         if(event.button == 2) {
             this.showContextMenu(event);
         } else if(event.shiftKey) {
-            this.selectionGroup.addOrRemove(obj);
-            this.selectionGroup.updateSelection();
+            this.selection.addOrRemoveFromSelection(obj);
             this.render();
         } else {
-            this.selectionGroup.setSelection([obj]);
-            this.selectionGroup.updateSelection();
+            this.selection.setSelection(obj);
             this.render();
         }
     }
@@ -461,7 +454,6 @@ class Stage {
             this.showContextMenu(event);
         } else {
             this.selectNone();
-            this.selectionGroup.updateSelection();
             this.render();
             SettingsPanel.onObjectUnselected();
         }
@@ -477,7 +469,7 @@ class Stage {
      * determines what to do.
      */
     onMouseUp( raycaster, scene, event ) {
-        if(this.dragging || this.selectionGroup.isTransforming) return;
+        if(this.dragging || this.selection.isTransforming) return;
         var intersects = raycaster.intersectObject( scene, true );
         for (var i = 0; i < intersects.length; i++) {
             var obj = intersects[ i ].object;
@@ -500,6 +492,6 @@ class Stage {
     }
 
     onLayFlatClicked() {
-        this.selectionGroup.children.forEach(obj => this.layObjectFlat(obj));
+        this.selection.children.forEach(obj => this.layObjectFlat(obj));
     }
 }

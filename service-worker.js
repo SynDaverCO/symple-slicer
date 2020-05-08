@@ -103,13 +103,14 @@ const filesToCache = [
     'lib/slicing-engines/CuraEngine/CuraEngine.wasm',
     'lib/three/BufferGeometryUtils.js',
     'lib/util/io/StlReader.js',
-    'config/machine_profiles/cura-default.toml',
-    'config/machine_profiles/syndaver-axi.toml',
-    'config/print_profiles/cura-default.toml',
-    'config/print_profiles/ABS-PROFILE-AXI-STANDARD-STABLE.toml',
-    'config/print_profiles/PLA-PROFILE-AXI-STANDARD-STABLE.toml',
-    'config/print_profiles/TPU85-PROFILE-AXI-STANDARD-STABLE.toml',
-    'config/print_profiles/TPU95-PROFILE-AXI-STANDARD-STABLE.toml'
+    'config/syndaver/profile_list.toml',
+    'config/syndaver/machine_profiles/cura_default.toml',
+    'config/syndaver/machine_profiles/syndaver_axi.toml',
+    'config/syndaver/print_profiles/cura_default.toml',
+    'config/syndaver/print_profiles/abs_standard_stable.toml',
+    'config/syndaver/print_profiles/pla_standard_stable.toml',
+    'config/syndaver/print_profiles/tpu85_standard_stable.toml',
+    'config/syndaver/print_profiles/tpu95_standard_stable.toml'
 ];
 
 self.addEventListener('install', event => {

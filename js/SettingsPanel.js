@@ -120,17 +120,9 @@ class SettingsPanel {
 
         s.page(       "Manage Presets",                              {id: "page_profiles"});
 
-        s.category(   "Printer &amp; Material",                      {open: "open"});
-        s.choice(     "Printer:",                                    {id: "preset_select"})
-         .option(         "SynDaver AXI",                            {id: "syndaver-axi"})
-         .option(         "Cura Defaults",                           {id: "cura-defaults"});
-
-        s.choice(     "Material:",                                   {id: "material_select"})
-         .option(         "PLA (matte finish)",                      {id: "PLA-PROFILE-AXI-STANDARD-STABLE"})
-         .option(         "ABS",                                     {id: "ABS-PROFILE-AXI-STANDARD-STABLE"})
-         .option(         "TPU (shore hardness 85)",                 {id: "TPU85-PROFILE-AXI-STANDARD-STABLE"})
-         .option(         "TPU (shore hardness 95)",                 {id: "TPU95-PROFILE-AXI-STANDARD-STABLE"})
-         .option(         "Cura Defaults",                           {id: "cura-defaults"});
+        s.heading("Printer &amp; Material");
+        var printer_menu = s.choice( "Printer:",                     {id: "preset_select"});
+        var material_menu = s.choice( "Material:",                   {id: "material_select"});
         s.footer();
         s.button(     "Apply",                                       {onclick: SettingsPanel.onApplyPreset});
         s.buttonHelp( "Applying presets resets all printer &amp; material settings<br>to defaults, including modified or imported settings.");
@@ -298,7 +290,7 @@ class SettingsPanel {
         SettingsPanel.onDropImage();    // Disable buttons
         SettingsPanel.onImportChange(); // Disable buttons
         settings.enable(".requires_objects", false);
-        SettingsPanel.loadStartupProfile();
+        SettingsPanel.loadProfileList(printer_menu, material_menu);
 
         // Set up the global drag and drop handler
         window.addEventListener("dragover",function(e){
@@ -330,6 +322,23 @@ class SettingsPanel {
 
         // If no local profile is found, reload starting profile
         SettingsPanel.applyPresets();
+    }
+
+    static loadProfileList(printer_menu, material_menu) {
+        fetchText("config/syndaver/profile_list.toml",
+            data =>
+            {
+                const config = toml.parse(data);
+                for (let [key, value] of Object.entries(config.machine_profiles)) {
+                    printer_menu.option(value, {id: key});
+                }
+                for (let [key, value] of Object.entries(config.print_profiles)) {
+                    material_menu.option(value, {id: key});
+                }
+                SettingsPanel.loadStartupProfile();
+            },
+            () => console.log("Unable to load profiles list")
+        );
     }
 
     static applyPresets() {
@@ -460,9 +469,9 @@ class SettingsPanel {
     }
 
     static onObjectSelected() {
-        SettingsPanel.onObjectTransforming("translate");
-        SettingsPanel.onObjectTransforming("rotate");
-        SettingsPanel.onObjectTransforming("scale");
+        SettingsPanel.onTransformChange("translate");
+        SettingsPanel.onTransformChange("rotate");
+        SettingsPanel.onTransformChange("scale");
     }
 
     static onTransformModeChanged(mode) {
@@ -486,9 +495,9 @@ class SettingsPanel {
     }
 
     static onEditPosition() {
-        stage.selectionGroup.position.x = settings.get("xform_position_x");
-        stage.selectionGroup.position.y = settings.get("xform_position_y");
-        stage.selectionGroup.position.z = settings.get("xform_position_z") + stage.selectionHeightAdjustment;
+        stage.selection.position.x = settings.get("xform_position_x");
+        stage.selection.position.y = settings.get("xform_position_y");
+        stage.selection.position.z = settings.get("xform_position_z") + stage.selectionHeightAdjustment;
         stage.onTransformationEdit(false);
     }
 
@@ -504,41 +513,41 @@ class SettingsPanel {
                 case "Z%": x_percent = y_percent = z_percent; break;
             }
         }
-        stage.selectionGroup.scale.x = x_percent;
-        stage.selectionGroup.scale.y = y_percent;
-        stage.selectionGroup.scale.z = z_percent;
+        stage.selection.scale.x = x_percent;
+        stage.selection.scale.y = y_percent;
+        stage.selection.scale.z = z_percent;
         if(uniform) {
-            SettingsPanel.onObjectTransforming("scale");
+            SettingsPanel.onTransformChange("scale");
         }
         stage.onTransformationEdit();
     }
 
     static onEditRotation() {
         const toRad = deg => deg * Math.PI / 180;
-        stage.selectionGroup.rotation.x = toRad(settings.get("xform_rotation_x"));
-        stage.selectionGroup.rotation.y = toRad(settings.get("xform_rotation_y"));
-        stage.selectionGroup.rotation.z = toRad(settings.get("xform_rotation_z"));
+        stage.selection.rotation.x = toRad(settings.get("xform_rotation_x"));
+        stage.selection.rotation.y = toRad(settings.get("xform_rotation_y"));
+        stage.selection.rotation.z = toRad(settings.get("xform_rotation_z"));
         stage.onTransformationEdit();
     }
 
-    static onObjectTransforming(mode) {
+    static onTransformChange(mode) {
         const toDeg = rad => (rad * 180 / Math.PI).toFixed(0);
         switch(mode) {
             case "translate":
-                const pos = stage.selectionGroup.position;
+                const pos = stage.selection.position;
                 $('#xform_position_x').val( pos.x.toFixed(2));
                 $('#xform_position_y').val( pos.y.toFixed(2));
                 $('#xform_position_z').val((pos.z - stage.selectionHeightAdjustment).toFixed(2));
                 break;
             case "rotate":
-                $('#xform_rotation_x').val(toDeg(stage.selectionGroup.rotation.x));
-                $('#xform_rotation_y').val(toDeg(stage.selectionGroup.rotation.y));
-                $('#xform_rotation_z').val(toDeg(stage.selectionGroup.rotation.z));
+                $('#xform_rotation_x').val(toDeg(stage.selection.rotation.x));
+                $('#xform_rotation_y').val(toDeg(stage.selection.rotation.y));
+                $('#xform_rotation_z').val(toDeg(stage.selection.rotation.z));
                 break;
             case "scale":
-                $('#xform_scale_x_pct').val((stage.selectionGroup.scale.x * 100).toFixed(2));
-                $('#xform_scale_y_pct').val((stage.selectionGroup.scale.y * 100).toFixed(2));
-                $('#xform_scale_z_pct').val((stage.selectionGroup.scale.z * 100).toFixed(2));
+                $('#xform_scale_x_pct').val((stage.selection.scale.x * 100).toFixed(2));
+                $('#xform_scale_y_pct').val((stage.selection.scale.y * 100).toFixed(2));
+                $('#xform_scale_z_pct').val((stage.selection.scale.z * 100).toFixed(2));
                 break;
         }
     }

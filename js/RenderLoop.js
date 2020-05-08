@@ -77,8 +77,8 @@ class RenderLoop {
         var control = new THREE.TransformControls( camera, renderer.domElement );
         scene.add( control );
 
-        stage.selectionGroup.setTransformControl(control);
-        stage.selectionGroup.setViewControl(this.orbit);
+        stage.selection.setTransformControl(control);
+        stage.selection.setViewControl(this.orbit);
 
         // Animate loop for control
         function animate() {

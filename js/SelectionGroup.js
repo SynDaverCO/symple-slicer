@@ -67,12 +67,13 @@ class SelectionGroup extends THREE.Object3D {
         var objs = this.children.slice(0); // Clone array
         objs.push(obj);
         this._set(objs);
+        this.selectionChanged();
     }
 
     /**
      * Selects an object if it is not already selected, otherwise deselects it.
      */
-    addOrRemove(obj) {
+    addOrRemoveFromSelection(obj) {
         if(this.isSelected(obj)) {
             this.removeFromSelection(obj);
         } else {
@@ -81,17 +82,17 @@ class SelectionGroup extends THREE.Object3D {
     }
 
     /**
-     * Removes an object from the selection. This is done
-     * via "setSelection()" to compute a new center.
+     * Removes one or more object(s) from the selection.
      */
     removeFromSelection(obj) {
-        this.parent.attach(obj);
-        // Force a recomputation of the center:
-        this._set(this.children.slice(0));
+        (Array.isArray(obj) ? obj : [obj]).forEach(obj => this.parent.attach(obj));
+        this.recompute();
+        this.selectionChanged();
     }
 
-    setSelection(objs) {
-        this._set(objs);
+    setSelection(obj) {
+        this._set(Array.isArray(obj) ? obj : [obj]);
+        this.selectionChanged();
     }
 
     /**
@@ -105,6 +106,7 @@ class SelectionGroup extends THREE.Object3D {
         this.position.set(0,0,0);
         this.rotation.set(0,0,0);
         this.scale.set(1,1,1);
+        this.selectionChanged();
     }
 
     isSelected(obj) {
@@ -121,19 +123,19 @@ class SelectionGroup extends THREE.Object3D {
         // Since the control does not have a "mirror" mode, we use a custom
         // "mouseDown" handler to modify the behavior of the "translate" mode.
         this.transformControl.addEventListener( 'mouseDown', event => {
-            if(this.currentTool == "mirror") {
+            if(this.mode == "mirror") {
                 this.transformControl.dragging = false;
                 switch(this.transformControl.axis) {
                     case 'X': this.scale.x = this.scale.x < 0 ? 1 : -1; break;
                     case 'Y': this.scale.y = this.scale.y < 0 ? 1 : -1; break;
                     case 'Z': this.scale.z = this.scale.z < 0 ? 1 : -1; break;
                 }
-                this.onObjectTransforming("scale");
+                this.onTransformChange("scale");
             }
         } );
 
         this.transformControl.addEventListener( 'change', event => {
-          this.onObjectTransforming(this.tranformMode);
+          this.onTransformChange(this.tranformMode);
         });
 
         control.addEventListener( 'dragging-changed', event => {
@@ -164,14 +166,14 @@ class SelectionGroup extends THREE.Object3D {
         if(this.count) {
             this.transformControl.enabled = false;
             this.recompute();
-            this.currentTool = mode;
+            this.mode = mode;
             switch(mode) {
                 case "move":    this.setTransformModeAndSpace("translate", "world"); break;
                 case "rotate":  this.setTransformModeAndSpace("rotate",    "world"); break;
                 case "scale":   this.setTransformModeAndSpace("scale",     "local"); break;
                 case "mirror":  this.setTransformModeAndSpace("translate", "local"); break;
             }
-            this.updateSelection();
+            this.selectionChanged();
             this.transformControl.enabled = true;
         }
     }
@@ -181,22 +183,23 @@ class SelectionGroup extends THREE.Object3D {
         this.transformControl.setSpace(space);
     }
 
-    updateSelection() {
+    selectionChanged() {
         if(this.count > 0) {
             renderLoop.outlinePass.selectedObjects = [this];
         } else {
             renderLoop.outlinePass.selectedObjects = [];
         }
 
-        if(this.count > 0 && this.currentTool) {
+        if(this.count > 0 && this.mode) {
             this.transformControl.attach(this);
         } else {
             this.transformControl.detach();
+            this.mode = null;
         }
     }
 
     get tranformMode() {
-        return this.currentTool == "mirror" ? "scale" : this.transformControl.mode;
+        return this.mode == "mirror" ? "scale" : this.transformControl.mode;
     }
 
     static isControlObject(obj) {
@@ -206,7 +209,7 @@ class SelectionGroup extends THREE.Object3D {
     }
 
     // Event call backs
-    onObjectTransforming(mode) {}
+    onTransformChange(mode) {}
     onTransformBegin() {}
     onTransformEnd() {}
 }

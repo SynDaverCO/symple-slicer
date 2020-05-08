@@ -1,6 +1,7 @@
 SynDaver Symple Slicer v0.9.95
 ------------------------------
-- Fix lay flat tool.
+- Fix lay flat tool
+- Profile menus now dynamically populated
 
 SynDaver Symple Slicer v0.9.94
 ------------------------------
