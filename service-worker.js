@@ -24,12 +24,12 @@
 
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
-const version   = '0.9.98';
-const release   = 1;
+const info = {
+    version: '0.9.99',
+    release: 1
+};
 
-const cacheName = 'v' + version + "r" + release;
-
-self.version = version;
+const cacheName = 'v' + info.version + "r" + info.release;
 
 const filesToCache = [
     '.',
@@ -132,9 +132,6 @@ self.addEventListener('message', event => {
         case 'skipWaiting':
             self.skipWaiting();
             break;
-        case 'getVersion':
-            event.source.postMessage({cmd: 'serviceWorkerVersion', version: version, release: release});
-            break;
     }
 });
 
@@ -145,6 +142,12 @@ self.addEventListener('fetch', event => {
                 if (response) {
                     //console.log("Using", event.request.url, " version ",  cacheName);
                     return response;
+                }
+                if (event.request.url.includes("version.json")) {
+                    return new Response(
+                        JSON.stringify(info),
+                        {headers: {"Content-Type": "text/css"}}
+                    );
                 }
                 console.log("Warning: Resource not in cache: ", event.request.url, "requested by",  event.request.referrer);
                 return fetch(event.request);

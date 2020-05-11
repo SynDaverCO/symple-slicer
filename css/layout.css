@@ -77,6 +77,18 @@ hr {
     display:            none;
 }
 
+#update-app-dialog.ready p#update-downloading {
+    display:            none;
+}
+
+#update-app-dialog:not(.ready) p#update-ready {
+    display:            none;
+}
+
+#update-app-dialog img {
+    width:              1em;
+}
+
 /* Trick to keep iframe responsive from https://benmarshall.me/responsive-iframes */
 
 .iframe-container {

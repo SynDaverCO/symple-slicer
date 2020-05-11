@@ -31,6 +31,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('service-worker.js').then(reg => {
                     reg.addEventListener('updatefound', () => {
+                        $("#update-app-dialog").show();
                         // A wild service worker has appeared in reg.installing!
                         newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
@@ -39,7 +40,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                             case 'installed':
                                 if (navigator.serviceWorker.controller) {
                                     // new update available
-                                    $("#update-app-dialog").show();
+                                    $("#update-app-dialog").addClass('ready');
                                 }
                                 // No update available
                                 break;
@@ -54,17 +55,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     window.location.reload();
                     refreshing = true;
                 });
-
-                if(navigator.serviceWorker.controller) {
-                    /* Fetch the version string from the service worker and put it in the about box */
-                    navigator.serviceWorker.addEventListener('message', event => {
-                        if(event.data.cmd == 'serviceWorkerVersion') {
-                            $("#serviceWorkerVersion").html("V" + event.data.version);
-                        }
-                    });
-
-                    navigator.serviceWorker.controller.postMessage({cmd: 'getVersion'});
-                }
             }
 
             function refreshWebApp() {
@@ -278,7 +268,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <iframe src="change_log.md">
                 </iframe>
             </p>
-            <button onclick="refreshWebApp()">Update!</button>
+            <p id="update-downloading">Downloading update... <img src="images/spinner.gif"></p>
+            <p id="update-ready"><button onclick="refreshWebApp()">Update!</button></p>
         </div>
 
         <script>
@@ -358,6 +349,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 SettingsPanel.setPrintTime(stats.time_hms);
                 SettingsPanel.setPrintFilament(stats.filament);
             }
+
+            // Retrieve version info from service-worker.
+            fetchJSON("version.json",
+                data => {$("#serviceWorkerVersion").html("V" + data.version);},
+                () => {console.log("Unable to load version from service worker");}
+            );
         </script>
     </body>
 </html>

@@ -1,3 +1,7 @@
+SynDaver Symple Slicer v0.9.99
+------------------------------
+- Show "Downloading update" when updates are being downloaded.
+
 SynDaver Symple Slicer v0.9.98
 ------------------------------
 - Made it installable as app
