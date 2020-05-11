@@ -24,7 +24,7 @@
 
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
-const version   = '0.9.96';
+const version   = '0.9.98';
 const release   = 1;
 
 const cacheName = 'v' + version + "r" + release;
@@ -33,6 +33,7 @@ self.version = version;
 
 const filesToCache = [
     '.',
+    './manifest.webmanifest',
     'lib/three/three.min.js',
     'lib/three/OrbitControls.js',
     'lib/three/TransformControls.js',
@@ -90,6 +91,10 @@ const filesToCache = [
     'lib/slicing-engines/CuraEngine/SlicerWorker.js',
     'lib/util/io/GeometryLoaderWorker.js',
     'images/favicon.ico',
+    'images/icon_128px.png',
+    'images/icon_180px.png',
+    'images/icon_192px.png',
+    'images/icon_512px.png',
     'images/scale.png',
     'images/scale-max.png',
     'images/rotate.png',

@@ -1,25 +1,25 @@
 {
+  "name": "Symple Slicer",
   "short_name": "Symple Slicer",
-  "name": "SynDaver Symple Slicer",
   "description": "SynDaver Symple Slicer is a slicer for SynDaver printers based on the CuraEngine",
   "icons": [
     {
-      "src": "images/icons-128.png",
+      "src": "images/icon_128px.png",
       "type": "image/png",
       "sizes": "128x128"
     },
     {
-      "src": "images/icons-180.png",
+      "src": "images/icon_180px.png",
       "type": "image/png",
       "sizes": "180x180"
     },
     {
-      "src": "images/icons-192.png",
+      "src": "images/icon_192px.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "images/icons-512.png",
+      "src": "images/icon_512px.png",
       "type": "image/png",
       "sizes": "512x512"
     }
