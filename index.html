@@ -25,43 +25,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <link rel="manifest" href="manifest.webmanifest">
     </head>
     <body>
-        <script>
-            let newWorker;
-
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('service-worker.js').then(reg => {
-                    reg.addEventListener('updatefound', () => {
-                        $("#update-app-dialog").show();
-                        // A wild service worker has appeared in reg.installing!
-                        newWorker = reg.installing;
-                        newWorker.addEventListener('statechange', () => {
-                        // Has network.state changed?
-                        switch (newWorker.state) {
-                            case 'installed':
-                                if (navigator.serviceWorker.controller) {
-                                    // new update available
-                                    $("#update-app-dialog").addClass('ready');
-                                }
-                                // No update available
-                                break;
-                        }
-                        });
-                    });
-                });
-
-                let refreshing;
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    if (refreshing) return;
-                    window.location.reload();
-                    refreshing = true;
-                });
-            }
-
-            function refreshWebApp() {
-                newWorker.postMessage({cmd: 'skipWaiting'});
-            }
-        </script>
-
         <script src="lib/three/three.min.js"></script>
         <script src="lib/three/OrbitControls.js"></script>
         <script src="lib/three/TransformControls.js"></script>
@@ -82,6 +45,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/util/io/GeometryLoader.js"></script>
         <script src="lib/util/misc/ResettableTimer.js"></script>
         <script src="lib/util/misc/ParseQuery.js"></script>
+        <script src="lib/util/ui/updater/updater.js"></script>
         <script src="lib/util/ui/settings/settings.js"></script>
         <script src="lib/util/ui/toolbar/toolbar.js"></script>
         <script src="lib/util/ui/progress/progress.js"></script>
@@ -99,6 +63,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <link rel="stylesheet" type="text/css" href="lib/util/ui/toolbar/toolbar.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/progress/progress.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/navcube/navcube.css">
+        <link rel="stylesheet" type="text/css" href="lib/util/ui/updater/updater.css">
 
         <!-- ***************** Prequisites for OutlinePass.js *****************
              We need all the following files to give selected objects a halo -->
@@ -273,6 +238,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </div>
 
         <script>
+            getWebAppVersion("#serviceWorkerVersion");
+
             var canvas       = document.getElementById("webgl");
             var stage        = new Stage();
             var renderLoop   = new RenderLoop(canvas, stage);
@@ -349,12 +316,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 SettingsPanel.setPrintTime(stats.time_hms);
                 SettingsPanel.setPrintFilament(stats.filament);
             }
-
-            // Retrieve version info from service-worker.
-            fetchJSON("version.json",
-                data => {$("#serviceWorkerVersion").html("V" + data.version);},
-                () => {console.log("Unable to load version from service worker");}
-            );
         </script>
     </body>
 </html>
