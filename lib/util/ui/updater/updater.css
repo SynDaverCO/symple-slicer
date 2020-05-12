@@ -20,11 +20,11 @@
     display:            none;
 }
 
-#update-app-dialog.ready p#update-downloading {
+#update-app-dialog.ready #update-downloading {
     display:            none;
 }
 
-#update-app-dialog:not(.ready) p#update-ready {
+#update-app-dialog:not(.ready) #update-ready {
     display:            none;
 }
 

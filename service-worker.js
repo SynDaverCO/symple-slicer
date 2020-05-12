@@ -22,11 +22,13 @@
  *
  */
 
+importScripts('lib/util/misc/Wikify.js');
+
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
     version: '0.9.99',
-    release: 1
+    release: 151
 };
 
 const cacheName = 'v' + info.version + "r" + info.release;
@@ -79,6 +81,7 @@ const filesToCache = [
     'lib/three/OutlinePass.js',
     'css/layout.css',
     'css/theme.css',
+    'css/markdown.css',
     'js/PrinterRepresentation.js',
     'js/PrintableObject.js',
     'js/SelectionGroup.js',
@@ -142,7 +145,7 @@ self.addEventListener('fetch', event => {
         caches.open(cacheName).then(cache =>
             cache.match(event.request).then(response => {
                 if (response) {
-                    //console.log("Using", event.request.url, " version ",  cacheName);
+                    // If we find it in the cache, return it unmodified.
                     return response;
                 }
                 if (event.request.url.includes("version.json")) {
@@ -151,9 +154,42 @@ self.addEventListener('fetch', event => {
                         {headers: {"Content-Type": "text/css"}}
                     );
                 }
+                if (event.request.url.endsWith(".md")) {
+                    return fetchAndModify(event.request, processMarkdown, "text/html");
+                }
                 console.log("Warning: Resource not in cache: ", event.request.url, "requested by",  event.request.referrer);
                 return fetch(event.request);
             })
         )
     );
 });
+
+function processMarkdown(str) {
+    return '<html><head><meta charset="utf-8"><link rel="stylesheet" href="css/markdown.css"></head><body>' + wikify(str) + '</body></html>';
+}
+
+async function fetchAndModify(request, func, mimeType) {
+  const response = await fetch(request);
+
+  // Check response is html content
+  if (
+    !response.headers.get("content-type") ||
+    !response.headers.get("content-type").includes("text/")
+  ) {
+    return response;
+  }
+
+  // Read response body.
+  const text = await response.text();
+  const modified = func(text);
+
+  // Return modified response.
+  return new Response(modified, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: {
+        ...response.headers,
+        "content-type": mimeType
+    }
+  });
+}
