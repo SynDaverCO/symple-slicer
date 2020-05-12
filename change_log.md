@@ -1,6 +1,8 @@
 SynDaver Symple Slicer v0.9.99
 ------------------------------
-- Show "Downloading update" when updates are being downloaded.
+- Inform user when updates are downloading
+- Fixed loading of presets
+- Report errors when presets cannot be loaded
 
 SynDaver Symple Slicer v0.9.98
 ------------------------------

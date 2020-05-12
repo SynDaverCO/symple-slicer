@@ -321,13 +321,14 @@ class SettingsPanel {
         }
 
         // If no local profile is found, reload starting profile
-        SettingsPanel.applyPresets();
+        SettingsPanel.applyPresets()
+                     .catch(error => alert(error));
     }
 
     static loadProfileList(printer_menu, material_menu) {
-        fetchText("config/syndaver/profile_list.toml",
-            data =>
-            {
+        console.log("Loading profile list");
+        fetchText("config/syndaver/profile_list.toml")
+            .then(data => {
                 const config = toml.parse(data);
                 for (let [key, value] of Object.entries(config.machine_profiles)) {
                     printer_menu.option(value, {id: key});
@@ -336,15 +337,15 @@ class SettingsPanel {
                     material_menu.option(value, {id: key});
                 }
                 SettingsPanel.loadStartupProfile();
-            },
-            () => console.log("Unable to load profiles list")
-        );
+            })
+            .catch(error => alert(error));
     }
 
-    static applyPresets() {
+    static async applyPresets() {
         slicer.loadDefaults();
-        slicer.loadProfile("machine", settings.get("preset_select") + ".toml", SettingsPanel.onPrinterSizeChanged);
-        slicer.loadProfile("print",   settings.get("material_select") + ".toml");
+        const profile = await slicer.loadProfile("machine", settings.get("preset_select") + ".toml");
+        SettingsPanel.onPrinterSizeChanged();
+        return slicer.loadProfile("print", settings.get("material_select") + ".toml");
     }
 
     static onEditStartGcode() {
@@ -373,12 +374,9 @@ class SettingsPanel {
     }
 
     static onApplyPreset(evt) {
-        try {
-            SettingsPanel.applyPresets();
-            alert("The new presets have been applied.");
-        } catch(e) {
-            alert(["Error:", e.message, "Line:", e.line].join(" "));
-        }
+        SettingsPanel.applyPresets()
+                     .then(() => alert("The new presets have been applied."))
+                     .catch(error => alert(error));
     }
 
     static onImportChange(file) {
