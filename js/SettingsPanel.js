@@ -237,6 +237,7 @@ class SettingsPanel {
         s.toggle(         "Show supports",                           {id: "show_support", onclick: SettingsPanel.onUpdatePreview});
         s.toggle(         "Show travel",                             {id: "show_travel", onclick: SettingsPanel.onUpdatePreview});
         s.slider(         "Show layer",                              {id: "preview_layer", oninput: SettingsPanel.onUpdateLayer});
+        s.number(         "Top layer",                               {id: "current_layer"});
 
         s.category(   "Save Options",                                {open: "open"});
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode"});
@@ -370,7 +371,7 @@ class SettingsPanel {
                 if(printer !== "keep" || material  !== "keep") {
                     alert("The new presets have been applied.");
                 }
-                settings.gotoPage("page_slice");
+                settings.gotoPage("page_place");
             }
         } catch(error) {
             alert(error);
@@ -630,11 +631,15 @@ class SettingsPanel {
         stage.showGcodePath("SUPPORT",           settings.get("show_support"));
         stage.showGcodePath("SUPPORT-INTERFACE", settings.get("show_support"));
         settings.enable("#preview_layer", stage.isGcodePathVisible);
-        $('#preview_layer').val(stage.getGcodeLayers() - 1);
+        const layer = stage.getGcodeLayers() - 1;
+        $('#preview_layer').val(layer);
+        $('#current_layer').val(layer);
     }
 
     static onUpdateLayer() {
-        stage.setGcodeLayer(Math.trunc(settings.get("preview_layer")));
+        const layer = Math.trunc(settings.get("preview_layer"));
+        stage.setGcodeLayer(layer);
+        $('#current_layer').val(layer);
     }
 
     static onDoItAgainClicked() {

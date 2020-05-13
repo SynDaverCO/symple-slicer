@@ -114,7 +114,7 @@ hr {
     white-space:        pre-wrap;
 }
 
-#print_time, #print_filament {
+#print_time, #print_filament, #current_layer {
     pointer-events:     none;
     border:             none;
 }

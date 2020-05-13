@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v0.9.993
+===============================
+
+* The materials panel now takes you to the place objects panel
+* Layer view now shows the top layer numerically
+
 SynDaver Symple Slicer v0.9.992
 ===============================
 
