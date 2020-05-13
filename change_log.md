@@ -1,11 +1,24 @@
+SynDaver Symple Slicer v0.9.992
+===============================
+
+* Allow user to click next if no profiles are selected
+* Change wording of export option checkboxes for clarity
+* Added tooltip for export option checkboxes for more clarity
+* Set default wall thickness to twice the line width
+* Changed speed_wall_x to speed_wall
+* Moved the "Clear All" to the right-click menu
+* Moved the "Rearrange All" to the right-click menu
+* Added "Center Selected Objects" to the right-click menu
+* Fixed issue where UI settings were not being overwritten when loading defaults
+
 SynDaver Symple Slicer v0.9.991
 ===============================
 
-- Combined the "Place Objects" and "Place Lithophane" screens into one
-- Changed workflow so that the user begins by selecting a preset
-- Added choice to keep previous settings
-- Added progress bar when loading presets
-- Fixed error handling when loading presets
+* Combined the "Place Objects" and "Place Lithophane" screens into one
+* Changed workflow so that the user begins by selecting a preset
+* Added choice to keep previous settings
+* Added progress bar when loading presets
+* Fixed error handling when loading presets
 
 SynDaver Symple Slicer v0.9.99
 ==============================

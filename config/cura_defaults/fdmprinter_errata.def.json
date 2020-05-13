@@ -7,6 +7,8 @@
         "mesh_position_y":                  {"value":         "0 if machine_center_is_zero else -machine_depth/2"},
         "speed_layer_0":                    {"value":         null},
         "speed_travel":                     {"value":         null},
-        "speed_travel_layer_0":             {"value":         null}
+        "speed_travel_layer_0":             {"value":         null},
+        "wall_thickness":                   {"value":         "1 if magic_spiralize else 2 * line_width"},
+        "speed_wall_x":                     {"value":         "speed_wall"}
     }
 }

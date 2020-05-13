@@ -85,8 +85,6 @@ class SettingsPanel {
 
         s.separator(                                                 {type: "br"});
         s.button(     "Add Another",                                 {className: "add_another",      onclick: SettingsPanel.onAddToPlatform});
-        s.button(     "Clear All",                                   {className: "requires_objects", onclick: SettingsPanel.onClearPlatform});
-        s.button(     "Rearrange",                                   {className: "requires_objects", onclick: SettingsPanel.onRearrangePlatform});
 
         s.category(   "Load 2D Images (as Reliefs or Lithophanes)",     {id: "place_lithophane"});
 
@@ -257,9 +255,10 @@ class SettingsPanel {
         s.buttonHelp( "Click this button to show<br>slicing engine logs.");
 
         s.category(   "Export Settings");
-        s.toggle(         "Show units and values as comments",       {id: "export_with_choices"});
+        s.toggle(         "Show units and choices as comments",      {id: "export_with_choices"});
         s.toggle(         "Show units descriptions as comments",     {id: "export_with_descriptions"});
-        s.toggle(         "Show default values as comments",         {id: "export_with_defaults"});
+        s.toggle(         "Show implicit values as comments",        {id: "export_with_unchanged",
+           tooltip: "Include all values, including those absent in profiles and unchanged by the user. This provides documentation for values that may have been implicitly computed from other settings."});
         s.separator(                                                 {type: "br"});
         s.text(       "Save as:",                                    {id: "export_filename", value: "config.toml"});
         s.separator(                                                 {type: "br"});
@@ -352,6 +351,7 @@ class SettingsPanel {
 
         var promise;
         try {
+            console.log("Loading slicer defaults");
             slicer.loadDefaults();
             if(printer !== "keep") {
                 console.log("Loading printer profile");
@@ -366,8 +366,10 @@ class SettingsPanel {
             }
             console.log("Loaded profiles");
             ProgressBar.hide();
-            if(notifyUser && (printer !== "keep" || material  !== "keep")) {
-                alert("The new presets have been applied.");
+            if(notifyUser) {
+                if(printer !== "keep" || material  !== "keep") {
+                    alert("The new presets have been applied.");
+                }
                 settings.gotoPage("page_slice");
             }
         } catch(error) {
@@ -424,7 +426,7 @@ class SettingsPanel {
     static onExportClicked() {
         var config = slicer.saveProfileStr({
             descriptions: settings.get("export_with_descriptions"),
-            defaults:     settings.get("export_with_defaults"),
+            unchanged:    settings.get("export_with_unchanged"),
             choices:      settings.get("export_with_choices")
         });
         var blob = new Blob([config], {type: "text/plain;charset=utf-8"});
@@ -481,14 +483,6 @@ class SettingsPanel {
 
     static onAddToPlatform() {
         stage.addGeometry(loaded_geometry);
-    }
-
-    static onClearPlatform() {
-        stage.removeAll();
-    }
-
-    static onRearrangePlatform() {
-        stage.arrangeObjectsOnPlatform();
     }
 
     static onObjectSelected() {

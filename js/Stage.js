@@ -50,14 +50,20 @@ class Stage {
             selector: 'canvas',
             callback: (evt, key, options) => {
                 switch(key) {
-                    case "select_all" : this.selectAll(); break;
-                    case "delete_some": this.removeSelectedObjects(); break;
+                    case "select_all"  : this.selectAll(); break;
+                    case "arrange_all" : this.arrangeAll(); break;
+                    case "delete_all"  : this.removeAll(); break;
+                    case "center_some" : this.centerSelectedObjects(); break;
+                    case "delete_some" : this.removeSelectedObjects(); break;
                 }
             },
             items: {
+                center_some: {name: "Center Selected Objects"},
                 delete_some: {name: "Delete Selected Objects", icon: "delete"},
                 separator1: "-----",
-                select_all: {name: "Select All Objects"}
+                select_all: {name: "Select All Objects"},
+                arrange_all: {name: "Arrange All Objects"},
+                delete_all: {name: "Clear Build Plate", icon: "delete"}
             }
         });
     }
@@ -346,6 +352,21 @@ class Stage {
     removeSelectedObjects() {
         this.removeObjects(this.selection.children.slice());
         this.render();
+    }
+
+    centerSelectedObjects() {
+        if(this.selection.children.length == 0) {
+            return;
+        }
+        this.centerObjectOnPlatform(this.selection.children[0], 1);
+        if(this.numObjects > 1) {
+            this.arrangeObjectsOnPlatform();
+        }
+        this.render();
+    }
+
+    arrangeAll() {
+        this.arrangeObjectsOnPlatform();
     }
 
     removeAll() {
