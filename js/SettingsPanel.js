@@ -69,22 +69,20 @@ class SettingsPanel {
         slicer.onOptionChanged =    (name, val)  => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val);};
         slicer.onAttributeChanged = (name, attr) => {s.setVisibility("#" + name, attr.enabled);};
 
-        s.page("Place Models",                                       {id: "page_place"});
+        s.page("Place Objects",                                      {id: "page_place"});
 
-        s.file("Drag and drop models<br><small>(STL, OBJ or 3MF)</small>",
+        s.category(   "Load 3D Objects",                             {id: "place_models", open: "open"});
+        s.file("Drag and drop 3D objects<br><small>(STL, OBJ or 3MF)</small>",
                                                                      {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary'});
 
         s.separator(                                                 {type: "br"});
         s.button(     "Add Another",                                 {className: "add_another",      onclick: SettingsPanel.onAddToPlatform});
         s.button(     "Clear All",                                   {className: "requires_objects", onclick: SettingsPanel.onClearPlatform});
         s.button(     "Rearrange",                                   {className: "requires_objects", onclick: SettingsPanel.onRearrangePlatform});
-        s.footer();
-        s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
-        s.buttonHelp( "Click this button when<br>you are done placing models.");
 
-        s.page("Place Lithophane",                                   {id: "page_lithophane"});
+        s.category(   "Load 2D Images (as Reliefs or Lithophanes)",     {id: "place_lithophane"});
 
-        s.file("Drag and drop images<br><small>(JPG, PNG, BMP or GIF)</small>",
+        s.file("Drag and drop 2D images<br><small>(JPG, PNG, BMP or GIF)</small>",
                                                                      {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file'});
 
         s.separator(                                                 {type: "br"});
@@ -648,7 +646,8 @@ class SettingsPanel {
                 case 'png':
                 case 'bmp':
                 case 'gif':
-                    settings.gotoPage("page_lithophane");
+                    settings.gotoPage("place_page");
+                    settings.expand("place_lithophane");
                     id = "image_file";
                     break;
             }
