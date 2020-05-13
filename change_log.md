@@ -1,3 +1,12 @@
+SynDaver Symple Slicer v0.9.991
+===============================
+
+- Combined the "Place Objects" and "Place Lithophane" screens into one
+- Changed workflow so that the user begins by selecting a preset
+- Added choice to keep previous settings
+- Added progress bar when loading presets
+- Fixed error handling when loading presets
+
 SynDaver Symple Slicer v0.9.99
 ==============================
 

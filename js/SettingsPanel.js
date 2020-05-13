@@ -69,6 +69,14 @@ class SettingsPanel {
         slicer.onOptionChanged =    (name, val)  => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val);};
         slicer.onAttributeChanged = (name, attr) => {s.setVisibility("#" + name, attr.enabled);};
 
+        s.page(       "Select Profiles",                             {id: "page_profiles"});
+
+        var printer_menu = s.choice( "Printer:",                     {id: "preset_select"});
+        var material_menu = s.choice( "Material:",                   {id: "material_select"});
+        s.footer();
+        s.button(     "Next",                                        {onclick: SettingsPanel.onApplyPreset});
+        s.buttonHelp( "Click this button to apply selections<br>and proceed to placing objects.");
+
         s.page("Place Objects",                                      {id: "page_place"});
 
         s.category(   "Load 3D Objects",                             {id: "place_models", open: "open"});
@@ -89,7 +97,7 @@ class SettingsPanel {
         s.button(     "Create",                                      {id: "add_litho", onclick: SettingsPanel.onAddLitho});
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
-        s.buttonHelp( "Click this button when<br>you are done placing objects.");
+        s.buttonHelp( "Click this button to<br>proceed to slicing.");
 
 
 
@@ -115,15 +123,6 @@ class SettingsPanel {
         s.number(         "X",                                       {id: "xform_rotation_x", units: "°", onchange: SettingsPanel.onEditRotation});
         s.number(         "Y",                                       {id: "xform_rotation_y", units: "°", onchange: SettingsPanel.onEditRotation});
         s.number(         "Z",                                       {id: "xform_rotation_z", units: "°", onchange: SettingsPanel.onEditRotation});
-
-        s.page(       "Manage Presets",                              {id: "page_profiles"});
-
-        s.heading("Printer &amp; Material");
-        var printer_menu = s.choice( "Printer:",                     {id: "preset_select"});
-        var material_menu = s.choice( "Material:",                   {id: "material_select"});
-        s.footer();
-        s.button(     "Apply",                                       {onclick: SettingsPanel.onApplyPreset});
-        s.buttonHelp( "Applying presets resets all printer &amp; material settings<br>to defaults, including modified or imported settings.");
 
         s.page(       "Machine Settings",                            {id: "page_machine"});
 
@@ -298,6 +297,10 @@ class SettingsPanel {
         window.addEventListener("drop", SettingsPanel.onWindowDrop);
     }
 
+    static hasSavedProfile() {
+        return (typeof(Storage) !== "undefined") && localStorage.getItem("startup_config");
+    }
+
     static loadStartupProfile() {
         // Always start with defaults.
         slicer.loadDefaults(true);
@@ -325,6 +328,10 @@ class SettingsPanel {
 
     static loadProfileList(printer_menu, material_menu) {
         console.log("Loading profile list");
+        if(SettingsPanel.hasSavedProfile()) {
+            printer_menu.option("Keep previous settings", {id: "keep"});
+            material_menu.option("Keep previous settings", {id: "keep"});
+        }
         fetchText("config/syndaver/profile_list.toml")
             .then(data => {
                 const config = toml.parse(data);
@@ -339,11 +346,33 @@ class SettingsPanel {
             .catch(error => alert(error));
     }
 
-    static async applyPresets() {
-        slicer.loadDefaults();
-        const profile = await slicer.loadProfile("machine", settings.get("preset_select") + ".toml");
-        SettingsPanel.onPrinterSizeChanged();
-        return slicer.loadProfile("print", settings.get("material_select") + ".toml");
+    static async applyPresets(notifyUser) {
+        const printer  = settings.get("preset_select");
+        const material = settings.get("material_select");
+
+        var promise;
+        try {
+            slicer.loadDefaults();
+            if(printer !== "keep") {
+                console.log("Loading printer profile");
+                ProgressBar.message("Loading profiles");
+                promise = await slicer.loadProfile("machine", printer + ".toml");
+                SettingsPanel.onPrinterSizeChanged();
+            }
+            if(material !== "keep") {
+                console.log("Loading material profile");
+                ProgressBar.message("Loading profiles");
+                promise = await slicer.loadProfile("print", material + ".toml");
+            }
+            console.log("Loaded profiles");
+            ProgressBar.hide();
+            if(notifyUser && (printer !== "keep" || material  !== "keep")) {
+                alert("The new presets have been applied.");
+                settings.gotoPage("page_slice");
+            }
+        } catch(error) {
+            alert(error);
+        }
     }
 
     static onEditStartGcode() {
@@ -372,9 +401,7 @@ class SettingsPanel {
     }
 
     static onApplyPreset(evt) {
-        SettingsPanel.applyPresets()
-                     .then(() => alert("The new presets have been applied."))
-                     .catch(error => alert(error));
+        SettingsPanel.applyPresets(true);
     }
 
     static onImportChange(file) {
@@ -617,7 +644,7 @@ class SettingsPanel {
     }
 
     static onDoItAgainClicked() {
-        settings.gotoPage("page_place");
+        settings.gotoPage("page_profiles");
     }
 
     /**
