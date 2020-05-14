@@ -248,21 +248,21 @@ class Stage {
         const helper = new FaceRotationHelper(obj);
         const downVector = new THREE.Vector3(0, -1, 0);
 
-        // Step 1: Find the lowest point in the convex hull
-        const lowestPoint = PrintableObject.findLowestPoint(obj, this.bedRelative);
+        // Step 1: Compute the center of the object in world coordinates
+        const boundingBox = new THREE.Box3();
+        boundingBox.setFromObject(obj);
+        const center = boundingBox.getCenter(new THREE.Vector3());
 
-        // Step 2: For all faces that share this point, compute the angle of that face to the horizontal.
-        const faces = GeometryAlgorithms.allFacesSharingVertex(obj.hull, lowestPoint.index);
-        const angles = faces.map(f => ({
-            angle: helper.angleBetweenFaceNormalAndVector(f, downVector),
-            face: f
-        }));
+        // Step 2: Find the face in the convex hull intersected by a ray
+        //         from the center of the object downwards
+        const restingFace = helper.findIntersectingFace(obj.hull, center, downVector);
 
-        // Step 3: Find the normal which is closest to vertical
-        angles.sort((a, b) => {return a.angle-b.angle});
-
-        // Step 4: Rotate object so that the object lays on that face.
-        helper.alignFaceNormalToVector(angles[0].face, downVector);
+        // Step 3: Rotate object so that the object lays on that face.
+        if(restingFace) {
+            helper.alignFaceNormalToVector(restingFace, downVector);
+        } else {
+            console.log("Unable to locate resting face");
+        }
 
         // Step 5: Bring the object down to the print plate
         this.dropObjectToFloor(obj);
