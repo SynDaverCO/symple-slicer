@@ -50,6 +50,7 @@ const filesToCache = [
     'lib/three/ConvexGeometry.js',
     'lib/util/geometry/GeometrySerialize.js',
     'lib/util/geometry/GeometryAlgorithms.js',
+    'lib/util/geometry/FaceRotationHelper.js',
     'lib/util/gcode/Toolpath.js',
     'lib/util/gcode/GCodeParser.js',
     'lib/util/io/FetchFile.js',

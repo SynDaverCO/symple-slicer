@@ -227,12 +227,12 @@ class Stage {
             obj.position.z -= lowestPoint.z;
         }
     }
-    
+
     /**
      * The center of the selected objects is used for positioning, but when
      * presenting editable values to the user, we want to use the lowest
      * point on the object as the Z reference point. This method computes
-     * the correction applied to the Z value text box. 
+     * the correction applied to the Z value text box.
      */
     get selectionHeightAdjustment() {
         const lowestPoint = PrintableObject.findLowestPoint(this.selection, this.bedRelative);
@@ -245,51 +245,26 @@ class Stage {
     layObjectFlat(obj) {
         this.selectNone();
 
-        var vector = new THREE.Vector3();
-        var quaternion = new THREE.Quaternion();
+        const helper = new FaceRotationHelper(obj);
+        const downVector = new THREE.Vector3(0, -1, 0);
 
         // Step 1: Find the lowest point in the convex hull
-        var pivot = PrintableObject.findLowestPoint(obj, this.bedRelative);
+        const lowestPoint = PrintableObject.findLowestPoint(obj, this.bedRelative);
 
-        // Step 2: Obtain the world quaternion of the object
-        obj.matrixWorld.decompose( vector, quaternion, vector );
+        // Step 2: For all faces that share this point, compute the angle of that face to the horizontal.
+        const faces = GeometryAlgorithms.allFacesSharingVertex(obj.hull, lowestPoint.index);
+        const angles = faces.map(f => ({
+            angle: helper.angleBetweenFaceNormalAndVector(f, downVector),
+            face: f
+        }));
 
-        // Step 3: For all faces that share this vertex, compute the angle of that face to the horizontal.
-        var downVector = new THREE.Vector3(0, -1, 0);
-        var candidates = [];
-        obj.hull.faces.forEach(face => {
-            if(pivot.index == face.a ||
-               pivot.index == face.b ||
-               pivot.index == face.c) {
-                   // Rotate face normal into world coordinates and
-                   // find the angle between it and the world down vector
-                   vector.copy(face.normal);
-                   vector.applyQuaternion(quaternion);
-                   candidates.push({
-                        angle:  Math.acos(vector.dot(downVector)),
-                        normal: face.normal
-                   });
-               }
-        });
+        // Step 3: Find the normal which is closest to vertical
+        angles.sort((a, b) => {return a.angle-b.angle});
 
-        // Step 4: Find the normal which is closest to horizontal
-        candidates.sort((a, b) => {return a.angle-b.angle});
+        // Step 4: Rotate object so that the object lays on that face.
+        helper.alignFaceNormalToVector(angles[0].face, downVector);
 
-        // Step 5: Transform the downVector into object coordinates
-        downVector.applyQuaternion(quaternion.inverse());
-
-        /*var arrowHelper = new THREE.ArrowHelper( downVector, new THREE.Vector3(), 100 );
-        obj.add( arrowHelper );
-
-        var arrowHelper = new THREE.ArrowHelper( vector, new THREE.Vector3(), 100 );
-        obj.add( arrowHelper );*/
-
-        // Step 6: Rotate object so that the face normal and down vector are aligned.
-        // This causes the object to "layflat" on that face.
-        quaternion.setFromUnitVectors(candidates[0].normal, downVector);
-        obj.quaternion.multiply(quaternion);
-
-        // Step 7: Bring the object down to the print plate
+        // Step 5: Bring the object down to the print plate
         this.dropObjectToFloor(obj);
         this.render();
     }
