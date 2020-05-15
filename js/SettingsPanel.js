@@ -22,6 +22,7 @@ var settings, gcode_blob, loaded_geometry;
 class SettingsPanel {
     static init(id) {
         var s = new SettingsUI(id);
+        s.enableAutoTab();
 
         /**
          * Helper function for obtaining UI parameters from the slicer engine
@@ -86,7 +87,7 @@ class SettingsPanel {
         s.separator(                                                 {type: "br"});
         s.button(     "Add Another",                                 {className: "add_another",      onclick: SettingsPanel.onAddToPlatform});
 
-        s.category(   "Load 2D Images (as Reliefs or Lithophanes)",     {id: "place_lithophane"});
+        s.category(   "Load 2D Images (as Reliefs or Lithophanes)",  {id: "place_images"});
 
         s.file("Drag and drop 2D images<br><small>(JPG, PNG, BMP or GIF)</small>",
                                                                      {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file'});
@@ -99,7 +100,7 @@ class SettingsPanel {
 
 
 
-        s.page(       "Transform Objects",                           {id: "page_transform"});
+        s.page(       "",                                            {id: "page_transform"});
 
         s.category(   "Position",                                    {id: "xform_position"});
         s.number(         "X",                                       {id: "xform_position_x", className: "axis_r", units: "mm", onchange: SettingsPanel.onEditPosition});
@@ -515,7 +516,7 @@ class SettingsPanel {
         $('#xform_scale_x_pct').val("");
         $('#xform_scale_y_pct').val("");
         $('#xform_scale_z_pct').val("");
-        settings.gotoPage("page_place");
+        settings.dismissModal();
     }
 
     static onEditPosition() {
@@ -675,6 +676,8 @@ class SettingsPanel {
                 case 'stl':
                 case 'obj':
                 case '3mf':
+                    settings.gotoPage("page_place");
+                    settings.expand("place_models");
                     id = "model_file";
                     break;
                 case 'toml':
@@ -687,8 +690,8 @@ class SettingsPanel {
                 case 'png':
                 case 'bmp':
                 case 'gif':
-                    settings.gotoPage("place_page");
-                    settings.expand("place_lithophane");
+                    settings.gotoPage("page_place");
+                    settings.expand("place_images");
                     id = "image_file";
                     break;
             }

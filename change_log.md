@@ -1,3 +1,12 @@
+SynDaver Symple Slicer v0.9.996
+===============================
+
+* Go to place models page when drag and dropping models
+* Fix for blank page when drag and dropping images
+* Do not return to place objects page when unselecting items
+* Moved "Transform objects" into right-click menu
+* Transformation dialog box now returns to previous menu
+
 SynDaver Symple Slicer v0.9.995
 ===============================
 

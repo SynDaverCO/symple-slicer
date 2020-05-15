@@ -56,12 +56,15 @@ class Stage {
                     case "delete_all"  : this.removeAll(); break;
                     case "center_some" : this.centerSelectedObjects(); break;
                     case "delete_some" : this.removeSelectedObjects(); break;
+                    case "xform_some"  : SettingsPanel.onToolChanged("move");
                 }
             },
             items: {
                 center_some: {name: "Center Selected Objects"},
                 delete_some: {name: "Delete Selected Objects", icon: "delete"},
                 separator1: "-----",
+                xform_some:  {name: "Edit Transform Values", icon: "edit"},
+                separator2: "-----",
                 select_all: {name: "Select All Objects"},
                 arrange_all: {name: "Arrange All Objects"},
                 delete_all: {name: "Clear Build Plate", icon: "delete"}
