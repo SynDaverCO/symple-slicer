@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v0.9.995
+===============================
+
+* Fixed axis color mismatch
+
 SynDaver Symple Slicer v0.9.994
 ===============================
 

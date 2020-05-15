@@ -102,14 +102,14 @@ class SettingsPanel {
         s.page(       "Transform Objects",                           {id: "page_transform"});
 
         s.category(   "Position",                                    {id: "xform_position"});
-        s.number(         "X",                                       {id: "xform_position_x", className: "x_axis", units: "mm", onchange: SettingsPanel.onEditPosition});
-        s.number(         "Y",                                       {id: "xform_position_y", className: "y_axis", units: "mm", onchange: SettingsPanel.onEditPosition});
-        s.number(         "Z",                                       {id: "xform_position_z", className: "z_axis", units: "mm", onchange: SettingsPanel.onEditPosition});
+        s.number(         "X",                                       {id: "xform_position_x", className: "axis_r", units: "mm", onchange: SettingsPanel.onEditPosition});
+        s.number(         "Y",                                       {id: "xform_position_y", className: "axis_b", units: "mm", onchange: SettingsPanel.onEditPosition});
+        s.number(         "Z",                                       {id: "xform_position_z", className: "axis_g", units: "mm", onchange: SettingsPanel.onEditPosition});
 
         s.category(   "Scale",                                       {id: "xform_scale"});
-        s.number(         "X",                                       {id: "xform_scale_x_pct", className: "x_axis", units: "%", onchange: evt => SettingsPanel.onEditScale("X%")});
-        s.number(         "Y",                                       {id: "xform_scale_y_pct", className: "y_axis", units: "%", onchange: evt => SettingsPanel.onEditScale("Y%")});
-        s.number(         "Z",                                       {id: "xform_scale_z_pct", className: "z_axis", units: "%", onchange: evt => SettingsPanel.onEditScale("Z%")});
+        s.number(         "X",                                       {id: "xform_scale_x_pct", className: "axis_r", units: "%", onchange: evt => SettingsPanel.onEditScale("X%")});
+        s.number(         "Y",                                       {id: "xform_scale_y_pct", className: "axis_g", units: "%", onchange: evt => SettingsPanel.onEditScale("Y%")});
+        s.number(         "Z",                                       {id: "xform_scale_z_pct", className: "axis_b", units: "%", onchange: evt => SettingsPanel.onEditScale("Z%")});
         /*s.separator(                                                 {type: "br"});
         s.number(         "X",                                       {id: "xform_scale_x_abs", units: "mm"});
         s.number(         "Y",                                       {id: "xform_scale_y_abs", units: "mm"});
@@ -118,14 +118,14 @@ class SettingsPanel {
         s.toggle(     "Uniform Scaling",                             {id: "xform_scale_uniform", checked: "checked"});
 
         s.category(   "Mirror",                                      {id: "xform_mirror"});
-        s.button(     "X Axis",                                      {className: "x_axis", onclick: evt => SettingsPanel.onMirrorAxis("X")});
-        s.button(     "Y Axis",                                      {className: "y_axis", onclick: evt => SettingsPanel.onMirrorAxis("Y")});
-        s.button(     "Z Axis",                                      {className: "z_axis", onclick: evt => SettingsPanel.onMirrorAxis("Z")});
+        s.button(     "X Axis",                                      {className: "axis_r", onclick: evt => SettingsPanel.onMirrorAxis("X")});
+        s.button(     "Y Axis",                                      {className: "axis_g", onclick: evt => SettingsPanel.onMirrorAxis("Y")});
+        s.button(     "Z Axis",                                      {className: "axis_b", onclick: evt => SettingsPanel.onMirrorAxis("Z")});
 
         s.category(   "Rotation",                                    {id: "xform_rotate"});
-        s.number(         "X",                                       {id: "xform_rotation_x", className: "x_axis", units: "°", onchange: SettingsPanel.onEditRotation});
-        s.number(         "Y",                                       {id: "xform_rotation_y", className: "y_axis", units: "°", onchange: SettingsPanel.onEditRotation});
-        s.number(         "Z",                                       {id: "xform_rotation_z", className: "z_axis", units: "°", onchange: SettingsPanel.onEditRotation});
+        s.number(         "X",                                       {id: "xform_rotation_x", className: "axis_r", units: "°", onchange: SettingsPanel.onEditRotation});
+        s.number(         "Y",                                       {id: "xform_rotation_y", className: "axis_b", units: "°", onchange: SettingsPanel.onEditRotation});
+        s.number(         "Z",                                       {id: "xform_rotation_z", className: "axis_g", units: "°", onchange: SettingsPanel.onEditRotation});
 
         s.page(       "Machine Settings",                            {id: "page_machine"});
 
@@ -137,9 +137,9 @@ class SettingsPanel {
 
         s.category(   "Build Volume");
         s.fromSlicer(     "machine_shape");
-        s.fromSlicer(     "machine_width",                           {className: "x_axis"});
-        s.fromSlicer(     "machine_depth",                           {className: "y_axis"});
-        s.fromSlicer(     "machine_height",                          {className: "z_axis"});
+        s.fromSlicer(     "machine_width",                           {className: "axis_r"});
+        s.fromSlicer(     "machine_depth",                           {className: "axis_g"});
+        s.fromSlicer(     "machine_height",                          {className: "axis_b"});
         s.fromSlicer(     "machine_center_is_zero");
         s.fromSlicer(     "machine_heated_bed");
         s.button(     "Save Changes",                                {onclick: SettingsPanel.onPrinterSizeChanged});
