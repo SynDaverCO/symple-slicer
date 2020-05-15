@@ -7,6 +7,8 @@ SynDaver Symple Slicer v0.9.996
 * Moved "Transform objects" into right-click menu
 * Transformation dialog box now returns to previous menu
 * Fixed "Clear Build Plate" with many objects
+* Added "Close" button to "Transform objects"
+* Do not unselect objects when clicking transform tool
 
 SynDaver Symple Slicer v0.9.995
 ===============================

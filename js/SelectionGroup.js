@@ -37,7 +37,12 @@ class SelectionGroup extends THREE.Object3D {
     _set(objs) {
         // We remove all existing objects from the selection so we
         // can reposition the SelectionGroup to the new center.
-        this.selectNone();
+        while (this.children.length) {
+            this.parent.attach(this.children.pop());
+        }
+        this.position.set(0,0,0);
+        this.rotation.set(0,0,0);
+        this.scale.set(1,1,1);
         if(objs.length == 0)
             return;
         // Copy the rotation and scaling factors from the first object
@@ -100,12 +105,7 @@ class SelectionGroup extends THREE.Object3D {
      * for the now empty SelectionGroup
      */
     selectNone() {
-        while (this.children.length) {
-            this.removeFromSelection(this.children.pop());
-        }
-        this.position.set(0,0,0);
-        this.rotation.set(0,0,0);
-        this.scale.set(1,1,1);
+        this._set([]);
         this.selectionChanged();
     }
 
@@ -163,7 +163,11 @@ class SelectionGroup extends THREE.Object3D {
     }
 
     setTransformMode(mode) {
-        if(this.count) {
+        if(!mode || mode == "none") {
+            this.mode = null;
+            this.transformControl.detach();
+        }
+        else if(this.count) {
             this.transformControl.enabled = false;
             this.recompute();
             this.mode = mode;
@@ -173,7 +177,7 @@ class SelectionGroup extends THREE.Object3D {
                 case "scale":   this.setTransformModeAndSpace("scale",     "local"); break;
                 case "mirror":  this.setTransformModeAndSpace("translate", "local"); break;
             }
-            this.selectionChanged();
+            this.transformControl.attach(this);
             this.transformControl.enabled = true;
         }
     }
@@ -187,14 +191,9 @@ class SelectionGroup extends THREE.Object3D {
         if(this.count > 0) {
             renderLoop.outlinePass.selectedObjects = [this];
         } else {
+            console.log("Clearing highlight", this.count);
             renderLoop.outlinePass.selectedObjects = [];
-        }
-
-        if(this.count > 0 && this.mode) {
-            this.transformControl.attach(this);
-        } else {
-            this.transformControl.detach();
-            this.mode = null;
+            this.setTransformMode("none");
         }
         this.onSelectionChanged();
     }

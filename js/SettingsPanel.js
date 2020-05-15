@@ -127,6 +127,8 @@ class SettingsPanel {
         s.number(         "X",                                       {id: "xform_rotation_x", className: "axis_r", units: "°", onchange: SettingsPanel.onEditRotation});
         s.number(         "Y",                                       {id: "xform_rotation_y", className: "axis_b", units: "°", onchange: SettingsPanel.onEditRotation});
         s.number(         "Z",                                       {id: "xform_rotation_z", className: "axis_g", units: "°", onchange: SettingsPanel.onEditRotation});
+        s.footer();
+        s.button(     "Close",                                       {onclick: SettingsPanel.onTransformDismissed});
 
         s.page(       "Machine Settings",                            {id: "page_machine"});
 
@@ -519,11 +521,16 @@ class SettingsPanel {
         settings.dismissModal();
     }
 
+    static onTransformDismissed() {
+        settings.dismissModal();
+        stage.onTransformDismissed();
+    }
+
     static onEditPosition() {
         stage.selection.position.x = settings.get("xform_position_x");
         stage.selection.position.y = settings.get("xform_position_y");
         stage.selection.position.z = settings.get("xform_position_z") + stage.selectionHeightAdjustment;
-        stage.onTransformationEdit(false);
+        stage.onTransformEdit(false);
     }
 
     static onEditScale(axis) {
@@ -544,7 +551,7 @@ class SettingsPanel {
         if(uniform) {
             SettingsPanel.onTransformChange("scale");
         }
-        stage.onTransformationEdit();
+        stage.onTransformEdit();
     }
 
     static onMirrorAxis(axis) {
@@ -553,7 +560,7 @@ class SettingsPanel {
             case "Y": stage.selection.scale.y *= -1; break;
             case "Z": stage.selection.scale.z *= -1; break;
         }
-        stage.onTransformationEdit();
+        stage.onTransformEdit();
     }
 
     static onEditRotation() {
@@ -561,7 +568,7 @@ class SettingsPanel {
         stage.selection.rotation.x = toRad(settings.get("xform_rotation_x"));
         stage.selection.rotation.y = toRad(settings.get("xform_rotation_y"));
         stage.selection.rotation.z = toRad(settings.get("xform_rotation_z"));
-        stage.onTransformationEdit();
+        stage.onTransformEdit();
     }
 
     static onTransformChange(mode) {

@@ -426,10 +426,15 @@ class Stage {
         }
     }
 
-    onTransformationEdit(dropToFloor = true) {
+    onTransformEdit(dropToFloor = true) {
         if (dropToFloor) {
             this.dropObjectToFloor(this.selection);
         }
+        this.render();
+    }
+
+    onTransformDismissed() {
+        stage.selection.setTransformMode("none");
         this.render();
     }
 
