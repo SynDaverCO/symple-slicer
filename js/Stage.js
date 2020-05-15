@@ -349,7 +349,7 @@ class Stage {
     }
 
     removeAll() {
-        this.removeObjects(this.objects);
+        this.removeObjects(this.objects.slice());
         this.render();
     }
 
