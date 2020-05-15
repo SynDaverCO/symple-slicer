@@ -28,7 +28,7 @@ importScripts('lib/util/misc/Wikify.js');
 
 const info = {
     version: '0.9.994',
-    release: 1
+    release: 2
 };
 
 const cacheName = 'v' + info.version + "r" + info.release;
