@@ -196,6 +196,7 @@ class SelectionGroup extends THREE.Object3D {
             this.transformControl.detach();
             this.mode = null;
         }
+        this.onSelectionChanged();
     }
 
     get tranformMode() {
@@ -212,4 +213,5 @@ class SelectionGroup extends THREE.Object3D {
     onTransformChange(mode) {}
     onTransformBegin() {}
     onTransformEnd() {}
+    onSelectionChanged() {}
 }

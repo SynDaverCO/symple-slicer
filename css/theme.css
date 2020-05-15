@@ -101,3 +101,15 @@ input, select {
     right:              1.5vw;
     font-size:          150%;
 }
+
+.x_axis {
+    outline: 1px solid red;
+}
+
+.y_axis {
+    outline: 1px solid green;
+}
+
+.z_axis {
+    outline: 1px solid blue;
+}

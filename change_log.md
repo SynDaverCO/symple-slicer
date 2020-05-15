@@ -1,3 +1,10 @@
+SynDaver Symple Slicer v0.9.994
+===============================
+
+* Added mirror buttons
+* Added axis color coding to UI
+* Pre-populate the transform objects panel
+
 SynDaver Symple Slicer v0.9.993
 ===============================
 

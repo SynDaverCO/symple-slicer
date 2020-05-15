@@ -16,16 +16,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
  
-#update-app-dialog {
+#update-app-dialog:not([data-state]), #update-app-dialog .downloading, 
+#update-app-dialog .ready, #update-app-dialog .okay {
     display:            none;
 }
 
-#update-app-dialog.ready #update-downloading {
-    display:            none;
+#update-app-dialog[data-state="show"] .header {
+    visibility:         hidden;
 }
 
-#update-app-dialog:not(.ready) #update-ready {
-    display:            none;
+#update-app-dialog[data-state="downloading"] .downloading {
+    display:            block;
+}
+
+#update-app-dialog[data-state="ready"] .ready {
+    display:            block;
+}
+
+#update-app-dialog[data-state="show"] .okay {
+    display:            block;
 }
 
 #update-app-dialog img {

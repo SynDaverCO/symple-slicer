@@ -41,6 +41,7 @@ class Stage {
             SettingsPanel.onTransformChange(mode);
         }
         this.selection.onTransformEnd = () => {this.dropObjectToFloor(this.selection);};
+        this.selection.onSelectionChanged = SettingsPanel.onSelectionChanged;
 
         this.placedObjects.add(this.selection);
         this.bedRelative.add(this.placedObjects);
@@ -410,14 +411,14 @@ class Stage {
 
     // Event handlers
 
-    onTranformToolChanged(tool) {
+    onToolChanged(tool) {
         if(this.selection.count) {
             if(tool == "layflat") {
                 this.onLayFlatClicked();
             } else {
                 this.selection.setTransformMode(tool);
-                SettingsPanel.onTransformModeChanged(this.selection.tranformMode);
-                SettingsPanel.onObjectSelected();
+                SettingsPanel.onToolChanged(tool);
+                SettingsPanel.onSelectionChanged();
             }
         }
     }

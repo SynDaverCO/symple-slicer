@@ -227,17 +227,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </div>
 
         <div id="update-app-dialog" class="float-center panel-style">
-            A new version of SynDaver Symple Slicer is available.
+            <div class="header">
+                A new version of SynDaver Symple Slicer is available.
+            </div>
             <p class="iframe-container">
                 <iframe src="change_log.md">
                 </iframe>
             </p>
-            <div id="update-downloading">Downloading update... <img src="images/spinner.gif"></div>
-            <div id="update-ready"><button onclick="refreshWebApp()">Update!</button></div>
+            <div class="downloading">Downloading update... <img src="images/spinner.gif"></div>
+            <div class="ready"><button onclick="Updater.update()">Update!</button></div>
+            <div class="okay"><button onclick="Updater.okay()">Okay!</button></div>
         </div>
 
         <script>
-            getWebAppVersion("#serviceWorkerVersion");
+            Updater.getVersion("#serviceWorkerVersion");
 
             var canvas       = document.getElementById("webgl");
             var stage        = new Stage();
@@ -264,7 +267,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             toolbar.addIcon("layflat",           "Lay Flat",        "images/lay-flat.png");
             //toolbar.addIcon("undo",              "Undo",            "images/undo.png");
 
-            toolbar.onChange = function(id) {stage.onTranformToolChanged(id);};
+            toolbar.onChange = id => stage.onToolChanged(id);
 
             switch(query.slicer) {
                 case "jsslicer":

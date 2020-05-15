@@ -73,6 +73,9 @@ hr {
 
 #log-dialog, #progress-dialog, #update-app-dialog {
     padding:            1em;
+}
+
+#log-dialog {
     display:            none;
 }
 
