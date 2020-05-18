@@ -1,6 +1,7 @@
 SynDaver Symple Slicer v0.9.996
 ===============================
 
+* Enter key now jumps to next field for quick entry of values
 * Go to place models page when drag and dropping models
 * Fix for blank page when drag and dropping images
 * Do not return to place objects page when unselecting items
