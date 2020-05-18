@@ -639,7 +639,7 @@ class SettingsPanel {
 
     static onPageExit(page) {
         if(page == "page_print") {
-            stage.setGcodePath(null);
+            stage.hideToolpath();
         }
     }
 
@@ -653,7 +653,7 @@ class SettingsPanel {
         stage.showGcodePath("SKIRT",             settings.get("show_support"));
         stage.showGcodePath("SUPPORT",           settings.get("show_support"));
         stage.showGcodePath("SUPPORT-INTERFACE", settings.get("show_support"));
-        settings.enable("#preview_layer", stage.isGcodePathVisible);
+        settings.enable("#preview_layer", stage.isToolpathVisible);
         const layer = stage.getGcodeLayers() - 1;
         $('#preview_layer').val(layer);
         $('#current_layer').val(layer);

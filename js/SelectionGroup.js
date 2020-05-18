@@ -191,7 +191,6 @@ class SelectionGroup extends THREE.Object3D {
         if(this.count > 0) {
             renderLoop.outlinePass.selectedObjects = [this];
         } else {
-            console.log("Clearing highlight", this.count);
             renderLoop.outlinePass.selectedObjects = [];
             this.setTransformMode("none");
         }

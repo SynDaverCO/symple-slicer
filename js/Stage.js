@@ -385,14 +385,11 @@ class Stage {
     showGcodePath(which, enabled) {
         if(this.toolpath) {
             this.toolpath.setVisibility(which, enabled);
-            if(this.toolpath.isVisible) {
-                this.toolpath.visible      = true;
-                this.placedObjects.visible = false;
+            if(this.toolpath.hasVisibleLayers) {
+                this.showToolpath();
             } else {
-                this.toolpath.visible      = false;
-                this.placedObjects.visible = true;
+                this.hideToolpath();
             }
-            this.render();
         }
     }
 
@@ -403,8 +400,24 @@ class Stage {
         }
     }
 
-    get isGcodePathVisible() {
-        return this.toolpath && this.toolpath.isVisible;
+    get isToolpathVisible() {
+        return this.toolpath && this.toolpath.visible;
+    }
+
+    showToolpath() {
+        if(this.toolpath && this.toolpath.hasVisibleLayers) {
+            this.toolpath.visible      = true;
+            this.placedObjects.visible = false;
+            this.render();
+        }
+    }
+
+    hideToolpath() {
+        if(this.toolpath) {
+            this.toolpath.visible      = false;
+        }
+        this.placedObjects.visible = true;
+        this.render();
     }
 
     // Returns a count of gcode layers

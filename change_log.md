@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v0.9.997
+===============================
+
+* Fix for slice preview disappearing when leaving preview and returning to it.
+
 SynDaver Symple Slicer v0.9.996
 ===============================
 
