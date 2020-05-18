@@ -126,6 +126,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <!-- Help table -->
 
+        <div id = "warning-print-out-of-bounds">
+            Warning: This print falls outside of<br>the printer's printable area.
+        </div>
+
         <div id = "help-post-print">
             <img src="images/celebration-party-hats.jpg">
             <p>
@@ -317,6 +321,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             slicer.onPrintStats = function(stats) {
                 SettingsPanel.setPrintTime(stats.time_hms);
                 SettingsPanel.setPrintFilament(stats.filament);
+                SettingsPanel.setPrintBounds(stats.bounds);
             }
         </script>
     </body>

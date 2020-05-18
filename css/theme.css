@@ -94,6 +94,13 @@ input, select {
     width:              150px;
 }
 
+#warning-print-out-of-bounds {
+    padding:            1em;
+    color:              red;
+    text-align:         center;
+    display:            none;
+}
+
 .close-box::after {
     content:            "\002716";
     position:           absolute;

@@ -502,9 +502,9 @@ class Stage {
                 return;
             }
             // Stop on first intersection
-            this.onFloorClicked(event);
             break;
         }
+        this.onFloorClicked(event);
     }
 
     onViewChanged() {

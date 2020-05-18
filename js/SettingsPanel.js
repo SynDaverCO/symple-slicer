@@ -249,6 +249,7 @@ class SettingsPanel {
 
         s.category(   "Save Options",                                {open: "open"});
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode"});
+        s.element(                                                   {id: "warning-print-out-of-bounds"});
 
         s.footer();
         s.button(     "Save",                                        {onclick: SettingsPanel.onDownloadClicked});
@@ -615,6 +616,20 @@ class SettingsPanel {
 
     static setPrintFilament(value) {
         $("#print_filament").attr("value",value);
+    }
+
+    static setPrintBounds(bounds) {
+        if( bounds.min.x < 0 ||
+            bounds.min.y < 0 ||
+            bounds.min.z < 0 ||
+            bounds.max.x > $('#machine_width').val() ||
+            bounds.max.y > $('#machine_depth').val() ||
+            bounds.max.y > $('#machine_height').val()) {
+            $("#warning-print-out-of-bounds").show();
+            console.warn("The print will fall outside the printer's printable area");
+        } else {
+            $("#warning-print-out-of-bounds").hide();
+        }
     }
 
     static readyToDownload(data) {
