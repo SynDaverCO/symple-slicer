@@ -22,6 +22,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+#BUILD_OPT='-DCMAKE_BUILD_TYPE=MinSizeRel'
 BUILD_DIR=src-cura/CuraEngine/build
 INSTALL_DIR=lib/slicing-engines/CuraEngine
 
@@ -29,7 +30,7 @@ build_cura() {
     rm -rf $BUILD_DIR &&
     mkdir -p $BUILD_DIR &&
     (cd $BUILD_DIR &&
-     emcmake cmake .. &&
+     emcmake cmake $BUILD_OPT .. &&
      emmake make) ||
      exit 1
 }
