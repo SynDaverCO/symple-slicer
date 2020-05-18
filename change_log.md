@@ -1,7 +1,8 @@
 SynDaver Symple Slicer v0.9.997
 ===============================
 
-* Fix for slice preview disappearing when leaving preview and returning to it.
+* Fix for slice preview disappearing when leaving preview and returning to it
+* Fix for object jumping around after scaling, moving and centering
 
 SynDaver Symple Slicer v0.9.996
 ===============================

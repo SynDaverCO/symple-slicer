@@ -114,6 +114,8 @@ class Stage {
      * in order to aid with the packing algorithm
      */
     centerObjectOnPlatform(object, fudge) {
+        this.selectNone();
+
         const center = object.geometry.boundingBox.getCenter(new THREE.Vector3());
         const delta = this.objectToBed(object, center);
         if(!this.printer.origin_at_center) {
