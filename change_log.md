@@ -3,8 +3,9 @@ SynDaver Symple Slicer v0.9.997
 
 * Fix for slice preview disappearing when leaving preview and returning to it
 * Fix for object jumping around after scaling, moving and centering
-* Clicking anywhere on window will now deselect objects
-* A warning will appear after slicing if the GCODE falls outside the printable area
+* Clicking anywhere in window will now deselect objects
+* Before slicing, warn if any transformed object falls outside the print volume
+* After slicing, warn if the brim, support, etc falls outside the print volume
 
 SynDaver Symple Slicer v0.9.996
 ===============================

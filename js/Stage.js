@@ -40,7 +40,10 @@ class Stage {
             this.render();
             SettingsPanel.onTransformChange(mode);
         }
-        this.selection.onTransformEnd = () => {this.dropObjectToFloor(this.selection);};
+        this.selection.onTransformEnd = () => {
+            this.dropObjectToFloor(this.selection);
+            this.highlightOutOfBounds(this.selection.children);
+        };
         this.selection.onSelectionChanged = SettingsPanel.onSelectionChanged;
 
         this.placedObjects.add(this.selection);
@@ -90,6 +93,11 @@ class Stage {
         this.arrangeObjectsOnPlatform();
         this.adjustViewpoint();
         this.render();
+
+        // Print volume used for checking whether the print is in bounds.
+        this.printVolume = new THREE.Box3();
+        this.printVolume.min.set(0, 0, 0);
+        this.printVolume.max.set(x_width,  y_depth, z_height);
     }
 
     getBedMatrixWorldInverse() {
@@ -161,6 +169,8 @@ class Stage {
                 this.packer = null;
                 p.destroy();
             }
+            this.highlightOutOfBounds(this.objects);
+            this.render();
         };
 
         if(this.packer) packingFinished();
@@ -214,6 +224,29 @@ class Stage {
         this.packer.update();
         // Packing might run continuously, to abort after a few seconds.
         this.timer.start(packingFinished, 5000);
+    }
+
+    /**
+     * Tests to see whether a particular object is within the print volume
+     */
+    testWithinBounds(obj) {
+        const bounds = PrintableObject.findBoundingBox(obj, this.bedRelative);
+        bounds.min.z = Math.ceil(bounds.min.z); // Account for slight numerical imprecision
+        return this.printVolume.containsBox(bounds);
+    }
+
+    /**
+     * Highlight any objects that are outside the print volume
+     */
+    highlightOutOfBounds(objs) {
+        SettingsPanel.transformOutOfBoundsError = false;
+        objs.forEach(obj => {
+            const within = this.testWithinBounds(obj);
+            obj.error = !within;
+            if(!within) {
+                SettingsPanel.transformOutOfBoundsError = true;
+            }
+        });
     }
 
     /**
@@ -445,6 +478,7 @@ class Stage {
         if (dropToFloor) {
             this.dropObjectToFloor(this.selection);
         }
+        this.checkSelectionWithinBounds();
         this.render();
     }
 

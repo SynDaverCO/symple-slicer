@@ -127,6 +127,9 @@ class SettingsPanel {
         s.number(         "X",                                       {id: "xform_rotation_x", className: "axis_r", units: "°", onchange: SettingsPanel.onEditRotation});
         s.number(         "Y",                                       {id: "xform_rotation_y", className: "axis_b", units: "°", onchange: SettingsPanel.onEditRotation});
         s.number(         "Z",                                       {id: "xform_rotation_z", className: "axis_g", units: "°", onchange: SettingsPanel.onEditRotation});
+        s.category();
+
+        s.element(                                                   {id: "object-out-of-bounds"});
         s.footer();
         s.button(     "Close",                                       {onclick: SettingsPanel.onTransformDismissed});
 
@@ -249,7 +252,7 @@ class SettingsPanel {
 
         s.category(   "Save Options",                                {open: "open"});
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode"});
-        s.element(                                                   {id: "warning-print-out-of-bounds"});
+        s.element(                                                   {id: "gcode-out-of-bounds"});
 
         s.footer();
         s.button(     "Save",                                        {onclick: SettingsPanel.onDownloadClicked});
@@ -625,10 +628,18 @@ class SettingsPanel {
             bounds.max.x > $('#machine_width').val() ||
             bounds.max.y > $('#machine_depth').val() ||
             bounds.max.y > $('#machine_height').val()) {
-            $("#warning-print-out-of-bounds").show();
+            $("#gcode-out-of-bounds").show();
             console.warn("The print will fall outside the printer's printable area");
         } else {
-            $("#warning-print-out-of-bounds").hide();
+            $("#gcode-out-of-bounds").hide();
+        }
+    }
+
+    static set transformOutOfBoundsError(isOutside) {
+        if(isOutside) {
+            $("#object-out-of-bounds").show();
+        } else {
+            $("#object-out-of-bounds").hide();
         }
     }
 

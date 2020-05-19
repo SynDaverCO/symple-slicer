@@ -94,7 +94,7 @@ input, select {
     width:              150px;
 }
 
-#warning-print-out-of-bounds {
+.warning {
     padding:            1em;
     color:              red;
     text-align:         center;

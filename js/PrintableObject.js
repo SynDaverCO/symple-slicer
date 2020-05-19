@@ -21,9 +21,13 @@ class PrintableObject extends THREE.Mesh {
     constructor(geometry) {
         geometry.computeBoundingSphere();
         geometry.computeBoundingBox();
-        super(geometry, PrintableObject.material);
+        super(geometry, PrintableObject.normalMaterial);
         this.generateConvexHull();
         this.castShadow = true;
+    }
+
+    set error(error) {
+        this.material = error ? PrintableObject.errorMaterial : PrintableObject.normalMaterial;
     }
 
     generateConvexHull() {
@@ -46,25 +50,46 @@ class PrintableObject extends THREE.Mesh {
     }
 
     /**
+     * Generic method that calls a geometry algorithm on each of this object's
+     * subobjects with an appropriate transform matrix
+     */
+    static _applyAlgorithm(obj, relativeTo, func) {
+        relativeTo.updateMatrixWorld();
+        var inverse   = new THREE.Matrix4().getInverse(relativeTo.matrixWorld);
+        var transform = new THREE.Matrix4();
+        var result;
+        obj.traverse(child => {
+            if (child.hasOwnProperty("hull")) {
+                child.updateMatrixWorld();
+                transform.copy(inverse).multiply(child.matrixWorld);
+                result = func(child.hull, transform, result, child);
+            }
+        });
+        return result;
+    }
+
+    /**
      * Finds the lowest point on an object
      *
      * obj        - The object for which we wish to find the lowest point.
      * relativeTo - Define "lowest" relative to this object's coordinate system.
      */
     static findLowestPoint(obj, relativeTo) {
-        relativeTo.updateMatrixWorld();
-        var inverse   = new THREE.Matrix4().getInverse(relativeTo.matrixWorld);
-        var transform = new THREE.Matrix4();
-        var lowestPoint;
-        obj.traverse(child => {
-            if (child.hasOwnProperty("hull")) {
-                child.updateMatrixWorld();
-                transform.copy(inverse).multiply(child.matrixWorld);
-                lowestPoint = GeometryAlgorithms.findLowestPoint(child.hull, transform, lowestPoint, child);
-            }
-        });
-        return lowestPoint;
+        return PrintableObject._applyAlgorithm(obj, relativeTo,
+            (geo, xform, data, child) => GeometryAlgorithms.findLowestPoint(geo, xform, data, child));
+    }
+
+    /**
+     * Finds the true bounding box of an object
+     *
+     * obj        - The object for which we wish to compute the bounding box.
+     * relativeTo - Relative to this object's coordinate system.
+     */
+    static findBoundingBox(obj, relativeTo) {
+        return PrintableObject._applyAlgorithm(obj, relativeTo,
+            (geo, xform, data, child) => GeometryAlgorithms.findBoundingBox(geo, xform, data));
     }
 }
 
-PrintableObject.material = new THREE.MeshPhongMaterial( { color: 0xfafad2, side: THREE.DoubleSide, flatShading: true } );
+PrintableObject.normalMaterial  = new THREE.MeshPhongMaterial( { color: 0xfafad2, side: THREE.DoubleSide, flatShading: true } );
+PrintableObject.errorMaterial   = new THREE.MeshPhongMaterial( { color: 0xfa3e34, side: THREE.DoubleSide, flatShading: true } );
