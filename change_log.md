@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v0.9.998
+===============================
+
+* Allow centering of object when there are multiple objects on the bed.
+
+
 SynDaver Symple Slicer v0.9.997
 ===============================
 

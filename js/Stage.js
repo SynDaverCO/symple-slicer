@@ -57,13 +57,13 @@ class Stage {
                     case "select_all"  : this.selectAll(); break;
                     case "arrange_all" : this.arrangeAll(); break;
                     case "delete_all"  : this.removeAll(); break;
-                    case "center_some" : this.centerSelectedObjects(); break;
+                    case "center_one" : this.centerSelectedObject(); break;
                     case "delete_some" : this.removeSelectedObjects(); break;
                     case "xform_some"  : SettingsPanel.onToolChanged("move");
                 }
             },
             items: {
-                center_some: {name: "Center Selected Objects"},
+                center_one:  {name: "Center Selected Object"},
                 delete_some: {name: "Delete Selected Objects", icon: "delete"},
                 separator1: "-----",
                 xform_some:  {name: "Edit Transform Values", icon: "edit"},
@@ -160,8 +160,11 @@ class Stage {
      * a circular footprint of the the object on the print bed.
      * However, this could be improved for tall and skinny objects
      * by only computing the bounding circle in X and Y.
+     *
+     *   lockedObject - An object which should not move.
+     *
      */
-    arrangeObjectsOnPlatform() {
+    arrangeObjectsOnPlatform(lockedObject) {
         var circles = [];
         var packingFinished = () => {
             if(this.packer) {
@@ -179,6 +182,8 @@ class Stage {
 
         // Create an array of circles for the packing algorithm
 
+        var lockedCircle;
+
         const inv = this.getBedMatrixWorldInverse();
         for(const [index, object] of this.objects.entries()) {
             var sphere = this.getObjectBoundingSphere(object, inv);
@@ -194,6 +199,9 @@ class Stage {
                 circle.position.y += this.printer.y_depth/2;
             }
             circles.push(circle);
+            if(lockedObject == object) {
+                lockedCircle = circle;
+            }
         }
 
         // Function for repositioning the objects on the bed
@@ -221,6 +229,12 @@ class Stage {
             onMove:               packingUpdate,
             onMoveEnd:            packingFinished
         });
+        if(lockedCircle) {
+            // There isn't a way to tell the circle packer to lock down
+            // particular objects, but you can get the same effect
+            // by using the drag handler.
+            this.packer.dragStart(lockedCircle.id);
+        }
         this.packer.update();
         // Packing might run continuously, to abort after a few seconds.
         this.timer.start(packingFinished, 5000);
@@ -368,13 +382,18 @@ class Stage {
         this.render();
     }
 
-    centerSelectedObjects() {
+    centerSelectedObject() {
         if(this.selection.children.length == 0) {
             return;
         }
-        this.centerObjectOnPlatform(this.selection.children[0], 1);
+        if(this.selection.children.length > 1) {
+            alert("Can only center one object at a time.");
+            return;
+        }
+        const objectToCenter = this.selection.children[0];
+        this.centerObjectOnPlatform(objectToCenter, 1);
         if(this.numObjects > 1) {
-            this.arrangeObjectsOnPlatform();
+            this.arrangeObjectsOnPlatform(objectToCenter);
         }
         this.render();
     }
