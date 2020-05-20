@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    version: '0.9.998',
+    version: '0.9.999',
     release: 1
 };
 
@@ -56,8 +56,10 @@ const filesToCache = [
     'lib/util/io/FetchFile.js',
     'lib/util/io/LoadResource.js',
     'lib/util/io/GeometryLoader.js',
+    'lib/util/io/GeometryLoaderWorker.js',
     'lib/util/misc/ResettableTimer.js',
     'lib/util/misc/ParseQuery.js',
+    'lib/util/misc/Wikify.js',
     'lib/util/ui/settings/settings.js',
     'lib/util/ui/toolbar/toolbar.js',
     'lib/util/ui/progress/progress.js',
@@ -74,6 +76,7 @@ const filesToCache = [
     'lib/util/ui/progress/progress.css',
     'lib/util/ui/navcube/navcube.css',
     'lib/util/ui/updater/updater.css',
+    'lib/FastestSmallestTextEncoderDecoder/EncoderDecoderTogether.min.js',
     'lib/three/Pass.js',
     'lib/three/RenderPass.js',
     'lib/three/ShaderPass.js',
