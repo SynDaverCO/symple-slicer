@@ -1,3 +1,9 @@
+
+SynDaver Symple Slicer v0.9.9993
+================================
+
+* Fixed layer view
+
 SynDaver Symple Slicer v0.9.9992
 ================================
 
