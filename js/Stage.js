@@ -182,7 +182,7 @@ class Stage {
 
         // Create an array of circles for the packing algorithm
 
-        var lockedCircle;
+        var pinnedId;
 
         const inv = this.getBedMatrixWorldInverse();
         for(const [index, object] of this.objects.entries()) {
@@ -200,7 +200,7 @@ class Stage {
             }
             circles.push(circle);
             if(lockedObject == object) {
-                lockedCircle = circle;
+                pinnedId = circle.id;
             }
         }
 
@@ -229,15 +229,12 @@ class Stage {
             onMove:               packingUpdate,
             onMoveEnd:            packingFinished
         });
-        if(lockedCircle) {
-            // There isn't a way to tell the circle packer to lock down
-            // particular objects, but you can get the same effect
-            // by using the drag handler.
-            this.packer.dragStart(lockedCircle.id);
+        if(pinnedId) {
+            this.packer.pinCircle(pinnedId);
         }
         this.packer.update();
         // Packing might run continuously, to abort after a few seconds.
-        this.timer.start(packingFinished, 5000);
+        this.timer.start(packingFinished, 3000);
     }
 
     /**
