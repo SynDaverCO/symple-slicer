@@ -32,6 +32,8 @@ getFiles() {
     ' service-worker.js | sed '/^\.$/ c index.html'
     echo service-worker.js
     echo change_log.md.txt
+    echo images/screenshot.png
+    echo LICENSE.txt
 }
 
 makeBuildDir() {

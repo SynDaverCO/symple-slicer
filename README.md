@@ -1,3 +1,5 @@
+![alt text][logo]
+
 SynDaver Symple Slicer
 ======================
 
@@ -38,3 +40,5 @@ to upgrade the slicing engine.
 
 [THREE.js]: https://threejs.org
 [EMSCRIPTEN]: https://emscripten.org
+
+[logo]: https://github.com/SynDaverCO/symple-slicer/raw/master/images/screenshot.png "Symple Slicer"
