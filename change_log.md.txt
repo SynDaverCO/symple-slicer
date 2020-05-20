@@ -1,4 +1,9 @@
 
+SynDaver Symple Slicer v0.9.9995
+================================
+
+* Fixed meta tags
+
 SynDaver Symple Slicer v0.9.9994
 ================================
 
