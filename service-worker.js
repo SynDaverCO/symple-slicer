@@ -158,7 +158,7 @@ self.addEventListener('fetch', event => {
                         {headers: {"Content-Type": "text/css"}}
                     );
                 }
-                if (event.request.url.endsWith(".md")) {
+                if (event.request.url.endsWith(".md") || event.request.url.endsWith(".md.txt")) {
                     return fetchAndModify(event.request, processMarkdown, "text/html");
                 }
                 console.log("Warning: Resource not in cache: ", event.request.url, "requested by",  event.request.referrer);
