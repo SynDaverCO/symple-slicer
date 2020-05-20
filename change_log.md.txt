@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v0.9.9991
+===============================
+
+* Change location on change log to prevent confusing Edge
+
 SynDaver Symple Slicer v0.9.999
 ===============================
 
