@@ -1,13 +1,14 @@
 SynDaver Symple Slicer v0.9.999
 ===============================
 
-* Restore Edge browser compatibility.
-* Added polyfill for collapsible categories in Edge.
+* Restore Edge browser compatibility
+* Added polyfill for collapsible categories in Edge
+* Fixed object transformation not refreshing
 
 SynDaver Symple Slicer v0.9.998
 ===============================
 
-* Allow centering of object when there are multiple objects on the bed.
+* Allow centering of object when there are multiple objects on the bed
 
 SynDaver Symple Slicer v0.9.997
 ===============================

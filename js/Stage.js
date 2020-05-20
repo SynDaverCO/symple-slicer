@@ -494,7 +494,7 @@ class Stage {
         if (dropToFloor) {
             this.dropObjectToFloor(this.selection);
         }
-        this.checkSelectionWithinBounds();
+        this.highlightOutOfBounds(this.selection.children);
         this.render();
     }
 
