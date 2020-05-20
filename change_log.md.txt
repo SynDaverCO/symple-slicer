@@ -2,6 +2,7 @@ SynDaver Symple Slicer v0.9.999
 ===============================
 
 * Restore Edge browser compatibility.
+* Added polyfill for collapsible categories in Edge.
 
 SynDaver Symple Slicer v0.9.998
 ===============================

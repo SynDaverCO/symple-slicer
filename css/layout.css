@@ -121,3 +121,9 @@ hr {
     pointer-events:     none;
     border:             none;
 }
+
+/* The following is required for things to look good
+   under Edge, which does not support DETAILS or SUMMARY */
+DETAILS, SUMMARY {
+    display:            block;
+}
