@@ -1,5 +1,10 @@
+SynDaver Symple Slicer v0.9.9992
+================================
+
+* Fix service worker for Edge browser
+
 SynDaver Symple Slicer v0.9.9991
-===============================
+================================
 
 * Change location on change log to prevent confusing Edge
 

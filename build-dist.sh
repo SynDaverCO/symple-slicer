@@ -68,9 +68,9 @@ customSliceFilter() {
     # This transformation is required for the Edge browser and currently isn't handled by Babel
     #
     echo Running additional filters
-    FILES=`grep -R -l "\.\.\.attr" dist`
-    perl -i -00pe 's/{\s*...attr\,([^{]*)}/Object.assign({\1},attr)/igs' $FILES
-    perl -i -00pe 's/{([^{]*)\,\s*...attr\s*}/Object.assign({\1},attr)/igs' $FILES
+    FILES=`grep -R -E -l "\.\.\.[a-zA-Z.]+" dist`
+    perl -i -00pe 's/{\s*...([a-zA-Z.]+)\,([^{}]*)}/Object.assign({\2},\1)/igs' $FILES
+    perl -i -00pe 's/{([^{}]*)\,\s*...([a-zA-Z.]+)\s*}/Object.assign({\1},\2)/igs' $FILES
 }
 
 rm -rf build dist
