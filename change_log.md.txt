@@ -1,8 +1,13 @@
 
+SynDaver Symple Slicer v0.9.9994
+================================
+
+* Fix for layer slider changing when hiding or showing layer
+
 SynDaver Symple Slicer v0.9.9993
 ================================
 
-* Fixed layer view
+* Fixed layer view on Edge browser
 
 SynDaver Symple Slicer v0.9.9992
 ================================

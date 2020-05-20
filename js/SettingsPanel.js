@@ -652,8 +652,10 @@ class SettingsPanel {
         var decoder = new TextDecoder();
         var path = new GCodeParser(decoder.decode(data));
         stage.setGcodePath(path);
-        var max = stage.getGcodeLayers() - 1;
+        const max = stage.getGcodeLayers() - 1;
         $("#preview_layer").attr("max", max).val(max);
+        $('#preview_layer').val(max);
+        $('#current_layer').val(max);
         SettingsPanel.onUpdatePreview();
     }
 
@@ -680,9 +682,6 @@ class SettingsPanel {
         stage.showGcodePath("SUPPORT",           settings.get("show_support"));
         stage.showGcodePath("SUPPORT-INTERFACE", settings.get("show_support"));
         settings.enable("#preview_layer", stage.isToolpathVisible);
-        const layer = stage.getGcodeLayers() - 1;
-        $('#preview_layer').val(layer);
-        $('#current_layer').val(layer);
     }
 
     static onUpdateLayer() {
