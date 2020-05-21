@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v0.9.9996
+================================
+
+* Fix for objects being difficult to select after they are sliced.
+* Updated profiles.
 
 SynDaver Symple Slicer v0.9.9995
 ================================
