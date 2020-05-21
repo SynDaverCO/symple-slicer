@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v0.9.9997
+================================
+
+* Fix for toolpath being occluded by invisible travel moves.
+
 SynDaver Symple Slicer v0.9.9996
 ================================
 
