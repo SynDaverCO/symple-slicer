@@ -547,6 +547,10 @@ class Stage {
                 // Disregard clicks on the control object
                 continue;
             }
+            if (obj.type === "LineSegments") {
+                // Disregard clicks on the toolpath
+                continue;
+            }
             if (obj instanceof PrintableObject) {
                 this.onObjectClicked(obj, event);
                 return;
