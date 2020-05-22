@@ -32,13 +32,16 @@ For developers, Symple Slicer brings the following advantages:
    - Web UI can be executed-in-place with no compilation
    - Updates can be pushed to users in minutes
 - No server-side code for straightforward deployment
+- Open-source and build using [THREE.js] and WebGL
 - Written in modern JavaScript (ES6)
 - Clean, human-readable profile configuration files (TOML)
-- Easy upgrading of the CuraEngine:
+- CuraEngine is far easier to compile:
+   - Uses a simple command-line build of CuraEngine
+   - No dependencies on libarcus or protobuff
    - CuraEngine can be compiled into WebAssembly in minutes
-   - Uses native CuraEngine's JSON files for engine setup
+- Compatibility with Cura's JSON files (fdmprinter and fdmextruder):
+   - Allows import of default values for CuraEngine
    - Python to JavaScript translation for formula values
-- Open-source and build using [THREE.js] and WebGL
 
 Re-Building from CuraEngine from source
 ---------------------------------------
