@@ -50,11 +50,12 @@ However, the repo contains pre-built WebAssembly binaries for the Cura Engine.
 These may be generated from the Cura Engine C++ source (in `src-cura/`) at any
 time using the `build-cura-engine.sh` shell script. Rebuilding the Cura Engine
 requires the [EMSCRIPTEN] toolchain. Refer to the documentation in
-`config/README.md` for information on upgrading the slicing engine.
+[config/README.md] for information on upgrading the slicing engine.
 
 [THREE.js]: https://threejs.org
 [EMSCRIPTEN]: https://emscripten.org
 [GNU Affero General Public
 License Version 3]: https://github.com/SynDaverCO/symple-slicer/raw/master/LICENSE.txt
+[config/README.md]: https://github.com/SynDaverCO/symple-slicer/blob/master/config/README.md
 
 [logo]: https://github.com/SynDaverCO/symple-slicer/raw/master/images/screenshot.png "Symple Slicer"
