@@ -1,7 +1,9 @@
-SynDaver Symple Slicer v0.9.9998
-================================
+SynDaver Symple Slicer v1.0.0
+=============================
 
 * Fix for enter as tab no longer working
+* Fix for certain non-linked settings being reset to default
+* Updated profiles
 
 SynDaver Symple Slicer v0.9.9997
 ================================
