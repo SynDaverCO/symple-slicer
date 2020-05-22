@@ -1,13 +1,18 @@
+SynDaver Symple Slicer v0.9.9998
+================================
+
+* Fix for enter as tab no longer working
+
 SynDaver Symple Slicer v0.9.9997
 ================================
 
-* Fix for toolpath being occluded by invisible travel moves.
+* Fix for toolpath being occluded by invisible travel moves
 
 SynDaver Symple Slicer v0.9.9996
 ================================
 
-* Fix for objects being difficult to select after they are sliced.
-* Updated profiles.
+* Fix for objects being difficult to select after they are sliced
+* Updated profiles
 
 SynDaver Symple Slicer v0.9.9995
 ================================
