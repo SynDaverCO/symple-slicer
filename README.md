@@ -57,8 +57,7 @@ requires the [EMSCRIPTEN] toolchain. Refer to the documentation in
 
 [THREE.js]: https://threejs.org
 [EMSCRIPTEN]: https://emscripten.org
-[GNU Affero General Public
-License Version 3]: https://github.com/SynDaverCO/symple-slicer/raw/master/LICENSE.txt
+[GNU Affero General Public License Version 3]: https://github.com/SynDaverCO/symple-slicer/raw/master/LICENSE.txt
 [config/README.md]: https://github.com/SynDaverCO/symple-slicer/blob/master/config/README.md
 
 [logo]: https://github.com/SynDaverCO/symple-slicer/raw/master/images/screenshot.png "Symple Slicer"
