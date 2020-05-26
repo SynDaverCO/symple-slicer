@@ -1,0 +1,76 @@
+<!--
+WebSlicer
+Copyright (C) 2016 Marcio Teixeira
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<script src="unit_test_functions.js"></script>
+
+<script src="../lib/slicing-engines/CuraEngine/SlicerConfiguration.js"></script>
+<script src="../lib/util/io/FetchFile.js"></script>
+
+<script>
+    var config = new SlicerConfiguration();
+    config.debug = true;
+    
+    config.loadSingleJSONDefinition({
+        "settings": {
+            "machine_nozzle_size":
+            {
+                "label": "Nozzle Diameter",
+                "default_value": 0.5,
+            },
+            "line_width":
+            {
+                "label": "Line Width",
+                "default_value": 0.4,
+                "value": "machine_nozzle_size"
+            },
+            "skin_line_width":
+            {
+                "default_value": 0.4,
+                "value": "line_width",
+                "enabled": "top_layers > 0",
+            },
+            "top_layers":
+            {
+                "label": "Top Layers",
+                "default_value": 8,
+            }
+        }
+    });
+
+    // Before settings propagation, all values will be set to "default_value"
+    assertEquals("config.get('machine_nozzle_size')", "0.5");
+    assertEquals("config.get('line_width')",          "0.4");
+
+    // Force settings propagation to compute initial values
+    config.loadDefaults(true);
+
+    assertEquals("config.get('machine_nozzle_size')",   "0.5");
+    assertEquals("config.get('line_width')",            "0.5");
+    assertEquals("config.isEnabled('skin_line_width')", "true");
+    assertEquals("config.get('skin_line_width')",       "0.5");
+    
+    config.set("skin_line_width", 0.6);
+    assertEquals("config.get('skin_line_width')",       "0.6");
+    
+    // BUG 1: Enabling/disabling a parameter should not clear previously set values.
+
+    config.set("top_layers", 0);
+    assertEquals("config.isEnabled('skin_line_width')", "false");
+    assertEquals("config.get('skin_line_width')",       "0.6");
+
+    summarize();
+</script>

@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.1
+=============================
+
+* Allow slicing features to be toggled while preserving profile settings.
+
 SynDaver Symple Slicer v1.0.0
 =============================
 
