@@ -108,13 +108,13 @@ class SettingsPanel {
         s.number(         "Z",                                       {id: "xform_position_z", className: "axis_g", units: "mm", onchange: SettingsPanel.onEditPosition});
 
         s.category(   "Scale",                                       {id: "xform_scale"});
-        s.number(         "X",                                       {id: "xform_scale_x_pct", className: "axis_r", units: "%", onchange: evt => SettingsPanel.onEditScale("X%")});
-        s.number(         "Y",                                       {id: "xform_scale_y_pct", className: "axis_g", units: "%", onchange: evt => SettingsPanel.onEditScale("Y%")});
-        s.number(         "Z",                                       {id: "xform_scale_z_pct", className: "axis_b", units: "%", onchange: evt => SettingsPanel.onEditScale("Z%")});
-        /*s.separator(                                                 {type: "br"});
-        s.number(         "X",                                       {id: "xform_scale_x_abs", units: "mm"});
-        s.number(         "Y",                                       {id: "xform_scale_y_abs", units: "mm"});
-        s.number(         "Z",                                       {id: "xform_scale_z_abs", units: "mm"});*/
+        s.number(         "X",                                       {id: "xform_scale_x_pct", className: "axis_r", units: "%", onchange: evt => SettingsPanel.onEditScalePct("X")});
+        s.number(         "Y",                                       {id: "xform_scale_y_pct", className: "axis_g", units: "%", onchange: evt => SettingsPanel.onEditScalePct("Y")});
+        s.number(         "Z",                                       {id: "xform_scale_z_pct", className: "axis_b", units: "%", onchange: evt => SettingsPanel.onEditScalePct("Z")});
+        s.separator(                                                 {type: "br"});
+        s.number(         "X",                                       {id: "xform_scale_x_abs", className: "axis_r", units: "mm", onchange: evt => SettingsPanel.onEditScaleAbs("X")});
+        s.number(         "Y",                                       {id: "xform_scale_y_abs", className: "axis_g", units: "mm", onchange: evt => SettingsPanel.onEditScaleAbs("Y")});
+        s.number(         "Z",                                       {id: "xform_scale_z_abs", className: "axis_b", units: "mm", onchange: evt => SettingsPanel.onEditScaleAbs("Z")});
         s.separator(                                                 {type: "br"});
         s.toggle(     "Uniform Scaling",                             {id: "xform_scale_uniform", checked: "checked"});
 
@@ -525,6 +525,34 @@ class SettingsPanel {
         settings.dismissModal();
     }
 
+    static setAxisScale(axis, value) {
+        switch(axis) {
+            case "X": $('#xform_scale_x_abs').val(value.toFixed(2)); break;
+            case "Y": $('#xform_scale_y_abs').val(value.toFixed(2)); break;
+            case "Z": $('#xform_scale_z_abs').val(value.toFixed(2)); break;
+            case "X%": $('#xform_scale_x_pct').val((value * 100).toFixed(2)); break;
+            case "Y%": $('#xform_scale_y_pct').val((value * 100).toFixed(2)); break;
+            case "Z%": $('#xform_scale_z_pct').val((value * 100).toFixed(2)); break;
+        }
+    }
+
+    static setAxisRotation(axis, value) {
+        const toDeg = rad => (rad * 180 / Math.PI).toFixed(0);
+        switch(axis) {
+            case "X": $('#xform_rotation_x').val(toDeg(value)); break;
+            case "Y": $('#xform_rotation_y').val(toDeg(value)); break;
+            case "Z": $('#xform_rotation_z').val(toDeg(value)); break;
+        }
+    }
+
+    static setAxisPosition(axis, value) {
+        switch(axis) {
+            case "X": $('#xform_position_x').val( value.toFixed(2)); break;
+            case "Y": $('#xform_position_y').val( value.toFixed(2)); break;
+            case "Z": $('#xform_position_z').val((value - stage.selectionHeightAdjustment).toFixed(2)); break;
+        }
+    }
+
     static onTransformDismissed() {
         settings.dismissModal();
         stage.onTransformDismissed();
@@ -537,24 +565,31 @@ class SettingsPanel {
         stage.onTransformEdit(false);
     }
 
-    static onEditScale(axis) {
+    static onEditScaleAbs(axis) {
+        var dim = stage.getSelectionDimensions(false);
+        switch(axis) {
+            case "X": SettingsPanel.setAxisScale("X%", settings.get("xform_scale_x_abs") / dim.x); SettingsPanel.onEditScalePct("X"); break;
+            case "Y": SettingsPanel.setAxisScale("Y%", settings.get("xform_scale_y_abs") / dim.y); SettingsPanel.onEditScalePct("Y"); break;
+            case "Z": SettingsPanel.setAxisScale("Z%", settings.get("xform_scale_z_abs") / dim.z); SettingsPanel.onEditScalePct("Z"); break;
+        }
+    }
+
+    static onEditScalePct(axis) {
         var x_percent = settings.get("xform_scale_x_pct") / 100;
         var y_percent = settings.get("xform_scale_y_pct") / 100;
         var z_percent = settings.get("xform_scale_z_pct") / 100;
         const uniform = settings.get("xform_scale_uniform");
         if(uniform) {
             switch(axis) {
-                case "X%": y_percent = z_percent = x_percent; break;
-                case "Y%": x_percent = z_percent = y_percent; break;
-                case "Z%": x_percent = y_percent = z_percent; break;
+                case "X": y_percent = z_percent = x_percent; break;
+                case "Y": x_percent = z_percent = y_percent; break;
+                case "Z": x_percent = y_percent = z_percent; break;
             }
         }
         stage.selection.scale.x = x_percent;
         stage.selection.scale.y = y_percent;
         stage.selection.scale.z = z_percent;
-        if(uniform) {
-            SettingsPanel.onTransformChange("scale");
-        }
+        SettingsPanel.onTransformChange("scale");
         stage.onTransformEdit();
     }
 
@@ -580,19 +615,23 @@ class SettingsPanel {
         switch(mode) {
             case "translate":
                 const pos = stage.selection.position;
-                $('#xform_position_x').val( pos.x.toFixed(2));
-                $('#xform_position_y').val( pos.y.toFixed(2));
-                $('#xform_position_z').val((pos.z - stage.selectionHeightAdjustment).toFixed(2));
+                SettingsPanel.setAxisPosition("X", pos.x);
+                SettingsPanel.setAxisPosition("Y", pos.y);
+                SettingsPanel.setAxisPosition("Z", pos.z);
                 break;
             case "rotate":
-                $('#xform_rotation_x').val(toDeg(stage.selection.rotation.x));
-                $('#xform_rotation_y').val(toDeg(stage.selection.rotation.y));
-                $('#xform_rotation_z').val(toDeg(stage.selection.rotation.z));
+                SettingsPanel.setAxisRotation("X", stage.selection.rotation.x);
+                SettingsPanel.setAxisRotation("Y", stage.selection.rotation.y);
+                SettingsPanel.setAxisRotation("Z", stage.selection.rotation.z);
                 break;
             case "scale":
-                $('#xform_scale_x_pct').val((stage.selection.scale.x * 100).toFixed(2));
-                $('#xform_scale_y_pct').val((stage.selection.scale.y * 100).toFixed(2));
-                $('#xform_scale_z_pct').val((stage.selection.scale.z * 100).toFixed(2));
+                SettingsPanel.setAxisScale("X%", stage.selection.scale.x);
+                SettingsPanel.setAxisScale("Y%", stage.selection.scale.y);
+                SettingsPanel.setAxisScale("Z%", stage.selection.scale.z);
+                var dim = stage.getSelectionDimensions();
+                SettingsPanel.setAxisScale("X", dim.x);
+                SettingsPanel.setAxisScale("Y", dim.y);
+                SettingsPanel.setAxisScale("Z", dim.z);
                 break;
         }
     }

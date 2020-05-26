@@ -53,11 +53,10 @@ class PrintableObject extends THREE.Mesh {
      * Generic method that calls a geometry algorithm on each of this object's
      * subobjects with an appropriate transform matrix
      */
-    static _applyAlgorithm(obj, relativeTo, func) {
+    static _applyAlgorithm(obj, relativeTo, result, func) {
         relativeTo.updateMatrixWorld();
         var inverse   = new THREE.Matrix4().getInverse(relativeTo.matrixWorld);
         var transform = new THREE.Matrix4();
-        var result;
         obj.traverse(child => {
             if (child.hasOwnProperty("hull")) {
                 child.updateMatrixWorld();
@@ -75,7 +74,7 @@ class PrintableObject extends THREE.Mesh {
      * relativeTo - Define "lowest" relative to this object's coordinate system.
      */
     static findLowestPoint(obj, relativeTo) {
-        return PrintableObject._applyAlgorithm(obj, relativeTo,
+        return PrintableObject._applyAlgorithm(obj, relativeTo, null,
             (geo, xform, data, child) => GeometryAlgorithms.findLowestPoint(geo, xform, data, child));
     }
 
@@ -85,8 +84,8 @@ class PrintableObject extends THREE.Mesh {
      * obj        - The object for which we wish to compute the bounding box.
      * relativeTo - Relative to this object's coordinate system.
      */
-    static findBoundingBox(obj, relativeTo) {
-        return PrintableObject._applyAlgorithm(obj, relativeTo,
+    static findBoundingBox(obj, relativeTo, initialBox) {
+        return PrintableObject._applyAlgorithm(obj, relativeTo, initialBox,
             (geo, xform, data, child) => GeometryAlgorithms.findBoundingBox(geo, xform, data));
     }
 }

@@ -261,6 +261,26 @@ class Stage {
     }
 
     /**
+     * Computes the dimensions of the selection, for populating the text boxes.
+     */
+    getSelectionDimensions(scaled = true) {
+        var box;
+        this.selection.children.forEach(obj => {
+            box = PrintableObject.findBoundingBox(obj, this.selection, box);
+        });
+        var size = new THREE.Vector3();
+        if(box) {
+            box.getSize(size);
+            if(scaled) {
+                size.x *= this.selection.scale.x;
+                size.y *= this.selection.scale.y;
+                size.z *= this.selection.scale.z;
+            }
+        }
+        return size;
+    }
+
+    /**
      * Converts a vector in object coordinates to print bed
      * coordinates
      */

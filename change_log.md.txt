@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.2
+=============================
+
+* Added ability to scale objects using absolute units.
+
 SynDaver Symple Slicer v1.0.1
 =============================
 
