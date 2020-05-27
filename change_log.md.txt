@@ -1,12 +1,13 @@
 SynDaver Symple Slicer v1.0.2
 =============================
 
-* Added ability to scale objects using absolute units.
+* Added ability to scale objects using absolute units
+* Added ability to add multiple objects at once
 
 SynDaver Symple Slicer v1.0.1
 =============================
 
-* Allow slicing features to be toggled while preserving profile settings.
+* Allow slicing features to be toggled while preserving profile settings
 
 SynDaver Symple Slicer v1.0.0
 =============================

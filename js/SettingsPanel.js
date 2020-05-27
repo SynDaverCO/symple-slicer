@@ -24,6 +24,19 @@ class SettingsPanel {
         var s = new SettingsUI(id);
         s.enableAutoTab();
 
+        // onchange handler for enforcing the min and max values.
+        function enforceMinMax(evt){
+            const el = evt.target;
+            if(el.value != ""){
+                if(el.hasAttribute("min") && parseInt(el.value) < parseInt(el.min)){
+                    el.value = el.min;
+                }
+                if(el.hasAttribute("max") && parseInt(el.value) > parseInt(el.max)){
+                    el.value = el.max;
+                }
+            }
+        }
+
         /**
          * Helper function for obtaining UI parameters from the slicer engine
          */
@@ -85,7 +98,8 @@ class SettingsPanel {
                                                                      {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary'});
 
         s.separator(                                                 {type: "br"});
-        s.button(     "Add Another",                                 {className: "add_another",      onclick: SettingsPanel.onAddToPlatform});
+        s.number(     "How many to place?",                          {id: "place_quantity", value: "1", min: "1", max: "50", onchange: enforceMinMax});
+        s.button(     "Place more",                                  {className: "place_more", onclick: SettingsPanel.onAddToPlatform});
 
         s.category(   "Load 2D Images (as Reliefs or Lithophanes)",  {id: "place_images"});
 
@@ -485,17 +499,20 @@ class SettingsPanel {
     static onGeometryLoaded(geometry) {
         if(geometry) {
             loaded_geometry = geometry;
-            settings.enable('.add_another', true);
+            settings.enable('.place_more', true);
             SettingsPanel.onAddToPlatform(); // Place the first object automatically
         } else {
-            settings.enable('.add_another', false);
+            settings.enable('.place_more', false);
             loaded_geometry = false;
         }
         ProgressBar.hide();
     }
 
     static onAddToPlatform() {
-        stage.addGeometry(loaded_geometry);
+        const howMany = parseInt(settings.get("place_quantity"))
+        for(var i = 0; i < howMany; i++) {
+            stage.addGeometry(loaded_geometry);
+        }
     }
 
     static onSelectionChanged() {
