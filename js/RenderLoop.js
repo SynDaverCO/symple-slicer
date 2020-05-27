@@ -130,14 +130,21 @@ class RenderLoop {
         window.addEventListener( 'resize', onWindowResize, false );
     }
 
-    resetCamera(view) {
+    setView(view) {
+        const size = stage.printVolume.getSize(new THREE.Vector3());
+        const y = size.y / 2;
         switch(view) {
-            case "left":   this.camera.position.set(  600,    0,    0);   break;
-            case "right":  this.camera.position.set( -600,    0,    0);   break;
-            case "back":   this.camera.position.set(    0,    0,  600);   break;
-            default:       this.camera.position.set(    0,    0, -600);   break;
+            case "left":   this.camera.position.set(  600,    y,    0); break;
+            case "right":  this.camera.position.set( -600,    y,    0); break;
+            case "back":   this.camera.position.set(    0,    y,  600); break;
+            case "top":    this.camera.position.set(    0,  600,   -1); break;
+            case "bottom": this.camera.position.set(    0, -600,   -1); break;
+            case "front":  this.camera.position.set(    0,    y, -600); break;
         }
-        this.orbit.update();
+        const topOrBottom = view == "top" || view == "bottom";
+        this.fitInView(size);
+        this.centerOnScreen(0, size.y / 2, 0, topOrBottom ? 0.5 : 0.4, 0.5);
+        this.render();
     }
 
     /**
@@ -171,34 +178,19 @@ class RenderLoop {
     }
 
     /**
-     * Adjusts the viewpoint to correspond to a new print volume.
-     * We want the print volume to fill the screen. We want the
-     * center of the print volume to be in the center of the
-     * screen, but we want the camera to be looking at the center
-     * of the print bed
+     * Adjusts the viewpoint such that a particularly sized volume fits on the screen.
      */
-    adjustViewpoint(object) {
-        const boundingBox = new THREE.Box3();
-        boundingBox.setFromObject(object);
-
-        const size = boundingBox.getSize(new THREE.Vector3());
-
-        // Back awsy the camera so the entire print volume fits on the screen
+    fitInView(size) {
+        // Back away the camera so the entire print volume fits on the screen
         const maxDim = Math.max( size.x, size.y, size.z );
         const fov = this.camera.fov * (Math.PI / 180);
         const offset = 1.25;
         const distance = Math.abs( maxDim / 2 / Math.tan( fov / 2 ) ) * offset + maxDim/2;
         this.camera.position.setLength(distance);
 
-        // Set the eye level to 1/4 up on the object
-        this.camera.position.y = size.y/2;
-
         // Look at the origin
         this.orbit.target.set(0,10,0);
         this.orbit.update();
-
-        // Now translate the canvas so the center of the print volume lies in the center of the screen
-        this.centerOnScreen(0, size.y / 2, 0, 0.4, 0.5);
     }
 
     render() {

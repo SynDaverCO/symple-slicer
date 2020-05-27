@@ -273,12 +273,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var navCube      = new NavCube("#navCube");
             var query        = parseQuery();
 
-            stage.adjustViewpoint();
-            renderLoop.render();
+            renderLoop.setView("front");
 
             navCube.onViewSelected = view => {
-                renderLoop.resetCamera(view);
-                stage.adjustViewpoint();
+                renderLoop.setView(view);
             };
 
             //toolbar.addIcon("open-file",         "Open File",       "images/open-file.png",);

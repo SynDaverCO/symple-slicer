@@ -3,6 +3,7 @@ SynDaver Symple Slicer v1.0.2
 
 * Added ability to scale objects using absolute units
 * Added ability to add multiple objects at once
+* Added "top" and "bottom" to right-click view menu
 
 SynDaver Symple Slicer v1.0.1
 =============================

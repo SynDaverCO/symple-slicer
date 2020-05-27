@@ -31,7 +31,6 @@ class PrinterRepresentation extends THREE.Object3D {
 
         this.light = new THREE.DirectionalLight( 0xffffff, 0 );
         this.add(this.light);
-
         this.constructRepresentation(printer);
     }
 

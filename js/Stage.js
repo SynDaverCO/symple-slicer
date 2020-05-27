@@ -19,17 +19,15 @@
 
 class Stage {
     constructor() {
-        this.printer = {
+        this.setPrinterCharacteristics({
             circular:          false,
             origin_at_center:  false,
             x_width:           282,
             y_depth:           282,
             z_height:          286
-        };
+        });
 
         this.objects = [];
-        this.printerRepresentation = new PrinterRepresentation(this.printer);
-        this.bedRelative   = this.printerRepresentation.bedRelative;
         this.placedObjects = new THREE.Object3D();
         this.dragging      = false;
         this.packer = null;
@@ -75,29 +73,22 @@ class Stage {
         });
     }
 
-    adjustViewpoint() {
-        renderLoop.adjustViewpoint(this.printerRepresentation);
-    }
-
     render() {
         renderLoop.render();
     }
 
-    setPrinterCharacteristics(circular, origin_at_center, x_width, y_depth, z_height) {
-        this.printer.circular         = circular;
-        this.printer.origin_at_center = origin_at_center;
-        this.printer.x_width          = x_width;
-        this.printer.y_depth          = y_depth;
-        this.printer.z_height         = z_height;
-        this.printerRepresentation.update(this.printer);
-        this.arrangeObjectsOnPlatform();
-        this.adjustViewpoint();
-        this.render();
-
+    setPrinterCharacteristics(printer) {
+        if(!this.printerRepresentation) {
+            this.printerRepresentation = new PrinterRepresentation(printer);
+        } else {  
+            this.printerRepresentation.update(printer);
+        }
+        this.bedRelative = this.printerRepresentation.bedRelative;
         // Print volume used for checking whether the print is in bounds.
         this.printVolume = new THREE.Box3();
         this.printVolume.min.set(0, 0, 0);
-        this.printVolume.max.set(x_width,  y_depth, z_height);
+        this.printVolume.max.set(printer.x_width, printer.y_depth, printer.z_height);
+        this.printer = printer;
     }
 
     getBedMatrixWorldInverse() {

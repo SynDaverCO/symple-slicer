@@ -421,12 +421,15 @@ class SettingsPanel {
     }
 
     static onPrinterSizeChanged() {
-        var circular         = settings.get("machine_shape") == "elliptic";
-        var origin_at_center = settings.get("machine_center_is_zero");
-        var x_width          = settings.get("machine_width");
-        var y_depth          = settings.get("machine_depth");
-        var z_height         = settings.get("machine_height");
-        stage.setPrinterCharacteristics(circular, origin_at_center, x_width, y_depth, z_height);
+        stage.setPrinterCharacteristics({
+            circular:          settings.get("machine_shape") == "elliptic",
+            origin_at_center:  settings.get("machine_center_is_zero"),
+            x_width:           settings.get("machine_width"),
+            y_depth:           settings.get("machine_depth"),
+            z_height:          settings.get("machine_height")
+        });
+        stage.arrangeObjectsOnPlatform();
+        renderLoop.setView("front");
     }
 
     static onApplyPreset(evt) {
