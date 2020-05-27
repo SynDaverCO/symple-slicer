@@ -10,7 +10,7 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-** Details:**
+**Details**
  - SympleSlicer Version:
  - Browser [e.g. chrome, safari]
 
