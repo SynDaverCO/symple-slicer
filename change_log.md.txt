@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v1.0.3
+=============================
+
+* Changed wording to "Last session settings"
+* Fix for "Last session settings" loading Cura defaults
+
 SynDaver Symple Slicer v1.0.2
 =============================
 

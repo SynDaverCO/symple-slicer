@@ -355,8 +355,8 @@ class SettingsPanel {
     static loadProfileList(printer_menu, material_menu) {
         console.log("Loading profile list");
         if(SettingsPanel.hasSavedProfile()) {
-            printer_menu.option("Keep previous settings", {id: "keep"});
-            material_menu.option("Keep previous settings", {id: "keep"});
+            printer_menu.option("Last session settings", {id: "keep"});
+            material_menu.option("Last session settings", {id: "keep"});
         }
         fetchText("config/syndaver/profile_list.toml")
             .then(data => {
@@ -378,8 +378,10 @@ class SettingsPanel {
 
         var promise;
         try {
-            console.log("Loading slicer defaults");
-            slicer.loadDefaults();
+            if(printer !== "keep" && material !== "keep") {
+                console.log("Loading slicer defaults");
+                slicer.loadDefaults();
+            }
             if(printer !== "keep") {
                 console.log("Loading printer profile");
                 ProgressBar.message("Loading profiles");
