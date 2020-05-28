@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v1.0.4
+=============================
+
+* Changed wording of items for consistency
+* Moved "Machine Settings" lower in the menu
+
 SynDaver Symple Slicer v1.0.3
 =============================
 

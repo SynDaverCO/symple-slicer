@@ -89,7 +89,7 @@ class SettingsPanel {
         var material_menu = s.choice( "Material:",                   {id: "material_select"});
         s.footer();
         s.button(     "Next",                                        {onclick: SettingsPanel.onApplyPreset});
-        s.buttonHelp( "Click this button to apply selections<br>and proceed to placing objects.");
+        s.buttonHelp( "Click this button to apply selections and proceed to placing objects.");
 
         s.page("Place Objects",                                      {id: "page_place"});
 
@@ -110,7 +110,7 @@ class SettingsPanel {
         s.button(     "Create",                                      {id: "add_litho", onclick: SettingsPanel.onAddLitho});
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
-        s.buttonHelp( "Click this button to<br>proceed to slicing.");
+        s.buttonHelp( "Click this button to proceed to slicing.");
 
 
 
@@ -146,36 +146,6 @@ class SettingsPanel {
         s.element(                                                   {id: "object-out-of-bounds"});
         s.footer();
         s.button(     "Close",                                       {onclick: SettingsPanel.onTransformDismissed});
-
-        s.page(       "Machine Settings",                            {id: "page_machine"});
-
-        s.category(   "Hot End");
-        s.fromSlicer(     "machine_nozzle_size");
-
-        s.category(   "Auto Leveling");
-        s.fromSlicer(     "machine_probe_type");
-
-        s.category(   "Build Volume");
-        s.fromSlicer(     "machine_shape");
-        s.fromSlicer(     "machine_width",                           {className: "axis_r"});
-        s.fromSlicer(     "machine_depth",                           {className: "axis_g"});
-        s.fromSlicer(     "machine_height",                          {className: "axis_b"});
-        s.fromSlicer(     "machine_center_is_zero");
-        s.fromSlicer(     "machine_heated_bed");
-        s.button(     "Save Changes",                                {onclick: SettingsPanel.onPrinterSizeChanged});
-
-        s.category(   "Start/End Template");
-        s.buttonHelp( "Template to edit:");
-        s.button(         "Start",                                   {onclick: SettingsPanel.onEditStartGcode});
-        s.button(         "End",                                     {onclick: SettingsPanel.onEditEndGcode});
-
-        s.page(       "",                                            {id: "page_start_gcode"});
-        s.fromSlicer(     "machine_start_gcode");
-        s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
-
-        s.page(       "",                                            {id: "page_end_gcode"});
-        s.fromSlicer(     "machine_end_gcode");
-        s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
 
         s.page(       "Slice Objects",                               {id: "page_slice", className: "scrollable"});
 
@@ -248,7 +218,7 @@ class SettingsPanel {
 
         s.footer();
         s.button(     "Slice",                                       {onclick: SettingsPanel.onSliceClicked});
-        s.buttonHelp( "Click this button to prepare<br>the model for printing.");
+        s.buttonHelp( "Click this button to generate a G-code file for printing.");
 
         s.page(       "Print and Preview",                           {id: "page_print"});
 
@@ -270,16 +240,46 @@ class SettingsPanel {
 
         s.footer();
         s.button(     "Save",                                        {onclick: SettingsPanel.onDownloadClicked});
-        s.buttonHelp( "Click this button to save<br>gcode for your 3D printer.");
+        s.buttonHelp( "Click this button to save a G-code file for your 3D printer.");
 
         s.page(       "Final Steps",                                 {id: "page_finished"});
         s.element(                                                   {id: "help-post-print"});
+
+        s.page(       "Machine Settings",                            {id: "page_machine"});
+
+        s.category(   "Hot End");
+        s.fromSlicer(     "machine_nozzle_size");
+
+        s.category(   "Auto Leveling");
+        s.fromSlicer(     "machine_probe_type");
+
+        s.category(   "Build Volume");
+        s.fromSlicer(     "machine_shape");
+        s.fromSlicer(     "machine_width",                           {className: "axis_r"});
+        s.fromSlicer(     "machine_depth",                           {className: "axis_g"});
+        s.fromSlicer(     "machine_height",                          {className: "axis_b"});
+        s.fromSlicer(     "machine_center_is_zero");
+        s.fromSlicer(     "machine_heated_bed");
+        s.button(     "Save Changes",                                {onclick: SettingsPanel.onPrinterSizeChanged});
+
+        s.category(   "Start &amp; End G-code");
+        s.buttonHelp( "Template to edit:");
+        s.button(         "Start",                                   {onclick: SettingsPanel.onEditStartGcode});
+        s.button(         "End",                                     {onclick: SettingsPanel.onEditEndGcode});
+
+        s.page(       "",                                            {id: "page_start_gcode"});
+        s.fromSlicer(     "machine_start_gcode");
+        s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
+
+        s.page(       "",                                            {id: "page_end_gcode"});
+        s.fromSlicer(     "machine_end_gcode");
+        s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
 
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
         s.category(   "Slicer Output");
         s.button(     "Show",                                        {onclick: onShowLogClicked});
-        s.buttonHelp( "Click this button to show<br>slicing engine logs.");
+        s.buttonHelp( "Click this button to show slicing engine logs.");
 
         s.category(   "Export Settings");
         s.toggle(         "Show units and choices as comments",      {id: "export_with_choices"});
@@ -290,13 +290,13 @@ class SettingsPanel {
         s.text(       "Save as:",                                    {id: "export_filename", value: "config.toml"});
         s.separator(                                                 {type: "br"});
         s.button(     "Export",                                      {onclick: SettingsPanel.onExportClicked});
-        s.buttonHelp( "Click this button to save changed<br>settings to your computer.");
+        s.buttonHelp( "Click this button to save current settings to a file on your computer.");
 
         s.category(   "Import Settings",                             {id: "import_settings"});
         s.file(       "Drag and drop settings<br><small>(.TOML)</small>", {id: "toml_file", onchange: SettingsPanel.onImportChange, mode: 'text'});
         s.separator(                                                 {type: "br"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: SettingsPanel.onImportClicked});
-        s.buttonHelp( "Importing settings from a file will override<br>all printer &amp; material presets.");
+        s.buttonHelp( "Importing settings from a file will override all printer &amp; material presets.");
 
         s.page(       "Help",                                        {id: "page_help"});
 

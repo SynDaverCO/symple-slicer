@@ -93,10 +93,6 @@ body.debug .setting-ui {
     cursor:             help;
 }
 
-.settings-panel .button-label {
-    font-size:          13px;
-}
-
 .settings-panel select {
     min-width:          calc(4px + 11em);
     font-size:          11px;
@@ -104,19 +100,27 @@ body.debug .setting-ui {
     cursor:             pointer;
 }
 
+.settings-panel .button-group {
+    display:            flex;
+    align-items:        center;
+}
+
 .settings-panel button {
-    margin:             5px;
+    margin:             5px 1em 5px 5px;
     cursor:             pointer;
+}
+
+.settings-panel .button-label {
+    vertical-align:     middle;
+    width:              0px;
+    min-width:          250px;
+    flex-grow:          1;
+    font-size:          13px;
 }
 
 .settings-panel textarea {
     width:              75vw;
     height:             75vh;
-}
-
-.settings-panel .button-label {
-    display:            inline-block;
-    vertical-align:     middle;
 }
 
 .settings-panel input[type=text],
