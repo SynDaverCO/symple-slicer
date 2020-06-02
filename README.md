@@ -10,6 +10,13 @@ Symple Slicer was developed at the Loveland, Colorado division of
 [SynDaver Labs, Inc.] for use with SynDaver 3D printers. Symple Slicer
 is licensed under the [GNU Affero General Public License Version 3].
 
+To run it, use the following link:
+
+| Release     | Live URL                                 |
+|-------------|------------------------------------------|
+| Stable      | https://syndaverco.github.io/slicer      |
+| Development | https://syndaverco.github.io/slicer-beta |
+
 Easy to use, easy to print
 --------------------------
 
@@ -18,7 +25,7 @@ For end-users, Symple Slicer brings the following advantages:
 - Easy-to-use interface, with a step-by-step wizard 
 - Runs on many platforms, requiring only a compatible web browswer
    - Installable as an app on Chromebooks
-   - Once run once, it can be used off-line
+   - After being run once, it will be cached and can be used off-line
    - Automatic updates when connected to the web
 - Uses the [CuraEngine] for slicing
 
@@ -49,7 +56,8 @@ Scope and limitations
 
 Because Symple Slicer is a web application, it cannot do tethered
 printing and requires a printer that can print GCODE from SD cards
-or USB flash drives.
+or USB flash drives. A desktop build using [Electron] is planned
+that should allow tethered printing and firmware flashing.
 
 Symple Slicer is not meant as a replacement for Cura for advanced
 users. Slicing is currently limited to a single extruder and the
@@ -61,18 +69,18 @@ History
 -------
 
 Symple Slicer is a spin off from earlier work done by the author
-in 2016 on a native JavaScript slicing engine. There are still
-references to a JSSlicer engine in the code. Such code isn't
-necessarily useful or functional in Symple Slicer, but is being
-kept around for posterity and/or future work.
+in 2016 on a native JavaScript slicing engine and web GUI. There
+are still references to a JSSlicer engine in the code. Such code
+isn't necessarily useful or functional in Symple Slicer, but is
+being kept around for posterity and/or future work.
 
 Re-Building CuraEngine from source
 ----------------------------------
 
 This repo contains pre-built [WebAssembly] binaries for [CuraEngine].
-If needed, these may be re-generated from the CuraEngine C++
-source (in `src-cura/`) using the `build-cura-engine.sh` shell
-script. Rebuilding the CuraEngine requires the [EMSCRIPTEN]
+If needed, these may be re-generated from the [CuraEngine] C++
+submodule (in `src-cura/`) using the `build-cura-engine.sh` shell
+script. Rebuilding the [CuraEngine] requires the [EMSCRIPTEN]
 toolchain. Refer to the documentation in [config/README.md] for
 information on upgrading the slicing engine and associated
 configuration files.
@@ -85,5 +93,6 @@ configuration files.
 [SynDaver Labs, Inc.]: https://syndaver.com
 [WebAssembly]: https://webassembly.org
 [TOML]: https://en.wikipedia.org/wiki/TOML
+[Electron]: https://www.electronjs.org/
 
 [logo]: https://github.com/SynDaverCO/symple-slicer/raw/master/images/screenshot.png "SynDaver Symple Slicer"
