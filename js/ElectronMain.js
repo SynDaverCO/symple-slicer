@@ -42,6 +42,7 @@ function createWindow () {
 //app.commandLine.appendSwitch('--enable-gpu')
 //app.commandLine.appendSwitch('--enable-logging')
 
+app.allowRendererProcessReuse = false;
 app.whenReady().then(createWindow)
 
 // Quit when all windows are closed.
