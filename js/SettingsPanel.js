@@ -764,15 +764,36 @@ class SettingsPanel {
     static async flash_archim() {
         try {
             ProgressBar.message("Loading firmware");
-            const data       = await fetchFile("firmware/flash_archim.bin");
-            const bossa      = await import('../lib/flashing-tools/bossa/bossa.js');
-            const programmer = new bossa.BOSSA();
-            const vendorId   = "03EB";
-            const productId  = "6124";
-            ProgressBar.message("Writing firmware");
+            const data         = await fetchFile("firmware/flash_archim.bin");
+            const bossa        = await import('../lib/flashing-tools/bossa/bossa.js');
+            const programmer   = new bossa.BOSSA();
+            const archimMarlin = {vendorId: "27B1", productId: "0001"};
+            const archimSamba  = {vendorId: "03EB", productId: "6124"};
+            
+            ProgressBar.message("Finding printers");
             programmer.onProgress = ProgressBar.progress;
-            await programmer.flash_by_id(vendorId, productId, data);
+            
+            // See if there are devices in the Samba bootloader
+            var matches = await programmer.find_devices(archimSamba);
+            if(matches.length == 0) {
+                // If none are found, try resetting active printers
+                matches = await programmer.find_devices(archimMarlin);
+                if(matches.length == 0) {
+                    throw Error("No printers found");
+                }
+                await programmer.reset_to_bootloader(matches[0]);
+                // See if there are now devices in the Samba bootloader
+                matches = await programmer.find_devices(archimSamba);
+                if(matches.length == 0) {
+                    throw Error("Unable to enter bootloaders");
+                }
+            }
+            await programmer.connect(matches[0]);
+            ProgressBar.message("Writing firmware");
+            await programmer.flash_firmware(data);
+            await programmer.reset_and_close();
         } catch(err) {
+            console.error(err);
             alert(err);
         } finally {
             ProgressBar.hide();
