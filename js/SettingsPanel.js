@@ -275,8 +275,11 @@ class SettingsPanel {
         s.fromSlicer(     "machine_end_gcode");
         s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
 
-        s.page(       "Flash Firmware",                              {id: "page_flash_fw"});
-        s.button(     "Flash",                                       {onclick: SettingsPanel.onFlashFirmwareClicked});
+        if(typeof process != "undefined") {
+            // If we are running inside node.js
+            s.page(       "Flash Firmware",                          {id: "page_flash_fw"});
+            s.button(     "Flash",                                   {onclick: SettingsPanel.onFlashFirmwareClicked});
+        }
 
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
@@ -758,26 +761,26 @@ class SettingsPanel {
         settings.gotoPage("page_profiles");
     }
 
-    static async flash(port, data, filename) {
-        var programmer;
-        if(filename.endsWith('.bin')) {
-            let bossa = await import('../lib/flashing-tools/bossa/bossa.js');
-            programmer = new bossa.BOSSA();
-        } else {
-            let stk = await import('../lib/flashing-tools/avr-isp/stk500v2.js');
-            let hex = await import('../lib/flashing-tools/avr-isp/intelHex.js');
-            programmer = new stk.Stk500v2();
-            data = hex.IntelHex.decode(data);
-        }
+    static async flash_archim() {
         try {
-            await programmer.connect_and_flash(port, data);
+            ProgressBar.message("Loading firmware");
+            const data       = await fetchFile("firmware/flash_archim.bin");
+            const bossa      = await import('../lib/flashing-tools/bossa/bossa.js');
+            const programmer = new bossa.BOSSA();
+            const vendorId   = "03EB";
+            const productId  = "6124";
+            ProgressBar.message("Writing firmware");
+            programmer.onProgress = ProgressBar.progress;
+            await programmer.flash_by_id(vendorId, productId, data);
         } catch(err) {
-            console.error(err);
+            alert(err);
+        } finally {
+            ProgressBar.hide();
         }
     }
 
     static onFlashFirmwareClicked() {
-        SettingsPanel.flash("COM4", "abc", "test.bin");
+        SettingsPanel.flash_archim();
     }
 
     /**
