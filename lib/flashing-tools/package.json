@@ -1,0 +1,18 @@
+{
+  "name": "flashing-tool",
+  "version": "1.0.0",
+  "description": "Utility for flashing AVR and ARM boards",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "start-debug": "electron --enable-logging .",
+    "test": "echo No tests available",
+    "install-wsl": "npm install && npm uninstall electron serialport && export npm_config_platform=win32 && npm install electron serialport && unset npm_config_platform"
+  },
+  "author": "",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "electron": "^9.0.3",
+    "serialport": "^9.0.0"
+  }
+}
