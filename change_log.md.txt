@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v1.0.5
+=============================
+
+* Updated AXI machine settings
+* Updated PLA profile with optimized support settings
+
 SynDaver Symple Slicer v1.0.4
 =============================
 
