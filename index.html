@@ -273,7 +273,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </div>
 
         <script>
-            if (Updater) {
+            if (typeof Updater != 'undefined') {
                 Updater.getVersion("#serviceWorkerVersion");
             }
 

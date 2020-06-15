@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-async flashArchimFirmware() {
+async function flashArchimFirmware() {
     try {
         ProgressBar.message("Loading firmware");
         const data         = await fetchFile("firmware/SynDaver_Axi_Marlin_R2.bin");
