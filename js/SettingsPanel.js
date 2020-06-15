@@ -478,7 +478,7 @@ class SettingsPanel {
     }
 
     static setOutputGcodeName(filename) {
-        const extension = filename.split('.').pop().toLowerCase();
+        const extension = filename.split('.').pop();
         document.getElementById("gcode_filename").value = filename.replace(extension, "gcode");
     }
 
