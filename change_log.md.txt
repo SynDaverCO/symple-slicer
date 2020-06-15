@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v1.0.6
+=============================
+
+* Allow selection of multiple objects in the file selection dialog box.
+* Object and image files are now filtered based on type.
+
 SynDaver Symple Slicer v1.0.5
 =============================
 

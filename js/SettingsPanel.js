@@ -95,7 +95,7 @@ class SettingsPanel {
 
         s.category(   "Load 3D Objects",                             {id: "place_models", open: "open"});
         s.file("Drag and drop 3D objects<br><small>(STL, OBJ or 3MF)</small>",
-                                                                     {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary'});
+                                                                     {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary', multiple: 'multiple', accept: ".stl,.obj,.3mf"});
 
         s.separator(                                                 {type: "br"});
         s.number(     "How many to place?",                          {id: "place_quantity", value: "1", min: "1", max: "50", onchange: enforceMinMax});
@@ -104,7 +104,7 @@ class SettingsPanel {
         s.category(   "Load 2D Images (as Reliefs or Lithophanes)",  {id: "place_images"});
 
         s.file("Drag and drop 2D images<br><small>(JPG, PNG, BMP or GIF)</small>",
-                                                                     {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file'});
+                                                                     {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file', 'accept': "image/*"});
 
         s.separator(                                                 {type: "br"});
         s.button(     "Create",                                      {id: "add_litho", onclick: SettingsPanel.onAddLitho});
@@ -274,6 +274,12 @@ class SettingsPanel {
         s.page(       "",                                            {id: "page_end_gcode"});
         s.fromSlicer(     "machine_end_gcode");
         s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
+
+        if(typeof process != "undefined") {
+            // If we are running inside node.js
+            s.page(       "Flash Firmware",                          {id: "page_flash_fw"});
+            s.button(     "Flash",                                   {onclick: SettingsPanel.onFlashFirmwareClicked});
+        }
 
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
@@ -753,6 +759,49 @@ class SettingsPanel {
 
     static onDoItAgainClicked() {
         settings.gotoPage("page_profiles");
+    }
+
+    static async flash_archim() {
+        try {
+            ProgressBar.message("Loading firmware");
+            const data         = await fetchFile("firmware/flash_archim.bin");
+            const bossa        = await import('../lib/flashing-tools/bossa/bossa.js');
+            const programmer   = new bossa.BOSSA();
+            const archimMarlin = {vendorId: "27B1", productId: "0001"};
+            const archimSamba  = {vendorId: "03EB", productId: "6124"};
+            
+            ProgressBar.message("Finding printers");
+            programmer.onProgress = ProgressBar.progress;
+            
+            // See if there are devices in the Samba bootloader
+            var matches = await programmer.find_devices(archimSamba);
+            if(matches.length == 0) {
+                // If none are found, try resetting active printers
+                matches = await programmer.find_devices(archimMarlin);
+                if(matches.length == 0) {
+                    throw Error("No printers found");
+                }
+                await programmer.reset_to_bootloader(matches[0]);
+                // See if there are now devices in the Samba bootloader
+                matches = await programmer.find_devices(archimSamba);
+                if(matches.length == 0) {
+                    throw Error("Unable to enter bootloaders");
+                }
+            }
+            await programmer.connect(matches[0]);
+            ProgressBar.message("Writing firmware");
+            await programmer.flash_firmware(data);
+            await programmer.reset_and_close();
+        } catch(err) {
+            console.error(err);
+            alert(err);
+        } finally {
+            ProgressBar.hide();
+        }
+    }
+
+    static onFlashFirmwareClicked() {
+        SettingsPanel.flash_archim();
     }
 
     /**
