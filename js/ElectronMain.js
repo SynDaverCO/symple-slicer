@@ -18,7 +18,7 @@
 
 // Entry point for when using SympleSlicer as an Electron app
 
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu } = require('electron')
 
 function createWindow () {
     // Create the browser window.
@@ -31,12 +31,98 @@ function createWindow () {
     })
 
     // Open the DevTools.
-    devtools = new BrowserWindow()
-    win.webContents.setDevToolsWebContents(devtools.webContents)
-    win.webContents.openDevTools({ mode: 'detach' })
+    //devtools = new BrowserWindow()
+    //win.webContents.setDevToolsWebContents(devtools.webContents)
+    //win.webContents.openDevTools({ mode: 'detach' })
 
     // and load the index.html of the app.
     win.loadFile('index.html')
+    
+    createMenu(win);
+}
+
+function createMenu(win) {
+    const isMac = process.platform === 'darwin';
+    
+    const template = [
+        ...(isMac ? [{role: 'appMenu' }] : []),
+        {
+            label: 'File',
+            submenu: [
+                {
+                    label: 'Open file(s)\u2026',
+                    accelerator: 'CommandOrControl+O',
+                    click: () => win.webContents.executeJavaScript('selectModelFiles()', true)
+                },
+                { type: 'separator' },
+                isMac ? { role: 'close' } : { role: 'quit' }
+            ]
+        },
+        // { role: 'editMenu' }
+        {
+            label: 'Edit',
+            submenu: [
+                /*{ role: 'undo', enabled: false },
+                { role: 'redo', enabled: false },
+                { type: 'separator' },*/
+                { label: 'Center Selected Object', click: () => win.webContents.executeJavaScript('stage.menuAction("center_one")') },
+                { label: 'Delete Selected Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("delete_some")') },
+                { type: 'separator' },
+                { label: 'Edit Transform Values\u2026', click: () => win.webContents.executeJavaScript('stage.menuAction("xform_some")') },
+                { type: 'separator' },
+                { label: 'Select All Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("select_all")') },
+                { label: 'Arrange All Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("arrange_all")') },
+                { label: 'Clear Build Plate', click: () => win.webContents.executeJavaScript('stage.menuAction("delete_all")') },
+            ]
+        },
+        // { role: 'viewMenu' }
+        {
+            label: 'View',
+            submenu: [
+                {label: 'Front',  click: () => win.webContents.executeJavaScript('renderLoop.setView("front")')},
+                {label: 'Left',   click: () => win.webContents.executeJavaScript('renderLoop.setView("left")')},
+                {label: 'Right',  click: () => win.webContents.executeJavaScript('renderLoop.setView("right")')},
+                {label: 'Back',   click: () => win.webContents.executeJavaScript('renderLoop.setView("back")')},
+                {label: 'Top',    click: () => win.webContents.executeJavaScript('renderLoop.setView("top")')},
+                {label: 'Bottom', click: () => win.webContents.executeJavaScript('renderLoop.setView("bottom")')},
+                { type: 'separator' },
+                { role: 'togglefullscreen' },
+                { role: 'toggledevtools' }
+            ]
+        },
+        // { role: 'viewMenu' }
+        {
+            label: 'Tasks',
+            submenu: [
+                {label: 'Select Profiles\u2026',   click: () => win.webContents.executeJavaScript('settings.gotoPage("page_profiles")')},
+                {label: 'Place Objects\u2026',     click: () => win.webContents.executeJavaScript('settings.gotoPage("page_place")')},
+                {label: 'Slice Objects\u2026',     click: () => win.webContents.executeJavaScript('settings.gotoPage("page_slice")')},
+                { type: 'separator' },
+                {label: 'Machine Setup\u2026',     click: () => win.webContents.executeJavaScript('settings.gotoPage("page_machine")')},
+                {label: 'Update Firmware\u2026',   click: () => win.webContents.executeJavaScript('settings.gotoPage("page_flash_fw")')},
+                {label: 'Advanced Features\u2026', click: () => win.webContents.executeJavaScript('settings.gotoPage("page_advanced")')},
+            ]
+        },
+        {
+            role: 'help',
+            submenu: [
+                {
+                    label: 'About Symple Slicer\u2026',
+                    click: () => win.webContents.executeJavaScript('showAbout()')
+                },
+                {
+                    label: 'About SynDaver\u2026',
+                    click: async () => {
+                        const { shell } = require('electron')
+                        await shell.openExternal('https://syndaver.com')
+                    }
+                }
+            ]
+        }
+    ]
+
+    const menu = Menu.buildFromTemplate(template)
+    Menu.setApplicationMenu(menu)
 }
 
 //app.commandLine.appendSwitch('--enable-gpu')

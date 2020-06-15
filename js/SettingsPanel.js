@@ -277,8 +277,9 @@ class SettingsPanel {
 
         if(typeof process != "undefined") {
             // If we are running inside node.js
-            s.page(       "Flash Firmware",                          {id: "page_flash_fw"});
-            s.button(     "Flash",                                   {onclick: SettingsPanel.onFlashFirmwareClicked});
+            s.page(       "Update Firmware",                         {id: "page_flash_fw"});
+            s.button(     "Update",                                  {onclick: SettingsPanel.onFlashFirmwareClicked});
+            s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
         }
 
         s.page(       "Advanced Features",                           {id: "page_advanced"});
@@ -764,7 +765,7 @@ class SettingsPanel {
     static async flash_archim() {
         try {
             ProgressBar.message("Loading firmware");
-            const data         = await fetchFile("firmware/flash_archim.bin");
+            const data         = await fetchFile("firmware/SynDaver_Axi_Marlin_R2.bin");
             const bossa        = await import('../lib/flashing-tools/bossa/bossa.js');
             const programmer   = new bossa.BOSSA();
             const archimMarlin = {vendorId: "27B1", productId: "0001"};

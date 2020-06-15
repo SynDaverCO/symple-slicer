@@ -50,27 +50,29 @@ class Stage {
         $.contextMenu({
             trigger: 'none',
             selector: 'canvas',
-            callback: (evt, key, options) => {
-                switch(key) {
-                    case "select_all"  : this.selectAll(); break;
-                    case "arrange_all" : this.arrangeAll(); break;
-                    case "delete_all"  : this.removeAll(); break;
-                    case "center_one" : this.centerSelectedObject(); break;
-                    case "delete_some" : this.removeSelectedObjects(); break;
-                    case "xform_some"  : SettingsPanel.onToolChanged("move");
-                }
-            },
+            callback: (evt, key, options) => this.menuAction(key),
             items: {
                 center_one:  {name: "Center Selected Object"},
                 delete_some: {name: "Delete Selected Objects", icon: "delete"},
                 separator1: "-----",
-                xform_some:  {name: "Edit Transform Values", icon: "edit"},
+                xform_some:  {name: "Edit Transform Values\u2026", icon: "edit"},
                 separator2: "-----",
                 select_all: {name: "Select All Objects"},
                 arrange_all: {name: "Arrange All Objects"},
                 delete_all: {name: "Clear Build Plate", icon: "delete"}
             }
         });
+    }
+
+    menuAction(key) {
+        switch(key) {
+            case "select_all"  : this.selectAll(); break;
+            case "arrange_all" : this.arrangeAll(); break;
+            case "delete_all"  : this.removeAll(); break;
+            case "center_one" : this.centerSelectedObject(); break;
+            case "delete_some" : this.removeSelectedObjects(); break;
+            case "xform_some"  : SettingsPanel.onToolChanged("move");
+        }
     }
 
     render() {
