@@ -95,7 +95,7 @@ class SettingsPanel {
 
         s.category(   "Load 3D Objects",                             {id: "place_models", open: "open"});
         s.file("Drag and drop 3D objects<br><small>(STL, OBJ or 3MF)</small>",
-                                                                     {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary'});
+                                                                     {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary', multiple: 'multiple', accept: ".stl,.obj,.3mf"});
 
         s.separator(                                                 {type: "br"});
         s.number(     "How many to place?",                          {id: "place_quantity", value: "1", min: "1", max: "50", onchange: enforceMinMax});
@@ -104,7 +104,7 @@ class SettingsPanel {
         s.category(   "Load 2D Images (as Reliefs or Lithophanes)",  {id: "place_images"});
 
         s.file("Drag and drop 2D images<br><small>(JPG, PNG, BMP or GIF)</small>",
-                                                                     {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file'});
+                                                                     {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file', 'accept': "image/*"});
 
         s.separator(                                                 {type: "br"});
         s.button(     "Create",                                      {id: "add_litho", onclick: SettingsPanel.onAddLitho});
