@@ -1,5 +1,6 @@
 {
   "name": "symple-slicer-desktop",
+  "productName": "Symple Slicer",
   "version": "1.0.0",
   "description": "A desktop version of SynDaver Symple Slicer built with Electron",
   "main": "js/ElectronMain.js",
@@ -8,7 +9,9 @@
     "start-debug": "electron --enable-logging .",
     "test": "echo No test command available",
     "install-wsl": "npm install && npm uninstall electron serialport && export npm_config_platform=win32 && npm install electron serialport && unset npm_config_platform",
-    "build": "electron-packager ."
+    "package-mac":   "electron-packager . --platform=darwin --arch=x64 --overwrite --icon=images/icon.icns      --prune=true --out=release-builds",
+    "package-win":   "electron-packager . --platform=win32  --arch=x64 --overwrite --icon=images/favicon.ico    --prune=true --out=release-builds --asar",
+    "package-linux": "electron-packager . --platform=linux  --arch=x64 --overwrite --icon=images/icon_512px.png --prune=true --out=release-builds --asar"
   },
   "repository": {
     "type": "git",
@@ -21,10 +24,10 @@
   },
   "homepage": "https://github.com/SynDaverCO/symple-slicer#readme",
   "dependencies": {
-    "electron": "^9.0.3",
     "serialport": "^9.0.0"
   },
   "devDependencies": {
+    "electron": "^9.0.3",
     "electron-rebuild": "^1.11.0",
     "electron-packager": "^14.2.1"
   }
