@@ -1,9 +1,10 @@
 SynDaver Symple Slicer v1.0.6
 =============================
 
-* Allow selection of multiple objects in the file selection dialog box.
-* Object and image files are now filtered based on type.
-* Show ".gcode" extension even when original file extension was capitalized.
+* Allow selection of multiple objects in the file selection dialog box
+* Object and image files are now filtered based on type
+* Show ".gcode" extension even when original file extension was capitalized
+* Add M73 to G-code to update progress bar while printing
 
 SynDaver Symple Slicer v1.0.5
 =============================
