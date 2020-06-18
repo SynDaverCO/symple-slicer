@@ -5,6 +5,7 @@ SynDaver Symple Slicer v1.0.6
 * Object and image files are now filtered based on type
 * Show ".gcode" extension even when original file extension was capitalized
 * Add M73 to G-code to update progress bar while printing
+* Added preliminary user's guide
 
 SynDaver Symple Slicer v1.0.5
 =============================

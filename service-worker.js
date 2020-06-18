@@ -28,7 +28,7 @@ importScripts('lib/util/misc/Wikify.js');
 
 const info = {
     version: '1.0.6',
-    release: 4
+    release: 8
 };
 
 const cacheName = 'v' + info.version + "r" + info.release;
@@ -128,7 +128,34 @@ const filesToCache = [
     'lib/util/ui/toolbar/toolbar.js',
     'lib/util/ui/ui.css',
     'lib/util/ui/updater/updater.css',
-    'lib/util/ui/updater/updater.js'
+    'lib/util/ui/updater/updater.js',
+    'guide/css/markdown.css',
+    'guide/symple_slicer_users_guide.md.txt',
+    'guide/images/advanced_features.png',
+    'guide/images/final_steps.png',
+    'guide/images/help.png',
+    'guide/images/install_chrome_app.png',
+    'guide/images/lithophane_generated.png',
+    'guide/images/lithophane_original.png',
+    'guide/images/machine_settings.png',
+    'guide/images/place_objects.png',
+    'guide/images/preview_all_layers.png',
+    'guide/images/preview_infill.png',
+    'guide/images/preview_shell.png',
+    'guide/images/preview_show_layers.png',
+    'guide/images/preview_supports.png',
+    'guide/images/preview_travel.png',
+    'guide/images/print_and_preview.png',
+    'guide/images/right_click_menu.png',
+    'guide/images/select_profiles.png',
+    'guide/images/slice_objects.png',
+    'guide/images/tool_layflat_after.png',
+    'guide/images/tool_layflat_before.png',
+    'guide/images/tool_mirror.png',
+    'guide/images/tool_move.png',
+    'guide/images/tool_rotate.png',
+    'guide/images/tool_scale.png',
+    'guide/images/view_drop_down_menu.png'
 ];
 
 self.addEventListener('install', event => {
@@ -147,37 +174,33 @@ self.addEventListener('message', event => {
     }
 });
 
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.open(cacheName).then(cache =>
-            cache.match(event.request).then(response => {
-                if (response) {
-                    // If we find it in the cache, return it unmodified.
-                    return response;
-                }
-                if (event.request.url.includes("version.json")) {
-                    return new Response(
-                        JSON.stringify(info),
-                        {headers: {"Content-Type": "text/css"}}
-                    );
-                }
-                if (event.request.url.endsWith(".md") || event.request.url.endsWith(".md.txt")) {
-                    return fetchAndModify(event.request, processMarkdown, "text/html");
-                }
-                console.log("Warning: Resource not in cache: ", event.request.url, "requested by",  event.request.referrer);
-                return fetch(event.request);
-            })
-        )
-    );
-});
+self.addEventListener('fetch', event => event.respondWith(processRequest(event.request)));
 
 function processMarkdown(str) {
     return '<html><head><meta charset="utf-8"><link rel="stylesheet" href="css/markdown.css"></head><body>' + wikify(str) + '</body></html>';
 }
 
-async function fetchAndModify(request, func, mimeType) {
-  const response = await fetch(request);
+async function processRequest(request) {
+    var cache    = await caches.open(cacheName);
+    var response = await cache.match(request);
+    if (!response) {
+        if (request.url.includes("version.json")) {
+            return new Response(
+                JSON.stringify(info),
+                {headers: {"Content-Type": "text/css"}}
+            );
+        } else {
+            console.log("Warning: Resource not in cache: ", request.url, "requested by",  request.referrer);
+            response = fetch(request);
+        }
+    }
+    if (request.url.endsWith(".md") || request.url.endsWith(".md.txt")) {
+        return modifyResponse(await response, processMarkdown, "text/html");
+    }
+    return response;
+}
 
+async function modifyResponse(response, func, mimeType) {
   // Check response is html content
   if (
     !response.headers.get("content-type") ||
@@ -194,9 +217,8 @@ async function fetchAndModify(request, func, mimeType) {
   return new Response(modified, {
     status: response.status,
     statusText: response.statusText,
-    headers: {
-        ...response.headers,
+    headers: Object.assign({
         "content-type": mimeType
-    }
+    },response.headers)
   });
 }
