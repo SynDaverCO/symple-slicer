@@ -35,19 +35,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <meta property="og:image:height"           content="630" />
     </head>
     <body>
-        <script>
-            const isElectron = typeof process != "undefined";
-            if(isElectron) {
-                console.log("Running in electron");
-            }
-        </script>
-
-        <!-- Trick for loading JQuery in Electron:
-             See: https://stackoverflow.com/questions/32621988/electron-jquery-is-not-defined
-        -->
-        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
-        <!-- End of trick -->
-
         <script src="lib/jquery/jquery-3.5.0.min.js"></script>
         <script src="lib/util/ui/updater/updater.js"></script>
         <script src="lib/three/three.min.js"></script>
@@ -111,10 +98,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="js/Stage.js"></script>
         <script src="js/SettingsPanel.js"></script>
         <script src="js/OtherUI.js"></script>
-
-        <!-- ***************** Prequisites for Electron app ***************** -->
-        <script src="js/ElectronSerial.js"></script>
-        <!-- ***************** Prequisites for Electron app ***************** -->
 
         <!-- Trick for colorizing images: https://css-tricks.com/color-filters-can-turn-your-gray-skies-blue/
              The target color is rgb(0.00 0.18 0.38) but for some reason we need to use (0.00, 0.03, 0.12) in
