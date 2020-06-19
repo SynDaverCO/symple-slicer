@@ -35,16 +35,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <meta property="og:image:height"           content="630" />
     </head>
     <body>
-        <!-- Uncomment the following when building an Electron app -->
-        <script>window.$ = window.jQuery = require('./lib/jquery/jquery-3.5.0.min.js');</script>
-        <script src="js/ElectronSerial.js"></script>
-        <!-- End of electron app section -->
-
-        <!-- Uncomment the following when building a web app -->
-        <!--<script src="lib/jquery/jquery-3.5.0.min.js"></script>
-        <script src="lib/util/ui/updater/updater.js"></script>-->
-        <!-- End of web app section -->
-
+        <script src="lib/jquery/jquery-3.5.0.min.js"></script>
+        <script src="lib/util/ui/updater/updater.js"></script>
         <script src="lib/three/three.min.js"></script>
         <script src="lib/three/OrbitControls.js"></script>
         <script src="lib/three/TransformControls.js"></script>
@@ -127,6 +119,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </canvas>
         <div id="buttons" class="dock-right dock-top">
             <button id="aboutbtn" onclick="showAbout()">About</button>
+            <button id="help" onclick="window.open('guide/symple_slicer_users_guide.md.txt');">Help</button>
             <button id="fullscreen" onclick="enterFullscreen()">Fullscreen</button>
         </div>
         <div id="settings" class="panel-style dock-right dock-bottom"></div>

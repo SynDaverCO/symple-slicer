@@ -275,8 +275,8 @@ class SettingsPanel {
         s.fromSlicer(     "machine_end_gcode");
         s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
 
-        if(typeof process != "undefined") {
-            // If we are running inside node.js
+        if(typeof flashArchimFirmware === "function") {
+            // This function only exists if we are running inside Electron
             s.page(       "Update Firmware",                         {id: "page_flash_fw"});
             s.button(     "Update",                                  {onclick: flashArchimFirmware});
             s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
