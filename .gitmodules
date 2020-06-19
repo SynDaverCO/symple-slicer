@@ -4,3 +4,6 @@
 [submodule "config/syndaver"]
 	path = config/syndaver
 	url = git@github.com:SynDaverCO/symple-slicer-profiles.git
+[submodule "guide"]
+	path = guide
+	url = git@github.com:SynDaverCO/symple-slicer-guide.git
