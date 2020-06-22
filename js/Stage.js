@@ -110,11 +110,9 @@ class Stage {
     }
 
     /**
-     * Positions an object in the center of the bed. If fudge
-     * is non-zero, it adds a random element to the position
-     * in order to aid with the packing algorithm
+     * Positions an object in the center of the bed.
      */
-    centerObjectOnPlatform(object, fudge) {
+    centerObjectOnPlatform(object) {
         this.selectNone();
 
         const center = object.geometry.boundingBox.getCenter(new THREE.Vector3());
@@ -125,10 +123,6 @@ class Stage {
         }
         object.position.x -= delta.x;
         object.position.y -= delta.y;
-        if(fudge) {
-            object.position.x += (Math.random() - 0.5) * fudge;
-            object.position.y += (Math.random() - 0.5) * fudge;
-        }
     }
 
     /**
@@ -179,8 +173,14 @@ class Stage {
 
         const inv = this.getBedMatrixWorldInverse();
         for(const [index, object] of this.objects.entries()) {
-            var sphere = this.getObjectBoundingSphere(object, inv);
-            var circle = {
+            if(lockedObject != object) {
+                // Add a small perturbation to the objects position to
+                // allow the packing algorithm to converge.
+                object.position.x += Math.random() - 0.5;
+                object.position.y += Math.random() - 0.5;
+            }
+            const sphere = this.getObjectBoundingSphere(object, inv);
+            const circle = {
                 id:       'c' + index,
                 radius:   sphere.radius,
                 position: {x: sphere.center.x, y: sphere.center.y},
@@ -356,9 +356,9 @@ class Stage {
         this.addObjects([obj]);
         this.scaleObjectToFit(obj);
         this.dropObjectToFloor(obj);
-        this.centerObjectOnPlatform(obj, 1);
+        this.centerObjectOnPlatform(obj);
         if(this.numObjects > 1) {
-            this.arrangeObjectsOnPlatform();
+            this.arrangeObjectsOnPlatform(obj);
         }
         this.render();
     }
@@ -401,7 +401,7 @@ class Stage {
             return;
         }
         const objectToCenter = this.selection.children[0];
-        this.centerObjectOnPlatform(objectToCenter, 1);
+        this.centerObjectOnPlatform(objectToCenter);
         if(this.numObjects > 1) {
             this.arrangeObjectsOnPlatform(objectToCenter);
         }
