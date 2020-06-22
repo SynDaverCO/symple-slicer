@@ -36,6 +36,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     </head>
     <body>
         <script src="lib/jquery/jquery-3.5.0.min.js"></script>
+        <script src="lib/util/misc/Wikify.js"></script>
         <script src="lib/util/ui/updater/updater.js"></script>
         <script src="lib/three/three.min.js"></script>
         <script src="lib/three/OrbitControls.js"></script>
@@ -257,7 +258,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 A new version of SynDaver Symple Slicer is available.
             </div>
             <p class="iframe-container">
-                <iframe src="change_log.md.txt">
+                <iframe id="iframe-changelog" src="change_log.md.html">
                 </iframe>
             </p>
             <div class="downloading">Downloading update... <img src="images/spinner.gif"></div>
@@ -268,6 +269,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script>
             if (typeof Updater != 'undefined') {
                 Updater.getVersion("#serviceWorkerVersion");
+                Updater.wikifyChangeLog("iframe-changelog");
             }
 
             var canvas       = document.getElementById("webgl");

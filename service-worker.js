@@ -27,8 +27,8 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    version: '1.0.6',
-    release: 10
+    version: '1.0.7',
+    release: 6
 };
 
 const cacheName = 'v' + info.version + "r" + info.release;
@@ -158,6 +158,8 @@ const filesToCache = [
     'guide/images/view_drop_down_menu.png'
 ];
 
+console.log('Service worker starting');
+
 self.addEventListener('install', event => {
     console.log('Attempting to install service worker and cache static assets');
     event.waitUntil(
@@ -181,6 +183,10 @@ function processMarkdown(str) {
 }
 
 async function processRequest(request) {
+    const autoWikify = request.url.endsWith(".md.html") || request.url.endsWith(".md.txt"); 
+    if (autoWikify) {
+        request = new Request(request.url.replace(".md.html", ".md"));
+    }
     var cache    = await caches.open(cacheName);
     var response = await cache.match(request);
     if (!response) {
@@ -194,7 +200,7 @@ async function processRequest(request) {
             response = fetch(request);
         }
     }
-    if (request.url.endsWith(".md") || request.url.endsWith(".md.txt")) {
+    if(autoWikify) {
         return modifyResponse(await response, processMarkdown, "text/html");
     }
     return response;

@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.7
+=============================
+
+* Now shows change log on first run
+
 SynDaver Symple Slicer v1.0.6
 =============================
 
