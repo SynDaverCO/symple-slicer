@@ -181,10 +181,11 @@ class SettingsPanel {
         s.fromSlicer(       "material_print_temperature_layer_0");
         s.fromSlicer(       "material_bed_temperature");
         s.fromSlicer(       "material_bed_temperature_layer_0");
-        s.fromSlicer(       "material_part_removal_temperature");
         s.fromSlicer(       "material_probe_temperature");
         s.fromSlicer(       "material_soften_temperature");
         s.fromSlicer(       "material_wipe_temperature");
+        s.fromSlicer(       "material_part_removal_temperature");
+        s.fromSlicer(       "material_keep_part_removal_temperature");
 
         s.category(   "Cooling");
         s.fromSlicer(       "cool_fan_enabled");

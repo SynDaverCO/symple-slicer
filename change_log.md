@@ -3,6 +3,8 @@ SynDaver Symple Slicer v1.0.7
 
 * Now shows change log on first run
 * Consolidated help info in help panel
+* Added "Keep heating" checkbox to temperature category
+* Fixed settings propagation on part removal temperature
 
 SynDaver Symple Slicer v1.0.6
 =============================
