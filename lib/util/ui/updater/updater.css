@@ -15,7 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
+#update-app-dialog {
+    min-width:          50%;
+}
+
 #update-app-dialog:not([data-state]), #update-app-dialog .downloading, 
 #update-app-dialog .ready, #update-app-dialog .okay {
     display:            none;

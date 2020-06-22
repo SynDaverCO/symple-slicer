@@ -305,10 +305,18 @@ class SettingsPanel {
         s.button(     "Apply",                                       {id: "import_settings", onclick: SettingsPanel.onImportClicked});
         s.buttonHelp( "Importing settings from a file will override all printer &amp; material presets.");
 
-        s.page(       "Help",                                        {id: "page_help"});
+        s.page(       "Help & Information",                          {id: "page_help"});
+
+        s.heading(    "Help & Information:");
+        s.button(     "About",                                       {onclick: showAbout});
+        s.button(     "User's Guide",                                {onclick: showUserGuide});
+        s.button(     "Change Log",                                  {onclick: Updater.showReleaseNotes});
 
         s.heading(    "View Controls:");
         s.element(                                                   {id: "help-viewport"});
+
+        s.footer();
+        s.button(     "Back",                                        {onclick: SettingsPanel.onHelpDismissed});
 
         s.done();
 
@@ -760,6 +768,14 @@ class SettingsPanel {
 
     static onDoItAgainClicked() {
         settings.gotoPage("page_profiles");
+    }
+
+    static goToHelp() {
+        settings.gotoPage("page_help");
+    }
+
+    static onHelpDismissed() {
+        settings.goBack();
     }
 
     /**

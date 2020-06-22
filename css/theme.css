@@ -94,6 +94,11 @@ input, select {
     width:              150px;
 }
 
+#help-viewport {
+    margin-left:auto;
+    margin-right:auto;
+}
+
 .warning {
     padding:            1em;
     color:              red;

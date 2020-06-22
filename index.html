@@ -119,8 +119,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             Sorry, your browser does not support the HTML canvas.
         </canvas>
         <div id="buttons" class="dock-right dock-top">
-            <button id="aboutbtn" onclick="showAbout()">About</button>
-            <button id="help" onclick="window.open('guide/symple_slicer_users_guide.md.txt');">Help</button>
+            <button id="help" onclick="SettingsPanel.goToHelp();">Help</button>
             <button id="fullscreen" onclick="enterFullscreen()">Fullscreen</button>
         </div>
         <div id="settings" class="panel-style dock-right dock-bottom"></div>
@@ -254,8 +253,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </div>
 
         <div id="update-app-dialog" class="float-center panel-style">
-            <div class="header">
+            <div class="downloading ready">
                 A new version of SynDaver Symple Slicer is available.
+            </div>
+            <div class="okay">
+                Symple Slicer release notes.
             </div>
             <p class="iframe-container">
                 <iframe id="iframe-changelog" src="change_log.md.html">
@@ -263,7 +265,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             </p>
             <div class="downloading">Downloading update... <img src="images/spinner.gif"></div>
             <div class="ready"><button onclick="Updater.update()">Update!</button></div>
-            <div class="okay"><button onclick="Updater.okay()">Okay!</button></div>
+            <div class="okay"><button onclick="Updater.okay()">Close</button></div>
         </div>
 
         <script>
@@ -346,6 +348,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 SettingsPanel.setPrintTime(stats.time_hms);
                 SettingsPanel.setPrintFilament(stats.filament);
                 SettingsPanel.setPrintBounds(stats.bounds);
+            }
+
+            function showUserGuide() {
+                window.open('guide/symple_slicer_users_guide.md.txt');
             }
 
             // Triggers for electron app

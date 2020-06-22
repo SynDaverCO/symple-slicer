@@ -2,6 +2,7 @@ SynDaver Symple Slicer v1.0.7
 =============================
 
 * Now shows change log on first run
+* Consolidated help info in help panel
 
 SynDaver Symple Slicer v1.0.6
 =============================
