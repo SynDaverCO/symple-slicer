@@ -19,6 +19,7 @@
 // Entry point for when using SympleSlicer as an Electron app
 
 const { app, BrowserWindow, Menu } = require('electron')
+const path = require('path')
 
 function createWindow () {
     // Create the browser window.
@@ -26,9 +27,12 @@ function createWindow () {
         width: 800,
         height: 600,
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: false,
+            contextIsolation: false,
+            enableremotemodule: false,
+            preload: path.join(__dirname, 'ElectronPreload.js')
         }
-    })
+    });
 
     // Open the DevTools.
     //devtools = new BrowserWindow()
