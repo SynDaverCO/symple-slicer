@@ -92,7 +92,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <!-- ****************** Prequisites for Electron app ****************** -->
         <script src="js/ElectronSerial.js"></script>
         <!-- ****************** Prequisites for Electron app ****************** -->
-        
+
         <link rel="stylesheet" type="text/css" href="css/layout.css">
         <link rel="stylesheet" type="text/css" href="css/theme.css">
 
@@ -122,7 +122,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <canvas id="webgl">
             Sorry, your browser does not support the HTML canvas.
         </canvas>
-        <div id="buttons" class="dock-right dock-top">
+        <div id="buttons" class="dock-right dock-top webapp-only">
             <button id="help" onclick="SettingsPanel.goToHelp();">Help</button>
             <button id="fullscreen" onclick="enterFullscreen()">Fullscreen</button>
         </div>
@@ -277,6 +277,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 Updater.getVersion("#serviceWorkerVersion");
                 Updater.wikifyChangeLog("iframe-changelog");
             }
+
+            // Selector based on whether we are running as a desktop app or webapp-only
+
+            const isDesktop = typeof flashArchimFirmware === "function";
+            $("BODY").attr('data-platform', isDesktop ? 'desktop' : 'webapp');
 
             var canvas       = document.getElementById("webgl");
             var stage        = new Stage();

@@ -235,15 +235,27 @@ class SettingsPanel {
         s.slider(         "Show layer",                              {id: "preview_layer", oninput: SettingsPanel.onUpdateLayer});
         s.number(         "Top layer",                               {id: "current_layer"});
 
-        s.category(   "Save Options",                                {open: "open"});
-        s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode"});
+        s.category(   "Print Options",                               {open: "open"});
+        let attr = {name: "print_destination", className: "desktop-only", onchange: SettingsPanel.onOutputChanged};
+        s.radio( "Send to connected printer:",                       {...attr, value: "printer"});
+        s.radio( "Save to GCODE file:",                              {...attr, value: "file", checked: "checked"});
+        s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode", className: "save-to-file webapp-only"});
+        s.category();
+
         s.element(                                                   {id: "gcode-out-of-bounds"});
 
         s.footer();
+        s.div({className: "save-to-file"});
         s.button(     "Save",                                        {onclick: SettingsPanel.onDownloadClicked});
         s.buttonHelp( "Click this button to save a G-code file for your 3D printer.");
+        s.div();
 
-        s.page(       "Final Steps",                                 {id: "page_finished"});
+        s.div({className: "save-to-printer"});
+        s.button(     "Print",                                       {onclick: SettingsPanel.onDownloadClicked});
+        s.buttonHelp( "Click this button to print to a USB attached printer");
+        s.div();
+
+        s.page( null,                                                {id: "page_finished"});
         s.element(                                                   {id: "help-post-print"});
 
         s.page(       "Machine Settings",                            {id: "page_machine"});
@@ -276,8 +288,7 @@ class SettingsPanel {
         s.fromSlicer(     "machine_end_gcode");
         s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
 
-        if(typeof flashArchimFirmware === "function") {
-            // This function only exists if we are running inside Electron
+        if(isDesktop) {
             s.page(       "Update Firmware",                         {id: "page_flash_fw"});
             s.button(     "Update",                                  {onclick: flashArchimFirmware});
             s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
@@ -295,7 +306,7 @@ class SettingsPanel {
         s.toggle(         "Show implicit values as comments",        {id: "export_with_unchanged",
            tooltip: "Include all values, including those absent in profiles and unchanged by the user. This provides documentation for values that may have been implicitly computed from other settings."});
         s.separator(                                                 {type: "br"});
-        s.text(       "Save as:",                                    {id: "export_filename", value: "config.toml"});
+        s.text(       "Save as:",                                    {id: "export_filename", value: "config.toml", className: "webapp-only"});
         s.separator(                                                 {type: "br"});
         s.button(     "Export",                                      {onclick: SettingsPanel.onExportClicked});
         s.buttonHelp( "Click this button to save current settings to a file on your computer.");
@@ -330,6 +341,7 @@ class SettingsPanel {
         SettingsPanel.onImportChange(); // Disable buttons
         settings.enable(".requires_objects", false);
         SettingsPanel.loadProfileList(printer_menu, material_menu);
+        SettingsPanel.onOutputChanged();
 
         // Set up the global drag and drop handler
         window.addEventListener("dragover",function(e){
@@ -736,8 +748,12 @@ class SettingsPanel {
         SettingsPanel.onUpdatePreview();
     }
 
+    static onOutputChanged(e) {
+        $(settings.ui).attr('data-output', e ? e.target.value : 'file');
+    }
+
     static onDownloadClicked() {
-        var fileName = settings.get("gcode_filename");
+        let fileName = settings.get("gcode_filename");
         saveAs(gcode_blob, fileName);
         settings.gotoPage("page_finished");
     }

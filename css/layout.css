@@ -49,6 +49,22 @@ hr {
     margin-top:         3px;
 }
 
+.settings-ui[data-output="file"] .save-to-printer {
+    display: none;
+}
+
+.settings-ui[data-output="printer"] .save-to-file {
+    display: none;
+}
+
+BODY[data-platform="webapp"] .desktop-only {
+    display: none;
+}
+
+BODY[data-platform="desktop"] .webapp-only {
+    display: none;
+}
+
 #about {
     padding:            2em;
     padding-top:        0;

@@ -114,14 +114,14 @@ input, select {
     font-size:          150%;
 }
 
-.axis_r {
+.axis_r input, button.axis_r {
     outline: 1px solid red;
 }
 
-.axis_g {
+.axis_g input, button.axis_g {
     outline: 1px solid green;
 }
 
-.axis_b {
+.axis_b input, button.axis_b {
     outline: 1px solid blue;
 }
