@@ -20,7 +20,7 @@ async function flashArchimFirmware() {
     try {
         ProgressBar.message("Loading firmware");
         const data         = await fetchFile("firmware/SynDaver_Axi_Marlin_R2.bin");
-        const bossa        = await import('../lib/flashing-tools/bossa/bossa.js');
+        const bossa        = await import('../lib/serial-tools/bossa/bossa.js');
         const programmer   = new bossa.BOSSA();
         const archimMarlin = {vendorId: "27B1", productId: "0001"};
         const archimSamba  = {vendorId: "03EB", productId: "6124"};
