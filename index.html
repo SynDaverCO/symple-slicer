@@ -280,7 +280,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             // Selector based on whether we are running as a desktop app or webapp-only
 
-            const isDesktop = typeof flashArchimFirmware === "function";
+            const isDesktop = typeof SequentialSerial !== 'undefined';
             $("BODY").attr('data-platform', isDesktop ? 'desktop' : 'webapp');
 
             var canvas       = document.getElementById("webgl");
