@@ -162,6 +162,7 @@ class SettingsPanel {
 
         s.category(   "Print Speed");
         s.fromSlicer(       "layer_height");
+        s.fromSlicer(       "layer_height_0");
         s.fromSlicer(       "speed_print");
         s.fromSlicer(       "speed_layer_0");
         s.fromSlicer(       "speed_travel");
@@ -175,6 +176,7 @@ class SettingsPanel {
         s.fromSlicer(       "top_bottom_pattern");
         s.fromSlicer(       "top_bottom_pattern_0");
         s.fromSlicer(       "z_seam_type");
+        s.fromSlicer(       "infill_before_walls");
         s.fromSlicer(       "ironing_enabled");
 
         s.category(   "Retraction");

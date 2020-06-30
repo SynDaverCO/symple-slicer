@@ -6,6 +6,8 @@ SynDaver Symple Slicer v1.0.7
 * Added "Keep heating" checkbox to temperature category
 * Fixed settings propagation on part removal temperature
 * Correct slight position variations when centering objects
+* Use radio buttons in "Place Objects" panel
+* Added "Infill before walls" and "Initial Layer Height"
 
 SynDaver Symple Slicer v1.0.6
 =============================

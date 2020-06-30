@@ -31,7 +31,7 @@ getFiles() {
                                             {sub(/\?.*$/, "", $2); if(PRINT) print $2}
     ' service-worker.js | sed '/^\.$/ c index.html'
     echo service-worker.js
-    echo change_log.md.txt
+    echo change_log.md
     echo images/screenshot.png
     echo LICENSE.txt
 }
