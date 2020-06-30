@@ -93,21 +93,28 @@ class SettingsPanel {
 
         s.page("Place Objects",                                      {id: "page_place"});
 
-        s.category(   "Load 3D Objects",                             {id: "place_models", open: "open"});
+        let attr = {name: "load_source", onchange: SettingsPanel.onLoadTypeChanged};
+        s.radio( "Load 3D objects:",                                 {...attr, value: "3d", checked: "checked"});
+        s.radio( "Load 2D images (as reliefs or lithophanes):",      {...attr, value: "2d"});
+        s.separator();
+
+        s.div({id: "load_models"});
         s.file("Drag and drop 3D objects<br><small>(STL, OBJ or 3MF)</small>",
                                                                      {id: "model_file", onchange: SettingsPanel.onDropModel, mode: 'binary', multiple: 'multiple', accept: ".stl,.obj,.3mf"});
 
-        s.separator(                                                 {type: "br"});
-        s.number(     "How many to place?",                          {id: "place_quantity", value: "1", min: "1", max: "50", onchange: enforceMinMax});
+        s.category("Place More");
+        s.number(     "How many more to place?",                     {id: "place_quantity", value: "1", min: "1", max: "50", onchange: enforceMinMax});
         s.button(     "Place more",                                  {className: "place_more", onclick: SettingsPanel.onAddToPlatform});
+        s.div();
 
-        s.category(   "Load 2D Images (as Reliefs or Lithophanes)",  {id: "place_images"});
-
+        s.div({id: "load_images"});
         s.file("Drag and drop 2D images<br><small>(JPG, PNG, BMP or GIF)</small>",
                                                                      {id: "image_file", onchange: SettingsPanel.onDropImage, mode: 'file', 'accept': "image/*"});
 
         s.separator(                                                 {type: "br"});
         s.button(     "Create",                                      {id: "add_litho", onclick: SettingsPanel.onAddLitho});
+        s.div();
+
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: SettingsPanel.onGotoSliceClicked});
         s.buttonHelp( "Click this button to proceed to slicing.");
@@ -236,7 +243,7 @@ class SettingsPanel {
         s.number(         "Top layer",                               {id: "current_layer"});
 
         s.category(   "Print Options",                               {open: "open"});
-        let attr = {name: "print_destination", className: "desktop-only", onchange: SettingsPanel.onOutputChanged};
+        attr = {name: "print_destination", className: "desktop-only", onchange: SettingsPanel.onOutputChanged};
         s.radio( "Send to connected printer:",                       {...attr, value: "printer"});
         s.radio( "Save to GCODE file:",                              {...attr, value: "file", checked: "checked"});
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode", className: "save-to-file webapp-only"});
@@ -342,6 +349,7 @@ class SettingsPanel {
         settings.enable(".requires_objects", false);
         SettingsPanel.loadProfileList(printer_menu, material_menu);
         SettingsPanel.onOutputChanged();
+        SettingsPanel.onLoadTypeChanged();
 
         // Set up the global drag and drop handler
         window.addEventListener("dragover",function(e){
@@ -501,6 +509,18 @@ class SettingsPanel {
     static setOutputGcodeName(filename) {
         const extension = filename.split('.').pop();
         document.getElementById("gcode_filename").value = filename.replace(extension, "gcode");
+    }
+
+    static onLoadTypeChanged(e) {
+        let mode = e ? (typeof e == "string" ? e : e.target.value) : '3d';
+        switch(mode) {
+            case '3d': $("#load_models").show(); $("#load_images").hide(); break;
+            case '2d': $("#load_models").hide(); $("#load_images").show(); break;
+        }
+        if(typeof e == "string") {
+            $('[name="load_source"]').removeAttr('checked');
+            $("input[name=load_source][value=" + mode + "]").prop('checked', true);
+        }
     }
 
     static onDropModel(data, filename) {
@@ -810,7 +830,7 @@ class SettingsPanel {
                 case 'obj':
                 case '3mf':
                     settings.gotoPage("page_place");
-                    settings.expand("place_models");
+                    SettingsPanel.onLoadTypeChanged("3d");
                     id = "model_file";
                     break;
                 case 'toml':
@@ -824,7 +844,7 @@ class SettingsPanel {
                 case 'bmp':
                 case 'gif':
                     settings.gotoPage("page_place");
-                    settings.expand("place_images");
+                    SettingsPanel.onLoadTypeChanged("2d");
                     id = "image_file";
                     break;
             }
