@@ -165,6 +165,9 @@ class SettingsPanel {
         s.fromSlicer(       "layer_height_0");
         s.fromSlicer(       "speed_print");
         s.fromSlicer(       "speed_layer_0");
+        s.fromSlicer(       "speed_infill");
+        s.fromSlicer(       "speed_wall");
+        s.fromSlicer(       "speed_support");
         s.fromSlicer(       "speed_travel");
         s.fromSlicer(       "speed_travel_layer_0");
 
@@ -210,6 +213,10 @@ class SettingsPanel {
         s.fromSlicer(       "support_pattern");
         s.fromSlicer(       "support_infill_rate");
         s.fromSlicer(       "support_angle");
+        s.fromSlicer(       "support_z_distance");
+        s.fromSlicer(       "support_xy_distance");
+        s.fromSlicer(       "support_xy_distance_overhang");
+        s.fromSlicer(       "support_interface_skip_height");
         s.fromSlicer(       "adhesion_type");
         s.fromSlicer(       "brim_width");
         s.fromSlicer(       "brim_gap");
