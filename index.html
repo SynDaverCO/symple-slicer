@@ -360,7 +360,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
 
             function showUserGuide() {
-                window.open('guide/symple_slicer_users_guide.md.txt');
+                let win = window.open('guide/symple_slicer_users_guide.md.txt', '', 'menubar=no');
+                if(isDesktop) {
+                    // When running as a desktop app there is no service worker
+                    // to wikify the contents, so we need to do it ourselves.
+                    win.addEventListener('load', wikifyOnLoad, false);
+                }
             }
 
             // Triggers for electron app

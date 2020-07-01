@@ -30,7 +30,8 @@ function createWindow () {
             nodeIntegration: false,
             contextIsolation: false,
             enableremotemodule: false,
-            preload: path.join(__dirname, 'ElectronPreload.js')
+            preload: path.join(__dirname, 'ElectronPreload.js'),
+            nativeWindowOpen: true
         }
     });
 
@@ -111,9 +112,18 @@ function createMenu(win) {
             role: 'help',
             submenu: [
                 {
-                    label: 'About Symple Slicer\u2026',
+                    label: "About Symple Slicer\u2026",
                     click: () => win.webContents.executeJavaScript('showAbout()')
                 },
+                {
+                    label: "User's Guide\u2026",
+                    click: () => win.webContents.executeJavaScript('showUserGuide()')
+                },
+                {
+                    label: "Change Log\u2026",
+                    click: () => win.webContents.executeJavaScript('Updater.showReleaseNotes()')
+                },
+                { type: 'separator' },
                 {
                     label: 'About SynDaver\u2026',
                     click: async () => {
