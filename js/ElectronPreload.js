@@ -106,8 +106,20 @@ class SequentialSerial {
     /**
      * Returns a promise that resolves to a list of available ports.
      */
-    static getPorts() {
+    static getPorts(filter) {
         return SerialPort.list();
+    }
+
+    static async matchPorts(filter) {
+        var matchingDevices = [];
+        const ports = await SequentialSerial.getPorts();
+        for(let i = 0; i < ports.length; i++) {
+            if(filter.hasOwnProperty("vendorId")  && ports[i].vendorId  != filter.vendorId)  continue;
+            if(filter.hasOwnProperty("productId") && ports[i].productId != filter.productId) continue;
+            if(filter.hasOwnProperty("path")      && ports[i].path      != filter.path)      continue;
+            matchingDevices.push(ports[i].path);
+        }
+        return matchingDevices;
     }
 }
 

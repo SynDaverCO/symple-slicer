@@ -54,3 +54,50 @@ async function flashArchimFirmware() {
         ProgressBar.hide();
     }
 }
+
+async function stream_gcode(gcode) {
+    try {
+        const marlin = await import('../lib/serial-tools/gcode-sender/MarlinSerialProtocol.js');
+        const archimMarlin = {vendorId: "27B1", productId: "0001"};
+
+        // Find an Archim board to connect to
+        
+        ProgressBar.message("Finding printers");
+        const matches = await SequentialSerial.matchPorts(archimMarlin);
+        if(matches.length == 0) {
+            throw Error("No printers found");
+        }
+        let port = matches[0];
+
+        // Connect to the printer
+        console.log("Found printer on port", port);
+        let sio = new SequentialSerial();
+        await sio.open(port, 250000, 3, 10000);
+        await sio.wait(10000);
+        console.log("Beginning to stream")
+
+        const proto = new marlin.MarlinSerialProtocol(sio, console.log, console.log);
+
+        // Split into individual lines
+        gcode = gcode.split(/\r?\n/);
+
+        // Stream the GCODE
+        ProgressBar.message("Printing");
+        for(const [i, line] of gcode.entries()) {
+            console.log("Sending line", i, "of", gcode.length);
+            await proto.sendCmdReliable(line);
+            while(!await proto.clearToSend()) {
+                await proto.readline();
+            }
+
+            if(i % 100 == 0) {
+                ProgressBar.progress(i/gcode.length);
+            }
+        }
+    } catch(err) {
+        console.error(err);
+        alert(err);
+    } finally {
+        ProgressBar.hide();
+    }
+}

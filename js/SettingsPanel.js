@@ -260,7 +260,7 @@ class SettingsPanel {
         s.div();
 
         s.div({className: "save-to-printer"});
-        s.button(     "Print",                                       {onclick: SettingsPanel.onDownloadClicked});
+        s.button(     "Print",                                       {onclick: SettingsPanel.onPrintClicked});
         s.buttonHelp( "Click this button to print to a USB attached printer");
         s.div();
 
@@ -778,6 +778,13 @@ class SettingsPanel {
         let fileName = settings.get("gcode_filename");
         saveAs(gcode_blob, fileName);
         settings.gotoPage("page_finished");
+    }
+
+    static onPrintClicked() {
+        gcode_blob.text().then(str => {
+            stream_gcode(str);
+            settings.gotoPage("page_finished"); 
+        });
     }
 
     static onPageExit(page) {
