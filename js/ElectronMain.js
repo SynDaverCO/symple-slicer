@@ -40,15 +40,28 @@ function createWindow () {
     //win.webContents.setDevToolsWebContents(devtools.webContents)
     //win.webContents.openDevTools({ mode: 'detach' })
 
+    // Open external links in external browsers
+    let handleRedirect = (e, url) => {
+      if(url.startsWith('http:') || url.startsWith('https:')) {
+        if(url.match(/^[\w-.\/:]*$/)) {
+            require('electron').shell.openExternal(url);
+        }
+        e.preventDefault();
+      }
+    }
+
+    win.webContents.on('will-navigate', handleRedirect)
+    win.webContents.on('new-window', handleRedirect)
+
     // and load the index.html of the app.
     win.loadFile('index.html')
-    
+
     createMenu(win);
 }
 
 function createMenu(win) {
     const isMac = process.platform === 'darwin';
-    
+
     const template = [
         ...(isMac ? [{role: 'appMenu' }] : []),
         {
