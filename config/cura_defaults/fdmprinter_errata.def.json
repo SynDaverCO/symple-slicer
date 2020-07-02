@@ -9,6 +9,8 @@
         "speed_travel":                     {"value":         null},
         "speed_travel_layer_0":             {"value":         null},
         "wall_thickness":                   {"value":         "1 if magic_spiralize else 2 * line_width"},
+        "speed_wall":                       {"value":         "speed_print"},
+        "speed_topbottom":                  {"value":         "speed_print"},
         "speed_wall_x":                     {"value":         "speed_wall"}
     }
 }

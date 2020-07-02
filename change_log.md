@@ -7,7 +7,10 @@ SynDaver Symple Slicer v1.0.7
 * Fixed settings propagation on part removal temperature
 * Correct slight position variations when centering objects
 * Use radio buttons in "Place Objects" panel
-* Added "Infill before walls" and "Initial Layer Height"
+* Added "Infill Before Walls" to "Shell"
+* Added "Support Z Distance", "Support X/Y Distance", "Minimum Support X/Y Distance" and "Support Interface Resolution" to "Support"
+* Added "Initial Layer Height", "Wall Speed", "Infill Speed" and "Support Speed" to "Print Speed"
+* In config files, default "speed_wall" and "speed_topbottom" to "print_speed"
 
 SynDaver Symple Slicer v1.0.6
 =============================
