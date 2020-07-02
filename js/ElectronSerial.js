@@ -73,8 +73,6 @@ async function stream_gcode(gcode) {
         console.log("Found printer on port", port);
         let sio = new SequentialSerial();
         await sio.open(port, 250000, 3, 10000);
-        await sio.wait(10000);
-        console.log("Beginning to stream")
 
         const proto = new marlin.MarlinSerialProtocol(sio, console.log, console.log);
 
@@ -84,15 +82,15 @@ async function stream_gcode(gcode) {
         // Stream the GCODE
         ProgressBar.message("Printing");
         for(const [i, line] of gcode.entries()) {
-            console.log("Sending line", i, "of", gcode.length);
             await proto.sendCmdReliable(line);
             while(!await proto.clearToSend()) {
-                await proto.readline();
+                let line = await proto.readline();
+                line = line.trim();
+                if(line && !line.startsWith("ok")) {
+                    console.log(line);
+                }
             }
-
-            if(i % 100 == 0) {
-                ProgressBar.progress(i/gcode.length);
-            }
+            ProgressBar.progress(i/gcode.length);
         }
     } catch(err) {
         console.error(err);
