@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+/************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
+
 const SerialPort = require('serialport');
 
 class SequentialSerial {
@@ -122,5 +124,7 @@ class SequentialSerial {
         return matchingDevices;
     }
 }
+
+/************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
 window.SequentialSerial = SequentialSerial;
