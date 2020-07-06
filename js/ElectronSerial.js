@@ -16,29 +16,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-async function flashArchimFirmware() {
+async function flashArchimFirmware(usb) {
     try {
-        ProgressBar.message("Loading firmware");
-        const data         = await fetchFile("firmware/SynDaver_Axi_Marlin_R2.bin");
+        ProgressBar.message("Loading firmware", usb.firmware);
+        const data         = await fetchFile(usb.firmware);
         const bossa        = await import('../lib/serial-tools/bossa/bossa.js');
         const programmer   = new bossa.BOSSA();
-        const archimMarlin = {vendorId: "27B1", productId: "0001"};
-        const archimSamba  = {vendorId: "03EB", productId: "6124"};
-        
+        const usb_marlin   = {vendorId: usb.marlin_vendor_id, productId: usb.marlin_product_id};
+        const usb_samba    = {vendorId: usb.samba_vendor_id,  productId: usb.samba_product_id};
+
         ProgressBar.message("Finding printers");
         programmer.onProgress = ProgressBar.progress;
-        
+
         // See if there are devices in the Samba bootloader
-        var matches = await programmer.find_devices(archimSamba);
+        var matches = await programmer.find_devices(usb_samba);
         if(matches.length == 0) {
             // If none are found, try resetting active printers
-            matches = await programmer.find_devices(archimMarlin);
+            matches = await programmer.find_devices(usb_marlin);
             if(matches.length == 0) {
                 throw Error("No printers found");
             }
             await programmer.reset_to_bootloader(matches[0]);
             // See if there are now devices in the Samba bootloader
-            matches = await programmer.find_devices(archimSamba);
+            matches = await programmer.find_devices(usb_samba);
             if(matches.length == 0) {
                 throw Error("Unable to enter bootloaders");
             }
@@ -47,23 +47,34 @@ async function flashArchimFirmware() {
         ProgressBar.message("Writing firmware");
         await programmer.flash_firmware(data);
         await programmer.reset_and_close();
-    } catch(err) {
-        console.error(err);
-        alert(err);
     } finally {
         ProgressBar.hide();
     }
 }
 
+async function flashFirmware() {
+    if(!ProfileManager.usb) {
+        throw Error("No serial port information for this profile");
+    }
+    switch(ProfileManager.usb.flasher) {
+        case "bossa": await flashArchimFirmware(ProfileManager.usb); break;
+    }
+}
+
 async function stream_gcode(gcode) {
+    if(!ProfileManager.usb) {
+        throw Error("No serial port information for this profile");
+    }
+    const usb = ProfileManager.usb;
+
     try {
         const marlin = await import('../lib/serial-tools/gcode-sender/MarlinSerialProtocol.js');
-        const archimMarlin = {vendorId: "27B1", productId: "0001"};
 
         // Find an Archim board to connect to
-        
+
+        const usb_marlin   = {vendorId: usb.marlin_vendor_id, productId: usb.marlin_product_id};
         ProgressBar.message("Finding printers");
-        const matches = await SequentialSerial.matchPorts(archimMarlin);
+        const matches = await SequentialSerial.matchPorts(usb_marlin);
         if(matches.length == 0) {
             throw Error("No printers found");
         }
@@ -74,7 +85,7 @@ async function stream_gcode(gcode) {
         // Connect to the printer
         console.log("Found printer on port", port);
         let sio = new SequentialSerial();
-        await sio.open(port, 250000, 3, 10000);
+        await sio.open(port, usb.baudrate, 3, 10000);
 
         const proto = new marlin.MarlinSerialProtocol(sio, console.log, console.log);
 
@@ -94,9 +105,6 @@ async function stream_gcode(gcode) {
             }
             ProgressBar.progress(i/gcode.length);
         }
-    } catch(err) {
-        console.error(err);
-        alert(err);
     } finally {
         ProgressBar.hide();
         setPowerSaveEnabled(true);

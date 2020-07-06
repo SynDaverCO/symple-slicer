@@ -307,7 +307,7 @@ class SettingsPanel {
 
         if(isDesktop) {
             s.page(       "Update Firmware",                         {id: "page_flash_fw"});
-            s.button(     "Update",                                  {onclick: flashArchimFirmware});
+            s.button(     "Update",                                  {onclick: SettingsPanel.onFlashClicked});
             s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
         }
 
@@ -372,16 +372,16 @@ class SettingsPanel {
     static async initProfiles(printer_menu, material_menu) {
         try {
             await ProfileManager.populateProfileMenus(printer_menu, material_menu);
+
+            if(ProfileManager.loadStoredProfile()) {
+                SettingsPanel.onPrinterSizeChanged();
+            } else {
+                // If no startup profile is found, load first profile from the selection box
+                SettingsPanel.onApplyPreset();
+            }
         } catch(error) {
             alert(error);
             console.error(error);
-        }
-
-        if(ProfileManager.loadStoredProfile()) {
-            SettingsPanel.onPrinterSizeChanged();
-        } else {
-            // If no startup profile is found, load first profile from the selection box
-            SettingsPanel.onApplyPreset();
         }
 
         window.onunload = ProfileManager.onUnloadHandler;
@@ -741,11 +741,23 @@ class SettingsPanel {
         settings.gotoPage("page_finished");
     }
 
-    static onPrintClicked() {
-        gcode_blob.text().then(str => {
-            stream_gcode(str);
+    static async onFlashClicked() {
+        try {
+            await flashFirmware();
+        } catch(err) {
+            console.error(err);
+            alert(err);
+        }
+    }
+
+    static async onPrintClicked() {
+        try {
+            await stream_gcode(await gcode_blob.text());
             settings.gotoPage("page_finished");
-        });
+        } catch(err) {
+            console.error(err);
+            alert(err);
+        }
     }
 
     static onPageExit(page) {

@@ -18,6 +18,27 @@
  */
 
 class ProfileManager {
+    static _loadProfileStr(str) {
+        const config = toml.parse(str);
+        if(config.hasOwnProperty("usb")) {
+            ProfileManager.usb = config.usb;
+        }
+        if(config.hasOwnProperty("settings")) {
+            slicer.setMultiple(config.settings);
+        }
+    }
+
+    static _saveProfileStr(options) {
+        const toml = new TOMLFormatter();
+        if(ProfileManager.usb) {
+            toml.writeCategory("usb");
+            toml.writeProperties(ProfileManager.usb);
+        }
+        toml.writeCategory("settings");
+        slicer.dumpSettings(toml, options);
+        return toml.str;
+    }
+
     /**
      * The stored profile is saved in the browser's local store
      * and is used to preserve settings across multiple sessions
@@ -29,18 +50,17 @@ class ProfileManager {
     static loadStoredProfile() {
         if(typeof(Storage) === "undefined") return false;
 
-        var stored_config = localStorage.getItem("startup_config");
+        const stored_config = localStorage.getItem("startup_config");
         if(!stored_config) return false;
 
         console.log("Loaded settings from local storage");
-        slicer.loadDefaults(true);
-        ProfileManager.loadProfileStr(stored_config);
+        ProfileManager.importConfiguration(stored_config, true);
         return true;
    }
 
     static onUnloadHandler() {
         console.log("Saved setting to local storage");
-        localStorage.setItem("startup_config", ProfileManager.exportConfiguration());
+        localStorage.setItem("startup_config", ProfileManager._saveProfileStr());
     }
 
     // Populate the pull down menus in the UI with a list of available profiles
@@ -63,15 +83,10 @@ class ProfileManager {
     /**
      * Loads a specific print profile. These profiles are stored as TOML files.
      */
-    static async loadProfile(type, filename) {
-        let data = await fetchText("config/syndaver/" + type + "_profiles/" + filename + ".toml");
+    static async loadPresets(type, filename) {
+        const data = await fetchText("config/syndaver/" + type + "_profiles/" + filename + ".toml");
         console.log("Loaded", type, "profile", filename);
-        ProfileManager.loadProfileStr(data);
-    }
-
-    static loadProfileStr(str) {
-        let config = toml.parse(str);
-        slicer.setMultiple(config.settings);
+        ProfileManager._loadProfileStr(data);
     }
     
     // Apply a selection from the menu
@@ -81,23 +96,20 @@ class ProfileManager {
             slicer.loadDefaults();
         }
         if(printer !== "keep") {
-            await ProfileManager.loadProfile("machine", printer);
+            await ProfileManager.loadPresets("machine", printer);
         }
         if(material !== "keep") {
-            await ProfileManager.loadProfile("print", material);
+            await ProfileManager.loadPresets("print", material);
         }
     }
 
-    static importConfiguration(data) {
-        slicer.loadDefaults();
-        ProfileManager.loadProfileStr(data);
+    static importConfiguration(data, initial) {
+        slicer.loadDefaults(initial);
+        ProfileManager._loadProfileStr(data);
     }
 
     static exportConfiguration(options) {
-        let toml = new TOMLFormatter();
-        toml.writeCategory("settings");
-        slicer.dumpSettings(toml, options);
-        return TOMLFormatter.alignComments(toml.str);
+        return TOMLFormatter.alignComments(ProfileManager._saveProfileStr(options));
     }
 }
 
@@ -110,9 +122,18 @@ class TOMLFormatter {
         this.str += "[" + category + "]\n\n";
     }
 
-    writeValue(key, value, comment, enabled) {
+    /**
+     * Writes a value into the TOML file
+     *
+     *   key     - the name of the value
+     *   value   - the value
+     *   comment - if provided, this is added as a comment at the end of the line
+     *   enabled - If false, the entire line is commented out
+     */
+    writeValue(key, value, comment, enabled = true) {
         let val_str;
         switch(typeof value) {
+            case "object":
             case "boolean":
             case "object":
             case "number":
@@ -122,7 +143,7 @@ class TOMLFormatter {
                 if(value.indexOf('\n') != -1) {
                     val_str = '"""\n' + value + '"""';
                 } else {
-                    val_str = '"' + value.toString().replace("\n","\\n") + '"';
+                    val_str = '"' + value + '"';
                 }
                 break;
         }
@@ -137,10 +158,16 @@ class TOMLFormatter {
         this.str += "\n";
     }
 
+    writeProperties(obj) {
+        for (const [key, value] of Object.entries(obj)) {
+            this.writeValue(key, value);
+        }
+    }
+
     // Reformats the TOML file so all the comments line up
     static alignComments(str) {
-        let comment  = /^(..*?)([#;].*)$/gm;
-        let tab_stop = 0;
+        const comment  = /^(..*?)([#;].*)$/gm;
+        let   tab_stop = 0;
         for(const m of str.matchAll(comment)) {
             tab_stop = Math.max(tab_stop, m[1].length);
         }
