@@ -34,13 +34,13 @@ class ProfileManager {
 
         console.log("Loaded settings from local storage");
         slicer.loadDefaults(true);
-        slicer.loadProfileStr(stored_config);
+        ProfileManager.loadProfileStr(stored_config);
         return true;
    }
 
     static onUnloadHandler() {
         console.log("Saved setting to local storage");
-        localStorage.setItem("startup_config", slicer.saveProfileStr());
+        localStorage.setItem("startup_config", ProfileManager.exportConfiguration());
     }
 
     // Populate the pull down menus in the UI with a list of available profiles
@@ -60,6 +60,20 @@ class ProfileManager {
         }
     }
 
+    /**
+     * Loads a specific print profile. These profiles are stored as TOML files.
+     */
+    static async loadProfile(type, filename) {
+        let data = await fetchText("config/syndaver/" + type + "_profiles/" + filename + ".toml");
+        console.log("Loaded", type, "profile", filename);
+        ProfileManager.loadProfileStr(data);
+    }
+
+    static loadProfileStr(str) {
+        let config = toml.parse(str);
+        slicer.setMultiple(config.settings);
+    }
+    
     // Apply a selection from the menu
     static async applyPresets(printer = "keep", material = "keep") {
         if(printer !== "keep" && material !== "keep") {
@@ -67,22 +81,69 @@ class ProfileManager {
             slicer.loadDefaults();
         }
         if(printer !== "keep") {
-            console.log("Loading printer profile");
-            await slicer.loadProfile("machine", printer + ".toml");
+            await ProfileManager.loadProfile("machine", printer);
         }
         if(material !== "keep") {
-            console.log("Loading material profile");
-            await slicer.loadProfile("print", material + ".toml");
+            await ProfileManager.loadProfile("print", material);
         }
-        console.log("Loaded profiles");
     }
 
     static importConfiguration(data) {
         slicer.loadDefaults();
-        slicer.loadProfileStr(data);
+        ProfileManager.loadProfileStr(data);
     }
 
     static exportConfiguration(options) {
-        return slicer.saveProfileStr(options);
+        let toml = new TOMLFormatter();
+        toml.writeCategory("settings");
+        slicer.dumpSettings(toml, options);
+        return TOMLFormatter.alignComments(toml.str);
+    }
+}
+
+class TOMLFormatter {
+    constructor() {
+        this.str = "";
+    }
+
+    writeCategory(category) {
+        this.str += "[" + category + "]\n\n";
+    }
+
+    writeValue(key, value, comment, enabled) {
+        let val_str;
+        switch(typeof value) {
+            case "boolean":
+            case "object":
+            case "number":
+                val_str = JSON.stringify(value);
+                break;
+            case "string":
+                if(value.indexOf('\n') != -1) {
+                    val_str = '"""\n' + value + '"""';
+                } else {
+                    val_str = '"' + value.toString().replace("\n","\\n") + '"';
+                }
+                break;
+        }
+        if(!enabled) {
+            this.str += "# ";
+            val_str = val_str.replace(/\n/g, "\n#"); // Comment out each line of a multi-line values
+        }
+        this.str += key + " = " + val_str;
+        if(comment) {
+            this.str += " # " + comment;
+        }
+        this.str += "\n";
+    }
+
+    // Reformats the TOML file so all the comments line up
+    static alignComments(str) {
+        let comment  = /^(..*?)([#;].*)$/gm;
+        let tab_stop = 0;
+        for(const m of str.matchAll(comment)) {
+            tab_stop = Math.max(tab_stop, m[1].length);
+        }
+        return str.replace(comment, (m, p1, p2) => p1.padEnd(tab_stop) + p2)
     }
 }
