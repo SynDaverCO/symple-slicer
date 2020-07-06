@@ -17,6 +17,7 @@
  */
 
 const SerialPort = require('serialport');
+const { ipcRenderer } = require('electron');
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
@@ -148,3 +149,4 @@ class SequentialSerial {
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
 window.SequentialSerial = SequentialSerial;
+window.setPowerSaveEnabled = enabled => ipcRenderer.send('setPowerSaveEnabled', enabled);

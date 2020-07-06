@@ -69,6 +69,8 @@ async function stream_gcode(gcode) {
         }
         let port = matches[0];
 
+        setPowerSaveEnabled(false);
+
         // Connect to the printer
         console.log("Found printer on port", port);
         let sio = new SequentialSerial();
@@ -97,5 +99,6 @@ async function stream_gcode(gcode) {
         alert(err);
     } finally {
         ProgressBar.hide();
+        setPowerSaveEnabled(true);
     }
 }

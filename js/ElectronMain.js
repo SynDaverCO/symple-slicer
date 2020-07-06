@@ -18,7 +18,7 @@
 
 // Entry point for when using SympleSlicer as an Electron app
 
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow, Menu, powerSaveBlocker, ipcMain  } = require('electron')
 const path = require('path')
 
 function createWindow () {
@@ -160,17 +160,36 @@ app.whenReady().then(createWindow)
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+    // On macOS it is common for applications and their menu bar
+    // to stay active until the user quits explicitly with Cmd + Q
+    if (process.platform !== 'darwin') {
+      app.quit()
+    }
 })
 
 app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
-  }
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    }
+})
+
+let powerSaveId;
+
+ipcMain.on('setPowerSaveEnabled', (event, enabled) => {
+    if(enabled) {
+        // Enable power saving mode if it was previously disabled
+        if(powerSaveId) {
+            console.log("Enabling power saving mode");
+            powerSaveBlocker.stop(powerSaveId);
+            powerSaveId = null;
+        }
+    } else {
+        // Disable power saving mode if it was previously enabled
+        if(!powerSaveId) {
+            console.log("Disabling power saving mode");
+            powerSaveId = powerSaveBlocker.start('prevent-app-suspension');
+        }
+    }
 })
