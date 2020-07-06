@@ -1,6 +1,7 @@
 /**
  * WebSlicer
  * Copyright (C) 2016 Marcio Teixeira
+ * Copyright (C) 2020  SynDaver Labs, Inc.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -356,7 +357,7 @@ class SettingsPanel {
         SettingsPanel.onDropImage();    // Disable buttons
         SettingsPanel.onImportChange(); // Disable buttons
         settings.enable(".requires_objects", false);
-        SettingsPanel.loadProfileList(printer_menu, material_menu);
+        SettingsPanel.initProfiles(printer_menu, material_menu);
         SettingsPanel.onOutputChanged();
         SettingsPanel.onLoadTypeChanged();
 
@@ -368,87 +369,22 @@ class SettingsPanel {
         window.addEventListener("drop", SettingsPanel.onWindowDrop);
     }
 
-    static hasSavedProfile() {
-        return (typeof(Storage) !== "undefined") && localStorage.getItem("startup_config");
-    }
-
-    static loadStartupProfile() {
-        // Always start with defaults.
-        slicer.loadDefaults(true);
-
-        if (typeof(Storage) !== "undefined") {
-            // Install handler for saving profile
-            window.onunload = function() {
-                console.log("Saved setting to local storage");
-                localStorage.setItem("startup_config", slicer.saveProfileStr());
-            }
-
-            var stored_config = localStorage.getItem("startup_config");
-            if(stored_config) {
-                console.log("Loaded settings from local storage");
-                slicer.loadProfileStr(stored_config);
-                SettingsPanel.onPrinterSizeChanged();
-                return;
-            }
-        }
-
-        // If no local profile is found, reload starting profile
-        SettingsPanel.applyPresets()
-                     .catch(error => alert(error));
-    }
-
-    static loadProfileList(printer_menu, material_menu) {
-        console.log("Loading profile list");
-        if(SettingsPanel.hasSavedProfile()) {
-            printer_menu.option("Last session settings", {id: "keep"});
-            material_menu.option("Last session settings", {id: "keep"});
-        }
-        fetchText("config/syndaver/profile_list.toml")
-            .then(data => {
-                const config = toml.parse(data);
-                for (let [key, value] of Object.entries(config.machine_profiles)) {
-                    printer_menu.option(value, {id: key});
-                }
-                for (let [key, value] of Object.entries(config.print_profiles)) {
-                    material_menu.option(value, {id: key});
-                }
-                SettingsPanel.loadStartupProfile();
-            })
-            .catch(error => alert(error));
-    }
-
-    static async applyPresets(notifyUser) {
-        const printer  = settings.get("preset_select");
-        const material = settings.get("material_select");
-
-        var promise;
+    static async initProfiles(printer_menu, material_menu) {
         try {
-            if(printer !== "keep" && material !== "keep") {
-                console.log("Loading slicer defaults");
-                slicer.loadDefaults();
-            }
-            if(printer !== "keep") {
-                console.log("Loading printer profile");
-                ProgressBar.message("Loading profiles");
-                promise = await slicer.loadProfile("machine", printer + ".toml");
-                SettingsPanel.onPrinterSizeChanged();
-            }
-            if(material !== "keep") {
-                console.log("Loading material profile");
-                ProgressBar.message("Loading profiles");
-                promise = await slicer.loadProfile("print", material + ".toml");
-            }
-            console.log("Loaded profiles");
-            ProgressBar.hide();
-            if(notifyUser) {
-                if(printer !== "keep" || material  !== "keep") {
-                    alert("The new presets have been applied.");
-                }
-                settings.gotoPage("page_place");
-            }
+            await ProfileManager.populateProfileMenus(printer_menu, material_menu);
         } catch(error) {
             alert(error);
+            console.error(error);
         }
+
+        if(ProfileManager.loadStoredProfile()) {
+            SettingsPanel.onPrinterSizeChanged();
+        } else {
+            // If no startup profile is found, load first profile from the selection box
+            SettingsPanel.onApplyPreset();
+        }
+
+        window.onunload = ProfileManager.onUnloadHandler;
     }
 
     static onEditStartGcode() {
@@ -479,8 +415,27 @@ class SettingsPanel {
         renderLoop.setView("front");
     }
 
-    static onApplyPreset(evt) {
-        SettingsPanel.applyPresets(true);
+    static async onApplyPreset() {
+        const printer  = settings.get("preset_select");
+        const material = settings.get("material_select");
+
+        if(printer !== "keep" || material !== "keep") {
+            try {
+                ProgressBar.message("Loading profiles");
+                await ProfileManager.applyPresets(printer, material);
+                if(printer !== "keep") {
+                    SettingsPanel.onPrinterSizeChanged();
+                }
+                alert("The new presets have been applied.");
+            } catch(error) {
+                alert(error);
+                console.error(error);
+            } finally {
+                ProgressBar.hide();
+            }
+        }
+
+        settings.gotoPage("page_place");
     }
 
     static onImportChange(file) {
@@ -490,18 +445,17 @@ class SettingsPanel {
     static onImportClicked() {
         try {
             const el = settings.get("toml_file");
-            el.clear();
-            slicer.loadDefaults();
-            slicer.loadProfileStr(el.data);
+            ProfileManager.importConfiguration(el.data);
             SettingsPanel.onPrinterSizeChanged();
             alert("The new settings have been applied.");
+            el.clear();
         } catch(e) {
             alert(["Error:", e.message, "Line:", e.line].join(" "));
         }
     }
 
     static onExportClicked() {
-        var config = slicer.saveProfileStr({
+        var config = ProfileManager.exportConfiguration({
             descriptions: settings.get("export_with_descriptions"),
             unchanged:    settings.get("export_with_unchanged"),
             choices:      settings.get("export_with_choices")
@@ -790,7 +744,7 @@ class SettingsPanel {
     static onPrintClicked() {
         gcode_blob.text().then(str => {
             stream_gcode(str);
-            settings.gotoPage("page_finished"); 
+            settings.gotoPage("page_finished");
         });
     }
 
