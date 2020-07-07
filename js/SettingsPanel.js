@@ -73,7 +73,7 @@ class SettingsPanel {
                 case 'enum':
                     var o = s.choice(label, attr);
                     for(const [value, label] of Object.entries(sd.options)) {
-                        o.option(label, {id: value});
+                        o.option(label, {value: value});
                     }
                     valueSetter[key] = (key, val) => {o.element.value = val;}
                     o.element.addEventListener('change', (event) => slicer.setOption(key, event.target.value));
@@ -804,6 +804,7 @@ class SettingsPanel {
     static onWindowDrop(e) {
         e = e || event;
         const files = e.dataTransfer.files;
+        // Process any drag-and-dropped files
         for (var i = 0; i < files.length; i++) {
             const extension = files[i].name.split('.').pop().toLowerCase();
             var id;
@@ -832,6 +833,21 @@ class SettingsPanel {
             }
             if(id) {
                 settings.get(id).drophandler(e);
+            }
+        }
+        // Process any drag-and-dropped commands
+        const data = e.dataTransfer.getData("text/plain");
+        if(data) {
+            let cmd = data.split(/\s+/);
+            switch(cmd[0]) {
+                case "add_profile_url":
+                    ProfileManager.addProfileUrl(cmd[1]);
+                    alert("New profiles will be available upon reload");
+                    break;
+                case "clear_local_storage":
+                    localStorage.clear();
+                    alert("Local storage cleared");
+                    break;
             }
         }
         e.preventDefault();

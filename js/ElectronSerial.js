@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-async function flashArchimFirmware(usb) {
+async function flashFirmwareWithBossa(usb) {
     try {
         ProgressBar.message("Loading firmware", usb.firmware);
         const data         = await fetchFile(usb.firmware);
@@ -40,7 +40,7 @@ async function flashArchimFirmware(usb) {
             // See if there are now devices in the Samba bootloader
             matches = await programmer.find_devices(usb_samba);
             if(matches.length == 0) {
-                throw Error("Unable to enter bootloaders");
+                throw Error("Unable to enter bootloader");
             }
         }
         await programmer.connect(matches[0]);
@@ -52,12 +52,38 @@ async function flashArchimFirmware(usb) {
     }
 }
 
+async function flashFirmwareWithStk(usb) {
+    try {
+        ProgressBar.message("Loading firmware", usb.firmware);
+        const data         = await fetchFile(usb.firmware);
+        const stk          = await import('../lib/serial-tools/avr-isp/stk500v2.js');
+        const hex          = await import('../lib/serial-tools/avr-isp/intelHex.js');
+        const programmer   = new stk.Stk500v2();
+        const usb_marlin   = {vendorId: usb.marlin_vendor_id, productId: usb.marlin_product_id};
+
+        ProgressBar.message("Finding printers");
+        programmer.onProgress = progress => {console.log(progress); ProgressBar.progress(progress)};
+
+        matches = await programmer.find_devices(usb_marlin);
+        if(matches.length == 0) {
+            throw Error("No printers found");
+        }
+        await programmer.connect(matches[0]);
+        ProgressBar.message("Writing firmware");
+        await programmer.flash_firmware(hex.IntelHex.decode(data));
+        await programmer.reset_and_close();
+    } finally {
+        ProgressBar.hide();
+    }
+}
+
 async function flashFirmware() {
     if(!ProfileManager.usb) {
         throw Error("No serial port information for this profile");
     }
     switch(ProfileManager.usb.flasher) {
-        case "bossa": await flashArchimFirmware(ProfileManager.usb); break;
+        case "bossa":    await flashFirmwareWithBossa(ProfileManager.usb); break;
+        case "stk500v2": await flashFirmwareWithStk(ProfileManager.usb); break;
     }
 }
 

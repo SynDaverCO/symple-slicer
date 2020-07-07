@@ -18,9 +18,13 @@
  */
 
 class ProfileManager {
-    static _loadProfileStr(str) {
+    static _loadProfileStr(str, baseUrl) {
         const config = toml.parse(str);
         if(config.hasOwnProperty("usb")) {
+            // Convert any URLs relative to the profile into absolute paths
+            if(baseUrl && config.usb.hasOwnProperty("firmware")) {
+                config.usb.firmware = new URL(config.usb.firmware, baseUrl).toString();
+            }
             ProfileManager.usb = config.usb;
         }
         if(config.hasOwnProperty("settings")) {
@@ -63,32 +67,67 @@ class ProfileManager {
         localStorage.setItem("startup_config", ProfileManager._saveProfileStr());
     }
 
+    /**
+     * Returns a list of URLs to fetch profiles from. By default,
+     * only the default profiles, but if "profile_urls"
+     * exists in the local storage, add those as well.
+     */
+    static getProfileUrls() {
+        let profileUrls = ["config/syndaver/profile_list.toml"];
+
+        if(typeof(Storage) === "undefined") return profileUrls;
+
+        const extra = localStorage.getItem("profile_urls");
+        if(extra) {
+            profileUrls = profileUrls.concat(extra.split(/\s+/));
+        }
+        return profileUrls;
+    }
+
+    static addProfileUrl(url) {
+        let oldList = localStorage.getItem("profile_urls") || "";
+        url = url.toString();
+        if(oldList.indexOf(url) === -1) {
+            oldList += " " + url;
+            localStorage.setItem("profile_urls", oldList.trim());
+        }
+    }
+
     // Populate the pull down menus in the UI with a list of available profiles
     static async populateProfileMenus(printer_menu, material_menu) {
-        console.log("Loading profile list");
         if(ProfileManager.hasStoredProfile()) {
-            printer_menu.option("Last session settings", {id: "keep"});
-            material_menu.option("Last session settings", {id: "keep"});
+            printer_menu.option("Last session settings", {value: "keep"});
+            material_menu.option("Last session settings", {value: "keep"});
         }
-        const data = await fetchText("config/syndaver/profile_list.toml");
-        const config = toml.parse(data);
-        for (let [key, value] of Object.entries(config.machine_profiles)) {
-            printer_menu.option(value, {id: key});
+
+        function addMenuEntries(baseUrl, config, type, menu) {
+            if(config.hasOwnProperty(type)) {
+                for (const [key, value] of Object.entries(config[type])) {
+                    let profile_url = new URL(type + "/" + key + ".toml", baseUrl);
+                    menu.option(value, {value: profile_url});
+                }
+            }
         }
-        for (let [key, value] of Object.entries(config.print_profiles)) {
-            material_menu.option(value, {id: key});
+
+        for(const url of ProfileManager.getProfileUrls()) {
+            const baseUrl = new URL(url, document.location);
+            const data = await fetchText(url);
+            const config = toml.parse(data);
+            console.log("Loading profile list from", baseUrl.toString());
+            addMenuEntries(baseUrl, config, "machine_profiles", printer_menu);
+            addMenuEntries(baseUrl, config, "print_profiles",   material_menu);
         }
     }
 
     /**
      * Loads a specific print profile. These profiles are stored as TOML files.
      */
-    static async loadPresets(type, filename) {
-        const data = await fetchText("config/syndaver/" + type + "_profiles/" + filename + ".toml");
-        console.log("Loaded", type, "profile", filename);
-        ProfileManager._loadProfileStr(data);
+    static async loadPresets(type, url) {
+        const data = await fetchText(url);
+        console.log("Loaded", type, "profile from", url);
+        ProfileManager._loadProfileStr(data, url);
     }
-    
+
     // Apply a selection from the menu
     static async applyPresets(printer = "keep", material = "keep") {
         if(printer !== "keep" && material !== "keep") {
