@@ -69,6 +69,7 @@ const filesToCache = [
     'js/OtherUI.js',
     'js/PrintableObject.js',
     'js/PrinterRepresentation.js',
+    'js/ProfileManager.js',
     'js/RenderLoop.js',
     'js/SelectionGroup.js',
     'js/SettingsPanel.js',

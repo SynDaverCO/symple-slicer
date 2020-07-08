@@ -377,7 +377,7 @@ class SettingsPanel {
                 SettingsPanel.onPrinterSizeChanged();
             } else {
                 // If no startup profile is found, load first profile from the selection box
-                SettingsPanel.onApplyPreset();
+                SettingsPanel.onApplyPreset(true);
             }
         } catch(error) {
             alert(error);
@@ -415,7 +415,7 @@ class SettingsPanel {
         renderLoop.setView("front");
     }
 
-    static async onApplyPreset() {
+    static async onApplyPreset(atStartup) {
         const printer  = settings.get("preset_select");
         const material = settings.get("material_select");
 
@@ -426,7 +426,9 @@ class SettingsPanel {
                 if(printer !== "keep") {
                     SettingsPanel.onPrinterSizeChanged();
                 }
-                alert("The new presets have been applied.");
+                if(!atStartup) {
+                    alert("The new presets have been applied.");
+                }
             } catch(error) {
                 alert(error);
                 console.error(error);
