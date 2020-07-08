@@ -17,8 +17,16 @@
  */
 
 const SerialPort = require('serialport');
+const { ipcRenderer } = require('electron');
+
+/************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
 class SequentialSerial {
+
+    constructor() {
+        this.decoder = new TextDecoder();
+        this.encoder = new TextEncoder();
+    }
 
     /**
      * Returns a promise that resolves once the serial port is open and ready.
@@ -88,14 +96,29 @@ class SequentialSerial {
     }
 
     /**
+     * Returns a line of text from the serial port.
+     */
+    async readline() {
+        let line = "";
+        while(true) {
+            let c = this.decoder.decode(await this.read(1));
+            switch(c) {
+                case '\r': break;
+                case '\n': return this.encoder.encode(line);
+                default:   line += c;
+            }
+        }
+    }
+
+    /**
      * Returns a promise that resolves after a certain number of miliseconds.
      */
     wait(ms) {
         return new Promise((resolve, reject) => {setTimeout(resolve,ms);});
     }
 
-    close() {
-        this.serial.close();
+    async close() {
+        await this.serial.close();
         this.serial = null;
     }
 
@@ -123,4 +146,7 @@ class SequentialSerial {
     }
 }
 
+/************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
+
 window.SequentialSerial = SequentialSerial;
+window.setPowerSaveEnabled = enabled => ipcRenderer.send('setPowerSaveEnabled', enabled);
