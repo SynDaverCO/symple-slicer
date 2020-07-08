@@ -109,29 +109,38 @@ async function stream_gcode(gcode) {
         setPowerSaveEnabled(false);
 
         // Connect to the printer
-        console.log("Found printer on port", port);
-        let sio = new SequentialSerial();
+        Log.clear();
+        Log.write("Found printer on port", port);
+        var sio = new SequentialSerial();
         await sio.open(port, usb.baudrate, 3, 10000);
 
-        const proto = new marlin.MarlinSerialProtocol(sio, console.log, console.log);
+        const proto = new marlin.MarlinSerialProtocol(sio, Log.write, Log.write);
 
         // Split into individual lines
         gcode = gcode.split(/\r?\n/);
 
         // Stream the GCODE
         ProgressBar.message("Printing");
+        let abortPrint = false;
+        ProgressBar.onAbort(() => {return abortPrint = confirm("About to abort the print. Click OK to abort, Cancel to continue.")});
         for(const [i, line] of gcode.entries()) {
             await proto.sendCmdReliable(line);
             while(!await proto.clearToSend()) {
                 let line = await proto.readline();
                 line = line.trim();
                 if(line && !line.startsWith("ok")) {
-                    console.log(line);
+                    Log.write(line);
+                }
+                if(abortPrint) {
+                    throw Error("Print aborted");
                 }
             }
             ProgressBar.progress(i/gcode.length);
         }
     } finally {
+        if(sio) {
+            sio.close();
+        }
         ProgressBar.hide();
         setPowerSaveEnabled(true);
     }

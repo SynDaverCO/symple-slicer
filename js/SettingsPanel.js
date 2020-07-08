@@ -314,7 +314,7 @@ class SettingsPanel {
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
         s.category(   "Slicer Output");
-        s.button(     "Show",                                        {onclick: onShowLogClicked});
+        s.button(     "Show",                                        {onclick: Log.show});
         s.buttonHelp( "Click this button to show slicing engine logs.");
 
         s.category(   "Export Settings");
@@ -680,7 +680,7 @@ class SettingsPanel {
                 slicer.loadFromGeometry(geo, filename);
                 return filename;
             });
-            clearConsole();
+            Log.clear();
             ProgressBar.message("Slicing...");
             ProgressBar.progress(0);
             slicer.slice(filenames);

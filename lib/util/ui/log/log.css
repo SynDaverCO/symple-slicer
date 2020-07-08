@@ -17,38 +17,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#progress-dialog {
-    display:              none;
+#log-dialog, #progress-dialog, #update-app-dialog {
+    padding:            1em;
 }
 
-#progress-dialog a {
-    display:              block;
-    margin-top:           1em;
-    font-size:            80%;
-    user-select:          none;
-    cursor:               pointer;
+#log-dialog {
+    display:            none;
 }
 
-#progress-dialog img {
-    position:             absolute;
-    bottom:               1em;
-    right:                1em;
-    
-    height:               1em;
-    width:                auto;
-}
-
-#progress-dialog.abortable img {
-    top:                  1em;
-    right:                1em;
-}
-
-#progress-dialog:not(.abortable) button {
-    display:              none;
-}
-
-#progress-dialog span {
-    display:              flex;
-    align-items:          baseline;
-    justify-content:      space-between;
+#console {
+    padding:            1em;
+    height:             80vh;
+    width:              85vw;
+    resize:             both;
+    overflow:           auto;
+    white-space:        pre-wrap;
 }

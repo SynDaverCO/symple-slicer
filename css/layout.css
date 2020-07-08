@@ -87,26 +87,6 @@ BODY[data-platform="desktop"] .webapp-only {
     border-spacing:     1em 2px;
 }
 
-#log-dialog, #progress-dialog, #update-app-dialog {
-    padding:            1em;
-}
-
-#log-dialog {
-    display:            none;
-}
-
-#update-app-dialog.ready p#update-downloading {
-    display:            none;
-}
-
-#update-app-dialog:not(.ready) p#update-ready {
-    display:            none;
-}
-
-#update-app-dialog img {
-    width:              1em;
-}
-
 /* Trick to keep iframe responsive from https://benmarshall.me/responsive-iframes */
 
 .iframe-container {
@@ -122,15 +102,6 @@ BODY[data-platform="desktop"] .webapp-only {
     width:              100%;
     left:               0;
     top:                0;
-}
-
-#console {
-    padding:            1em;
-    height:             80vh;
-    width:              85vw;
-    resize:             both;
-    overflow:           auto;
-    white-space:        pre-wrap;
 }
 
 #print_time, #print_filament, #current_layer {
