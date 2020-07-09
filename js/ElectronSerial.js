@@ -114,6 +114,9 @@ async function stream_gcode(gcode) {
         var sio = new SequentialSerial();
         await sio.open(port, usb.baudrate, 3, 10000);
 
+        let serialDisconnect = false;
+        sio.serial.on('close', err => {console.error(err); serialDisconnect = true;});
+
         const proto = new marlin.MarlinSerialProtocol(sio, Log.write, Log.write);
 
         // Split into individual lines
@@ -122,7 +125,7 @@ async function stream_gcode(gcode) {
         // Stream the GCODE
         ProgressBar.message("Printing");
         let abortPrint = false;
-        ProgressBar.onAbort(() => {return abortPrint = confirm("About to abort the print. Click OK to abort, Cancel to continue.")});
+        ProgressBar.onAbort(() => {return abortPrint = confirm("About to abort the print. Click OK to abort, Cancel to keep printing.")});
         for(const [i, line] of gcode.entries()) {
             await proto.sendCmdReliable(line);
             while(!await proto.clearToSend()) {
@@ -132,7 +135,10 @@ async function stream_gcode(gcode) {
                     Log.write(line);
                 }
                 if(abortPrint) {
-                    throw Error("Print aborted");
+                    throw PrintAborted("Print stopped by user");
+                }
+                if(serialDisconnect) {
+                    throw Error("Connection dropped");
                 }
             }
             ProgressBar.progress(i/gcode.length);
@@ -145,3 +151,5 @@ async function stream_gcode(gcode) {
         setPowerSaveEnabled(true);
     }
 }
+
+class PrintAborted extends Error {};

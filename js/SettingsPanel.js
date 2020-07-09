@@ -757,8 +757,11 @@ class SettingsPanel {
             await stream_gcode(await gcode_blob.text());
             settings.gotoPage("page_finished");
         } catch(err) {
-            console.error(err);
-            alert(err);
+            if(!(err instanceof PrintAborted)) {
+                // Report all errors except for user initiated abort
+                console.error(err);
+                alert(err);
+            }
         }
     }
 
