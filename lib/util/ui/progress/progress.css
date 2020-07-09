@@ -19,6 +19,7 @@
 
 #progress-dialog {
     display:              none;
+    padding:              1em;
 }
 
 #progress-dialog a {

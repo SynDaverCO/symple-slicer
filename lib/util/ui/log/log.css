@@ -17,7 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#log-dialog, #progress-dialog, #update-app-dialog {
+#log-dialog {
     padding:            1em;
 }
 
@@ -27,8 +27,8 @@
 
 #console {
     padding:            1em;
-    height:             80vh;
-    width:              85vw;
+    width:              calc(100vw - 11em);
+    height:             calc(100vh - 13em);
     resize:             both;
     overflow:           auto;
     white-space:        pre-wrap;
