@@ -125,7 +125,7 @@ async function stream_gcode(gcode) {
         // Stream the GCODE
         ProgressBar.message("Printing");
         let abortPrint = false;
-        ProgressBar.onAbort(() => {return abortPrint = confirm("About to abort the print. Click OK to abort, Cancel to keep printing.")});
+        ProgressBar.onAbort(() => {return abortPrint = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.")});
         for(const [i, line] of gcode.entries()) {
             await proto.sendCmdReliable(line);
             while(!await proto.clearToSend()) {
@@ -135,10 +135,13 @@ async function stream_gcode(gcode) {
                     Log.write(line);
                 }
                 if(abortPrint) {
-                    throw PrintAborted("Print stopped by user");
+                    for(const line of usb.stop_print_gcode.split(/\r?\n/)) {
+                        await proto.sendCmdReliable(line);
+                    }
+                    throw new PrintAborted("Print stopped by user");
                 }
                 if(serialDisconnect) {
-                    throw Error("Connection dropped");
+                    throw new Error("Connection dropped");
                 }
             }
             ProgressBar.progress(i/gcode.length);

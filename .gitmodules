@@ -2,8 +2,8 @@
 	path = src-cura/CuraEngine
 	url = git@github.com:SynDaverCO/CuraEngine.git
 [submodule "config/syndaver"]
-	path = config/syndaver
+	path = src-app/config/syndaver
 	url = git@github.com:SynDaverCO/symple-slicer-profiles.git
 [submodule "guide"]
-	path = guide
+	path = src-app/guide
 	url = git@github.com:SynDaverCO/symple-slicer-guide.git

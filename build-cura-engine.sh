@@ -24,7 +24,7 @@
 
 #BUILD_OPT='-DCMAKE_BUILD_TYPE=MinSizeRel'
 BUILD_DIR=src-cura/CuraEngine/build
-INSTALL_DIR=lib/slicing-engines/CuraEngine
+INSTALL_DIR=src-app/lib/slicing-engines/CuraEngine
 
 build_cura() {
     rm -rf $BUILD_DIR &&

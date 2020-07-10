@@ -154,6 +154,8 @@ function createMenu(win) {
 
 //app.commandLine.appendSwitch('--enable-gpu')
 //app.commandLine.appendSwitch('--enable-logging')
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+app.commandLine.appendSwitch("disable-background-timer-throttling");
 
 app.allowRendererProcessReuse = false;
 app.whenReady().then(createWindow)

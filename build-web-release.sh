@@ -23,36 +23,27 @@
 #
 
 USE_BABEL=0
+SRC_DIR=src-app
 
 getFiles() {
     awk -F "'" '
     /^const filesToCache/                   {PRINT=1}
     /];/                                    {PRINT=0}
                                             {sub(/\?.*$/, "", $2); if(PRINT) print $2}
-    ' service-worker.js | sed '/^\.$/ c index.html'
+    ' $SRC_DIR/service-worker.js | sed '/^\.$/ c index.html'
     echo service-worker.js
     echo change_log.md
     echo images/screenshot.png
     echo LICENSE.txt
 }
 
-makeBuildDir() {
-    echo Copying build files
+makeWebReleaseDir() {
+    echo Copying web-release files
     for f in `getFiles`
     do
-        mkdir -p `dirname build/$f`
-        cp $f build/$f
+        mkdir -p `dirname release-web/$f`
+        cp $SRC_DIR/$f release-web/$f
     done
-}
-
-makeDistDir() {
-    echo Making distribution directory
-    if [ $USE_BABEL != 0 ];
-    then
-        ~/node_modules/.bin/babel build --verbose --copy-files --out-dir dist
-    else
-        cp -r build/* dist
-    fi
 }
 
 customSliceFilter() {
@@ -76,9 +67,8 @@ customSliceFilter() {
     done
 }
 
-rm -rf build dist
-mkdir build dist
+rm -rf release-web
+mkdir release-web
 
-makeBuildDir
-makeDistDir
+makeWebReleaseDir
 customSliceFilter
