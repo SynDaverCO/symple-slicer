@@ -24,6 +24,7 @@
 
 USE_BABEL=0
 SRC_DIR=src-app
+OUT_DIR=release-web
 
 getFiles() {
     awk -F "'" '
@@ -34,15 +35,14 @@ getFiles() {
     echo service-worker.js
     echo change_log.md
     echo images/screenshot.png
-    echo LICENSE.txt
 }
 
 makeWebReleaseDir() {
     echo Copying web-release files
     for f in `getFiles`
     do
-        mkdir -p `dirname release-web/$f`
-        cp $SRC_DIR/$f release-web/$f
+        mkdir -p `dirname $OUT_DIR/$f`
+        cp $SRC_DIR/$f $OUT_DIR/$f
     done
 }
 
@@ -58,7 +58,7 @@ customSliceFilter() {
     #
     # This transformation is required for the Edge browser and currently isn't handled by Babel
     #
-    FILES=`grep -R -E -l "\.\.\.[a-zA-Z.]+" dist | grep -v "\.min\."`
+    FILES=`grep -R -E -l "\.\.\.[a-zA-Z.]+" $OUT_DIR | grep -v "\.min\."`
     for f in $FILES
     do
         echo Rewriting slice operator on $f
@@ -67,8 +67,8 @@ customSliceFilter() {
     done
 }
 
-rm -rf release-web
-mkdir release-web
+rm -rf $OUT_DIR
+mkdir $OUT_DIR
 
 makeWebReleaseDir
 customSliceFilter
