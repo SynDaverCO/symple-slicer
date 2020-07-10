@@ -112,12 +112,12 @@ async function stream_gcode(gcode) {
         Log.clear();
         Log.write("Found printer on port", port);
         var sio = new SequentialSerial();
-        await sio.open(port, usb.baudrate, 3, 10000);
+        await sio.open(port, 0.5*usb.baudrate, 3, 10000);
 
         let serialDisconnect = false;
-        sio.serial.on('close', err => {console.error(err); serialDisconnect = true;});
+        sio.serial.on('close', err => {if(err) {console.error(err); serialDisconnect = true;}});
 
-        const proto = new marlin.MarlinSerialProtocol(sio, Log.write, Log.write);
+        let proto = new marlin.MarlinSerialProtocol(sio, Log.write, Log.write);
 
         // Split into individual lines
         gcode = gcode.split(/\r?\n/);
@@ -125,26 +125,42 @@ async function stream_gcode(gcode) {
         // Stream the GCODE
         ProgressBar.message("Printing");
         let abortPrint = false;
-        ProgressBar.onAbort(() => {return abortPrint = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.")});
+        ProgressBar.onAbort(() => {
+            let abortPrint = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
+            if(abortPrint) {
+                ProgressBar.message("Stopping...");
+            }
+            return abortPrint;
+        });
         for(const [i, line] of gcode.entries()) {
             await proto.sendCmdReliable(line);
             while(!await proto.clearToSend()) {
-                let line = await proto.readline();
-                line = line.trim();
+                const line = await proto.readline();
                 if(line && !line.startsWith("ok")) {
                     Log.write(line);
                 }
-                if(abortPrint) {
-                    for(const line of usb.stop_print_gcode.split(/\r?\n/)) {
-                        await proto.sendCmdReliable(line);
-                    }
+                if(abortPrint || serialDisconnect) break;
+            }
+            if(proto.resyncCount > 2) {
+                if(!confirm("The printer is not responding. Press OK to continue waiting, or Cancel to stop the print")) {
                     throw new PrintAborted("Print stopped by user");
-                }
-                if(serialDisconnect) {
-                    throw new Error("Connection dropped");
                 }
             }
             ProgressBar.progress(i/gcode.length);
+            if(abortPrint || serialDisconnect) break;
+        }
+        // Handle abnormal conditions
+        if(serialDisconnect) {
+            Log.write("Connection dropped");
+            throw new Error("Connection dropped");
+        }
+        else if(abortPrint) {
+            await proto.abortPrint(usb.stop_print_gcode);
+            Log.write("Print stopped by user");
+            throw new PrintAborted("Print stopped by user");
+        } else {
+            await proto.finishPrint();
+            Log.write("Print finished.");
         }
     } finally {
         if(sio) {

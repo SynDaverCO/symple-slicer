@@ -107,6 +107,10 @@ export class GCodeHistory {
         return this.pos == this.list.length
     }
 
+    linesLeft() {
+        return this.list.length - this.pos;
+    }
+
     position() {
         return this.pos;
     }
@@ -135,6 +139,7 @@ export class MarlinSerialProtocol {
         this.fastTimeout            = 15;
         this.usingAdvancedOk        = false;
         this.watchdogTimeout        = time.time();
+        this.resyncCount             = 0;
         this.encoder                = new TextEncoder();
         this.decoder                = new TextDecoder();
         this.onResendCallback       = onResendCallback;
@@ -230,6 +235,7 @@ export class MarlinSerialProtocol {
     async _resetMarlinLineCounter() {
         // Sends a command requesting that Marlin reset its line counter to match
         // our own position
+
         let cmd = this._addPositionAndChecksum(this.history.lastLineSent(), "M110");
         await this._sendImmediate(cmd);
     }
@@ -244,13 +250,16 @@ export class MarlinSerialProtocol {
                 this.marlinAvailBuffer     = this.marlinReserve + 1;
                 this.marlinPendingCommands = 0;
                 await this._sendImmediate("\nM105*\n");
-                this.sendNotification("Marlin timeout. Forcing re-sync.");
+                this.sendNotification("Timeout. Forcing a re-sync.");
+                this.resyncCount++;
             } else if (line == "") {
                 let timeoutIn = this.watchdogTimeout - time.time();
                 if (timeoutIn != this.lastTimeoutMessage) {
                     this.lastTimeoutMessage = timeoutIn;
-                    this.sendNotification("Marlin timeout in " + timeoutIn + " seconds");
+                    this.sendNotification("Timeout. Re-sync in " + timeoutIn + " seconds");
                 }
+            } else {
+                this.resyncCount = 0;
             }
         }
     }
@@ -314,7 +323,7 @@ export class MarlinSerialProtocol {
         // interactive commands from an UI that is not part of a print.
         let cmd = this._stripCommentsAndWhitespace(line);
         if (cmd) {
-            this.asap.append(cmd);
+            this.asap.push(cmd);
         }
     }
 
@@ -334,7 +343,7 @@ export class MarlinSerialProtocol {
     }
 
     _gotOkay(line) {
-        let m = line.match(/ok N(\d+) P(\d+) B(\d+)\n/);
+        let m = line.match(/ok N(\d+) P(\d+) B(\d+)/);
         if (m) {
             // If ADVANCED_OK is enabled in Marlin, we can use that
             // info to correct our estimate of many free slots are
@@ -361,7 +370,7 @@ export class MarlinSerialProtocol {
         if(blocking || this.serial.in_waiting) {
             try {
                 line = await this.serial.readline();
-                line = this.decoder.decode(line);
+                line = this.decoder.decode(line).trim();
             } catch (e) {
                 line = "";
                 console.log("Timeout in readline");
@@ -443,6 +452,33 @@ export class MarlinSerialProtocol {
     marlinBufferCapacity() {
         // Returns how many buffer positions are open in Marlin, excluding reserved locations.
         return this.marlinAvailBuffer - this.marlinReserve;
+    }
+
+    isPrinting() {
+        return this.asap.length > 0 || !this.history.atEnd();
+    }
+
+    async abortPrint(abortScript) {
+        this.history.clear();
+        for(const line of abortScript.split(/\r?\n/)) {
+            await this.sendCmdUnreliable(line);
+        }
+        await this.waitUntilQueueEmpty();
+    }
+
+    // Call this after all commands have been sent, but
+    // before closing the serial port, to allow queued
+    // commands to be sent.
+    async finishPrint() {
+        await this.waitUntilQueueEmpty();
+    }
+
+    async waitUntilQueueEmpty() {
+        while(this.isPrinting() && this.resyncCount < 3) {
+            while(!await this.clearToSend()) {
+                await this.readline();
+            }
+        }
     }
 
     async restart() {
