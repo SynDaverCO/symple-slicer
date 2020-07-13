@@ -279,10 +279,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </div>
 
         <script>
-            if (typeof Updater != 'undefined') {
-                Updater.getVersion("#serviceWorkerVersion");
-                Updater.wikifyChangeLog("iframe-changelog");
-            }
+            Updater.getVersion().then(v => $('#serviceWorkerVersion').html("V" + v));
+            Updater.wikifyChangeLog("iframe-changelog");
 
             // Selector based on whether we are running as a desktop app or webapp-only
 

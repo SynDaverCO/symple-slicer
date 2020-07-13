@@ -55,10 +55,26 @@ class Updater {
         window.location.reload();
     }
 
-    static getVersion(selector) {
-        fetchJSON("version.json")
-        .then(data  => $(selector).html("V" + data.version))
-        .catch(error => console.warn(error));
+    // Try fetching the application version from a running service worker of the
+    // or try to extract it out of the file manually.
+    static async getVersion() {
+        try {
+            let data = await fetchJSON("version.json");
+            return data.version;
+        } catch(error) {
+            console.error(error);
+        }
+
+        try {
+            let data = await fetchText("service-worker.js");
+            let m = data.match(/version: '([\d.]+)',/);
+            if(m) {
+                return m[1];
+            }
+        }
+        catch(error) {
+            console.warn(error);
+        }
     }
 
     static update() {
@@ -95,7 +111,8 @@ if ('serviceWorker' in navigator && location.protocol != 'file:') {
         console.warn("Failed to register service worker: ", reason)
     });
     navigator.serviceWorker.addEventListener('controllerchange', Updater.onControllerChange, {once: true});
+    Updater.isAvailable = true;
 } else {
     console.warn("Service workers not supported");
-    delete window.Updater;
+    Updater.isAvailable = false;
 }

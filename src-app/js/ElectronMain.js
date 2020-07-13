@@ -18,7 +18,7 @@
 
 // Entry point for when using SympleSlicer as an Electron app
 
-const { app, BrowserWindow, Menu, powerSaveBlocker, ipcMain, dialog  } = require('electron')
+const { app, BrowserWindow, Menu, powerSaveBlocker, ipcMain, dialog } = require('electron')
 const path = require('path')
 
 function createWindow () {
@@ -55,7 +55,7 @@ function createWindow () {
     win.on('close', onClose);
 
     // and load the index.html of the app.
-    win.loadFile('index.html')
+    win.loadFile('index.html');
 
     createMenu(win);
 }
