@@ -107,12 +107,13 @@ async function stream_gcode(gcode) {
         let port = matches[0];
 
         setPowerSaveEnabled(false);
+        setPrintInProgress(true);
 
         // Connect to the printer
         Log.clear();
         Log.write("Found printer on port", port);
         var sio = new SequentialSerial();
-        await sio.open(port, 0.5*usb.baudrate, 3, 10000);
+        await sio.open(port, usb.baudrate, 3, 10000);
 
         let serialDisconnect = false;
         sio.serial.on('close', err => {if(err) {console.error(err); serialDisconnect = true;}});
@@ -126,7 +127,7 @@ async function stream_gcode(gcode) {
         ProgressBar.message("Printing");
         let abortPrint = false;
         ProgressBar.onAbort(() => {
-            let abortPrint = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
+            abortPrint = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
             if(abortPrint) {
                 ProgressBar.message("Stopping...");
             }
@@ -155,8 +156,9 @@ async function stream_gcode(gcode) {
             throw new Error("Connection dropped");
         }
         else if(abortPrint) {
+            Log.write("Stopping print");
             await proto.abortPrint(usb.stop_print_gcode);
-            Log.write("Print stopped by user");
+            Log.write("Print stopped");
             throw new PrintAborted("Print stopped by user");
         } else {
             await proto.finishPrint();
@@ -168,6 +170,7 @@ async function stream_gcode(gcode) {
         }
         ProgressBar.hide();
         setPowerSaveEnabled(true);
+        setPrintInProgress(false);
     }
 }
 
