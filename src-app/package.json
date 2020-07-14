@@ -1,0 +1,29 @@
+{
+  "name": "SympleSlicer",
+  "version": "1.0.0",
+  "description": "A desktop version of SynDaver Symple Slicer built with Electron",
+  "main": "js/ElectronMain.js",
+  "scripts": {
+    "start": "electron .",
+    "start-debug": "electron --enable-logging .",
+    "install-wsl": "npm install && npm uninstall electron serialport && export npm_config_platform=win32 && npm install electron serialport && unset npm_config_platform",
+    "test": "echo No test command available"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SynDaverCO/symple-slicer.git"
+  },
+  "author": "SynDaver Labs, Inc.",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/SynDaverCO/symple-slicer/issues"
+  },
+  "homepage": "https://github.com/SynDaverCO/symple-slicer#readme",
+  "dependencies": {
+    "serialport": "^9.0.0"
+  },
+  "devDependencies": {
+    "electron": "^9.0.3",
+    "electron-rebuild": "^1.11.0"
+  }
+}
