@@ -165,12 +165,12 @@ class SettingsPanel {
         s.fromSlicer(       "layer_height");
         s.fromSlicer(       "layer_height_0");
         s.fromSlicer(       "speed_print");
-        s.fromSlicer(       "speed_layer_0");
-        s.fromSlicer(       "speed_infill");
-        s.fromSlicer(       "speed_wall");
+        //s.fromSlicer(       "speed_layer_0");
+        //s.fromSlicer(       "speed_infill");
+        //s.fromSlicer(       "speed_wall");
         s.fromSlicer(       "speed_support");
         s.fromSlicer(       "speed_travel");
-        s.fromSlicer(       "speed_travel_layer_0");
+        //s.fromSlicer(       "speed_travel_layer_0");
 
         s.category(   "Shell");
         s.fromSlicer(       "wall_thickness");
@@ -191,9 +191,9 @@ class SettingsPanel {
 
         s.category(   "Temperatures");
         s.fromSlicer(       "material_print_temperature");
-        s.fromSlicer(       "material_print_temperature_layer_0");
+        //s.fromSlicer(       "material_print_temperature_layer_0");
         s.fromSlicer(       "material_bed_temperature");
-        s.fromSlicer(       "material_bed_temperature_layer_0");
+        //s.fromSlicer(       "material_bed_temperature_layer_0");
         s.fromSlicer(       "material_probe_temperature");
         s.fromSlicer(       "material_soften_temperature");
         s.fromSlicer(       "material_wipe_temperature");
