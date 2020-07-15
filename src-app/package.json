@@ -1,7 +1,9 @@
 {
   "name": "SympleSlicer",
   "version": "1.0.0",
-  "description": "A desktop version of SynDaver Symple Slicer built with Electron",
+  "description": "A desktop version of SynDaver Symple Slicer with tethered printing capabilities",
+  "author": "SynDaver Labs, Inc.",
+  "license": "AGPL-3.0-or-later",
   "main": "js/ElectronMain.js",
   "dependencies": {
     "serialport": "^9.0.0"

@@ -1,7 +1,7 @@
 {
   "name": "SympleSlicer",
   "version": "1.0.0",
-  "description": "A desktop version of SynDaver Symple Slicer built with Electron",
+  "description": "A desktop version of SynDaver Symple Slicer with tethered printing capabilities",
   "author": "SynDaver Labs, Inc.",
   "license": "AGPL-3.0-or-later",
   "homepage": "https://github.com/SynDaverCO/symple-slicer",
@@ -11,15 +11,16 @@
   "scripts": {
     "start": "electron src-app",
     "start-debug": "electron --enable-logging src-app",
-    "package-mac": "electron-packager src-app --platform=darwin --arch=x64 --overwrite --icon=app/images/icon.icns --prune=true --out=dist",
-    "package-win": "electron-packager src-app --platform=win32  --arch=x64 --overwrite --icon=app/images/favicon.ico --prune=true --out=dist",
-    "package-linux": "electron-packager src-app --platform=linux  --arch=x64 --overwrite --icon=app/images/icon_512px.png --prune=true --out=dist",
+    "package-mac": "electron-packager src-app --platform=darwin --arch=x64 --overwrite --icon=src-app/images/icon.icns --prune=true --out=dist",
+    "package-win": "electron-packager src-app --platform=win32  --arch=x64 --overwrite --icon=src-app/images/favicon.ico --prune=true --out=dist",
+    "package-linux": "electron-packager src-app --platform=linux  --arch=x64 --overwrite --icon=src-app/images/icon_512px.png --prune=true --out=dist",
     "installer-win": "electron-builder --prepackaged dist/SympleSlicer-win32-x64",
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "directories": {
-      "app": "src-app"
+      "app": "src-app",
+      "buildResources": "resources"
     }
   },
   "devDependencies": {
