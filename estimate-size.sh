@@ -25,12 +25,17 @@
 # Estimates the size of the entire slicer package if it were minimized and
 # stored in a zip file.
 
+SRC_DIR=src-app
+
 getFiles() {
     awk -F "'" '
     /^const filesToCache/                   {PRINT=1}
     /];/                                    {PRINT=0}
                                             {sub(/\?.*$/, "", $2); if(PRINT) print $2}
-    ' service-worker.js | sed '/^\.$/ c index.html'
+    ' $SRC_DIR/service-worker.js | sed '/^\.$/ c index.html'
+    echo service-worker.js
+    echo change_log.md
+    echo images/screenshot.png
 }
 
 minify() {
@@ -40,19 +45,19 @@ minify() {
     do
         mkdir -p build/`dirname $file`
         if [[ $file == *.js ]]; then
-            uglifyjs $file > build/$file
+            uglifyjs $SRC_DIR/$file > build/$file
         else
             false
         fi
         if [ $? -ne 0 ]; then
-            cp $file build/$file
+            cp $SRC_DIR/$file build/$file
         fi
     done
 }
 
 FILES=`getFiles`
 
-minify $FILES
+minify
 
 zip -r -9 packed.zip build
 du -sh packed.zip

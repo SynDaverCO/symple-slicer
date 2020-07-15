@@ -22,9 +22,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-USE_BABEL=0
 SRC_DIR=src-app
-OUT_DIR=release-web
+OUT_DIR=dist/web
 
 getFiles() {
     awk -F "'" '
