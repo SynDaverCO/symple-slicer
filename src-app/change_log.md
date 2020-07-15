@@ -9,9 +9,8 @@ SynDaver Symple Slicer v1.0.7
 * Use radio buttons in "Place Objects" panel
 * Added "Infill Before Walls" to "Shell"
 * Added "Support Z Distance", "Support X/Y Distance", "Minimum Support X/Y Distance" and "Support Interface Resolution" to "Support"
-* Added "Initial Layer Height", "Wall Speed", "Infill Speed" and "Support Speed" to "Print Speed"
+* Added "Initial Layer Height", and "Support Speed" to "Print Speed"
 * Use Cura Engine computed values for "Initial Layer Speed", "Initial Layer Travel Speed", "Travel Speed", "Wall Speed", "Top/Bottom Speed" and "Inner Wall Speed"
-
 
 SynDaver Symple Slicer v1.0.6
 =============================
