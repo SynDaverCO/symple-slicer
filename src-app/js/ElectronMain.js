@@ -18,7 +18,7 @@
 
 // Entry point for when using SympleSlicer as an Electron app
 
-const { app, BrowserWindow, Menu, powerSaveBlocker, ipcMain  } = require('electron')
+const { app, BrowserWindow, Menu, powerSaveBlocker, ipcMain, dialog } = require('electron')
 const path = require('path')
 
 function createWindow () {
@@ -52,9 +52,10 @@ function createWindow () {
 
     win.webContents.on('will-navigate', handleRedirect)
     win.webContents.on('new-window', handleRedirect)
+    win.on('close', onClose);
 
     // and load the index.html of the app.
-    win.loadFile('index.html')
+    win.loadFile('index.html');
 
     createMenu(win);
 }
@@ -195,3 +196,16 @@ ipcMain.on('setPowerSaveEnabled', (event, enabled) => {
         }
     }
 })
+
+let printInProgress = false;
+
+ipcMain.on('setPrintInProgress', (event, enabled) => {
+    printInProgress = enabled;
+})
+
+function onClose(e){
+    if(printInProgress) {
+        e.preventDefault();
+        dialog.showMessageBox({message: "Symple Slicer cannot close while a print is in progress."});
+    }
+}
