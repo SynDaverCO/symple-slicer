@@ -115,7 +115,7 @@ async function stream_gcode(gcode) {
         await sio.open(port, usb.baudrate, 3, 10000);
 
         let serialDisconnect = false;
-        sio.serial.on('close', err => {console.error(err); serialDisconnect = true;});
+        sio.serial.on('close', err => {if(err) {console.error(err); serialDisconnect = true;}});
 
         const proto = new marlin.MarlinSerialProtocol(sio, Log.write, Log.write);
 
