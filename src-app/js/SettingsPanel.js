@@ -89,7 +89,7 @@ class SettingsPanel {
         var printer_menu = s.choice( "Printer:",                     {id: "preset_select"});
         var material_menu = s.choice( "Material:",                   {id: "material_select"});
         s.footer();
-        s.button(     "Next",                                        {onclick: SettingsPanel.onApplyPreset});
+        s.button(     "Apply",                                       {onclick: SettingsPanel.onApplyPreset});
         s.buttonHelp( "Click this button to apply selections and proceed to placing objects.");
 
         s.page("Place Objects",                                      {id: "page_place"});
