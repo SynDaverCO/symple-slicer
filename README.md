@@ -10,12 +10,17 @@ Symple Slicer was developed at the Loveland, Colorado division of
 [SynDaver Labs, Inc.] for use with SynDaver 3D printers. Symple Slicer
 is licensed under the [GNU Affero General Public License Version 3].
 
-To run it, use the following link:
+To run the online version of Symple Slicer, use the following links:
 
 | Release     | Live URL                                 |
 |-------------|------------------------------------------|
 | Stable      | https://syndaverco.github.io/slicer      |
 | Development | https://syndaverco.github.io/slicer-beta |
+
+An off-line desktop version of Symple Slicer which can print to USB
+attached printers and flash printer firmware is under development. For
+developers familiar with [Electron], there are build instructions in
+the 'docs' directory.
 
 Easy to use, easy to print
 --------------------------
@@ -54,11 +59,6 @@ advantages:
 Scope and limitations
 ---------------------
 
-Because Symple Slicer is a web application, it cannot do tethered
-printing and requires a printer that can print GCODE from SD cards
-or USB flash drives. A desktop build using [Electron] is planned
-that should allow tethered printing and firmware flashing.
-
 Symple Slicer is not meant as a replacement for Cura for advanced
 users. Slicing is currently limited to a single extruder and the
 GUI allows access to a subset of all Cura settings (although
@@ -95,4 +95,4 @@ configuration files.
 [TOML]: https://en.wikipedia.org/wiki/TOML
 [Electron]: https://www.electronjs.org/
 
-[logo]: https://github.com/SynDaverCO/symple-slicer/raw/master/images/screenshot.png "SynDaver Symple Slicer"
+[logo]: https://github.com/SynDaverCO/symple-slicer/raw/master/src-app/images/screenshot.png "SynDaver Symple Slicer"
