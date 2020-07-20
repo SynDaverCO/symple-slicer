@@ -155,8 +155,9 @@ async function stream_gcode(gcode) {
                      *   https://docs.octoprint.org/en/master/bundledplugins/action_command_prompt.html
                      */
                     if(line.startsWith("//action:")) {
-                        let cmd = line.substr(9).split(" ");
-                        switch(cmd[0]) {
+                        let args = line.substr(9).split(" ");
+                        let cmd = args.shift();
+                        switch(cmd) {
                             case "out_of_filament": alert("The filament has run out. Press okay to resume printing"); break;
                             case "pause":  asyncEvent = "pauseWithScript"; break;
                             case "resume": asyncEvent = "resumeWithScript"; break;
@@ -164,13 +165,16 @@ async function stream_gcode(gcode) {
                             case "resumed": asyncEvent = "resume"; break;
                             case "cancel": asyncEvent = "abort"; break;
                             case "disconnect": asyncEvent = "abort"; break;
+                            case "notification": ProgressBar.message(args.join(" ")); break;
                             case "probe_failed": throw new Error("Probe failed."); break;
-                            case "prompt_begin": Dialog.removeButtons(); Dialog.message(cmd[1]); break;
+                            case "prompt_begin": Dialog.removeButtons(); Dialog.message(args.join(" ")); break;
                             case "prompt_choice":
                             case "prompt_button":
 Dialog.addButton(cmd[1]); break;
                             case "prompt_show": Dialog.show(); break;
                             case "prompt_end": Dialog.hide(); break;
+                            default:
+                                console.warn("Unhandled host action:", cmd, args);
                         }
                     }
                 }
@@ -187,7 +191,6 @@ Dialog.addButton(cmd[1]); break;
                     case "resume":
                         isPaused = false;
                         ProgressBar.setPauseState(false);
-                        ProgressBar.message("Printing");
                         break;
                     case "pauseWithScript":
                         if(usb.pause_print_gcode) {
@@ -201,7 +204,6 @@ Dialog.addButton(cmd[1]); break;
                     case "pause":
                         isPaused = true;
                         ProgressBar.setPauseState(true);
-                        ProgressBar.message("Paused");
                         break;
                     case "disconnect":
                         Log.write("Connection dropped");
