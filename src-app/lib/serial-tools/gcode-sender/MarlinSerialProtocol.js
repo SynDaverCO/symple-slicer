@@ -458,11 +458,17 @@ export class MarlinSerialProtocol {
         return this.asap.length > 0 || !this.history.atEnd();
     }
 
-    async abortPrint(abortScript) {
-        this.history.clear();
-        for(const line of abortScript.split(/\r?\n/)) {
-            await this.sendCmdUnreliable(line);
+    async sendScriptUnreliable(gcode) {
+        if(gcode) {
+            for(const line of gcode.split(/\r?\n/)) {
+                await this.sendCmdUnreliable(line);
+            }
         }
+    }
+
+    async abortPrint(gcode) {
+        this.history.clear();
+        await this.sendScriptUnreliable(gcode);
         await this.waitUntilQueueEmpty();
     }
 

@@ -119,6 +119,8 @@ const filesToCache = [
     'lib/util/misc/ParseQuery.js',
     'lib/util/misc/ResettableTimer.js',
     'lib/util/misc/Wikify.js',
+    'lib/util/ui/dialog/dialog.css',
+    'lib/util/ui/dialog/dialog.js',
     'lib/util/ui/log/log.css',
     'lib/util/ui/log/log.js',
     'lib/util/ui/navcube/navcube.css',

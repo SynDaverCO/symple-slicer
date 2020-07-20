@@ -39,17 +39,45 @@
     width:                auto;
 }
 
-#progress-dialog.abortable img {
-    top:                  1em;
-    right:                1em;
-}
-
-#progress-dialog:not(.abortable) button {
-    display:              none;
-}
-
 #progress-dialog span {
     display:              flex;
     align-items:          baseline;
     justify-content:      space-between;
+}
+
+#progress-dialog span button {
+    font-size:            150%;
+    font-family:          "Segoe UI Symbol";
+    padding:              0;
+    border:               none;
+    background:           none;
+}
+
+#progress-dialog span button.disabled {
+    opacity:              50%;
+}
+
+#progress-dialog button[title] {
+    cursor:             help;
+}
+
+/* If either button is visible, move spinner to top of dialog box */
+
+#progress-dialog.hasAbort img, #progress-dialog.hasSuspend img {
+    top:                  1em;
+    right:                1em;
+}
+
+/* Show or hide the buttons depending on state of dialog box */
+#progress-dialog:not(.hasAbort) button.stop {
+    display:              none;
+}
+
+#progress-dialog:not(.hasSuspend) button.pause, #progress-dialog.paused button.pause {
+    display:              none;
+}
+
+
+#progress-dialog:not(.hasSuspend) button.resume, #progress-dialog:not(.paused) button.resume {
+    display:              none;
 }

@@ -35,6 +35,11 @@ class Log {
     }
 
     static write(...str) {
-        document.getElementById('console').textContent += str.join(' ') + '\n';
+        let el = document.getElementById('console');
+        let atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 3;
+        el.textContent += str.join(' ') + '\n';
+        if(atBottom) {
+            el.scrollTop = el.scrollHeight;
+        }
     }
 }

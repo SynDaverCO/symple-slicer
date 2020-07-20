@@ -115,8 +115,8 @@ async function stream_gcode(gcode) {
         var sio = new SequentialSerial();
         await sio.open(port, usb.baudrate, 3, 10000);
 
-        let serialDisconnect = false;
-        sio.serial.on('close', err => {if(err) {console.error(err); serialDisconnect = true;}});
+        let asyncEvent = "";
+        sio.serial.on('close', err => {if(err) {console.error(err); asyncEvent = "disconnect";}});
 
         let proto = new marlin.MarlinSerialProtocol(sio, Log.write, Log.write);
 
@@ -125,22 +125,99 @@ async function stream_gcode(gcode) {
 
         // Stream the GCODE
         ProgressBar.message("Printing");
-        let abortPrint = false;
+        
         ProgressBar.onAbort(() => {
-            abortPrint = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
+            let abortPrint = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
             if(abortPrint) {
                 ProgressBar.message("Stopping...");
+                asyncEvent = "abort";
             }
             return abortPrint;
         });
+        ProgressBar.onPause(async state => {asyncEvent = state ? "pauseWithScript" : "resumeWithScript"});
+
+        // Stream the gcode to the printer
+        let isPaused = false;
         for(const [i, line] of gcode.entries()) {
             await proto.sendCmdReliable(line);
-            while(!await proto.clearToSend()) {
+            while(!await proto.clearToSend() || isPaused) {
                 const line = await proto.readline();
-                if(line && !line.startsWith("ok")) {
-                    Log.write(line);
+                if(line) {
+                    if(!line.startsWith("ok")) {
+                        Log.write(line);
+                    }
+                    /**
+                     * Handle host action commands
+                     *
+                     * See:
+                     *   https://reprap.org/wiki/G-code#Action_commands
+                     *   https://docs.octoprint.org/en/master/features/action_commands.html
+                     *   https://docs.octoprint.org/en/master/bundledplugins/action_command_prompt.html
+                     */
+                    if(line.startsWith("//action:")) {
+                        let cmd = line.substr(9).split(" ");
+                        switch(cmd[0]) {
+                            case "out_of_filament": alert("The filament has run out. Press okay to resume printing"); break;
+                            case "pause":  asyncEvent = "pauseWithScript"; break;
+                            case "resume": asyncEvent = "resumeWithScript"; break;
+                            case "paused": asyncEvent = "pause"; break;
+                            case "resumed": asyncEvent = "resume"; break;
+                            case "cancel": asyncEvent = "abort"; break;
+                            case "disconnect": asyncEvent = "abort"; break;
+                            case "probe_failed": throw new Error("Probe failed."); break;
+                            case "prompt_begin": Dialog.removeButtons(); Dialog.message(cmd[1]); break;
+                            case "prompt_choice":
+                            case "prompt_button":
+Dialog.addButton(cmd[1]); break;
+                            case "prompt_show": Dialog.show(); break;
+                            case "prompt_end": Dialog.hide(); break;
+                        }
+                    }
                 }
-                if(abortPrint || serialDisconnect) break;
+                // Handle events that may have happened outside this thread.
+                switch(asyncEvent) {
+                    case "resumeWithScript":
+                       if(usb.resume_print_gcode) {
+                            await proto.sendScriptUnreliable(usb.resume_print_gcode);
+                            await proto.waitUntilQueueEmpty();
+                        } else {
+                            console.warn("No resume_print_gcode in profile");
+                        }
+                        // Fall-through
+                    case "resume":
+                        isPaused = false;
+                        ProgressBar.setPauseState(false);
+                        ProgressBar.message("Printing");
+                        break;
+                    case "pauseWithScript":
+                        if(usb.pause_print_gcode) {
+                            await proto.waitUntilQueueEmpty();
+                            await proto.sendScriptUnreliable(usb.pause_print_gcode);
+                            await proto.waitUntilQueueEmpty();
+                        } else {
+                            console.warn("No pause_print_gcode in profile");
+                        }
+                        // Fall-through
+                    case "pause":
+                        isPaused = true;
+                        ProgressBar.setPauseState(true);
+                        ProgressBar.message("Paused");
+                        break;
+                    case "disconnect":
+                        Log.write("Connection dropped");
+                        throw new Error("Connection dropped");
+                        break;
+                    case "abort":
+                        Log.write("Stopping print");
+                        if(!usb.stop_print_gcode) {
+                            console.warn("No stop_print_gcode in profile");
+                        }
+                        await proto.abortPrint(usb.stop_print_gcode);
+                        Log.write("Print stopped");
+                        throw new PrintAborted("Print stopped by user");
+                        break;
+                }
+                asyncEvent = "";
             }
             if(proto.resyncCount > 2) {
                 if(!confirm("The printer is not responding. Press OK to continue waiting, or Cancel to stop the print")) {
@@ -148,22 +225,9 @@ async function stream_gcode(gcode) {
                 }
             }
             ProgressBar.progress(i/gcode.length);
-            if(abortPrint || serialDisconnect) break;
         }
-        // Handle abnormal conditions
-        if(serialDisconnect) {
-            Log.write("Connection dropped");
-            throw new Error("Connection dropped");
-        }
-        else if(abortPrint) {
-            Log.write("Stopping print");
-            await proto.abortPrint(usb.stop_print_gcode);
-            Log.write("Print stopped");
-            throw new PrintAborted("Print stopped by user");
-        } else {
-            await proto.finishPrint();
-            Log.write("Print finished.");
-        }
+        await proto.finishPrint();
+        Log.write("Print finished.");
     } finally {
         if(sio) {
             sio.close();

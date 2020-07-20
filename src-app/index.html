@@ -64,6 +64,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/util/ui/toolbar/toolbar.js"></script>
         <script src="lib/util/ui/progress/progress.js"></script>
         <script src="lib/util/ui/log/log.js"></script>
+        <script src="lib/util/ui/dialog/dialog.js"></script>
         <script src="lib/util/ui/navcube/navcube.js"></script>
         <script src="lib/slicing-engines/SlicerInterface.js"></script>
 
@@ -77,6 +78,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <link rel="stylesheet" type="text/css" href="lib/util/ui/settings/settings.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/toolbar/toolbar.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/log/log.css">
+        <link rel="stylesheet" type="text/css" href="lib/util/ui/dialog/dialog.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/progress/progress.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/navcube/navcube.css">
         <link rel="stylesheet" type="text/css" href="lib/util/ui/updater/updater.css">
@@ -185,7 +187,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <label for="slicing">Progress:</label><img src="images/spinner.gif"><br>
             <progress id="slicing" value="0"></progress>
             <span>
-                <button>Stop</button>
+                <button class="stop" title="Stop the print">&#x23F9;&#xFE0E;</button>
+                <button class="pause" title="Pause the print">&#x23F8;&#xFE0E;</button>
+                <button class="resume" title="Resume the print">&#x23F5;&#xFE0E;</button>
                 <a onclick="Log.show()">Show log</a>
             </span>
         </div>
@@ -193,6 +197,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <div id="log-dialog" class="float-center panel-style">
             <pre id="console"></pre>
             <button onclick="Log.hide()">Close</button>
+        </div>
+
+        <div id="custom-dialog" class="float-center panel-style">
+            <p></p><span></span>
         </div>
 
         <div id="about" onclick="hideAbout(event)" class="float-center panel-style close-box">
