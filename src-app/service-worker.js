@@ -44,6 +44,7 @@ const filesToCache = [
     'config/syndaver/machine_profiles/syndaver_axi.toml',
     'config/syndaver/print_profiles/abs_standard_stable.toml',
     'config/syndaver/print_profiles/cura_default.toml',
+    'config/syndaver/print_profiles/pc-abs_standard_stable.toml',
     'config/syndaver/print_profiles/petg_standard_stable.toml',
     'config/syndaver/print_profiles/pla_standard_stable.toml',
     'config/syndaver/print_profiles/tpu85_standard_stable.toml',
