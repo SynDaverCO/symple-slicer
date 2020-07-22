@@ -126,7 +126,7 @@ export class MarlinSerialProtocol {
      * as adding a checksum to each line, replying to resend
      * requests and keeping the Marlin buffer full
      */
-    constructor(serial, onResendCallback, onDebugMsgCallback) {
+    constructor(serial) {
         this.serial                 = serial;
         this.marlinBufSize          = 5;
         this.marlinReserve          = 1;
@@ -142,8 +142,6 @@ export class MarlinSerialProtocol {
         this.resyncCount             = 0;
         this.encoder                = new TextEncoder();
         this.decoder                = new TextDecoder();
-        this.onResendCallback       = onResendCallback;
-        this.onDebugMsgCallback     = onDebugMsgCallback;
         this.restart();
     }
 
@@ -252,6 +250,9 @@ export class MarlinSerialProtocol {
                 await this._sendImmediate("\nM105*\n");
                 this.sendNotification("Timeout. Forcing a re-sync.");
                 this.resyncCount++;
+                if(this.onResyncCallback) {
+                    this.onResyncCallback(this.resyncCount);
+                }
             } else if (line == "") {
                 let timeoutIn = this.watchdogTimeout - time.time();
                 if (timeoutIn != this.lastTimeoutMessage) {
@@ -372,8 +373,12 @@ export class MarlinSerialProtocol {
                 line = await this.serial.readline();
                 line = this.decoder.decode(line).trim();
             } catch (e) {
-                line = "";
-                console.log("Timeout in readline");
+                if(e instanceof SerialTimeout) {
+                    line = "";
+                    console.log("Timeout in readline");
+                } else {
+                    throw e;
+                }
             }
         } else {
             line = "";
@@ -480,10 +485,8 @@ export class MarlinSerialProtocol {
     }
 
     async waitUntilQueueEmpty() {
-        while(this.isPrinting() && this.resyncCount < 3) {
-            while(!await this.clearToSend()) {
-                await this.readline();
-            }
+        while(this.isPrinting()) {
+            await this.readline();
         }
     }
 
@@ -501,4 +504,9 @@ export class MarlinSerialProtocol {
     async close() {
         await this.serial.close();
     }
+
+    // Event handlers (may be overriden by users):
+    onResendCallback()         {}
+    onDebugMsgCallback(msg)    {}
+    onResyncCallback(count)    {}
 }

@@ -116,9 +116,14 @@ async function stream_gcode(gcode) {
         await sio.open(port, usb.baudrate, 3, 10000);
 
         let asyncEvent = "";
-        sio.serial.on('close', err => {if(err) {console.error(err); asyncEvent = "disconnect";}});
-
-        let proto = new marlin.MarlinSerialProtocol(sio, Log.write, Log.write);
+        let proto = new marlin.MarlinSerialProtocol(sio);
+        proto.onDebugMsgCallback = Log.write;
+        proto.onResendCallback = Log.write;
+        proto.onResyncCallback = count => {
+            if(count > 2 && !confirm("The printer is not responding. Press OK to continue waiting, or Cancel to stop the print")) {
+                asyncEvent = "abort";
+            }
+        };
 
         // Split into individual lines
         gcode = gcode.split(/\r?\n/);
@@ -127,12 +132,12 @@ async function stream_gcode(gcode) {
         ProgressBar.message("Printing");
         
         ProgressBar.onAbort(() => {
-            let abortPrint = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
-            if(abortPrint) {
+            let okay = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
+            if(okay) {
                 ProgressBar.message("Stopping...");
-                asyncEvent = "abort";
+                asyncEvent = "stop";
             }
-            return abortPrint;
+            return okay;
         });
         ProgressBar.onPause(async state => {asyncEvent = state ? "pauseWithScript" : "resumeWithScript"});
 
@@ -163,14 +168,12 @@ async function stream_gcode(gcode) {
                             case "resume": asyncEvent = "resumeWithScript"; break;
                             case "paused": asyncEvent = "pause"; break;
                             case "resumed": asyncEvent = "resume"; break;
-                            case "cancel": asyncEvent = "abort"; break;
-                            case "disconnect": asyncEvent = "abort"; break;
+                            case "cancel": asyncEvent = "stop"; break;
                             case "notification": ProgressBar.message(args.join(" ")); break;
                             case "probe_failed": throw new Error("Probe failed."); break;
                             case "prompt_begin": Dialog.removeButtons(); Dialog.message(args.join(" ")); break;
                             case "prompt_choice":
-                            case "prompt_button":
-Dialog.addButton(cmd[1]); break;
+                            case "prompt_button": Dialog.addButton(cmd[1]); break;
                             case "prompt_show": Dialog.show(); break;
                             case "prompt_end": Dialog.hide(); break;
                             default:
@@ -205,11 +208,9 @@ Dialog.addButton(cmd[1]); break;
                         isPaused = true;
                         ProgressBar.setPauseState(true);
                         break;
-                    case "disconnect":
-                        Log.write("Connection dropped");
-                        throw new Error("Connection dropped");
-                        break;
                     case "abort":
+                        throw new PrintAborted("Print stopped by user");
+                    case "stop":
                         Log.write("Stopping print");
                         if(!usb.stop_print_gcode) {
                             console.warn("No stop_print_gcode in profile");
@@ -220,11 +221,6 @@ Dialog.addButton(cmd[1]); break;
                         break;
                 }
                 asyncEvent = "";
-            }
-            if(proto.resyncCount > 2) {
-                if(!confirm("The printer is not responding. Press OK to continue waiting, or Cancel to stop the print")) {
-                    throw new PrintAborted("Print stopped by user");
-                }
             }
             ProgressBar.progress(i/gcode.length);
         }
