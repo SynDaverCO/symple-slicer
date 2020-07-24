@@ -21,6 +21,9 @@ const { ipcRenderer } = require('electron');
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
+class SerialTimeout extends Error {}
+class SerialDisconnected extends Error {}
+
 class SequentialSerial {
 
     constructor() {
@@ -81,9 +84,11 @@ class SequentialSerial {
             var result = this.serial.read(len);
             if(result) {
                 resolve(result);
+            } else if(!this.serial.isOpen) {
+                reject(new SerialDisconnected("Serial port closed while waiting for data"));
             } else {
                 if(Date.now() - this.readStart > this.timeout * 1000) {
-                    reject("SerialTimeout");
+                    reject(new SerialTimeout("Timeout expired while waiting for data"));
                 } else {
                     // Using setTimeout here is crucial for allowing the I/O buffer to refill
                     setTimeout(() => tryIt(this.serial, resolve, reject), 0);
@@ -149,6 +154,8 @@ class SequentialSerial {
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
 window.SequentialSerial = SequentialSerial;
+window.SerialTimeout = SerialTimeout;
+window.SerialDisconnected = SerialDisconnected;
 window.setPowerSaveEnabled = enabled => ipcRenderer.send('setPowerSaveEnabled', enabled);
 window.setPrintInProgress = enabled => ipcRenderer.send('setPrintInProgress', enabled);
 window.electronAppDownloadAndInstall = () => ipcRenderer.send('electronAppDownloadAndInstall');

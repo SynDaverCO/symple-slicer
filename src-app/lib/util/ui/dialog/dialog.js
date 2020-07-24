@@ -22,24 +22,34 @@
  *
  */
 
-class Log {
-    static clear() {
-        document.getElementById('console').textContent = '';
-    }
+class Dialog {
     static show() {
-        $("#log-dialog").show();
+        console.log("Show dialog", $("#custom-dialog").length);
+        $("#custom-dialog").show();
+        if($("#custom-dialog span button").length == 0) {
+            Dialog.addButton("OK", () => Dialog.hide());
+        }
+    }
+
+    static message(str) {
+        $("#custom-dialog p").html(str);
+    }
+
+    static addButton(str, callback) {
+        let el = document.createElement("button");
+        el.innerText = str;
+        $("#custom-dialog span").append(el);
+        if(callback) {
+            el.addEventListener("click", callback);
+        }
+    }
+
+    static removeButtons() {
+        $("#custom-dialog span").empty();
     }
 
     static hide() {
-        $("#log-dialog").hide();
+        $("#custom-dialog").hide();
     }
 
-    static write(...str) {
-        let el = document.getElementById('console');
-        let atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 3;
-        el.textContent += str.join(' ') + '\n';
-        if(atBottom) {
-            el.scrollTop = el.scrollHeight;
-        }
-    }
 }

@@ -42,24 +42,47 @@ class ProgressBar {
     }
 
     static hide() {
-        $("#progress-dialog").hide();
-        $("#progress-dialog").removeClass("abortable");
+        $("#progress-dialog").hide()
+                             .removeClass("paused")
+                             .removeClass("hasSuspend")
+                             .removeClass("hasAbort");
+        $("#progress-dialog .stop").prop('disabled', false);
     }
 
-    // Assigns a abort callback and shows an abort button.
-    // This lasts until the progress bar is hidden.
-    static onAbort(callback) {
-        $("#progress-dialog").addClass("abortable");
-
-        let abortBtn = $("#progress-dialog button");
-        abortBtn.prop('disabled', false);
-        abortBtn.on("click", () => {
-            abortBtn.prop('disabled', true);
-            if(!callback()) {
-                abortBtn.prop('disabled', false);
-            } else {
-                abortBtn.off("click");
-            }
+    // Assigns an abort callback and shows an abort button.
+    static onAbort(callback, str = "Abort") {
+        $("#progress-dialog").addClass("hasAbort");
+        $("#progress-dialog .stop").off("click");
+        $("#progress-dialog .stop").on(
+            "click", () => {
+                $("#progress-dialog .stop").prop('disabled', true);
+                if(!callback()) {
+                    $("#progress-dialog .stop").prop('disabled', false);
+                }
         });
+    }
+
+    // Assigns a pause/resume callback and shows a pause button.
+    static onPause(callback) {
+        $("#progress-dialog").addClass("hasSuspend");
+        $("#progress-dialog .pause").off("click");
+        $("#progress-dialog .pause").on(
+            "click", () => {
+                ProgressBar.setPauseState(true);
+                callback(true);
+        });
+        $("#progress-dialog .resume").on(
+            "click", () => {
+                ProgressBar.setPauseState(false);
+                callback(false);
+        });
+    }
+
+    static setPauseState(state) {
+        if(state) {
+            $("#progress-dialog").addClass("paused");
+        } else {
+            $("#progress-dialog").removeClass("paused");
+        }
     }
 }

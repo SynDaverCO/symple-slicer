@@ -1,9 +1,7 @@
 /**
- *
- * @licstart
- *
- * Web Cura
- * Copyright (C) 2020 SynDaver Labs, Inc.
+ * WebSlicer
+ * Copyright (C) 2016  Marcio Teixeira
+ * Copyright (C) 2020  SynDaver Labs, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,29 +15,14 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- * @licend
- *
  */
 
-class Log {
-    static clear() {
-        document.getElementById('console').textContent = '';
-    }
-    static show() {
-        $("#log-dialog").show();
-    }
+#custom-dialog {
+    display:              none;
+    padding:              1em;
+}
 
-    static hide() {
-        $("#log-dialog").hide();
-    }
-
-    static write(...str) {
-        let el = document.getElementById('console');
-        let atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 3;
-        el.textContent += str.join(' ') + '\n';
-        if(atBottom) {
-            el.scrollTop = el.scrollHeight;
-        }
-    }
+#custom-dialog span {
+    display:              flex;
+    align-items:          baseline;
 }

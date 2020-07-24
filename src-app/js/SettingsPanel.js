@@ -739,6 +739,10 @@ class SettingsPanel {
     }
 
     static onDownloadClicked() {
+        if(!gcode_blob) {
+            alert("There is nothing to print")
+            return
+        }
         let fileName = settings.get("gcode_filename");
         saveAs(gcode_blob, fileName);
         settings.gotoPage("page_finished");
@@ -756,6 +760,10 @@ class SettingsPanel {
     }
 
     static async onPrintClicked() {
+        if(!gcode_blob) {
+            alert("There is nothing to print")
+            return
+        }
         if(featureRequiresDesktopVersion("Printing via USB")) {
             try {
                 await stream_gcode(await gcode_blob.text());
