@@ -40,3 +40,25 @@ function enterFullscreen() {
         el.msRequestFullscreen();
     }
 }
+
+// Call this function before running operations that require the
+// desktop version. It will give the user the option to  go to the
+// download page if they are running from the web version.
+function featureRequiresDesktopVersion(what = "This feature") {
+    if(isDesktop) {
+        return true;
+    }
+    if (confirm(what + " requires the desktop edition of Symple Slicer.\n\nClick OK to visit the download page and abandon your work.\nClick CANCEL to continue working with the web edition.")) {
+        redirectToDesktopDownload()
+    }
+    return false;
+}
+
+function redirectToDesktopDownload() {
+    let url = "https://syndaverco.github.io/slicer-desktop";
+    if(isDesktop) {
+        window.open(url);
+    } else {
+        window.location.href = url;
+    }
+}

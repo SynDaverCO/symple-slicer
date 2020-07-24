@@ -185,7 +185,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <div id="progress-dialog" class="float-center panel-style">
             <label for="slicing">Progress:</label><img src="images/spinner.gif"><br>
-            <progress id="slicing" value="0"></progress>
+            <progress id="slicing"></progress>
             <span>
                 <button class="stop" title="Stop the print">&#x23F9;&#xFE0E;</button>
                 <button class="pause" title="Pause the print">&#x23F8;&#xFE0E;</button>
@@ -271,7 +271,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </div>
 
         <div id="update-app-dialog" class="float-center panel-style">
-            <div class="downloading ready">
+            <div class="available downloading ready">
                 A new version of SynDaver Symple Slicer is available.
             </div>
             <div class="okay">
@@ -281,9 +281,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <iframe id="iframe-changelog" src="change_log.md.html">
                 </iframe>
             </p>
-            <div class="downloading">Downloading update... <img src="images/spinner.gif"></div>
+            <div class="available">
+                <span>
+                <button onclick="Updater.downloadAndInstall()">Download and Install</button>
+                <button onclick="Updater.dismiss()">Skip</button>
+                </span>
+            </div>
+            <div class="downloading">
+                <span>
+                    Downloading update
+                    <progress></progress>
+                    <img src="images/spinner.gif">
+                </span>
+            </div>
             <div class="ready"><button onclick="Updater.update()">Update!</button></div>
-            <div class="okay"><button onclick="Updater.okay()">Close</button></div>
+            <div class="okay"><button onclick="Updater.dismiss()">Close</button></div>
         </div>
 
         <script>

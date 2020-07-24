@@ -21,13 +21,17 @@
     padding:            1em;
 }
 
-#update-app-dialog:not([data-state]), #update-app-dialog .downloading, 
+#update-app-dialog:not([data-state]), #update-app-dialog .available, #update-app-dialog .downloading,
 #update-app-dialog .ready, #update-app-dialog .okay {
     display:            none;
 }
 
 #update-app-dialog[data-state="show"] .header {
     visibility:         hidden;
+}
+
+#update-app-dialog[data-state="available"] .available {
+    display:            block;
 }
 
 #update-app-dialog[data-state="downloading"] .downloading {
@@ -44,4 +48,10 @@
 
 #update-app-dialog img {
     width:              1em;
+}
+
+#update-app-dialog span {
+    display:            flex;
+    align-items:        baseline;
+    justify-content:    space-between;
 }
