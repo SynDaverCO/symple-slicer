@@ -253,7 +253,7 @@ class SettingsPanel {
         s.number(         "Top layer",                               {id: "current_layer"});
 
         s.category(   "Print Options",                               {open: "open"});
-        attr = {name: "print_destination", className: "desktop-only", onchange: SettingsPanel.onOutputChanged};
+        attr = {name: "print_destination", onchange: SettingsPanel.onOutputChanged};
         s.radio( "Send to connected printer:",                       {...attr, value: "printer"});
         s.radio( "Save to GCODE file:",                              {...attr, value: "file", checked: "checked"});
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode", className: "save-to-file webapp-only"});
@@ -305,11 +305,9 @@ class SettingsPanel {
         s.fromSlicer(     "machine_end_gcode");
         s.button(         "Done",                                    {onclick: SettingsPanel.doneEditingGcode});
 
-        if(isDesktop) {
-            s.page(       "Update Firmware",                         {id: "page_flash_fw"});
-            s.button(     "Update",                                  {onclick: SettingsPanel.onFlashClicked});
-            s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
-        }
+        s.page(       "Update Firmware",                             {id: "page_flash_fw"});
+        s.button(     "Update",                                      {onclick: SettingsPanel.onFlashClicked});
+        s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
 
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
@@ -340,6 +338,9 @@ class SettingsPanel {
         s.button(     "About",                                       {onclick: showAbout});
         s.button(     "User's Guide",                                {onclick: showUserGuide});
         s.button(     "Change Log",                                  {onclick: Updater.showReleaseNotes});
+
+        s.heading(    "Symple Slicer Desktop Edition:");
+        s.button(     "Download Desktop Edition",                    {onclick: redirectToDesktopDownload});
 
         s.heading(    "View Controls:");
         s.element(                                                   {id: "help-viewport"});
@@ -744,23 +745,27 @@ class SettingsPanel {
     }
 
     static async onFlashClicked() {
-        try {
-            await flashFirmware();
-        } catch(err) {
-            console.error(err);
-            alert(err);
+        if(featureRequiresDesktopVersion("Updating firmware")) {
+            try {
+                await flashFirmware();
+            } catch(err) {
+                console.error(err);
+                alert(err);
+            }
         }
     }
 
     static async onPrintClicked() {
-        try {
-            await stream_gcode(await gcode_blob.text());
-            settings.gotoPage("page_finished");
-        } catch(err) {
-            if(!(err instanceof PrintAborted)) {
-                // Report all errors except for user initiated abort
-                console.error(err);
-                alert(err);
+        if(featureRequiresDesktopVersion("Printing via USB")) {
+            try {
+                await stream_gcode(await gcode_blob.text());
+                settings.gotoPage("page_finished");
+            } catch(err) {
+                if(!(err instanceof PrintAborted)) {
+                    // Report all errors except for user initiated abort
+                    console.error(err);
+                    alert(err);
+                }
             }
         }
     }

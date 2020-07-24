@@ -109,14 +109,21 @@ class ProfileManager {
             }
         }
 
+        let okay = true
         for(const url of ProfileManager.getProfileUrls()) {
-            const baseUrl = new URL(url, document.location);
-            const data = await fetchText(url);
-            const config = toml.parse(data);
-            console.log("Loading profile list from", baseUrl.toString());
-            addMenuEntries(baseUrl, config, "machine_profiles", printer_menu);
-            addMenuEntries(baseUrl, config, "print_profiles",   material_menu);
+            const baseUrl = new URL(url, document.location)
+            try {
+                const data = await fetchText(url)
+                const config = toml.parse(data)
+                console.log("Loading profile list from", baseUrl.toString())
+                addMenuEntries(baseUrl, config, "machine_profiles", printer_menu)
+                addMenuEntries(baseUrl, config, "print_profiles",   material_menu)
+            } catch(e) {
+                console.warn("Unable to load profiles from", url)
+                okay = false
+            }
         }
+        if(!okay) alert("Unable to retrieve one or more profile lists")
     }
 
     /**
@@ -134,10 +141,10 @@ class ProfileManager {
             console.log("Loading slicer defaults");
             slicer.loadDefaults();
         }
-        if(printer !== "keep") {
+        if(printer && printer !== "keep") {
             await ProfileManager.loadPresets("machine", printer);
         }
-        if(material !== "keep") {
+        if(material && material !== "keep") {
             await ProfileManager.loadPresets("print", material);
         }
     }

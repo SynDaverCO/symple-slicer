@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.8
+=============================
+
+* Added links to Symple Slicer Desktop Edition
+
 SynDaver Symple Slicer v1.0.7
 =============================
 

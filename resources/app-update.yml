@@ -1,0 +1,4 @@
+owner: SynDaverCO
+repo: symple-slicer
+provider: github
+updaterCacheDirName: symple-slicer-updater

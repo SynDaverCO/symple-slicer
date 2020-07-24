@@ -66,8 +66,14 @@ customSliceFilter() {
     done
 }
 
+incrementCacheVersion() {
+    sed -i -r 's/(.*)(cacheVersion:[ ]*)([0-9]+)(.*)/echo "\1\2$((\3+1))\4"/ge' $SRC_DIR/service-worker.js
+    echo Incremented cache version in service worker
+}
+
 rm -rf $OUT_DIR
 mkdir $OUT_DIR
 
 makeWebReleaseDir
 customSliceFilter
+incrementCacheVersion
