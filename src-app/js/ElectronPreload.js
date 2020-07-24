@@ -151,3 +151,4 @@ class SequentialSerial {
 window.SequentialSerial = SequentialSerial;
 window.setPowerSaveEnabled = enabled => ipcRenderer.send('setPowerSaveEnabled', enabled);
 window.setPrintInProgress = enabled => ipcRenderer.send('setPrintInProgress', enabled);
+window.electronAppDownloadAndInstall = () => ipcRenderer.send('electronAppDownloadAndInstall');

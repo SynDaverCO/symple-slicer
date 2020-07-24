@@ -58,6 +58,7 @@ function createWindow () {
     win.loadFile('index.html');
 
     createMenu(win);
+    checkForUpdates(win);
 }
 
 function createMenu(win) {
@@ -159,7 +160,33 @@ app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-background-timer-throttling");
 
 app.allowRendererProcessReuse = false;
-app.whenReady().then(createWindow)
+app.whenReady().then(createWindow);
+
+// Auto-update functionality
+
+function checkForUpdates(win) {
+    const { autoUpdater } = require("electron-updater")
+    autoUpdater.logger = require("electron-log")
+    autoUpdater.logger.transports.file.level = "info"
+    autoUpdater.autoDownload = false
+
+    autoUpdater.on('update-available', info => {
+      console.log('Update available: ', info.version)
+      win.webContents.executeJavaScript('Updater.onElectronAppUpdateAvailable("' + info.version + '")')
+    })
+    autoUpdater.on('download-progress', progressObj => {
+      let log_message = "Download speed: " + progressObj.bytesPerSecond
+      log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
+      log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')'
+      console.log(log_message)
+      win.webContents.executeJavaScript('Updater.onElectronAppDownloadProgress(' + progressObj.percent + ')')
+    })
+    autoUpdater.on('update-downloaded', info => autoUpdater.quitAndInstall())
+
+    ipcMain.on('electronAppDownloadAndInstall', event => autoUpdater.downloadUpdate())
+
+    autoUpdater.checkForUpdatesAndNotify()
+}
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

@@ -27,15 +27,15 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    version: '1.0.7',
-    release: 9
+    cacheVersion: 1
 };
 
-const cacheName = 'v' + info.version + "r" + info.release;
+const cacheName = 'v' + info.cacheVersion;
 
 const filesToCache = [
     '.',
     './manifest.webmanifest',
+    './package.json',
     'config/cura_defaults/fdmextruder.def.json',
     'config/cura_defaults/fdmprinter.def.json',
     'config/cura_defaults/fdmprinter_errata.def.json',
@@ -194,10 +194,10 @@ async function processRequest(request) {
     var cache    = await caches.open(cacheName);
     var response = await cache.match(request);
     if (!response) {
-        if (request.url.includes("version.json")) {
+        if (request.url.includes("service-worker-info.json")) {
             return new Response(
                 JSON.stringify(info),
-                {headers: {"Content-Type": "text/css"}}
+                {headers: {"Content-Type": "text/json"}}
             );
         } else {
             console.log("Warning: Resource not in cache: ", request.url, "requested by",  request.referrer);
