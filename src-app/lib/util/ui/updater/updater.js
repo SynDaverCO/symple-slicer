@@ -121,7 +121,7 @@ class Updater extends UpdateDialog {
                     UpdateDialog.showUpdateReady();
                     break;
                 case "redundant":
-                    alert("Update failed");
+                    alert("Failed to download update. Please try again later.");
                     UpdateDialog.dismiss();
                     break;
             }
