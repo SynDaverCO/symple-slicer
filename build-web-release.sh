@@ -72,7 +72,7 @@ incrementCacheVersion() {
 }
 
 rm -rf $OUT_DIR
-mkdir $OUT_DIR
+mkdir -p $OUT_DIR
 
 makeWebReleaseDir
 customSliceFilter

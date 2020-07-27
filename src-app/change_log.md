@@ -1,7 +1,10 @@
 SynDaver Symple Slicer v1.0.8
 =============================
 
-* Added links to Symple Slicer Desktop Edition
+* Added [https://syndaverco.github.io/slicer-desktop/ Symple Slicer Desktop Edition]
+* '''Desktop Only:''' Added ability to print to an USB connected printer
+* '''Desktop Only:''' Added ability to flash firmware to an USB connected printer
+* '''Firmware:''' Release 3: faster bed heating
 
 SynDaver Symple Slicer v1.0.7
 =============================
@@ -15,8 +18,8 @@ SynDaver Symple Slicer v1.0.7
 * Added "Infill Before Walls" to "Shell"
 * Added "Support Z Distance", "Support X/Y Distance", "Minimum Support X/Y Distance" and "Support Interface Resolution" to "Support"
 * Added "Initial Layer Height", and "Support Speed" to "Print Speed"
-* Use Cura Engine computed values for "Initial Layer Speed", "Initial Layer Travel Speed", "Travel Speed", "Wall Speed", "Top/Bottom Speed" and "Inner Wall Speed"
-* Added "PC-ABS (beta)" profile
+* '''Profiles:''' Use Cura Engine computed values for "Initial Layer Speed", "Initial Layer Travel Speed", "Travel Speed", "Wall Speed", "Top/Bottom Speed" and "Inner Wall Speed"
+* '''Profiles:''' Added "PC-ABS (beta)" profile
 
 SynDaver Symple Slicer v1.0.6
 =============================
@@ -26,13 +29,13 @@ SynDaver Symple Slicer v1.0.6
 * Show ".gcode" extension even when original file extension was capitalized
 * Add M73 to G-code to update progress bar while printing
 * Added user's guide
-* Updated profiles
+* '''Profiles:''' Updated profiles
 
 SynDaver Symple Slicer v1.0.5
 =============================
 
-* Updated AXI machine settings
-* Updated PLA profile with optimized support settings
+* '''Profiles:''' Updated AXI machine settings
+* '''Profiles:''' Updated PLA profile with optimized support settings
 
 SynDaver Symple Slicer v1.0.4
 =============================
@@ -63,7 +66,7 @@ SynDaver Symple Slicer v1.0.0
 
 * Fix for enter as tab no longer working
 * Fix for certain non-linked settings being reset to default
-* Updated profiles
+* '''Profiles:''' Updated profiles
 
 SynDaver Symple Slicer v0.9.9997
 ================================
@@ -74,7 +77,7 @@ SynDaver Symple Slicer v0.9.9996
 ================================
 
 * Fix for objects being difficult to select after they are sliced
-* Updated profiles
+* '''Profiles:''' Updated profiles
 
 SynDaver Symple Slicer v0.9.9995
 ================================
@@ -146,7 +149,7 @@ SynDaver Symple Slicer v0.9.994
 * Added mirror buttons
 * Added axis color coding to UI
 * Pre-populate the transform objects panel
-* Updated print profiles
+* '''Profiles:''' Updated print profiles
 
 SynDaver Symple Slicer v0.9.993
 ===============================
@@ -161,12 +164,12 @@ SynDaver Symple Slicer v0.9.992
 * Allow user to click next if no profiles are selected
 * Change wording of export option checkboxes for clarity
 * Added tooltip for export option checkboxes for more clarity
-* Set default wall thickness to twice the line width
-* Changed speed_wall_x to speed_wall
 * Moved the "Clear All" to the right-click menu
 * Moved the "Rearrange All" to the right-click menu
 * Added "Center Selected Objects" to the right-click menu
 * Fixed issue where UI settings were not being overwritten when loading defaults
+* '''Profiles:''' Set default wall thickness to twice the line width
+* '''Profiles:''' Changed speed_wall_x to speed_wall
 
 SynDaver Symple Slicer v0.9.991
 ===============================
@@ -201,7 +204,7 @@ SynDaver Symple Slicer v0.9.94
 ==============================
 
 * Fixed typos in UI
-* Updated PLA profile to release 5/7/2020
+* '''Profiles:''' Updated PLA profile to release 5/7/2020
 
 SynDaver Symple Slicer v0.9.93
 ==============================
@@ -209,7 +212,7 @@ SynDaver Symple Slicer v0.9.93
 * Added the ability to make lithophanes out of images.
 * Reduce size of extremely large objects to fit
 * Fixed objects not falling to the bed.
-* Updated PLA profile to release 5/5/2020
+* '''Profiles:''' Updated PLA profile to release 5/5/2020
 
 SynDaver Symple Slicer v0.9.92
 ==============================
