@@ -50,20 +50,16 @@ function loadSTLFile(stlData) {
     loadGeometry(geometry);
 }
     
-function loadFileFromUrl(url) {
+async function loadFileFromUrl(url) {
     self.postMessage({'cmd': 'stdout', 'str': "Reading model"});
-    fetchFile(url,
-        function(response) {
-            loadSTLFile(response);
-        },
-        function(status) {
-            if(status == 404) {
-                self.postMessage({'cmd': 'stderr', 'str': "Failed, file not found"});
-            } else {
-                self.postMessage({'cmd': 'stderr', 'str': "Failed, status:" + status});
-            }
-        }
-    );
+    try {
+        console.log(url);
+        let data = await fetchFile(url);
+        return loadSTLFile(data);
+    } catch(e) {
+        self.postMessage({'cmd': 'stderr', 'str': e.toString()});
+        console.error(e);
+    }
 }
 
 function stop() {

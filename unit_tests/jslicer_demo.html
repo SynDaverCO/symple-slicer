@@ -140,12 +140,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <div id="credits" class="tiltLeft dashedAndRound"><a href="http://marciot.freeshell.org">marciot.freeshell.org</a></div>
 
-        <script src="/lib/three/three.min.js"></script>
-        <script src="/lib/jquery/jquery.js"></script>
-        <script src="/lib/util/geometry/GeometrySerialize.js"></script>
+        <script src="../src-app/lib/three/three.min.js"></script>
+        <script src="../src-app/lib/jquery/jquery-3.5.0.min.js"></script>
+        <script src="../src-app/lib/util/geometry/GeometrySerialize.js"></script>
 
-        <script src="/lib/slicing-engines/JSSlicer/worker/SlicerInterface.js"></script>
-        <script src="/lib/slicing-engines/JSSlicer/core/ClipperPath.js"></script>
+        <script src="../src-app/lib/slicing-engines/JSSlicer/worker/SlicerInterface.js"></script>
+        <script src="../src-app/lib/slicing-engines/JSSlicer/core/ClipperPath.js"></script>
 
         <script>
             var canvas   = document.getElementById('myCanvas');
@@ -161,15 +161,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 var passes = 0;
                 var file   = 0;
                 var files  = [
-                    "/stl/demo1.stl",
-                    "/stl/demo2.stl",
-                    "/stl/demo3.stl"
+                    "../stl/demo1.stl",
+                    "../stl/demo2.stl",
+                    "../stl/demo3.stl"
                 ];
                 var autorotate = true;
 
                 this.fetchNext = function() {
                     console.log("Getting " + files[file]);
-                    slicer.loadFileFromUrl(files[file]);
+                    let absoluteUrl = new URL(files[file], document.baseURI).href
+                    slicer.loadFileFromUrl(absoluteUrl);
 
                     passes = 0;
 
