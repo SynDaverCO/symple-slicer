@@ -384,8 +384,8 @@ class SlicerConfiguration {
         this.getDependents(key).forEach(
             dependent => {
                 var whatChanged = 0;
-                if(this.nodeDependsOn(dependent, key, "value") ||
-                   this.nodeDependsOn(dependent, key, "resolve") &&
+                if((this.nodeDependsOn(dependent, key, "value") ||
+                   this.nodeDependsOn(dependent, key, "resolve")) &&
                    excluding.indexOf(dependent) == -1) {
                     whatChanged = this.recomputeValue(dependent, whatChanged);
                 }
