@@ -61,24 +61,39 @@ function re_json(str, jsonStorage) {
 }
 
 function lists(str) {
-    str = str.replace( /(?:^[#].*$\n?)+/gm, '<ol>\n$&</ol>');
-    str = str.replace( /(?:^[*].*$\n?)+/gm, '<ul>\n$&</ul>');
-    str = str.replace( /^[#*] .*(?:\n[#*]{2}.*)*$/gm, '<li>\n$&\n</li>');
-    str = str.replace( /^[#*][ ]*/gm, '');
+    function collapseSublist(str, delim, open_tag, close_tag) {
+        var match_parent_li_and_sublist = new RegExp('(.*)\n((?:^' + delim + '.*$\n?)+)', "gm");
+        var match_li                    = new RegExp('^' + delim + ' +(.*)$', "gm");
+        return str.replace( match_parent_li_and_sublist,  (m,p_li,ol) => p_li + open_tag + ol.replace(match_li, '<li>$1</li>').replace(/\n/g,'') + close_tag + '\n');
+    }
+    str = collapseSublist(str, "[#][#][#]", "<ol>", "</ol>");
+    str = collapseSublist(str, "[*][*][*]", "<ul>", "</ul>");
+    str = collapseSublist(str, "[#][#]",    "<ol>", "</ol>");
+    str = collapseSublist(str, "[*][*]",    "<ul>", "</ul>");
+    str = collapseSublist(str, "[#]",       "<ol>", "</ol>");
+    str = collapseSublist(str, "[*]",       "<ul>", "</ul>");
     return str;
+}
+
+function make_id(str) {
+    return str.trim().replace(/ /g, "-").replace(/[^A-Za-z0-9\-]/g,'');
+}
+
+function make_anchor(str) {
+    return '<a id="' + make_id(str) + '">' + str + '</a>';
 }
 
 // == Headers ==
 function headers_sl(str) {
     return str.replace(/^(=+)[ ]*(.*)[ ]*\1/gm, function(a,b,c)
-        {return '<h' + b.length + '>' + c + '</h' + b.length + '>'});
+        {return '<h' + b.length + '>' + make_anchor(c) + '</h' + b.length + '>'});
 }
 
 // Headers
 // -------
 function headers_ml(str) {
-    return str.replace(/^(\w.*)\n==+$/gm, '<h1>$1</h1>')
-              .replace(/^(\w.*)\n--+$/gm, '<h2>$1</h2>');
+    return str.replace(/^(\w.*)\n==+$/gm, (a,b) => '<h1>' + make_anchor(b) + '</h1>')
+              .replace(/^(\w.*)\n--+$/gm, (a,b) => '<h2>' + make_anchor(b) + '</h2>');
 }
 
 function def_lists(str) {
@@ -167,6 +182,7 @@ function figs(str) {
 
 function links(str) {
     // Internal links
+    str = str.replace( /\[\[#([^\]|]+)\]\]/g, (a,b) => '<a href="#' + make_id(b) + '">' + b + '</a>');
     str = str.replace( /\[\[([^\]|]+)\]\]/g, '<a>$1</a>');
     str = str.replace( /\[\[([^\]|]+)\|([^\]]+)\]\]/g, '<a href="$2">$1</a>');
 
