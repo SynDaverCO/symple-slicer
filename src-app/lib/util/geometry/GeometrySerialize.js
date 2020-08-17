@@ -32,10 +32,10 @@ function geometryToJSON(geometry) {
             result.transferables.push(attr.array.buffer);
         }
     }
-    pushAttribute("position", geometry.getAttribute("position"));
-    //pushAttribute("color",    geometry.getAttribute("color"));
-    pushAttribute("normal",   geometry.getAttribute("normal"));
-    pushAttribute("index",    geometry.getIndex());
+    pushAttribute("position", bufferGeometry.getAttribute("position"));
+    //pushAttribute("color",    bufferGeometry.getAttribute("color"));
+    pushAttribute("normal",   bufferGeometry.getAttribute("normal"));
+    pushAttribute("index",    bufferGeometry.getIndex());
     return result;
 }
 

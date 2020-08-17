@@ -15,9 +15,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+ 
+function getScriptPath() {
+    let id = +new Date + Math.random();
+    document.write('<script id="dummy' + id + '"><\/script>');
+    return document.getElementById('dummy' + id).previousSibling.src;
+}
+
+let baseJsPath = getScriptPath();
 
 function SlicerInterface() {
-    var js = "/lib/slicing-engines/JSSlicer/worker/SlicerWorker.js";
+    var js = new URL("./SlicerWorker.js", baseJsPath).href;
     var worker;
     var slicingFinishedFunc;
     var onGeometryLoadedFunc;
