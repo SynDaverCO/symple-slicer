@@ -57,6 +57,14 @@ hr {
     display: none;
 }
 
+.settings-ui[data-keep-settings="yes"] .load-profiles {
+    display: none;
+}
+
+.settings-ui[data-keep-settings="no"] .keep-settings {
+    display: none;
+}
+
 BODY[data-platform="webapp"] .desktop-only {
     display: none;
 }

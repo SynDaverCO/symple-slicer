@@ -36,13 +36,13 @@ class Stage {
         this.selection = new SelectionGroup();
         this.selection.onTransformChange = mode => {
             this.render();
-            SettingsPanel.onTransformChange(mode);
+            ObjectTransformPage.onTransformChange(mode);
         }
         this.selection.onTransformEnd = () => {
             this.dropObjectToFloor(this.selection);
             this.highlightOutOfBounds(this.selection.children);
         };
-        this.selection.onSelectionChanged = SettingsPanel.onSelectionChanged;
+        this.selection.onSelectionChanged = ObjectTransformPage.onSelectionChanged;
 
         this.placedObjects.add(this.selection);
         this.bedRelative.add(this.placedObjects);
@@ -71,7 +71,7 @@ class Stage {
             case "delete_all"  : this.removeAll(); break;
             case "center_one" : this.centerSelectedObject(); break;
             case "delete_some" : this.removeSelectedObjects(); break;
-            case "xform_some"  : SettingsPanel.onToolChanged("move");
+            case "xform_some"  : ObjectTransformPage.onToolChanged("move");
         }
     }
 
@@ -243,12 +243,12 @@ class Stage {
      * Highlight any objects that are outside the print volume
      */
     highlightOutOfBounds(objs) {
-        SettingsPanel.transformOutOfBoundsError = false;
+        ObjectTransformPage.transformOutOfBoundsError = false;
         objs.forEach(obj => {
             const within = this.testWithinBounds(obj);
             obj.error = !within;
             if(!within) {
-                SettingsPanel.transformOutOfBoundsError = true;
+                ObjectTransformPage.transformOutOfBoundsError = true;
             }
         });
     }
@@ -372,7 +372,7 @@ class Stage {
             this.objects.push(obj);
             this.placedObjects.add(obj);
         });
-        SettingsPanel.onObjectCountChanged(this.objects.length);
+        PlaceObjectsPage.onObjectCountChanged(this.objects.length);
     }
 
     removeObjects(objs) {
@@ -384,7 +384,7 @@ class Stage {
                 this.objects.splice(index, 1);
             }
         });
-        SettingsPanel.onObjectCountChanged(this.objects.length);
+        PlaceObjectsPage.onObjectCountChanged(this.objects.length);
     }
 
     removeSelectedObjects() {
@@ -497,8 +497,8 @@ class Stage {
                 this.onLayFlatClicked();
             } else {
                 this.selection.setTransformMode(tool);
-                SettingsPanel.onToolChanged(tool);
-                SettingsPanel.onSelectionChanged();
+                ObjectTransformPage.onToolChanged(tool);
+                ObjectTransformPage.onSelectionChanged();
             }
         }
     }
@@ -538,7 +538,7 @@ class Stage {
         } else {
             this.selectNone();
             this.render();
-            SettingsPanel.onObjectUnselected();
+            ObjectTransformPage.onObjectUnselected();
         }
     }
 

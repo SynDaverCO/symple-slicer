@@ -128,7 +128,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             Sorry, your browser does not support the HTML canvas.
         </canvas>
         <div id="buttons" class="dock-right dock-top webapp-only">
-            <button id="help" onclick="SettingsPanel.goToHelp();">Help</button>
+            <button id="help" onclick="HelpAndInfoPage.show();">Help</button>
             <button id="fullscreen" onclick="enterFullscreen()">Fullscreen</button>
         </div>
         <div id="settings" class="panel-style dock-right dock-bottom"></div>
@@ -161,7 +161,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <p>
                 Well done! You can now take the G-code file to your printer for printing!
             </p>
-            <button onclick="SettingsPanel.onDoItAgainClicked()">Do it again!</button>
+            <button onclick="PrintFinishedPage.onDoItAgainClicked()">Do it again!</button>
         </div>
 
         <table id="help-viewport">
@@ -352,7 +352,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             // Prepare the geometry loading thread
             var geoLoader    = new GeometryLoader();
-            geoLoader.onGeometryLoaded = geometry => {SettingsPanel.onGeometryLoaded(geometry);};
+            geoLoader.onGeometryLoaded = geometry => {PlaceObjectPage.onGeometryLoaded(geometry);};
 
             geoLoader.onProgress = function(progress) {
                 ProgressBar.progress(progress);
@@ -363,7 +363,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             slicer.onStderrOutput = Log.write;
 
             slicer.onFileReceived = function(data) {
-                SettingsPanel.readyToDownload(data);
+                PrintAndPreviewPage.readyToDownload(data);
             }
 
             slicer.onProgress = function(progress) {
@@ -371,9 +371,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
 
             slicer.onPrintStats = function(stats) {
-                SettingsPanel.setPrintTime(stats.time_hms);
-                SettingsPanel.setPrintFilament(stats.filament);
-                SettingsPanel.setPrintBounds(stats.bounds);
+                PrintAndPreviewPage.setPrintTime(stats.time_hms);
+                PrintAndPreviewPage.setPrintFilament(stats.filament);
+                PrintAndPreviewPage.setPrintBounds(stats.bounds);
             }
 
             function showUserGuide() {

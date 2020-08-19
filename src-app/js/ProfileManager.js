@@ -95,11 +95,6 @@ class ProfileManager {
 
     // Populate the pull down menus in the UI with a list of available profiles
     static async populateProfileMenus(printer_menu, material_menu) {
-        if(ProfileManager.hasStoredProfile()) {
-            printer_menu.option("Last session settings", {value: "keep"});
-            material_menu.option("Last session settings", {value: "keep"});
-        }
-
         function addMenuEntries(baseUrl, config, type, menu) {
             if(config.hasOwnProperty(type)) {
                 for (const [key, value] of Object.entries(config[type])) {
@@ -136,17 +131,10 @@ class ProfileManager {
     }
 
     // Apply a selection from the menu
-    static async applyPresets(printer = "keep", material = "keep") {
-        if(printer !== "keep" && material !== "keep") {
-            console.log("Loading slicer defaults");
-            slicer.loadDefaults();
-        }
-        if(printer && printer !== "keep") {
-            await ProfileManager.loadPresets("machine", printer);
-        }
-        if(material && material !== "keep") {
-            await ProfileManager.loadPresets("print", material);
-        }
+    static async applyPresets(printer, material) {
+        slicer.loadDefaults();
+        await ProfileManager.loadPresets("machine", printer);
+        await ProfileManager.loadPresets("print", material);
     }
 
     static importConfiguration(data, initial) {
