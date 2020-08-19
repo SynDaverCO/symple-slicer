@@ -1,6 +1,6 @@
 /*
- * RetroWeb Browser
- * Copyright (C) 2020 Marcio Teixeira
+ * Wikify.js
+ * Copyright (C) 2016 Marcio Teixeira
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -15,27 +15,99 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
  /**
- 
+
  Heading 1
 =========
 
 Heading 2
 ---------
 
+= Heading 1 =
+
+== Heading 2 ==
+
 === Heading 3 ===
+
+==== Heading 4 ====
+
+= Definition Lists =
 
 ; Some word
 : Some definition
 
-* List item 1
-* List item 2
+= Item Lists =
+
+* List item 1 (w/ bullets)
+* List item 2 (w/ bullets)
+** Sublist item 1 (w/ bullets)
+** Sublist item 1 (w/ bullets)
+* List item 3 (w/ bullets)
+
+# List item 1 (w/ ordinal)
+# List item 2 (w/ ordinal)
+## Sublist item 1 (w/ ordinal)
+## Sublist item 2 (w/ ordinal)
+# List item 3 (w/ ordinal)
+
+# List item 1 (w/ ordinal)
+# List item 2 (w/ ordinal)
+** Sublist item 1 (w/ bullets)
+** Sublist item 2 (w/ bullets)
+# List item 3 (w/ ordinal)
+
+Text formatting:
 
 '''boldface'''
 ''italics''
+__underline__
 
-* */
+  Two leading spaces,
+  makes a blockquote
+
+ One leading space,
+ preformatted text
+
+Hyperlinks:
+
+[[#Hyperlink to Heading]]
+[[Internal link]]
+
+http://whatever.com
+[http://whatever.com]
+[http://whatever.com External link with description]
+
+Figures:
+
+[[figure:filename]]
+[[figure-className:filename]]
+
+Simple table with headers:
+
+|! Header 1  |! Header 2  |!  Header 3  |
+|  Item 1    |  Item 3    |   Item 5    |
+|  Item 2    |  Item 4    |   Item 6    |
+
+
+Table cells can have modifiers, which immediately follow the leading "|" in a
+cell. The modifiers, which must be listed in this order are:
+
+  !  - Header
+  >  - Justify Right or
+  ^  - Justify Center
+  n  - Number indicating colspan
+  ,m - Number indicating rowspan
+
+Example table with individual cell formatting:
+
+|!3                   Header spanning three columns                   |
+|     Left Justify     |     Left Justify       |   Left Justify      |
+|     Left Justify     |^    Center Justify     |>  Right justified   |
+|     Blank Cell       |2    Left justified text spanning two columns |
+|^2 Center justified text spanning two columns  |   Blank Cell        |
+
+*/
 
 /* Removes embedded JSON content from the wiki markup. Since JSON content
  * may span multiple lines and can interfere with subsequent substitutions,
@@ -192,7 +264,7 @@ function links(str) {
     // External links
     str = str.replace( /\[(http[^\] ]+) ([^\]]+)\]/g,  '<a href="$1" target="new">$2</a>');
     str = str.replace( /\[(http[^\] ]+)\]/g,           '<a href="$1" target="new">$1</a>');
-    str = str.replace( /([^">])(http[^\]<\n ]+)/g,      '$1<a href="$2" target="new">$2</a>');
+    str = str.replace( /([^">])(http[^\]<\n ]+)/g,     '$1<a href="$2" target="new">$2</a>');
 
     return str;
 }
