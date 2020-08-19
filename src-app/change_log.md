@@ -3,12 +3,13 @@ SynDaver Symple Slicer v1.0.9
 
 * Added radio buttons to "Select Presets" panel to make things easier to understand.
 * Added [https://syndaverco.github.io/slicer-desktop/ Symple Slicer Desktop Edition]
+* Added auto-scrolling to console window
 * '''Cura Engine:''' Updated to 4.6.2
 * '''Desktop Only:''' Added ability to print to an USB connected printer
 * '''Desktop Only:''' Added ability to flash firmware to an USB connected printer
 * '''Firmware:''' Release 3: faster bed heating
-* '''Guide:''' Added table of contents, updated figures
-* '''Profiles:''' Profile updates
+* '''Guide:''' Added table of contents; updated text and figures
+* '''Profiles:''' Updated ABS, PC-ABS, PETG, PLA and TPU95 profiles
 
 SynDaver Symple Slicer v1.0.8
 =============================
