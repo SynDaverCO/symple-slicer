@@ -33,7 +33,10 @@ class SettingsPanel {
         PrintFinishedPage.init(s);
         MachineSettingsPage.init(s);
         StartAndEndGCodePage.init(s);
-        UpdateFirmwarePage.init(s);
+        if(isDesktop) {
+            // Disable desktop redirect for now
+            UpdateFirmwarePage.init(s);
+        }
         AdvancedFeaturesPage.init(s);
         HelpAndInfoPage.init(s);
 
@@ -695,6 +698,11 @@ class PrintAndPreviewPage {
         s.button(     "Print",                                       {onclick: PrintAndPreviewPage.onPrintClicked});
         s.buttonHelp( "Click this button to print to a USB attached printer");
         s.div();
+
+        if(!isDesktop) {
+            // Hide desktop integration for now.
+            $("input[name='print_destination']").parent().hide();
+        }
     }
 
     static onOutputChanged(e) {
