@@ -162,12 +162,12 @@ class SelectProfilesPage {
 
         const attr = {name: "keep_settings", onchange: SelectProfilesPage.onKeepSettingsChanged};
         s.radio( "Use slicer settings from last session",            {...attr, value: "yes", checked: "checked"});
-        s.radio( "Load new slicer settings from profiles:",           {...attr, value: "no"});
+        s.radio( "Load new slicer settings from profiles:",          {...attr, value: "no"});
 
         s.div({className: "load-profiles"});
         s.separator("br");
-        const printer_menu = s.choice( "Printer:",                     {id: "preset_select"});
-        const material_menu = s.choice( "Material:",                   {id: "material_select"});
+        const printer_menu = s.choice( "Printer:",                   {id: "preset_select"});
+        const material_menu = s.choice( "Material:",                 {id: "material_select"});
         s.div();
 
         s.footer();
@@ -217,12 +217,12 @@ class SelectProfilesPage {
     }
 
     static setUseLastSettings(useLastSettings) {
-        $('input[name="keep_settings"]').removeAttr("checked");
+        $('input[name="keep_settings"]').prop('checked', false);
         if(useLastSettings) {
-            $('input[name="keep_settings"][value="yes"]').attr("checked","checked");
+            $('input[name="keep_settings"][value="yes"]').prop('checked', true);
             $(settings.ui).attr('data-keep-settings', 'yes');
         } else {
-            $('input[name="keep_settings"][value="no"]').attr("checked","checked");
+            $('input[name="keep_settings"][value="no"]').prop('checked', true);
             $(settings.ui).attr('data-keep-settings', 'no');
         }
     }
@@ -272,7 +272,7 @@ class PlaceObjectsPage {
             case '2d': $("#load_models").hide(); $("#load_images").show(); break;
         }
         if(typeof e == "string") {
-            $('[name="load_source"]').removeAttr('checked');
+            $('[name="load_source"]').prop('checked', false);
             $("input[name=load_source][value=" + mode + "]").prop('checked', true);
         }
     }
@@ -956,8 +956,8 @@ class HelpAndInfoPage {
         s.button(     "User's Guide",                                {onclick: showUserGuide});
         s.button(     "Change Log",                                  {onclick: Updater.showReleaseNotes});
 
-        s.heading(    "Symple Slicer Desktop Edition:");
-        s.button(     "Download Desktop Edition",                    {onclick: redirectToDesktopDownload});
+        //s.heading(    "Symple Slicer Desktop Edition:");
+        //s.button(     "Download Desktop Edition",                    {onclick: redirectToDesktopDownload});
 
         s.heading(    "View Controls:");
         s.element(                                                   {id: "help-viewport"});
