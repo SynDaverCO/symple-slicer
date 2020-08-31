@@ -524,7 +524,7 @@ class SliceObjectsPage {
         s.fromSlicer(       "layer_height");
         s.fromSlicer(       "layer_height_0");
         s.fromSlicer(       "speed_print");
-        //s.fromSlicer(       "speed_layer_0");
+        s.fromSlicer(       "speed_layer_0");
         //s.fromSlicer(       "speed_infill");
         //s.fromSlicer(       "speed_wall");
         s.fromSlicer(       "speed_support");
@@ -584,6 +584,7 @@ class SliceObjectsPage {
         s.fromSlicer(       "raft_surface_layers");
         s.fromSlicer(       "skirt_line_count");
         s.fromSlicer(       "support_brim_enable");
+        s.fronSlicer(       "support_interface_enable");
 
         s.category(   "Filament");
         s.fromSlicer(       "material_diameter");
