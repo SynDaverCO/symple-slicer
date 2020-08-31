@@ -584,7 +584,7 @@ class SliceObjectsPage {
         s.fromSlicer(       "raft_surface_layers");
         s.fromSlicer(       "skirt_line_count");
         s.fromSlicer(       "support_brim_enable");
-        s.fronSlicer(       "support_interface_enable");
+        s.fromSlicer(       "support_interface_enable");
 
         s.category(   "Filament");
         s.fromSlicer(       "material_diameter");

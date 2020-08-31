@@ -11,7 +11,9 @@ SynDaver Symple Slicer v1.0.9
 
 * Added radio buttons to "Select Presets" panel to make things easier to understand.
 * Added auto-scrolling to console window
-* '''Slicing UI:''' Added "Initial Layer Speed" and "Enable Support Interface"
+* '''Slicing UI:''' Added "Initial Layer Speed"
+* '''Slicing UI:''' Added "Enable Support Interface"
+* '''Slicing UI:''' Made it so changing the "Infill Density" will not change the "Infill Pattern" 
 * '''Cura Engine:''' Updated to 4.6.2
 * '''Guide:''' Added table of contents; updated text and figures
 * '''Profiles:''' Updated ABS, PC-ABS, PETG, PLA and TPU profiles
