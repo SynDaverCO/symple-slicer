@@ -73,6 +73,11 @@ BODY[data-platform="desktop"] .webapp-only {
     display: none;
 }
 
+#gcode_filename {
+    width:              auto;
+    flex-grow:          1;
+}
+
 #about {
     padding:            2em;
     padding-top:        0;
