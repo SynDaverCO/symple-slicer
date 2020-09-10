@@ -1,10 +1,13 @@
-SynDaver Symple Slicer v1.1.0
+SynDaver Symple Slicer v1.1.11
 =============================
 
-* Added [https://syndaverco.github.io/slicer-desktop/ Symple Slicer Desktop Edition]
-* '''Desktop Only:''' Added ability to print to an USB connected printer
-* '''Desktop Only:''' Added ability to flash firmware to an USB connected printer
-* '''Firmware:''' Release 3: faster bed heating
+* '''Slicing UI:''' Made "Save as:" text box wider
+* '''Profiles:''' Corrected print bed dimensions
+
+SynDaver Symple Slicer v1.1.10
+=============================
+
+* '''Profiles:''' Updated start G-code to improve first layer.
 
 SynDaver Symple Slicer v1.0.9
 =============================
