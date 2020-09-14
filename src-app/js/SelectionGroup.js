@@ -126,9 +126,9 @@ class SelectionGroup extends THREE.Object3D {
             if(this.mode == "mirror") {
                 this.transformControl.dragging = false;
                 switch(this.transformControl.axis) {
-                    case 'X': this.scale.x = this.scale.x < 0 ? 1 : -1; break;
-                    case 'Y': this.scale.y = this.scale.y < 0 ? 1 : -1; break;
-                    case 'Z': this.scale.z = this.scale.z < 0 ? 1 : -1; break;
+                    case 'X': this.scale.x *= -1; break;
+                    case 'Y': this.scale.y *= -1; break;
+                    case 'Z': this.scale.z *= -1; break;
                 }
                 this.onTransformChange("scale");
             }

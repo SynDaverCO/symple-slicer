@@ -1,7 +1,8 @@
 SynDaver Symple Slicer v1.1.11
 =============================
 
-* Unhighlight unprintable object if it is centered to lie within the print area. 
+* Unhighlight unprintable object if it is centered to lie within the print area.
+* Fixed incorrect resizing of scaled objects when using the Mirror tool.
 * '''Slicing UI:''' Made "Save as:" text box wider
 * '''Profiles:''' Corrected print bed dimensions
 
