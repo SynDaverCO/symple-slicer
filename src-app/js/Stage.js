@@ -404,6 +404,8 @@ class Stage {
         this.centerObjectOnPlatform(objectToCenter);
         if(this.numObjects > 1) {
             this.arrangeObjectsOnPlatform(objectToCenter);
+        } else {
+            this.highlightOutOfBounds([objectToCenter]);
         }
         this.render();
     }
