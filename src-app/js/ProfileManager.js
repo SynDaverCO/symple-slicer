@@ -18,6 +18,12 @@
  */
 
 class ProfileManager {
+    static _loadDefaults() {
+        delete ProfileManager.usb;
+        delete ProfileManager.settings;
+        delete ProfileManager.metadata;
+    }
+
     static _loadProfileStr(str, baseUrl) {
         const config = toml.parse(str);
         if(config.hasOwnProperty("usb")) {
@@ -140,12 +146,14 @@ class ProfileManager {
     // Apply a selection from the menu
     static async applyPresets(printer, material) {
         slicer.loadDefaults();
+        ProfileManager._loadDefaults();
         await ProfileManager.loadPresets("machine", printer);
         await ProfileManager.loadPresets("print", material);
     }
 
     static importConfiguration(data, initial) {
         slicer.loadDefaults(initial);
+        ProfileManager._loadDefaults();
         ProfileManager._loadProfileStr(data);
     }
 

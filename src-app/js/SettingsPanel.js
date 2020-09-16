@@ -252,6 +252,7 @@ class MaterialNotesPage {
             $("#material_notes").text(ProfileManager.metadata.material_notes);
             return true;
         }
+        $("#material_notes").empty();
         return false;
     }
 }
