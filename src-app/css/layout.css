@@ -73,6 +73,14 @@ BODY[data-platform="desktop"] .webapp-only {
     display: none;
 }
 
+#material_notes:empty:after {
+    content: "No special instructions for this material";
+}
+
+#material_notes {
+    min-height: 3em;
+}
+
 #gcode_filename {
     width:              auto;
     flex-grow:          1;

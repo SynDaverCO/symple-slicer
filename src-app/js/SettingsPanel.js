@@ -26,6 +26,7 @@ class SettingsPanel {
         s.enableAutoTab();
 
         SelectProfilesPage.init(s);
+        MaterialNotesPage.init(s);
         PlaceObjectsPage.init(s);
         ObjectTransformPage.init(s);
         SliceObjectsPage.init(s);
@@ -209,7 +210,11 @@ class SelectProfilesPage {
     }
 
     static onNext() {
-        settings.gotoPage("page_place");
+        if(MaterialNotesPage.loadProfileNotes()) {
+            settings.gotoPage("page_material_notes");
+        } else {
+            settings.gotoPage("page_place");
+        }
     }
 
     static onKeepSettingsChanged(e) {
@@ -225,6 +230,29 @@ class SelectProfilesPage {
             $('input[name="keep_settings"][value="no"]').prop('checked', true);
             $(settings.ui).attr('data-keep-settings', 'no');
         }
+    }
+}
+
+class MaterialNotesPage {
+    static init(s) {
+        s.page(       "Material Notes",                              {id: "page_material_notes"});
+        s.element({id: "material_notes"});
+        s.footer();
+
+        s.button(     "Next",                                        {onclick: MaterialNotesPage.onNext});
+        s.buttonHelp( "Click this button to proceed to placing objects.");
+    }
+
+    static onNext() {
+        settings.gotoPage("page_place");
+    }
+
+    static loadProfileNotes() {
+        if(ProfileManager.hasOwnProperty("metadata") && ProfileManager.metadata.hasOwnProperty("material_notes")) {
+            $("#material_notes").text(ProfileManager.metadata.material_notes);
+            return true;
+        }
+        return false;
     }
 }
 

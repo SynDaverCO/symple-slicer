@@ -30,10 +30,17 @@ class ProfileManager {
         if(config.hasOwnProperty("settings")) {
             slicer.setMultiple(config.settings);
         }
+        if(config.hasOwnProperty("metadata")) {
+            ProfileManager.metadata = Object.assign(ProfileManager.metadata || {}, config.metadata);
+        }
     }
 
     static _saveProfileStr(options) {
         const toml = new TOMLFormatter();
+        if(ProfileManager.metadata) {
+            toml.writeCategory("metadata");
+            toml.writeProperties(ProfileManager.metadata);
+        }
         if(ProfileManager.usb) {
             toml.writeCategory("usb");
             toml.writeProperties(ProfileManager.usb);

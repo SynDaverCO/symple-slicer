@@ -254,6 +254,10 @@ class SettingsUI {
         }
     }
 
+    html(html) {
+        $(this.target_dom).append(html);
+    }
+
     setVisibility(id, visible) {
         if(visible) {
             $(id).parent(".parameter").show();
