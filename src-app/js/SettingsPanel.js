@@ -820,6 +820,11 @@ class MachineSettingsPage {
         s.fromSlicer(     "machine_center_is_zero");
         s.fromSlicer(     "machine_heated_bed");
         s.button(     "Save Changes",                                {onclick: MachineSettingsPage.onPrinterSizeChanged});
+
+        s.category(   "Start &amp; End G-code");
+        s.buttonHelp( "Template to edit:");
+        s.button(         "Start",                                   {onclick: MachineSettingsPage.onEditStartGcode});
+        s.button(         "End",                                     {onclick: MachineSettingsPage.onEditEndGcode});
     }
 
     static onPrinterSizeChanged() {
@@ -833,23 +838,6 @@ class MachineSettingsPage {
         stage.arrangeObjectsOnPlatform();
         renderLoop.setView("front");
     }
-}
-
-class StartAndEndGCodePage {
-    static init(s) {
-        s.category(   "Start &amp; End G-code");
-        s.buttonHelp( "Template to edit:");
-        s.button(         "Start",                                   {onclick: StartAndEndGCodePage.onEditStartGcode});
-        s.button(         "End",                                     {onclick: StartAndEndGCodePage.onEditEndGcode});
-
-        s.page(       "",                                            {id: "page_start_gcode"});
-        s.fromSlicer(     "machine_start_gcode");
-        s.button(         "Done",                                    {onclick: StartAndEndGCodePage.doneEditingGcode});
-
-        s.page(       "",                                            {id: "page_end_gcode"});
-        s.fromSlicer(     "machine_end_gcode");
-        s.button(         "Done",                                    {onclick: StartAndEndGCodePage.doneEditingGcode});
-    }
 
     static onEditStartGcode() {
         settings.gotoPage("page_start_gcode");
@@ -857,6 +845,18 @@ class StartAndEndGCodePage {
 
     static onEditEndGcode() {
         settings.gotoPage("page_end_gcode");
+    }
+}
+
+class StartAndEndGCodePage {
+    static init(s) {
+        s.page(       "",                                            {id: "page_start_gcode"});
+        s.fromSlicer(     "machine_start_gcode");
+        s.button(         "Done",                                    {onclick: StartAndEndGCodePage.doneEditingGcode});
+
+        s.page(       "",                                            {id: "page_end_gcode"});
+        s.fromSlicer(     "machine_end_gcode");
+        s.button(         "Done",                                    {onclick: StartAndEndGCodePage.doneEditingGcode});
     }
 
     static doneEditingGcode() {
