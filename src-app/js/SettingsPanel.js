@@ -249,7 +249,7 @@ class MaterialNotesPage {
 
     static loadProfileNotes() {
         if(ProfileManager.hasOwnProperty("metadata") && ProfileManager.metadata.hasOwnProperty("material_notes")) {
-            $("#material_notes").text(ProfileManager.metadata.material_notes);
+            $("#material_notes").html(ProfileManager.metadata.material_notes);
             return true;
         }
         $("#material_notes").empty();
