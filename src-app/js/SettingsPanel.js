@@ -983,7 +983,7 @@ class HelpAndInfoPage {
 
         s.heading(    "Help & Information:");
         s.button(     "About",                                       {onclick: showAbout});
-        s.button(     "User's Guide",                                {onclick: showUserGuide});
+        s.button(     "User Guide",                                  {onclick: showUserGuide});
         s.button(     "Change Log",                                  {onclick: Updater.showReleaseNotes});
 
         //s.heading(    "Symple Slicer Desktop Edition:");

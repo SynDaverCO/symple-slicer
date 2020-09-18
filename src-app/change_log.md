@@ -4,6 +4,7 @@ SynDaver Symple Slicer v1.1.11
 * Unhighlight unprintable object if it is centered to lie within the print area.
 * Fixed incorrect resizing of scaled objects when using the Mirror tool.
 * Added a "Material Notes" page for certain materials.
+* Replaced "Help" button with "User Guide"
 * '''Slicing UI:''' Made "Save as:" text box wider
 * '''Profiles:''' Corrected print bed dimensions
 * '''Profiles:''' Added FibreTuff and nylon profile
