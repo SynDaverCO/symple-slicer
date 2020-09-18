@@ -6,6 +6,7 @@ SynDaver Symple Slicer v1.1.11
 * Added a "Material Notes" page for certain materials.
 * '''Slicing UI:''' Made "Save as:" text box wider
 * '''Profiles:''' Corrected print bed dimensions
+* '''Profiles:''' Added FibreTuff and nylon profile
 
 SynDaver Symple Slicer v1.1.10
 =============================
