@@ -1,4 +1,4 @@
-SynDaver Symple Slicer v1.1.11
+SynDaver Symple Slicer v1.0.11
 =============================
 
 * Unhighlight unprintable object if it is centered to lie within the print area.
@@ -10,7 +10,7 @@ SynDaver Symple Slicer v1.1.11
 * '''Profiles:''' Corrected print bed dimensions
 * '''Profiles:''' Added CarbonX, FibreTuff and nylon profile
 
-SynDaver Symple Slicer v1.1.10
+SynDaver Symple Slicer v1.0.10
 =============================
 
 * '''Profiles:''' Updated start G-code to improve first layer.
