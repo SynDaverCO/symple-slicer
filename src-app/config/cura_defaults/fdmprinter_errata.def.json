@@ -3,9 +3,10 @@
     "author": "SynDaver Labs, Inc.",
     "settings":
     {
-        "mesh_position_x":                  {"value":         "0 if machine_center_is_zero else -machine_width/2"},
-        "mesh_position_y":                  {"value":         "0 if machine_center_is_zero else -machine_depth/2"},
-        "infill_pattern":                   {"value":         null},
-        "support_xy_distance_overhang":     {"label":         "Overhang Support X/Y Distance"}
+        "mesh_position_x":                    {"value":         "0 if machine_center_is_zero else -machine_width/2"},
+        "mesh_position_y":                    {"value":         "0 if machine_center_is_zero else -machine_depth/2"},
+        "material_initial_print_temperature": {"value":         "max(0, material_print_temperature_layer_0 - 5)"},
+        "infill_pattern":                     {"value":         null},
+        "support_xy_distance_overhang":       {"label":         "Overhang Support X/Y Distance"}
     }
 }
