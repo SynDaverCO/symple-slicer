@@ -4,6 +4,7 @@ SynDaver Symple Slicer v1.0.11
 * Unhighlight unprintable object if it is centered to lie within the print area.
 * Fixed incorrect resizing of scaled objects when using the Mirror tool.
 * Replaced "Help" button with "User Guide"
+* Updated "User Guide"
 * Adjusted formula for initial print temperature.
 * '''Slicing UI:''' Added a "Material Notes" page for certain materials.
 * '''Slicing UI:''' Added "Build Plate Temperature Initial Layer".
