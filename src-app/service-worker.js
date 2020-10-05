@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 38
+    cacheVersion: 39
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -44,7 +44,8 @@ const filesToCache = [
     'config/syndaver/machine_profiles/syndaver_axi.toml',
     'config/syndaver/print_profiles/abs_standard_stable.toml',
     'config/syndaver/print_profiles/cura_default.toml',
-    'config/syndaver/print_profiles/carbon-x_standard_stable.toml',
+    'config/syndaver/print_profiles/carbon-fiber-nylon_standard_stable.toml',
+    'config/syndaver/print_profiles/copperfill_standard_stable.toml',
     'config/syndaver/print_profiles/fibretuff_standard_stable.toml',
     'config/syndaver/print_profiles/nylon_standard_stable.toml',
     'config/syndaver/print_profiles/pc-abs_standard_stable.toml',

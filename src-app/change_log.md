@@ -11,7 +11,7 @@ SynDaver Symple Slicer v1.0.11
 * '''Slicing UI:''' Renamed "Minimum Support X/Y Distance" to "Overhang Support X/Y Distance"
 * '''Slicing UI:''' Made "Save as:" text box wider
 * '''Profiles:''' Corrected print bed dimensions
-* '''Profiles:''' Added CarbonX, FibreTuff and nylon profile
+* '''Profiles:''' Added FibreTuff, carbon fiber, copperfill and nylon profile
 
 SynDaver Symple Slicer v1.0.10
 =============================
