@@ -5,6 +5,8 @@ SynDaver Symple Slicer v1.0.11
 * Fixed incorrect resizing of scaled objects when using the Mirror tool.
 * Replaced "Help" button with "User Guide"
 * '''Slicing UI:''' Added a "Material Notes" page for certain materials.
+* '''Slicing UI:''' Added "Build Plate Temperature Initial Layer".
+* '''Slicing UI:''' Added "Printing Temperature Initial Layer".
 * '''Slicing UI:''' Renamed "Minimum Support X/Y Distance" to "Overhang Support X/Y Distance"
 * '''Slicing UI:''' Made "Save as:" text box wider
 * '''Profiles:''' Corrected print bed dimensions
