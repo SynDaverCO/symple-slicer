@@ -49,11 +49,15 @@ hr {
     margin-top:         3px;
 }
 
-.settings-ui[data-output="file"] .save-to-printer {
+.settings-ui:not([data-output="printer"]) .save-to-printer {
     display: none;
 }
 
-.settings-ui[data-output="printer"] .save-to-file {
+.settings-ui:not([data-output="file"]) .save-to-file {
+    display: none;
+}
+
+.settings-ui:not([data-output="wifi"]) .save-to-wifi {
     display: none;
 }
 

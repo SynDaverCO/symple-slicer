@@ -38,6 +38,7 @@ class SettingsPanel {
             // Disable desktop redirect for now
             UpdateFirmwarePage.init(s);
         }
+        ConfigWirelessPage.init(s);
         AdvancedFeaturesPage.init(s);
         HelpAndInfoPage.init(s);
 
@@ -711,8 +712,17 @@ class PrintAndPreviewPage {
 
         s.category(   "Print Options",                               {open: "open"});
         const attr = {name: "print_destination", onchange: PrintAndPreviewPage.onOutputChanged};
+        s.radio( "Save to G-code file:",                             {...attr, value: "file", checked: "checked"});
         s.radio( "Send to connected printer:",                       {...attr, value: "printer"});
-        s.radio( "Save to GCODE file:",                              {...attr, value: "file", checked: "checked"});
+        s.radio( "Send to wireless printer:",                        {...attr, value: "wifi"});
+        s.separator(                                                 {type: "br"});
+
+        /* Choices for printing wirelessly */
+        s.text(           "Printer Address:",                        {id: "printer_addr", className: "save-to-wifi"});
+        s.text(           "Upload Password:",                        {id: "printer_pass", className: "save-to-wifi"});
+        s.button(         "Configure Wireless",                      {onclick: PrintAndPreviewPage.configWireless, className: "save-to-wifi"});
+
+        /* Choices for saving to file */
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode", className: "save-to-file webapp-only"});
         s.category();
 
@@ -729,9 +739,13 @@ class PrintAndPreviewPage {
         s.buttonHelp( "Click this button to print to a USB attached printer");
         s.div();
 
+        s.div({className: "save-to-wifi"});
+        s.button(     "Print",                                       {onclick: PrintAndPreviewPage.onUploadClicked});
+        s.buttonHelp( "Click this button to print to a SynDaver WiFi printer");
+        s.div();
+
         if(!isDesktop) {
-            // Hide desktop integration for now.
-            $("input[name='print_destination']").parent().hide();
+            $("input[value='printer']").parent().hide();
         }
     }
 
@@ -828,6 +842,10 @@ class PrintAndPreviewPage {
     static setOutputGcodeName(filename) {
         const extension = filename.split('.').pop();
         document.getElementById("gcode_filename").value = filename.replace(extension, "gcode");
+    }
+
+    static configWireless() {
+        settings.gotoPage("page_config_wifi");
     }
 }
 
@@ -955,6 +973,24 @@ class AdvancedFeaturesPage {
         var blob = new Blob([config], {type: "text/plain;charset=utf-8"});
         var filename = settings.get("export_filename");
         saveAs(blob, filename);
+    }
+}
+
+class ConfigWirelessPage {
+    static init(s) {
+        s.page(       "Configure Wireless",                          {id: "page_config_wifi"});
+        s.heading(   "Wireless Network:");
+        s.text(           "Network Name (SSID):",                    {id: "wifi_ssid"});
+        s.text(           "Network Password:",                       {id: "wifi_pass"});
+        s.heading(   "Printer Setup:");
+        //s.text(           "IP Address:",                           {id: "printer_addr"});
+        s.text(           "Set Upload Password:",                    {id: "printer_pass"});
+        s.footer();
+        s.button(     "Save",                                        {onclick: ConfigWirelessPage.onSaveClicked});
+        s.buttonHelp( "Click this button to save WiFi configuration G-code for your printer");
+    }
+
+    static async onSaveClicked() {
     }
 }
 
