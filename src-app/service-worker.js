@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 40
+    cacheVersion: 43
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -149,6 +149,7 @@ const filesToCache = [
     'guide/images/lithophane_generated.png',
     'guide/images/lithophane_original.png',
     'guide/images/machine_settings.png',
+    'guide/images/material_notes.png',
     'guide/images/place_objects.png',
     'guide/images/preview_all_layers.png',
     'guide/images/preview_infill.png',
