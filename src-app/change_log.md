@@ -1,5 +1,10 @@
+SynDaver Symple Slicer v1.0.12
+==============================
+
+* Tweaked part placement algorithm to not cluster objects on center of bed.
+
 SynDaver Symple Slicer v1.0.11
-=============================
+==============================
 
 * Unhighlight unprintable object if it is centered to lie within the print area.
 * Fixed incorrect resizing of scaled objects when using the Mirror tool.
@@ -15,7 +20,7 @@ SynDaver Symple Slicer v1.0.11
 * '''Profiles:''' Added FibreTuff, carbon fiber, copperfill and nylon profile
 
 SynDaver Symple Slicer v1.0.10
-=============================
+==============================
 
 * '''Profiles:''' Updated start G-code to improve first layer.
 

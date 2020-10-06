@@ -218,7 +218,7 @@ class Stage {
             circles,
             continuousMode:       true,
             collisionPasses:       5,
-            centeringPasses:       3,
+            centeringPasses:      0, /* Requires a modification to the packing library to allow this to be zero */
             onMove:               packingUpdate,
             onMoveEnd:            packingFinished
         });
