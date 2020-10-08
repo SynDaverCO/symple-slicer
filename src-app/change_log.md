@@ -2,6 +2,7 @@ SynDaver Symple Slicer v1.0.12
 ==============================
 
 * Tweaked part placement algorithm to not cluster objects on center of bed.
+* Implemented experimental wifi upload
 
 SynDaver Symple Slicer v1.0.11
 ==============================

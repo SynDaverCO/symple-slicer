@@ -37,8 +37,8 @@ class SettingsPanel {
         if(isDesktop) {
             // Disable desktop redirect for now
             UpdateFirmwarePage.init(s);
+            ConfigWirelessPage.init(s);
         }
-        ConfigWirelessPage.init(s);
         AdvancedFeaturesPage.init(s);
         HelpAndInfoPage.init(s);
 
@@ -714,8 +714,10 @@ class PrintAndPreviewPage {
         const attr = {name: "print_destination", onchange: PrintAndPreviewPage.onOutputChanged};
         s.radio( "Save to G-code file:",                             {...attr, value: "file", checked: "checked"});
         s.radio( "Send to connected printer:",                       {...attr, value: "printer"});
-        s.radio( "Send to wireless printer:",                        {...attr, value: "wifi"});
-        s.separator(                                                 {type: "br"});
+        s.radio( "Send to wireless printer:",                        {...attr, value: "wifi"});    
+        if(isDesktop) {
+            s.separator(                                             {type: "br"});
+        }
 
         /* Choices for printing wirelessly */
         //s.button(         "Configure Wireless",                      {onclick: PrintAndPreviewPage.configWireless, className: "save-to-wifi"});
@@ -745,7 +747,9 @@ class PrintAndPreviewPage {
         s.div();
 
         if(!isDesktop) {
+            $("input[value='file']").parent().hide();
             $("input[value='printer']").parent().hide();
+            $("input[value='wifi']").parent().hide();
         }
 
         PrintAndPreviewPage.onInput();
@@ -835,6 +839,12 @@ class PrintAndPreviewPage {
             theBlob.lastModifiedDate = new Date();
             theBlob.name = fileName;
             return theBlob;
+        }
+        if (window.location.protocol.indexOf('https') == 0){
+            var el = document.createElement('meta')
+            el.setAttribute('http-equiv', 'Content-Security-Policy')
+            el.setAttribute('content', 'upgrade-insecure-requests')
+            document.head.append(el)
         }
         try {
             const upload_addr = settings.get("upload_addr"); 
