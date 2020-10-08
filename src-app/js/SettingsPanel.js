@@ -763,7 +763,8 @@ class PrintAndPreviewPage {
     }
 
     static onOutputChanged(e) {
-        $(settings.ui).attr('data-output', e ? e.target.value : 'file');
+        $(settings.ui       ).attr('data-output', e ? e.target.value : 'file');
+        $('#help-post-print').attr('data-output', e ? e.target.value : 'file');
     }
 
     static onUpdatePreview() {
