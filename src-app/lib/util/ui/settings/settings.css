@@ -125,10 +125,15 @@ body.debug .setting-ui {
 
 .settings-panel input[type=text],
 .settings-panel input[type=number] {
-    padding:            1px 3em 1px 2px; /* Allow 3em for units */
+    padding:            1px 2px;
     width:              8em;
     font-size:          11px;
     border:             1px solid;
+}
+
+.settings-panel .has_units input[type=text],
+.settings-panel .has_units input[type=number] {
+    padding:            1px 3em 1px 2px; /* Allow 3em for units */
 }
 
 input::-webkit-outer-spin-button,

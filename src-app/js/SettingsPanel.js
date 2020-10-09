@@ -35,9 +35,8 @@ class SettingsPanel {
         MachineSettingsPage.init(s);
         StartAndEndGCodePage.init(s);
         if(isDesktop) {
-            // Disable desktop redirect for now
-            UpdateFirmwarePage.init(s);
             ConfigWirelessPage.init(s);
+            UpdateFirmwarePage.init(s);
         }
         AdvancedFeaturesPage.init(s);
         HelpAndInfoPage.init(s);
@@ -167,7 +166,7 @@ class SelectProfilesPage {
         s.radio( "Load new slicer settings from profiles:",          {...attr, value: "no"});
 
         s.div({className: "load-profiles"});
-        s.separator("br");
+        s.separator(                                                 {type: "br"});
         const printer_menu = s.choice( "Printer:",                   {id: "preset_select"});
         const material_menu = s.choice( "Material:",                 {id: "material_select"});
         s.div();
@@ -714,15 +713,7 @@ class PrintAndPreviewPage {
         const attr = {name: "print_destination", onchange: PrintAndPreviewPage.onOutputChanged};
         s.radio( "Save to G-code file:",                             {...attr, value: "file", checked: "checked"});
         s.radio( "Send to connected printer:",                       {...attr, value: "printer"});
-        s.radio( "Send to wireless printer:",                        {...attr, value: "wifi"});    
-        if(isDesktop) {
-            s.separator(                                             {type: "br"});
-        }
-
-        /* Choices for printing wirelessly */
-        //s.button(         "Configure Wireless",                      {onclick: PrintAndPreviewPage.configWireless, className: "save-to-wifi"});
-        s.text(           "Printer Address:",                        {id: "upload_addr", className: "save-to-wifi", oninput: PrintAndPreviewPage.onInput});
-        s.text(           "Upload Password:",                        {id: "upload_pass", className: "save-to-wifi", oninput: PrintAndPreviewPage.onInput});
+        s.radio( "Send to wireless printer:",                        {...attr, value: "wifi"});
 
         /* Choices for saving to file */
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode", className: "save-to-file webapp-only"});
@@ -751,15 +742,6 @@ class PrintAndPreviewPage {
             $("input[value='printer']").parent().hide();
             $("input[value='wifi']").parent().hide();
         }
-
-        PrintAndPreviewPage.onInput();
-    }
-
-    static onInput() {
-        const upload_ssid = settings.get("upload_addr");
-        const upload_pass = settings.get("upload_pass");
-        const enabled = upload_ssid.length && upload_pass.length;
-        settings.enable("#upload_btn", enabled);
     }
 
     static onOutputChanged(e) {
@@ -832,6 +814,11 @@ class PrintAndPreviewPage {
     }
 
     static async onUploadClicked() {
+        const credentials = ConfigWirelessPage.getCredentials();
+        if(!credentials) {
+            alert("Please configure the wireless module using the \"Wireless Configuration\" option from the drop down")
+            return
+        }
         if(!gcode_blob) {
             alert("There is nothing to print")
             return
@@ -841,19 +828,11 @@ class PrintAndPreviewPage {
             theBlob.name = fileName;
             return theBlob;
         }
-        if (window.location.protocol.indexOf('https') == 0){
-            var el = document.createElement('meta')
-            el.setAttribute('http-equiv', 'Content-Security-Policy')
-            el.setAttribute('content', 'upgrade-insecure-requests')
-            document.head.append(el)
-        }
         try {
-            const upload_addr = settings.get("upload_addr"); 
-            const upload_pass = settings.get("upload_pass");
             ProgressBar.message("Uploading file");
             const hmac = await AuthenticatedUpload.upload({
-                url:              'http://' + upload_addr + "/upload",
-                password:         upload_pass,
+                url:              'http://' + credentials.address + "/upload",
+                password:         credentials.password,
                 file:             blobToFile(gcode_blob, "upload.gco"),
                 onProgress:       bytes => ProgressBar.progress(bytes/gcode_blob.size)
             });
@@ -1027,39 +1006,88 @@ class AdvancedFeaturesPage {
 class ConfigWirelessPage {
     static init(s) {
         s.page(       "Configure Wireless",                          {id: "page_config_wifi"});
-        s.heading(   "Wireless Network:");
-        s.text(           "Network Name (SSID):",                    {id: "wifi_ssid", oninput: ConfigWirelessPage.onInput});
-        s.text(           "Network Password:",                       {id: "wifi_pass", oninput: ConfigWirelessPage.onInput});
+        s.category("Wireless Configuration",                         {open: "open"});
+
+        const no_save = {oninput: ConfigWirelessPage.onInput};
+        const to_save = {oninput: ConfigWirelessPage.onInput, onchange: ConfigWirelessPage.onChange};
+        s.text(           "Network Name (SSID):",                    {...to_save, id: "wifi_ssid",    placeholder: "Required",
+                                                                         tooltip: "Type in the name of the wireless access point you want your printer to connect to"});
+        s.text(           "Network Password:",                       {...no_save, id: "wifi_pass",    placeholder: "Required",
+                                                                         tooltip: "Type in the password of the wireless access point you want your printer to connect to"});
         s.heading(   "Printer Setup:");
-        //s.text(           "IP Address:",                           {id: "printer_addr"});
-        s.text(           "Set Upload Password:",                    {id: "printer_pass", oninput: ConfigWirelessPage.onInput});
-        s.footer();
+        s.text(           "Set Upload Password:",                    {...to_save, id: "printer_pass", placeholder: "Required",
+                                                                         tooltip: "Choose a password to prevent unauthorized use of your printer"});
+        s.text(           "IP Address:",                             {...to_save, id: "printer_addr", placeholder: "Optional",
+                                                                          tooltip: "Leave this blank now to allow the printer to select an address via DHCP; but once the printer is connected it will show you an address to type in here"});
+        s.separator(                                                 {type: "br"});
         s.button(     "Save",                                        {onclick: ConfigWirelessPage.onSaveClicked, id: "save_config_btn"});
-        s.buttonHelp( "Click this button to save WiFi configuration G-code for your printer");
+        s.buttonHelp( "Click this button to save WiFi configuration G-code to run on your printer");
+
+        s.category("Upgrade Firmware");
+        s.button(     "Upgrade",                                     {onclick: ConfigWirelessPage.onUpgradeFirmware, id: "upgrade_wifi_btn"});
+        s.buttonHelp( "Click this button upload firmware to the wireless module");
         ConfigWirelessPage.onInput();
+
+        let loadFromStorage = id => document.getElementById(id).value = localStorage.getItem(id) || "";
+
+        console.log(localStorage.getItem("wifi_ssid"));
+        
+        // Load settings from local storage
+        loadFromStorage("wifi_ssid");
+        loadFromStorage("printer_pass");
+        loadFromStorage("printer_addr");
     }
 
     static onSaveClicked() {
         const wifi_ssid = settings.get("wifi_ssid");
         const wifi_pass = settings.get("wifi_pass");
-        const post_pass = settings.get("printer_pass");
+        let   printer_addr = settings.get("printer_addr");
+        const printer_pass = settings.get("printer_pass");
+        if(!printer_addr) {
+            printer_addr = "dhcp";
+        }
         const config =
             "M118 P0 wifi_ssid: " + wifi_ssid + "\n" +
             "M118 P0 wifi_pass: " + wifi_pass + "\n" +
-            "M118 P0 wifi_addr: dhcp\n" +
-            "M118 P0 post_pass: " + post_pass + "\n" +
+            "M118 P0 wifi_addr: " + printer_addr + "\n" +
+            "M118 P0 post_pass: " + printer_pass + "\n" +
             "M118 P0 wifi_save_config\n" +
             "M118 P0 wifi_restart\n";
         const blob = new Blob([config], {type: "text/plain;charset=utf-8"});
         saveAs(blob, "wifi_config.gco");
+        if(printer_addr == "dhcp") {
+            alert("After running the script on the printer, please enter the address displayed by the printer in the \"IP Address\" field.");
+            document.getElementById("printer_addr").placeholder = "Enter here";
+        }
     }
 
     static onInput() {
+        // Enable the save button when all required fields are filled in
         const wifi_ssid = settings.get("wifi_ssid");
         const wifi_pass = settings.get("wifi_pass");
-        const post_pass = settings.get("printer_pass");
-        const enabled = wifi_ssid.length && wifi_pass.length && post_pass.length;
-        settings.enable("#save_config_btn", enabled);
+        const printer_pass = settings.get("printer_pass");
+        const printer_addr = settings.get("printer_addr");
+        const save_enabled = wifi_ssid.length && wifi_pass.length && printer_pass.length;
+        settings.enable("#save_config_btn", save_enabled);
+        const fw_enabled = printer_addr.length && printer_pass.length;
+        settings.enable("#upgrade_wifi_btn", fw_enabled);
+    }
+
+    static onChange() {
+        // Save all changed elements to local storage
+        localStorage.setItem(event.currentTarget.id,event.currentTarget.value);
+    }
+    
+    static getCredentials() {
+        const printer_pass = settings.get("printer_pass");
+        const printer_addr = settings.get("printer_addr");
+        if(printer_pass.length && printer_addr.length) {
+            return {password: printer_pass, address: printer_addr}
+        }
+    }
+
+    static getAddress() {
+        return settings.get("printer_addr");
     }
 }
 

@@ -88,7 +88,7 @@ class SettingsUI {
             SettingsUI._copyAttr(
                 {type: type, autocomplete: "off"},
                 attr,
-                ["id", "onclick", "oninput", "onchange", "min", "max", "step", "checked", "value", "name"]
+                ["id", "onclick", "oninput", "onchange", "min", "max", "step", "checked", "value", "name", "placeholder"]
             ));
     }
 
