@@ -48,7 +48,6 @@ class SettingsPanel {
         PlaceObjectsPage.onDropModel();         // Disable buttons
         PlaceObjectsPage.onDropImage();         // Disable buttons
         AdvancedFeaturesPage.onImportChanged(); // Disable buttons
-        PrintAndPreviewPage.onOutputChanged();
         PlaceObjectsPage.onLoadTypeChanged();
 
         // Set up the global drag and drop handler
@@ -711,9 +710,9 @@ class PrintAndPreviewPage {
 
         s.category(   "Print Options",                               {open: "open"});
         const attr = {name: "print_destination", onchange: PrintAndPreviewPage.onOutputChanged};
-        s.radio( "Save to G-code file:",                             {...attr, value: "file", checked: "checked"});
-        s.radio( "Send to connected printer:",                       {...attr, value: "printer"});
-        s.radio( "Send to wireless printer:",                        {...attr, value: "wifi"});
+        s.radio( "Save a G-code file for printing:",                   {...attr, value: "file", checked: "checked"});
+        s.radio( "Send to printer using a USB cable:",               {...attr, value: "printer"});
+        s.radio( "Send to printer wirelessly:",                      {...attr, value: "wifi"});
 
         /* Choices for saving to file */
         s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode", className: "save-to-file webapp-only"});
@@ -742,11 +741,22 @@ class PrintAndPreviewPage {
             $("input[value='printer']").parent().hide();
             $("input[value='wifi']").parent().hide();
         }
+
+        const defaultOutput = localStorage.getItem('data-output') || 'file';
+        PrintAndPreviewPage.setOutput(defaultOutput);
+    }
+
+    static setOutput(what) {
+        $('input[name="print_destination"]').prop('checked', false);
+        $('input[name="print_destination"][value="' + what + '"]').prop('checked', true);
+        this.onOutputChanged(what)
     }
 
     static onOutputChanged(e) {
-        $(settings.ui       ).attr('data-output', e ? e.target.value : 'file');
-        $('#help-post-print').attr('data-output', e ? e.target.value : 'file');
+        const dataOutput = e.target ? e.target.value : e;
+        $(settings.ui       ).attr('data-output', dataOutput);
+        $('#help-post-print').attr('data-output', dataOutput);
+        localStorage.setItem('data-output', dataOutput);
     }
 
     static onUpdatePreview() {
@@ -814,11 +824,6 @@ class PrintAndPreviewPage {
     }
 
     static async onUploadClicked() {
-        const credentials = ConfigWirelessPage.getCredentials();
-        if(!credentials) {
-            alert("Please configure the wireless module using the \"Wireless Configuration\" option from the drop down")
-            return
-        }
         if(!gcode_blob) {
             alert("There is nothing to print")
             return
@@ -828,20 +833,8 @@ class PrintAndPreviewPage {
             theBlob.name = fileName;
             return theBlob;
         }
-        try {
-            ProgressBar.message("Uploading file");
-            const hmac = await AuthenticatedUpload.upload({
-                url:              'http://' + credentials.address + "/upload",
-                password:         credentials.password,
-                file:             blobToFile(gcode_blob, "upload.gco"),
-                onProgress:       bytes => ProgressBar.progress(bytes/gcode_blob.size)
-            });
-            settings.gotoPage("page_finished");
-        } catch (e) {
-            alert(e);
-        } finally {
-            ProgressBar.hide();
-        }
+        await ConfigWirelessPage.uploadFile(blobToFile(gcode_blob, "upload.gco"))
+        settings.gotoPage("page_finished");
     }
 
     static setPrintTime(value) {
@@ -869,10 +862,6 @@ class PrintAndPreviewPage {
     static setOutputGcodeName(filename) {
         const extension = filename.split('.').pop();
         document.getElementById("gcode_filename").value = filename.replace(extension, "gcode");
-    }
-
-    static configWireless() {
-        settings.gotoPage("page_config_wifi");
     }
 }
 
@@ -1006,7 +995,7 @@ class AdvancedFeaturesPage {
 class ConfigWirelessPage {
     static init(s) {
         s.page(       "Configure Wireless",                          {id: "page_config_wifi"});
-        s.category("Wireless Configuration",                         {open: "open"});
+        s.heading("Network Configuration:",                          {open: "open"});
 
         const no_save = {oninput: ConfigWirelessPage.onInput};
         const to_save = {oninput: ConfigWirelessPage.onInput, onchange: ConfigWirelessPage.onChange};
@@ -1014,28 +1003,23 @@ class ConfigWirelessPage {
                                                                          tooltip: "Type in the name of the wireless access point you want your printer to connect to"});
         s.text(           "Network Password:",                       {...no_save, id: "wifi_pass",    placeholder: "Required",
                                                                          tooltip: "Type in the password of the wireless access point you want your printer to connect to"});
-        s.heading(   "Printer Setup:");
+        s.heading(   "Printer Configuration:");
         s.text(           "Set Upload Password:",                    {...to_save, id: "printer_pass", placeholder: "Required",
                                                                          tooltip: "Choose a password to prevent unauthorized use of your printer"});
         s.text(           "IP Address:",                             {...to_save, id: "printer_addr", placeholder: "Optional",
                                                                           tooltip: "Leave this blank now to allow the printer to select an address via DHCP; but once the printer is connected it will show you an address to type in here"});
-        s.separator(                                                 {type: "br"});
+        s.footer();
         s.button(     "Save",                                        {onclick: ConfigWirelessPage.onSaveClicked, id: "save_config_btn"});
         s.buttonHelp( "Click this button to save WiFi configuration G-code to run on your printer");
 
-        s.category("Upgrade Firmware");
-        s.button(     "Upgrade",                                     {onclick: ConfigWirelessPage.onUpgradeFirmware, id: "upgrade_wifi_btn"});
-        s.buttonHelp( "Click this button upload firmware to the wireless module");
-        ConfigWirelessPage.onInput();
-
         let loadFromStorage = id => document.getElementById(id).value = localStorage.getItem(id) || "";
 
-        console.log(localStorage.getItem("wifi_ssid"));
-        
         // Load settings from local storage
         loadFromStorage("wifi_ssid");
         loadFromStorage("printer_pass");
         loadFromStorage("printer_addr");
+
+        ConfigWirelessPage.onInput();
     }
 
     static onSaveClicked() {
@@ -1056,7 +1040,7 @@ class ConfigWirelessPage {
         const blob = new Blob([config], {type: "text/plain;charset=utf-8"});
         saveAs(blob, "wifi_config.gco");
         if(printer_addr == "dhcp") {
-            alert("After running the script on the printer, please enter the address displayed by the printer in the \"IP Address\" field.");
+            alert("After running the G-code on the printer, please type the address displayed by the printer in the \"IP Address\" field.");
             document.getElementById("printer_addr").placeholder = "Enter here";
         }
     }
@@ -1077,28 +1061,44 @@ class ConfigWirelessPage {
         // Save all changed elements to local storage
         localStorage.setItem(event.currentTarget.id,event.currentTarget.value);
     }
-    
-    static getCredentials() {
+
+    // Uploads a file to the wireless module
+    static async uploadFile(file) {
         const printer_pass = settings.get("printer_pass");
         const printer_addr = settings.get("printer_addr");
-        if(printer_pass.length && printer_addr.length) {
-            return {password: printer_pass, address: printer_addr}
+        if(printer_pass.length == 0 || printer_addr.length == 0) {
+            alert("Please configure the wireless module using the \"Configure Wireless\" from the \"Tasks\" menu")
+            return
         }
-    }
-
-    static getAddress() {
-        return settings.get("printer_addr");
+        try {
+            ProgressBar.message("Uploading file");
+            const hmac = await AuthenticatedUpload.upload({
+                url:              'http://' + printer_addr + "/upload",
+                password:         printer_pass,
+                file:             file,
+                onProgress:       bytes => ProgressBar.progress(bytes/gcode_blob.size)
+            });
+        } catch (e) {
+            alert(e);
+        } finally {
+            ProgressBar.hide();
+        }
     }
 }
 
 class UpdateFirmwarePage {
     static init(s) {
         s.page(       "Update Firmware",                             {id: "page_flash_fw"});
-        s.button(     "Update",                                      {onclick: UpdateFirmwarePage.onFlashClicked});
+        s.category("Update Printer Firmware");
+        s.button(     "Update",                                      {onclick: UpdateFirmwarePage.onFlashPrinterClicked});
         s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
+
+        s.category("Update Wireless Firmware");
+        s.button(     "Update",                                      {onclick: UpdateFirmwarePage.onFlashWirelessClicked, id: "upgrade_wifi_btn"});
+        s.buttonHelp( "Click this button to update the firmware on the wireless module wirelessly");
     }
 
-    static async onFlashClicked() {
+    static async onFlashPrinterClicked() {
         if(featureRequiresDesktopVersion("Updating firmware")) {
             try {
                 await flashFirmware();
@@ -1106,6 +1106,11 @@ class UpdateFirmwarePage {
                 console.error(err);
                 alert(err);
             }
+        }
+    }
+
+    static async onFlashWirelessClicked() {
+        if(featureRequiresDesktopVersion("Updating firmware")) {
         }
     }
 }

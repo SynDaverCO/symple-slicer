@@ -114,13 +114,14 @@ function createMenu(win) {
         {
             label: 'Tasks',
             submenu: [
-                {label: 'Select Profiles\u2026',   click: () => win.webContents.executeJavaScript('settings.gotoPage("page_profiles")')},
-                {label: 'Place Objects\u2026',     click: () => win.webContents.executeJavaScript('settings.gotoPage("page_place")')},
-                {label: 'Slice Objects\u2026',     click: () => win.webContents.executeJavaScript('settings.gotoPage("page_slice")')},
+                {label: 'Select Profiles\u2026',    click: () => win.webContents.executeJavaScript('settings.gotoPage("page_profiles")')},
+                {label: 'Place Objects\u2026',      click: () => win.webContents.executeJavaScript('settings.gotoPage("page_place")')},
+                {label: 'Slice Objects\u2026',      click: () => win.webContents.executeJavaScript('settings.gotoPage("page_slice")')},
                 { type: 'separator' },
-                {label: 'Machine Setup\u2026',     click: () => win.webContents.executeJavaScript('settings.gotoPage("page_machine")')},
-                {label: 'Update Firmware\u2026',   click: () => win.webContents.executeJavaScript('settings.gotoPage("page_flash_fw")')},
-                {label: 'Advanced Features\u2026', click: () => win.webContents.executeJavaScript('settings.gotoPage("page_advanced")')},
+                {label: 'Machine Setup\u2026',      click: () => win.webContents.executeJavaScript('settings.gotoPage("page_machine")')},
+                {label: 'Configure Wireless\u2026', click: () => win.webContents.executeJavaScript('settings.gotoPage("page_config_wifi")')},
+                {label: 'Update Firmware\u2026',    click: () => win.webContents.executeJavaScript('settings.gotoPage("page_flash_fw")')},
+                {label: 'Advanced Features\u2026',  click: () => win.webContents.executeJavaScript('settings.gotoPage("page_advanced")')},
             ]
         },
         {
@@ -131,7 +132,7 @@ function createMenu(win) {
                     click: () => win.webContents.executeJavaScript('showAbout()')
                 },
                 {
-                    label: "User's Guide\u2026",
+                    label: "User Guide\u2026",
                     click: () => win.webContents.executeJavaScript('showUserGuide()')
                 },
                 {
