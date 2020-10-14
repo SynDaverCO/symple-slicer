@@ -828,12 +828,7 @@ class PrintAndPreviewPage {
             alert("There is nothing to print")
             return
         }
-        function blobToFile(theBlob, fileName) {
-            theBlob.lastModifiedDate = new Date();
-            theBlob.name = fileName;
-            return theBlob;
-        }
-        await ConfigWirelessPage.uploadFile(blobToFile(gcode_blob, "upload.gco"))
+        await ConfigWirelessPage.uploadBlob(gcode_blob, "upload.gco");
         settings.gotoPage("page_finished");
     }
 
@@ -1063,7 +1058,7 @@ class ConfigWirelessPage {
     }
 
     // Uploads a file to the wireless module
-    static async uploadFile(file) {
+    static async uploadFile(file, message = "Uploading file") {
         const printer_pass = settings.get("printer_pass");
         const printer_addr = settings.get("printer_addr");
         if(printer_pass.length == 0 || printer_addr.length == 0) {
@@ -1071,18 +1066,26 @@ class ConfigWirelessPage {
             return
         }
         try {
-            ProgressBar.message("Uploading file");
+            ProgressBar.message(message);
             const hmac = await AuthenticatedUpload.upload({
                 url:              'http://' + printer_addr + "/upload",
                 password:         printer_pass,
                 file:             file,
-                onProgress:       bytes => ProgressBar.progress(bytes/gcode_blob.size)
+                onProgress:       bytes => ProgressBar.progress(bytes/file.size)
             });
         } catch (e) {
+            console.error(e);
             alert(e);
         } finally {
             ProgressBar.hide();
         }
+    }
+
+    // Uploads a blob to the wireless module
+    static async uploadBlob(blob, fileName, message = "Uploading file") {
+        blob.lastModifiedDate = new Date();
+        blob.name = fileName;
+        await this.uploadFile(blob, message);
     }
 }
 
@@ -1111,6 +1114,9 @@ class UpdateFirmwarePage {
 
     static async onFlashWirelessClicked() {
         if(featureRequiresDesktopVersion("Updating firmware")) {
+            let fw = await fetch('config/syndaver/machine_firmware/SynDaver_WiFi.bin');
+            let blob = await fw.blob();
+            await ConfigWirelessPage.uploadBlob(blob, "firmware.bin", "Uploading firmware");
         }
     }
 }

@@ -133,9 +133,18 @@ class AuthenticatedUpload {
         });
     }
 
+    static fetchWithTimeout (url, options, timeout = 3000) {
+        return Promise.race([
+            fetch(url, options),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('timeout')), timeout)
+            )
+        ]);
+    }
+
     // Fetches JSON data from an URL
     static async getJSON(url) {
-        let response = await fetch(url);
+        let response = await this.fetchWithTimeout(url);
         return await response.json();
     }
 
@@ -144,13 +153,12 @@ class AuthenticatedUpload {
         return new Promise((resolve, reject) => {
             try {
                 let reader = new FileReader();
-                let fileByteArray = [];
                 reader.readAsArrayBuffer(file);
-                reader.onloadend = (evt) => {
-                    if (evt.target.readyState == FileReader.DONE) {
+                reader.onloadend = evt => {
+                    if (evt.target.readyState == FileReader.DONE && evt.target.result) {
                         resolve(evt.target.result);
                     } else {
-                        reject();
+                        reject(new Error("Unable to read file"));
                     }
                 }
             }
