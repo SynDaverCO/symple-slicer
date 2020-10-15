@@ -828,7 +828,7 @@ class PrintAndPreviewPage {
             alert("There is nothing to print")
             return
         }
-        await ConfigWirelessPage.uploadBlob(gcode_blob, "upload.gco");
+        await ConfigWirelessPage.uploadBlob(gcode_blob, "printjob.gco");
         settings.gotoPage("page_finished");
     }
 
