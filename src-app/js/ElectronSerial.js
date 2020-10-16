@@ -91,7 +91,8 @@ async function stream_gcode(gcode) {
     if(!ProfileManager.usb) {
         throw Error("No serial port information for this profile");
     }
-    const usb = ProfileManager.usb;
+    const usb     = ProfileManager.usb;
+    const scripts = ProfileManager.scripts;
 
     try {
         const marlin = await import('../lib/serial-tools/gcode-sender/MarlinSerialProtocol.js');
@@ -184,8 +185,8 @@ async function stream_gcode(gcode) {
                 // Handle events that may have happened outside this thread.
                 switch(asyncEvent) {
                     case "resumeWithScript":
-                       if(usb.resume_print_gcode) {
-                            await proto.sendScriptUnreliable(usb.resume_print_gcode);
+                       if(scripts.resume_print_gcode) {
+                            await proto.sendScriptUnreliable(scripts.resume_print_gcode);
                             await proto.waitUntilQueueEmpty();
                         } else {
                             console.warn("No resume_print_gcode in profile");
@@ -196,9 +197,9 @@ async function stream_gcode(gcode) {
                         ProgressBar.setPauseState(false);
                         break;
                     case "pauseWithScript":
-                        if(usb.pause_print_gcode) {
+                        if(scripts.pause_print_gcode) {
                             await proto.waitUntilQueueEmpty();
-                            await proto.sendScriptUnreliable(usb.pause_print_gcode);
+                            await proto.sendScriptUnreliable(scripts.pause_print_gcode);
                             await proto.waitUntilQueueEmpty();
                         } else {
                             console.warn("No pause_print_gcode in profile");
@@ -212,10 +213,10 @@ async function stream_gcode(gcode) {
                         throw new PrintAborted("Print stopped by user");
                     case "stop":
                         Log.write("Stopping print");
-                        if(!usb.stop_print_gcode) {
+                        if(!scripts.stop_print_gcode) {
                             console.warn("No stop_print_gcode in profile");
                         }
-                        await proto.abortPrint(usb.stop_print_gcode);
+                        await proto.abortPrint(scripts.stop_print_gcode);
                         Log.write("Print stopped");
                         throw new PrintAborted("Print stopped by user");
                         break;

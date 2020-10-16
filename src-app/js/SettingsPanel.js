@@ -828,7 +828,8 @@ class PrintAndPreviewPage {
             alert("There is nothing to print")
             return
         }
-        await ConfigWirelessPage.uploadBlob(gcode_blob, "printjob.gco");
+        const file = ConfigWirelessPage.fileFromBlob("printjob.gco", gcode_blob);
+        await ConfigWirelessPage.uploadFiles([file]);
         settings.gotoPage("page_finished");
     }
 
@@ -1057,8 +1058,8 @@ class ConfigWirelessPage {
         localStorage.setItem(event.currentTarget.id,event.currentTarget.value);
     }
 
-    // Uploads a file to the wireless module
-    static async uploadFile(file, message = "Uploading file") {
+    // Uploads files to the wireless module
+    static async uploadFiles(files) {
         const printer_pass = settings.get("printer_pass");
         const printer_addr = settings.get("printer_addr");
         if(printer_pass.length == 0 || printer_addr.length == 0) {
@@ -1066,13 +1067,21 @@ class ConfigWirelessPage {
             return
         }
         try {
-            ProgressBar.message(message);
-            const hmac = await AuthenticatedUpload.upload({
-                url:              'http://' + printer_addr + "/upload",
-                password:         printer_pass,
-                file:             file,
-                onProgress:       bytes => ProgressBar.progress(bytes/file.size)
-            });
+            let totalBytes = 0;
+            let completedBytes = 0;
+            for(const file of files) {
+                totalBytes += file.size;
+            }
+            for(const file of files) {
+                ProgressBar.message("Uploading \"" + file.name + "\"");
+                const hmac = await AuthenticatedUpload.upload({
+                    url:              'http://' + printer_addr + "/upload",
+                    password:         printer_pass,
+                    file:             file,
+                    onProgress:       bytes => ProgressBar.progress((completedBytes + bytes)/totalBytes)
+                });
+                completedBytes += file.size;
+            }
         } catch (e) {
             console.error(e);
             alert(e);
@@ -1081,11 +1090,23 @@ class ConfigWirelessPage {
         }
     }
 
-    // Uploads a blob to the wireless module
-    static async uploadBlob(blob, fileName, message = "Uploading file") {
+    static fileFromBlob(fileName, blob) {
         blob.lastModifiedDate = new Date();
         blob.name = fileName;
-        await this.uploadFile(blob, message);
+        return blob;
+    }
+
+    static fileFromStr(fileName, str) {
+        let blob = new Blob([str], {type : 'text/plain'});
+        blob.lastModifiedDate = new Date();
+        blob.name = fileName;
+        return blob;
+    }
+
+    static async fileFromUrl(fileName, url) {
+        let fw = await fetch(url);
+        let blob = await fw.blob();
+        return ConfigWirelessPage.fileFromBlob(fileName, blob);
     }
 }
 
@@ -1114,9 +1135,15 @@ class UpdateFirmwarePage {
 
     static async onFlashWirelessClicked() {
         if(featureRequiresDesktopVersion("Updating firmware")) {
-            let fw = await fetch('config/syndaver/machine_firmware/SynDaver_WiFi.bin');
-            let blob = await fw.blob();
-            await ConfigWirelessPage.uploadBlob(blob, "firmware.bin", "Uploading firmware");
+            // An upgrade set includes the various print scripts as well as the firmware file.
+            let files = [];
+            files.push(      ConfigWirelessPage.fileFromStr("pause.gco",    ProfileManager.scripts.pause_print_gcode  || ""));
+            files.push(      ConfigWirelessPage.fileFromStr("cancel.gco",   ProfileManager.scripts.stop_print_gcode   || ""));
+            files.push(      ConfigWirelessPage.fileFromStr("resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
+            files.push(      ConfigWirelessPage.fileFromStr("badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
+            files.push(await ConfigWirelessPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin'));
+            // Upload everything.
+            await ConfigWirelessPage.uploadFiles(files);
         }
     }
 }

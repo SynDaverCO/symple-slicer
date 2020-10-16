@@ -20,6 +20,7 @@
 class ProfileManager {
     static _loadDefaults() {
         delete ProfileManager.usb;
+        delete ProfileManager.scripts;
         delete ProfileManager.settings;
         delete ProfileManager.metadata;
     }
@@ -32,6 +33,9 @@ class ProfileManager {
                 config.usb.firmware = new URL(config.usb.firmware, baseUrl).toString();
             }
             ProfileManager.usb = config.usb;
+        }
+        if(config.hasOwnProperty("scripts")) {
+            ProfileManager.scripts = config.scripts;
         }
         if(config.hasOwnProperty("settings")) {
             slicer.setMultiple(config.settings);
@@ -50,6 +54,10 @@ class ProfileManager {
         if(ProfileManager.usb) {
             toml.writeCategory("usb");
             toml.writeProperties(ProfileManager.usb);
+        }
+        if(ProfileManager.scripts) {
+            toml.writeCategory("scripts");
+            toml.writeProperties(ProfileManager.scripts);
         }
         toml.writeCategory("settings");
         slicer.dumpSettings(toml, options);
