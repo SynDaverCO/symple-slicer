@@ -1138,10 +1138,10 @@ class UpdateFirmwarePage {
             // An upgrade set includes the various print scripts as well as the firmware file.
             let files = [];
             if(ProfileManager.scripts) {
-                files.push(      ConfigWirelessPage.fileFromStr("pause.gco",    ProfileManager.scripts.pause_print_gcode  || ""));
-                files.push(      ConfigWirelessPage.fileFromStr("cancel.gco",   ProfileManager.scripts.stop_print_gcode   || ""));
-                files.push(      ConfigWirelessPage.fileFromStr("resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
-                files.push(      ConfigWirelessPage.fileFromStr("badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
+                files.push(ConfigWirelessPage.fileFromStr("pause.gco",    ProfileManager.scripts.pause_print_gcode  || ""));
+                files.push(ConfigWirelessPage.fileFromStr("cancel.gco",   ProfileManager.scripts.stop_print_gcode   || ""));
+                files.push(ConfigWirelessPage.fileFromStr("resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
+                files.push(ConfigWirelessPage.fileFromStr("badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
             }
             files.push(await ConfigWirelessPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin'));
             // Upload everything.
