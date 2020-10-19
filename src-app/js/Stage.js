@@ -52,7 +52,7 @@ class Stage {
             selector: 'canvas',
             callback: (evt, key, options) => this.menuAction(key),
             items: {
-                center_one:  {name: "Center Selected Object"},
+                center_some:  {name: "Center Selected Objects"},
                 delete_some: {name: "Delete Selected Objects", icon: "delete"},
                 separator1: "-----",
                 xform_some:  {name: "Edit Transform Values\u2026", icon: "edit"},
@@ -69,7 +69,7 @@ class Stage {
             case "select_all"  : this.selectAll(); break;
             case "arrange_all" : this.arrangeAll(); break;
             case "delete_all"  : this.removeAll(); break;
-            case "center_one" : this.centerSelectedObject(); break;
+            case "center_some" : this.centerSelectedObjects(); break;
             case "delete_some" : this.removeSelectedObjects(); break;
             case "xform_some"  : ObjectTransformPage.onToolChanged("move");
         }
@@ -148,10 +148,10 @@ class Stage {
      * However, this could be improved for tall and skinny objects
      * by only computing the bounding circle in X and Y.
      *
-     *   lockedObject - An object which should not move.
+     *   objectsToArrange - Restrict arrangement to certain objects.
      *
      */
-    arrangeObjectsOnPlatform(lockedObject) {
+    arrangeObjectsOnPlatform(objectsToArrange) {
         var circles = [];
         var packingFinished = () => {
             if(this.packer) {
@@ -169,11 +169,15 @@ class Stage {
 
         // Create an array of circles for the packing algorithm
 
-        var pinnedId;
-
         const inv = this.getBedMatrixWorldInverse();
         for(const [index, object] of this.objects.entries()) {
-            if(lockedObject != object) {
+            const isAbsoluteCenter =  objectsToArrange && objectsToArrange[0] == object;
+            const isPulledToCenter = !objectsToArrange || objectsToArrange.includes(object);
+            if(isAbsoluteCenter) {
+                // The first object in the selection is pulled to the exact center of the bed.
+                this.centerObjectOnPlatform(object);
+            }
+            else {
                 // Add a small perturbation to the objects position to
                 // allow the packing algorithm to converge.
                 object.position.x += Math.random() - 0.5;
@@ -181,9 +185,11 @@ class Stage {
             }
             const sphere = this.getObjectBoundingSphere(object, inv);
             const circle = {
-                id:       'c' + index,
-                radius:   sphere.radius,
-                position: {x: sphere.center.x, y: sphere.center.y},
+                id:               'c' + index,
+                radius:           sphere.radius,
+                position:         {x: sphere.center.x, y: sphere.center.y},
+                isPulledToCenter: isPulledToCenter,
+                isPinned:         isAbsoluteCenter
             };
             if(this.printer.origin_at_center) {
                 // The circle packing algorithm works only with positive coordinates,
@@ -192,9 +198,6 @@ class Stage {
                 circle.position.y += this.printer.y_depth/2;
             }
             circles.push(circle);
-            if(lockedObject == object) {
-                pinnedId = circle.id;
-            }
         }
 
         // Function for repositioning the objects on the bed
@@ -218,14 +221,10 @@ class Stage {
             circles,
             continuousMode:       true,
             collisionPasses:       5,
+            centeringPasses:       3,
             onMove:               packingUpdate,
             onMoveEnd:            packingFinished
         });
-        // Requires a modification to the packing library to allow centering passes to be zero
-        this.packer.setCenteringPasses(0);
-        if(pinnedId) {
-            this.packer.pinCircle(pinnedId);
-        }
         this.packer.update();
         // Packing might run continuously, to abort after a few seconds.
         this.timer.start(packingFinished, 3000);
@@ -358,9 +357,7 @@ class Stage {
         this.scaleObjectToFit(obj);
         this.dropObjectToFloor(obj);
         this.centerObjectOnPlatform(obj);
-        if(this.numObjects > 1) {
-            this.arrangeObjectsOnPlatform(obj);
-        }
+        this.arrangeObjectsOnPlatform(this.objects);
         this.render();
     }
 
@@ -393,19 +390,14 @@ class Stage {
         this.render();
     }
 
-    centerSelectedObject() {
+    centerSelectedObjects() {
         if(this.selection.children.length == 0) {
             return;
         }
-        if(this.selection.children.length > 1) {
-            alert("Can only center one object at a time.");
-            return;
-        }
-        const objectToCenter = this.selection.children[0];
-        this.centerObjectOnPlatform(objectToCenter);
         if(this.numObjects > 1) {
-            this.arrangeObjectsOnPlatform(objectToCenter);
+            this.arrangeObjectsOnPlatform(this.selection.children.slice());
         } else {
+            this.centerObjectOnPlatform(objectToCenter);
             this.highlightOutOfBounds([objectToCenter]);
         }
         this.render();
