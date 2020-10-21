@@ -129,24 +129,6 @@ function capturePrintInfo(str) {
 }
 
 /**
- * Gets the print bounds from the Cura header
- */
-function extractBoundsFromHeader() {
-    function getField(str) {
-        const pattern = ';' + str + ':([-0-9.]+)';
-        if(m = sliceInfo.header.match(pattern)) {
-            return parseFloat(m[1]);
-        } else {
-            return null;
-        }
-    }
-    sliceInfo.bounds = {
-        min: {x: getField("MINX"), y: getField("MINY"), z: getField("MINZ")},
-        max: {x: getField("MAXX"), y: getField("MAXY"), z: getField("MAXZ")}
-    };    
-}
-
-/**
  * This function writes out the geometry object as a binary STL file
  * to the Emscripten FS so that cura can read it in.
  */
@@ -242,7 +224,6 @@ function get_file(encoding) {
 }
 
 function get_stats() {
-    extractBoundsFromHeader();
     self.postMessage({
         'cmd': 'stats',
         'stats': sliceInfo

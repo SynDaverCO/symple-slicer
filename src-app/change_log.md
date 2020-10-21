@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.14
+==============================
+
+* Added ability to load pre-sliced G-code.
+
 SynDaver Symple Slicer v1.0.13
 ==============================
 
