@@ -125,8 +125,9 @@ body.debug .setting-ui {
 
 .settings-panel input[type=text],
 .settings-panel input[type=number] {
+    box-sizing:         border-box;
     padding:            1px 2px;
-    width:              8em;
+    width:              12em;
     font-size:          11px;
     border:             1px solid;
 }
