@@ -109,6 +109,8 @@ class SettingsPanel {
                 case 'stl':
                 case 'obj':
                 case '3mf':
+                case 'gco':
+                case 'gcode':
                     settings.gotoPage("page_place");
                     PlaceObjectsPage.onLoadTypeChanged("3d");
                     id = "model_file";
@@ -266,8 +268,8 @@ class PlaceObjectsPage {
         s.separator();
 
         s.div({id: "load_models"});
-        s.file("Drag and drop 3D objects<br><small>(STL, OBJ or 3MF)</small>",
-                                                                     {id: "model_file", onchange: PlaceObjectsPage.onDropModel, mode: 'binary', multiple: 'multiple', accept: ".stl,.obj,.3mf"});
+        s.file("Drag and drop 3D objects<br><small>(STL, OBJ, 3MF or GCO)</small>",
+                                                                     {id: "model_file", onchange: PlaceObjectsPage.onDropModel, mode: 'binary', multiple: 'multiple', accept: ".stl,.obj,.3mf,.gco,.gcode"});
 
         s.category("Place More");
         s.number(     "How many more to place?",                     {id: "place_quantity", value: "1", min: "1", max: "50", onchange: SettingsPanel.enforceMinMax});
@@ -306,6 +308,19 @@ class PlaceObjectsPage {
     }
 
     static onDropModel(data, filename) {
+        // Check for pre-sliced gcode files
+        if(filename) {
+            const extension = filename.split('.').pop();
+            if(extension == "gco" || extension == "gcode") {
+                if(confirm("Loading pre-sliced G-code will clear any existing objects.\nAny printer, material or slicing choices you have made will be ignored.\nPrinting incompatible G-code could damage your printer.")) {
+                    stage.removeAll();
+                    PrintAndPreviewPage.setOutputGcodeName(filename);
+                    PrintAndPreviewPage.readyToDownload(data);
+                }
+                return;
+            }
+        }
+        // Handle regular model files
         if(data) {
             PrintAndPreviewPage.setOutputGcodeName(filename);
             ProgressBar.message("Preparing model");
@@ -698,7 +713,7 @@ class PrintAndPreviewPage {
 
         s.category(   "Print Statistics",                            {open: "open"});
         s.text(           "Print time",                              {id: "print_time"});
-        s.number(         "Filament used",                           {id: "print_filament", units: "mm²"});
+        s.number(         "Filament used",                           {id: "print_filament", units: "m"});
 
         s.category(   "Preview Options",                             {open: "open"});
         s.toggle(         "Show shell",                              {id: "show_shell", onclick: PrintAndPreviewPage.onUpdatePreview, checked: 'checked'});
@@ -779,18 +794,39 @@ class PrintAndPreviewPage {
     }
 
     static readyToDownload(data) {
-        gcode_blob = new Blob([data], {type: "application/octet-stream"});
         ProgressBar.hide();
         settings.gotoPage("page_print");
-
-        // Show the filament pathname
         var decoder = new TextDecoder();
-        var path = new GCodeParser(decoder.decode(data));
+        this.loadSlicedGcode(decoder.decode(data));
+    }
+
+    static extractDataFromGcodeHeader(gcode) {
+        function getField(str) {
+            const r = new RegExp('^;' + str + ':\\s*([-0-9.]+)','m');
+            const m = gcode.match(r);
+            return m ? parseFloat(m[1]) : 0;
+        }
+        const bounds = {
+            min: {x: getField("MINX"), y: getField("MINY"), z: getField("MINZ")},
+            max: {x: getField("MAXX"), y: getField("MAXY"), z: getField("MAXZ")}
+        };
+        const time = getField("TIME");
+        const time_hms = new Date(time * 1000).toISOString().substr(11, 8);
+        const filament = getField("Filament used");
+        PrintAndPreviewPage.setPrintBounds(bounds);
+        PrintAndPreviewPage.setPrintTime(time_hms);
+        PrintAndPreviewPage.setPrintFilament(filament.toFixed(2));
+    }
+
+    static loadSlicedGcode(str) {
+        gcode_blob = new Blob([str], {type: "text/plain"});
+        var path = new GCodeParser(str);
         stage.setGcodePath(path);
-        const max = stage.getGcodeLayers() - 1;
+        const max = Math.max(0, stage.getGcodeLayers() - 1);
         $("#preview_layer").attr("max", max).val(max);
         $('#preview_layer').val(max);
         $('#current_layer').val(max);
+        PrintAndPreviewPage.extractDataFromGcodeHeader(str);
         PrintAndPreviewPage.onUpdatePreview();
     }
 
