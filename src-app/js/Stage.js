@@ -397,6 +397,7 @@ class Stage {
         if(this.numObjects > 1) {
             this.arrangeObjectsOnPlatform(this.selection.children.slice());
         } else {
+            let objectToCenter = this.selection.children[0];
             this.centerObjectOnPlatform(objectToCenter);
             this.highlightOutOfBounds([objectToCenter]);
         }
