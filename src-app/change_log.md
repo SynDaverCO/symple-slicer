@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v1.0.13
+==============================
+
+* Multiple objects can now be selected for centering.
+* '''Profiles:''' Updates to all profiles
+
 SynDaver Symple Slicer v1.0.12
 ==============================
 
