@@ -94,7 +94,8 @@ body.debug .setting-ui {
 }
 
 .settings-panel select {
-    min-width:          calc(4px + 11em);
+    box-sizing:         border-box;
+    min-width:          12em;
     font-size:          11px;
     border:             1px solid;
     cursor:             pointer;
