@@ -2,6 +2,8 @@ SynDaver Symple Slicer v1.0.14
 ==============================
 
 * Added ability to load pre-sliced G-code.
+* '''Slicing UI:''' Added "Z Seam Alignment", "Z Seam X" and "Z Seam Y"
+* '''Profiles:''' Updated PETG and Nylon
 
 SynDaver Symple Slicer v1.0.13
 ==============================

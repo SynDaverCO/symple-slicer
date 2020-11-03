@@ -582,6 +582,9 @@ class SliceObjectsPage {
         s.fromSlicer(       "top_bottom_pattern");
         s.fromSlicer(       "top_bottom_pattern_0");
         s.fromSlicer(       "z_seam_type");
+        s.fromSlicer(       "z_seam_position");
+        s.fromSlicer(       "z_seam_x");
+        s.fromSlicer(       "z_seam_y");
         s.fromSlicer(       "infill_before_walls");
         s.fromSlicer(       "ironing_enabled");
 
