@@ -1113,8 +1113,9 @@ class ConfigWirelessPage {
             }
             for(const file of files) {
                 ProgressBar.message("Uploading \"" + file.name + "\"");
-                const hmac = await AuthenticatedUpload.upload({
-                    url:              'http://' + printer_addr + "/upload",
+                const hmac = await AuthenticatedRequest.doPost({
+                    statusUrl:        'http://' + printer_addr + "/status",
+                    methodUrl:        'http://' + printer_addr + "/" + file.name,
                     password:         printer_pass,
                     file:             file,
                     onProgress:       bytes => ProgressBar.progress((completedBytes + bytes)/totalBytes)
@@ -1185,6 +1186,7 @@ class UpdateFirmwarePage {
             files.push(await ConfigWirelessPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin'));
             // Upload everything.
             await ConfigWirelessPage.uploadFiles(files);
+            alert("The wireless module has been upgraded.");
         }
     }
 }
