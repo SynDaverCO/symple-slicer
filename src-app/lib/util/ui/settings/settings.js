@@ -188,6 +188,12 @@ class SettingsUI {
         }
     }
 
+    progress(description, attr) {
+        var container = SettingsUI._param(this.target_dom, attr, false);
+        SettingsUI._label(container, description, attr);
+        return SettingsUI.addTag(container, "progress", SettingsUI._copyAttr({}, attr, ["id", "value", "max"]));
+    }
+
     heading(text) {
         SettingsUI.addTag(this.target_dom, "h1", {innerHTML: text});
     }

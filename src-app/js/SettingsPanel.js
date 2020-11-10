@@ -35,7 +35,7 @@ class SettingsPanel {
         MachineSettingsPage.init(s);
         StartAndEndGCodePage.init(s);
         if(isDesktop) {
-            ConfigWirelessPage.init(s);
+            WirelessPrintingPage.init(s);
             UpdateFirmwarePage.init(s);
         }
         AdvancedFeaturesPage.init(s);
@@ -867,9 +867,9 @@ class PrintAndPreviewPage {
             alert("There is nothing to print")
             return
         }
-        const file = ConfigWirelessPage.fileFromBlob("printjob.gco", gcode_blob);
-        await ConfigWirelessPage.uploadFiles([file]);
-        settings.gotoPage("page_finished");
+        const file = WirelessPrintingPage.fileFromBlob("printjob.gco", gcode_blob);
+        await WirelessPrintingPage.uploadFiles([file]);
+        WirelessPrintingPage.showMonitor();
     }
 
     static setPrintTime(value) {
@@ -1027,13 +1027,15 @@ class AdvancedFeaturesPage {
     }
 }
 
-class ConfigWirelessPage {
+class WirelessPrintingPage {
     static init(s) {
-        s.page(       "Configure Wireless",                          {id: "page_config_wifi"});
+        s.page(       "Wireless Printing",                           {id: "page_wifi_printing"});
+        
+        s.category( "Configure Wireless Printing",                   {id: "config_wifi"});
         s.heading("Network Configuration:",                          {open: "open"});
 
-        const no_save = {oninput: ConfigWirelessPage.onInput};
-        const to_save = {oninput: ConfigWirelessPage.onInput, onchange: ConfigWirelessPage.onChange};
+        const no_save = {oninput: WirelessPrintingPage.onInput};
+        const to_save = {oninput: WirelessPrintingPage.onInput, onchange: WirelessPrintingPage.onChange};
         s.text(           "Network Name (SSID):",                    {...to_save, id: "wifi_ssid",    placeholder: "Required",
                                                                          tooltip: "Type in the name of the wireless access point you want your printer to connect to"});
         s.text(           "Network Password:",                       {...no_save, id: "wifi_pass",    placeholder: "Required",
@@ -1043,9 +1045,15 @@ class ConfigWirelessPage {
                                                                          tooltip: "Choose a password to prevent unauthorized use of your printer"});
         s.text(           "IP Address:",                             {...to_save, id: "printer_addr", placeholder: "Optional",
                                                                           tooltip: "Leave this blank now to allow the printer to select an address via DHCP; but once the printer is connected it will show you an address to type in here"});
-        s.footer();
-        s.button(     "Save",                                        {onclick: ConfigWirelessPage.onSaveClicked, id: "save_config_btn"});
+        s.button(     "Save",                                        {onclick: WirelessPrintingPage.onSaveClicked, id: "save_config_btn"});
         s.buttonHelp( "Click this button to save WiFi configuration G-code to run on your printer");
+
+        s.category( "Monitor Wireless Printing",                     {id: "monitor_wifi"});
+        s.progress( "Print progress:",                               {id: "wifi_progress", value: 0});
+        s.text(     "Printer status:",                               {id: "wifi_status"});
+        s.number(   "Signal strength:",                              {id: "wifi_strength", units: "dBm"});
+        s.button(   "Stop",                                          {id: "wifi_stop", onclick: WirelessPrintingPage.stopPrint, disabled: "disabled"});
+        s.button(   "Pause",                                         {id: "wifi_pause_resume", onclick: WirelessPrintingPage.pauseResumePrint, disabled: "disabled"});
 
         let loadFromStorage = id => document.getElementById(id).value = localStorage.getItem(id) || "";
 
@@ -1054,7 +1062,9 @@ class ConfigWirelessPage {
         loadFromStorage("printer_pass");
         loadFromStorage("printer_addr");
 
-        ConfigWirelessPage.onInput();
+        WirelessPrintingPage.onInput();
+
+        setInterval(this.onTimer, 5000);
     }
 
     static onSaveClicked() {
@@ -1113,7 +1123,7 @@ class ConfigWirelessPage {
             }
             for(const file of files) {
                 ProgressBar.message("Uploading \"" + file.name + "\"");
-                const hmac = await AuthenticatedRequest.doPost({
+                await AuthenticatedRequest.doPost({
                     statusUrl:        'http://' + printer_addr + "/status",
                     methodUrl:        'http://' + printer_addr + "/" + file.name,
                     password:         printer_pass,
@@ -1125,8 +1135,30 @@ class ConfigWirelessPage {
         } catch (e) {
             console.error(e);
             alert(e);
+            return false;
         } finally {
             ProgressBar.hide();
+        }
+        return true;
+    }
+
+    static async sendCommand(cmd) {
+        const printer_pass = settings.get("printer_pass");
+        const printer_addr = settings.get("printer_addr");
+        if(printer_pass.length == 0 || printer_addr.length == 0) {
+            alert("Please configure the wireless module using the \"Configure Wireless\" from the \"Tasks\" menu")
+            return
+        }
+        try {
+            console.log(cmd);
+            await AuthenticatedRequest.doGet({
+                statusUrl:        'http://' + printer_addr + "/status",
+                methodUrl:        'http://' + printer_addr + "/" + cmd,
+                password:         printer_pass
+            });
+        } catch (e) {
+            console.error(e);
+            alert(e);
         }
     }
 
@@ -1146,7 +1178,51 @@ class ConfigWirelessPage {
     static async fileFromUrl(fileName, url) {
         let fw = await fetch(url);
         let blob = await fw.blob();
-        return ConfigWirelessPage.fileFromBlob(fileName, blob);
+        return WirelessPrintingPage.fileFromBlob(fileName, blob);
+    }
+
+    static async onTimer() {
+        let progress = document.getElementById('wifi_progress');
+        let strength = document.getElementById('wifi_strength');
+        let status   = document.getElementById('wifi_status');
+
+        function isHidden(el) {
+            return (el.offsetParent === null);
+        }
+
+        /* Since updating the status requires network traffic, only do it
+         * if the user is watching.
+         */
+        if(!isHidden(progress)) {
+            const printer_addr = settings.get("printer_addr");
+            if(printer_addr.length == 0) return;
+            let json = await fetchJSON('http://' + printer_addr + "/status");
+            progress.value = json.progress;
+            strength.value = json.wifiRSSI;
+            status.value   = json.status;
+            const printing = json.status == "printing" || json.status == "paused";
+            settings.enable('#wifi_stop', printing);
+            settings.enable('#wifi_pause_resume', printing);
+            document.getElementById("wifi_pause_resume").innerHTML = json.status == "printing" ? "Pause" : "Resume";
+        }
+    }
+
+    static async stopPrint() {
+        if(confirm("Are you sure you want to stop the print? Press OK to stop the print, Cancel otherwise.")) {
+            WirelessPrintingPage.sendCommand("stop");
+        }
+    }
+
+    static async pauseResumePrint() {
+        let status = document.getElementById('wifi_status');
+        if(status.value == "printing") await WirelessPrintingPage.sendCommand("pause");
+        if(status.value == "paused")   await WirelessPrintingPage.sendCommand("resume");
+    }
+
+    static showMonitor() {
+        settings.gotoPage("page_wifi_printing");
+        settings.expand("configure_wifi", false);
+        settings.expand("monitor_wifi", true);
     }
 }
 
@@ -1178,15 +1254,16 @@ class UpdateFirmwarePage {
             // An upgrade set includes the various print scripts as well as the firmware file.
             let files = [];
             if(ProfileManager.scripts) {
-                files.push(ConfigWirelessPage.fileFromStr("pause.gco",    ProfileManager.scripts.pause_print_gcode  || ""));
-                files.push(ConfigWirelessPage.fileFromStr("cancel.gco",   ProfileManager.scripts.stop_print_gcode   || ""));
-                files.push(ConfigWirelessPage.fileFromStr("resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
-                files.push(ConfigWirelessPage.fileFromStr("badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
+                files.push(WirelessPrintingPage.fileFromStr("pause.gco",    ProfileManager.scripts.pause_print_gcode  || ""));
+                files.push(WirelessPrintingPage.fileFromStr("cancel.gco",   ProfileManager.scripts.stop_print_gcode   || ""));
+                files.push(WirelessPrintingPage.fileFromStr("resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
+                files.push(WirelessPrintingPage.fileFromStr("badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
             }
-            files.push(await ConfigWirelessPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin'));
+            files.push(await WirelessPrintingPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin'));
             // Upload everything.
-            await ConfigWirelessPage.uploadFiles(files);
-            alert("The wireless module has been upgraded.");
+            if(await WirelessPrintingPage.uploadFiles(files)) {
+                alert("The wireless module has been upgraded.");
+            }
         }
     }
 }

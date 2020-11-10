@@ -141,7 +141,7 @@ BODY[data-platform="desktop"] .webapp-only {
     top:                0;
 }
 
-#print_time, #print_filament, #current_layer {
+#print_time, #print_filament, #current_layer, #wifi_strength, #wifi_status {
     pointer-events:     none;
     border:             none;
 }

@@ -133,6 +133,11 @@ body.debug .setting-ui {
     border:             1px solid;
 }
 
+.settings-panel progress {
+    box-sizing:         border-box;
+    width:              12em;    
+}
+
 .settings-panel .has_units input[type=text],
 .settings-panel .has_units input[type=number] {
     padding:            1px 3em 1px 2px; /* Allow 3em for units */
@@ -210,12 +215,4 @@ input[type=number] {
 
 .settings-panel .selected-file .reset {
     font-size:          120%;
-}
-
-.settings-panel progress {
-    position:          absolute;
-    width:             100%;
-    visibility:        hidden;
-    bottom:            0px;
-    left:              0px;
 }
