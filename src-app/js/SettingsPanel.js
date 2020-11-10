@@ -31,7 +31,6 @@ class SettingsPanel {
         ObjectTransformPage.init(s);
         SliceObjectsPage.init(s);
         PrintAndPreviewPage.init(s);
-        PrintFinishedPage.init(s);
         MachineSettingsPage.init(s);
         StartAndEndGCodePage.init(s);
         if(isDesktop) {
@@ -840,7 +839,6 @@ class PrintAndPreviewPage {
         }
         let fileName = settings.get("gcode_filename");
         saveAs(gcode_blob, fileName);
-        settings.gotoPage("page_finished");
     }
 
     static async onPrintClicked() {
@@ -851,7 +849,6 @@ class PrintAndPreviewPage {
         if(featureRequiresDesktopVersion("Printing via USB")) {
             try {
                 await stream_gcode(await gcode_blob.text());
-                settings.gotoPage("page_finished");
             } catch(err) {
                 if(!(err instanceof PrintAborted)) {
                     // Report all errors except for user initiated abort
@@ -868,8 +865,13 @@ class PrintAndPreviewPage {
             return
         }
         const file = WirelessPrintingPage.fileFromBlob("printjob.gco", gcode_blob);
-        await WirelessPrintingPage.uploadFiles([file]);
-        WirelessPrintingPage.showMonitor();
+        try {
+            await WirelessPrintingPage.uploadFiles([file]);
+            WirelessPrintingPage.showMonitor();
+        } catch (e) {
+            console.error(e);
+            alert(e);
+        }
     }
 
     static setPrintTime(value) {
@@ -959,17 +961,6 @@ class StartAndEndGCodePage {
 
     static doneEditingGcode() {
         settings.gotoPage("page_machine");
-    }
-}
-
-class PrintFinishedPage {
-    static init(s) {
-        s.page( null,                                                {id: "page_finished"});
-        s.element(                                                   {id: "help-post-print"});
-    }
-
-    static onDoItAgainClicked() {
-        settings.gotoPage("page_profiles");
     }
 }
 
@@ -1132,14 +1123,9 @@ class WirelessPrintingPage {
                 });
                 completedBytes += file.size;
             }
-        } catch (e) {
-            console.error(e);
-            alert(e);
-            return false;
         } finally {
             ProgressBar.hide();
         }
-        return true;
     }
 
     static async sendCommand(cmd) {
@@ -1261,8 +1247,12 @@ class UpdateFirmwarePage {
             }
             files.push(await WirelessPrintingPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin'));
             // Upload everything.
-            if(await WirelessPrintingPage.uploadFiles(files)) {
+            try {
+                await WirelessPrintingPage.uploadFiles(files);
                 alert("The wireless module has been upgraded.");
+            } catch (e) {
+                console.error(e);
+                alert(e);
             }
         }
     }

@@ -61,18 +61,6 @@ hr {
     display: none;
 }
 
-#help-post-print:not([data-output="printer"]) .save-to-printer {
-    display: none;
-}
-
-#help-post-print:not([data-output="file"]) .save-to-file {
-    display: none;
-}
-
-#help-post-print:not([data-output="wifi"]) .save-to-wifi {
-    display: none;
-}
-
 .settings-ui[data-keep-settings="yes"] .load-profiles {
     display: none;
 }
