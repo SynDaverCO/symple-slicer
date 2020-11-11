@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 62
+    cacheVersion: 63
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -114,7 +114,7 @@ const filesToCache = [
     'lib/three/ShaderPass.js',
     'lib/three/TransformControls.js',
     'lib/three/three.min.js',
-    'lib/util/crypto/AuthenticatedUpload.js',
+    'lib/util/crypto/AuthenticatedRequest.js',
     'lib/util/gcode/GCodeParser.js',
     'lib/util/gcode/Toolpath.js',
     'lib/util/geometry/FaceRotationHelper.js',
