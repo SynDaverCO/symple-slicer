@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 62
+    cacheVersion: 63
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -43,6 +43,7 @@ const filesToCache = [
     'config/syndaver/machine_profiles/cura_default.toml',
     'config/syndaver/machine_profiles/syndaver_axi.toml',
     'config/syndaver/print_profiles/abs_standard_stable.toml',
+    'config/syndaver/print_profiles/asa_standard_stable.toml',
     'config/syndaver/print_profiles/cura_default.toml',
     'config/syndaver/print_profiles/carbon-fiber-nylon_standard_stable.toml',
     'config/syndaver/print_profiles/copperfill_standard_stable.toml',
@@ -113,7 +114,7 @@ const filesToCache = [
     'lib/three/ShaderPass.js',
     'lib/three/TransformControls.js',
     'lib/three/three.min.js',
-    'lib/util/crypto/AuthenticatedUpload.js',
+    'lib/util/crypto/AuthenticatedRequest.js',
     'lib/util/gcode/GCodeParser.js',
     'lib/util/gcode/Toolpath.js',
     'lib/util/geometry/FaceRotationHelper.js',
