@@ -119,7 +119,7 @@ function createMenu(win) {
                 {label: 'Slice Objects\u2026',      click: () => win.webContents.executeJavaScript('settings.gotoPage("page_slice")')},
                 { type: 'separator' },
                 {label: 'Machine Setup\u2026',      click: () => win.webContents.executeJavaScript('settings.gotoPage("page_machine")')},
-                {label: 'Configure Wireless\u2026', click: () => win.webContents.executeJavaScript('settings.gotoPage("page_config_wifi")')},
+                {label: 'Configure Wireless\u2026', click: () => win.webContents.executeJavaScript('WirelessPrintingPage.showConfig()')},
                 {label: 'Update Firmware\u2026',    click: () => win.webContents.executeJavaScript('settings.gotoPage("page_flash_fw")')},
                 {label: 'Advanced Features\u2026',  click: () => win.webContents.executeJavaScript('settings.gotoPage("page_advanced")')},
             ]

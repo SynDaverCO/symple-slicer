@@ -101,7 +101,7 @@ body.debug .setting-ui {
     cursor:             pointer;
 }
 
-.settings-panel .button-group {
+.settings-panel .button-group, .settings-panel .incomplete-button-group {
     display:            flex;
     align-items:        center;
 }

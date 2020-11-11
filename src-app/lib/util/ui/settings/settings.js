@@ -175,7 +175,7 @@ class SettingsUI {
     choice(description, attr) {
         var container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
-        var el = SettingsUI.addTag(container, "select", {id: attr.id});
+        var el = SettingsUI.addTag(container, "select", SettingsUI._copyAttr({}, attr, ["id", "multiple"]));
         if(attr && attr.id) {
             this.getters[attr.id] = function() {return document.getElementById(attr.id).value;}
         }
@@ -219,12 +219,16 @@ class SettingsUI {
      * A button group is a div that contains buttons and buttonHelp elements.
      * If one already exists, it will be used, otherwise a new one will be created
      */
-    _lastButtonGroup() {
-        const lastChild = this.target_dom.lastChild;
-        if (lastChild && lastChild.classList.contains("button-group")) {
-            return lastChild;
+    _lastButtonGroup(closeGroup) {
+        let group = this.target_dom.lastChild;
+        if (!(group && group.classList.contains("incomplete-button-group"))) {
+            group = SettingsUI.addTag(this.target_dom, "div", {className: "incomplete-button-group"})
         }
-        return SettingsUI.addTag(this.target_dom, "div", {className: "button-group"});
+        if(closeGroup) {
+            group.classList.remove("incomplete-button-group");
+            group.classList.add("button-group");
+        }
+        return group;
     }
 
     button(label, attr_list) {
@@ -233,7 +237,7 @@ class SettingsUI {
     }
 
     buttonHelp(text) {
-        SettingsUI.addTag(this._lastButtonGroup(), "div", {innerHTML:text, className: "button-label"});
+        SettingsUI.addTag(this._lastButtonGroup(true), "div", {innerHTML:text, className: "button-label"});
     }
 
     textarea(label, attr) {
