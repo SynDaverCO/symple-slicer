@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 63
+    cacheVersion: 66
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -58,7 +58,6 @@ const filesToCache = [
     'css/layout.css',
     'css/markdown.css',
     'css/theme.css',
-    'images/celebration-party-hats.jpg',
     'images/favicon.ico',
     'images/icon_128px.png',
     'images/icon_180px.png',
