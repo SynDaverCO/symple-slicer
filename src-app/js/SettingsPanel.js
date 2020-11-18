@@ -1133,6 +1133,7 @@ class WirelessPrintingPage {
             throw Error("Please configure wireless printing using the \"Configure Wireless\" from the \"Tasks\" menu");
         }
         try {
+            if(!await WirelessPrintingPage.checkIfPrinterIdle()) return;
             let totalBytes = 0;
             let completedBytes = 0;
             for(const file of files) {
@@ -1224,6 +1225,21 @@ class WirelessPrintingPage {
         }
     }
 
+    static async isPrinterBusy() {
+        const printer_addr = settings.get("printer_addr");
+        if(printer_addr.length == 0) return false;
+        const result = await fetchJSON('http://' + printer_addr + "/status");
+        return result.status == "printing" ||  result.status == "paused";
+    }
+
+    static async checkIfPrinterIdle() {
+        if(!await WirelessPrintingPage.isPrinterBusy()) return true;
+        if(confirm("The selected printer is busy. Click OK to monitor the print in progress.")) {
+            WirelessPrintingPage.showMonitor();
+        }
+        return false;
+    }
+
     static async pauseResumePrint() {
         let status = document.getElementById('wifi_status');
         if(status.value == "printing") await WirelessPrintingPage.sendCommand("pause");
@@ -1261,11 +1277,16 @@ class WirelessPrintingPage {
             for(const k of availableProfiles) {
                 el.add(new Option(k, k, false, k == selectedProfile));
             }
-            el.onchange = event => WirelessPrintingPage.changeWirelessProfile(event.target.value);
+            el.onchange = WirelessPrintingPage.onProfileChanged;
             if(!availableProfiles.includes(selectedProfile)) {
                 el.selectedIndex = -1;
             }
         }
+    }
+
+    static async onProfileChanged(event) {
+        WirelessPrintingPage.changeWirelessProfile(event.target.value);
+        await WirelessPrintingPage.checkIfPrinterIdle();
     }
 
     static loadWirelessProfileList() {
@@ -1372,7 +1393,8 @@ class UpdateFirmwarePage {
                 files.push(WirelessPrintingPage.fileFromStr("resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
                 files.push(WirelessPrintingPage.fileFromStr("badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
             }
-            files.push(await WirelessPrintingPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin'));
+            files.push(await WirelessPrintingPage.fileFromUrl("index.html",   'config/syndaver/machine_firmware/SynDaver_WiFi.html'));
+            files.push(await WirelessPrintingPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin')); // Must be last
             // Upload everything.
             try {
                 await WirelessPrintingPage.uploadFiles(files);

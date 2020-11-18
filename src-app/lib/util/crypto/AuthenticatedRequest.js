@@ -34,12 +34,15 @@ class AuthenticatedRequest {
      *    in the "nonce" attribute of a JSON response
      *  - The host will use the ESP32 hardware random number generator
      *    for the nonce.
-     *  - The client appends the nonce to the end of the file and
+     *  - The client generates a preamble that consists of the HTTP
+     *    method, the cannonical URL path, the nonce as a decimal and
+     *    newline, i.e: "PUT /file.gco 1118992010\n"
+     *  - The client concatenates the preamble and request body and
      *    generates a SHA256 HMAC over the data using the end-user
      *    entered password
-     *  - The client uploads the file and HMAC in plaintext using
-     *    either a PUT or POST request to the following URL
-     *    "http://baseUrl/PATHNAME?hmac=XXXXXXXXXXXX"
+     *  - The client submits the file using PUT or POST with an
+     *    Authorization header of type "SYN1-HMAC-SHA256" and the
+     *    first 32 characters of the hexadecimal HMAC.
      *  - The host saves the file to the local SD card and then
      *    generates an HMAC over the file contents and the nonce
      *    using the password saved on the printer.
@@ -59,55 +62,74 @@ class AuthenticatedRequest {
      */
 
     static async signAndSendRequest(options, method, payload) {
-        let status    = await this.getJSON(options.statusUrl);
-        let hmac      = await this.sign(payload, options.password, status.nonce);
-        if(options.onSignatureReady) {
-            options.onSignatureReady(hmac);
+        let status = await this.getJSON(options.statusUrl);
+        if(status.protocol && status.protocol >= 1) {
+            // New protocol, use Authorization header with 128 bit HMAC
+            let preamble = method + " " + this.cannonicalResource(options.methodUrl) + " " + status.nonce + "\n";
+            let hmac = await this.sign(options.password, preamble, payload);
+            if(options.onSignatureReady) {
+                options.onSignatureReady(hmac);
+            }
+            this.validateUrl(options.methodUrl);
+            await this.fetchXHR(options.methodUrl, {
+                method: method,
+                body: payload,
+                onProgress: options.onProgress,
+                authorization: "SYN1-HMAC-SHA256 " + hmac.substring(0, 32) // Truncate HMAC to 128 bits
+            });
+        } else {
+            // Legacy protocol, use hmac query parameter with 256 bit HMAC
+            await this.signAndSendRequest_legacy(options, method, payload);
         }
-
-        await this.fetchXHR(options.methodUrl + "?hmac=" + hmac, {
-            method: method,
-            body: payload,
-            onProgress: options.onProgress
-        });
-    }
-
-    static async doPut(options) {
-        let payload = await this.fileToArrayBuffer(options.file);
-        this.signAndSendRequest(options, "PUT", payload);
-    }
-
-    static async doPost(options) {
-        let payload = await this.fileToArrayBuffer(options.file);
-        await this.signAndSendRequest(options, "POST", payload);
-    }
-
-    static async doDelete(options) {
-        await this.signAndSendRequest(options, "DELETE", new ArrayBuffer());
-    }
-
-    static async doGet(options) {
-        await this.signAndSendRequest(options, "GET", new ArrayBuffer());
     }
 
     /**
-     * Generates an HMAC using the file's content, password and optional
-     * nonce value.
+     * Generates an HMAC using the password, preamble and file's content
      */
-    static async sign(arrayBuffer, passwd, nonce) {
-        let msgBits = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
-        arrayBuffer = null;
-        if(nonce) {
-            const nonceBuffer = new ArrayBuffer(4);
-            const nonceView = new Uint32Array(nonceBuffer);
-            nonceView[0] = nonce;
-            const nonceBits = sjcl.codec.arrayBuffer.toBits(nonceBuffer);
-            msgBits = sjcl.bitArray.concat(msgBits, nonceBits);
+    static async sign(passwd, preamble, arrayBuffer) {
+        let msgBits = sjcl.codec.utf8String.toBits(preamble);
+        if(arrayBuffer) {
+            const arrayBits = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
+            arrayBuffer = null;
+            msgBits = sjcl.bitArray.concat(msgBits, arrayBits);
         }
         const pwdBits = sjcl.codec.utf8String.toBits(passwd);
         const h = new sjcl.misc.hmac(pwdBits);
         const hmacBits = h.encrypt(msgBits);
         return sjcl.codec.hex.fromBits(hmacBits);
+    }
+
+    static cannonicalResource(url) {
+        const parser = document.createElement('a');
+        parser.href = url;
+        return parser.pathname + parser.search;
+    }
+
+    // The ESP32 HTTPS library puts a limit on the length of the URL.
+    static validateUrl(url) {
+        const HTTPS_REQUEST_MAX_REQUEST_LENGTH = 128;
+        const request = "OPTIONS " + this.cannonicalResource(url) + " HTTP/1.1";
+        if(request.length > HTTPS_REQUEST_MAX_REQUEST_LENGTH) {
+            throw Error("This request cannot be processed. The path is too long.");
+        }
+    }
+
+    static async doPut(options) {
+        let payload = options.file ? await this.fileToArrayBuffer(options.file) : null;
+        await this.signAndSendRequest(options, "PUT", payload);
+    }
+
+    static async doPost(options) {
+        let payload = options.file ? await this.fileToArrayBuffer(options.file) : null;
+        await this.signAndSendRequest(options, "POST", payload);
+    }
+
+    static async doDelete(options) {
+        await this.signAndSendRequest(options, "DELETE", null);
+    }
+
+    static async doGet(options) {
+        await this.signAndSendRequest(options, "GET", null);
     }
 
     /**
@@ -125,7 +147,6 @@ class AuthenticatedRequest {
                     if (evt.lengthComputable) {
                         data.onProgress(evt.loaded, evt.total)
                     } else {
-                        console.log(evt.loaded);
                         data.onProgress(evt.loaded)
                     }
                 }, false);
@@ -145,9 +166,10 @@ class AuthenticatedRequest {
             });
             xhr.addEventListener("error", () => {reject(xhr.statusText);});
             xhr.open((data && data.method) || "GET", url);
-            if(data.body) {
-                xhr.send(data.body);
+            if(data.authorization) {
+                xhr.setRequestHeader("Authorization", data.authorization);
             }
+            xhr.send(data.body);
         });
     }
 
@@ -184,5 +206,42 @@ class AuthenticatedRequest {
                 reject(e);
             }
         })
+    }
+
+    // Legacy protocol support, should be removed at some point
+
+    static async signAndSendRequest_legacy(options, method, payload) {
+        let status    = await this.getJSON(options.statusUrl);
+        let hmac      = await this.sign_legacy(payload, options.password, status.nonce);
+        if(options.onSignatureReady) {
+            options.onSignatureReady(hmac);
+        }
+        let url = options.methodUrl + (options.methodUrl.indexOf('?') != -1 ? "&" : "?") + "hmac=" + hmac;
+        this.validateUrl(url);
+        await this.fetchXHR(url, {
+            method: method,
+            body: payload,
+            onProgress: options.onProgress
+        });
+    }
+
+    /**
+     * Generates an HMAC using the file's content, password and optional
+     * nonce value.
+     */
+    static async sign_legacy(arrayBuffer, passwd, nonce) {
+        let msgBits = sjcl.codec.arrayBuffer.toBits(arrayBuffer);
+        arrayBuffer = null;
+        if(nonce) {
+            const nonceBuffer = new ArrayBuffer(4);
+            const nonceView = new Uint32Array(nonceBuffer);
+            nonceView[0] = nonce;
+            const nonceBits = sjcl.codec.arrayBuffer.toBits(nonceBuffer);
+            msgBits = sjcl.bitArray.concat(msgBits, nonceBits);
+        }
+        const pwdBits = sjcl.codec.utf8String.toBits(passwd);
+        const h = new sjcl.misc.hmac(pwdBits);
+        const hmacBits = h.encrypt(msgBits);
+        return sjcl.codec.hex.fromBits(hmacBits);
     }
 }
