@@ -1095,7 +1095,7 @@ class WirelessPrintingPage {
         const blob = new Blob([config], {type: "text/plain;charset=utf-8"});
         saveAs(blob, "wifi_config.gco");
         if(printer_addr == "dhcp") {
-            alert("After running the G-code on the printer, please type the address displayed by the printer in the \"IP Address\" field.");
+            alert("After running the G-code on the printer, please type the address displayed by the printer in the \"IP Address\" field (example: 192.168.0.10)");
             document.getElementById("printer_addr").placeholder = "Enter printer's IP here";
         }
         WirelessPrintingPage.saveWirelessProfile();
