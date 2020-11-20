@@ -1394,6 +1394,7 @@ class UpdateFirmwarePage {
                 files.push(WirelessPrintingPage.fileFromStr("badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
             }
             files.push(await WirelessPrintingPage.fileFromUrl("index.html",   'config/syndaver/machine_firmware/SynDaver_WiFi.html'));
+            files.push(await WirelessPrintingPage.fileFromUrl("serial.html",   'config/syndaver/machine_firmware/SynDaver_WiFi_Serial.html'));
             files.push(await WirelessPrintingPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin')); // Must be last
             // Upload everything.
             try {
