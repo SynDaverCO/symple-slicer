@@ -77,9 +77,11 @@ function captureGcodeHeader(str) {
 /**
  * Preform postprocessing on generated G-code
  */
-function postProcessGcode(gcode) {
+function postProcessGcode(gcode, slicer_args) {
     gcode = replaceGcodeHeader(gcode);
-    gcode = addPrintProgress(gcode);
+    if(slicer_args.includes("machine_gcode_flavor=RepRap (Marlin/Sprinter)")) {
+        gcode = addPrintProgress(gcode);
+    }
     return gcode;
 }
 
@@ -203,7 +205,7 @@ function loadFromUrl(url, filename) {
  * The following routine reads the file "output.gcode" from the Emscripten FS
  * and posts it via a message
  */
-function get_file(encoding) {
+function get_file(slicer_args) {
     var gcode;
     try {
         gcode = FS.readFile('output.gcode', {encoding: 'utf8'});
@@ -213,7 +215,7 @@ function get_file(encoding) {
     }
 
     // Apply post-processing to file
-    gcode = postProcessGcode(gcode);
+    gcode = postProcessGcode(gcode, slicer_args);
 
     const enc = new TextEncoder();
     var payload = {
@@ -259,7 +261,7 @@ function receiveMessage(e) {
         case 'loadFromUrl':  loadFromUrl(data.url, data.filename);                   break;
         case 'loadFromBlob': loadFromBlob(data.blob, data.filename);                 break;
         case 'loadGeometry': loadGeometry(jsonToGeometry(data.data), data.filename); break;
-        case 'slice':        slice(data.args); get_stats(); get_file();              break;
+        case 'slice':        slice(data.args); get_stats(); get_file(data.args);     break;
         case 'stop':         stop();                                                 break;
         default:             Module.printErr('Unknown command: ' + cmd);
     };
