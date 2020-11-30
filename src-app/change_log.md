@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.15
+==============================
+
+* Fixed incorrect print time on prints longer than a day
+
 SynDaver Symple Slicer v1.0.14
 ==============================
 

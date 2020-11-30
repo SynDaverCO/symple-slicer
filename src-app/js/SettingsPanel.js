@@ -811,12 +811,19 @@ class PrintAndPreviewPage {
             const m = gcode.match(r);
             return m ? parseFloat(m[1]) : 0;
         }
+        function toHMS(time) {
+            const hrs = Math.floor(time / 3600);
+            const min = Math.floor((time % 3600) / 60);
+            const sec = Math.floor(time % 60);
+            return hrs.toString().padStart(2, '0') + "h " +
+                   min.toString().padStart(2, '0') + "m " +
+                   sec.toString().padStart(2, '0') + "s";
+        }
         const bounds = {
             min: {x: getField("MINX"), y: getField("MINY"), z: getField("MINZ")},
             max: {x: getField("MAXX"), y: getField("MAXY"), z: getField("MAXZ")}
         };
-        const time = getField("TIME");
-        const time_hms = new Date(time * 1000).toISOString().substr(11, 8);
+        const time_hms = toHMS(getField("TIME"));
         const filament = getField("Filament used");
         PrintAndPreviewPage.setPrintBounds(bounds);
         PrintAndPreviewPage.setPrintTime(time_hms);
