@@ -99,11 +99,12 @@ function replaceGcodeHeader(gcode) {
  * Add M73 (Set Print Progress) to GCODE file
  */
 function addPrintProgress(gcode) {
-    if(m = gcode.match(/^;LAYER_COUNT:(\d+)$/m)) {
-        const layer_count = m[1];
-        gcode = gcode.replace(/^;LAYER:(\d+)$/gm, (match, layer_num) => match + "\nM73 P" + Math.ceil(layer_num/layer_count*100));
+    if(m = gcode.match(/^;TIME:(\d+)$/m)) {
+        const total_time = m[1];
+        gcode = gcode.replace(/^;TIME_ELAPSED:(\d+).*$/gm,
+            (match, time_elapsed) => match + "\nM73 P" + Math.ceil((time_elapsed+1)/(total_time+1)*100));
     } else {
-        console.warn("Warning: Unable to find layer count");
+        console.warn("Warning: Unable to find time elapsed");
     }
     return gcode;
 }

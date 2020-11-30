@@ -2,6 +2,7 @@ SynDaver Symple Slicer v1.0.15
 ==============================
 
 * Fixed incorrect print time on prints longer than a day
+* Compute print progress based on time rather than layers
 
 SynDaver Symple Slicer v1.0.14
 ==============================
