@@ -876,7 +876,7 @@ class PrintAndPreviewPage {
         }
         const file = WirelessPrintingPage.fileFromBlob("printjob.gco", gcode_blob);
         try {
-            await WirelessPrintingPage.uploadFiles([file]);
+            await WirelessPrintingPage.uploadOrQueueFiles([file]);
         } catch (e) {
             console.error(e);
             alert(e);
@@ -1093,6 +1093,7 @@ class WirelessPrintingPage {
             printer_addr = "dhcp";
         }
         const config =
+            "M118 P0 wifi_mode: sta\n" +
             "M118 P0 wifi_ssid: " + wifi_ssid + "\n" +
             "M118 P0 wifi_pass: " + wifi_pass + "\n" +
             "M118 P0 wifi_addr: " + printer_addr + "\n" +
@@ -1140,7 +1141,6 @@ class WirelessPrintingPage {
             throw Error("Please configure wireless printing using the \"Configure Wireless\" from the \"Tasks\" menu");
         }
         try {
-            if(!await WirelessPrintingPage.checkIfPrinterIdle()) return;
             let totalBytes = 0;
             let completedBytes = 0;
             for(const file of files) {
@@ -1160,6 +1160,17 @@ class WirelessPrintingPage {
         } finally {
             ProgressBar.hide();
         }
+    }
+
+    static async uploadOrQueueFiles(files) {
+        if(await WirelessPrintingPage.isPrinterBusy()) {
+            if(confirm("The printer is busy. Click OK to upload the file for printing next.")) {
+                files.unshift(WirelessPrintingPage.fileFromStr("printjob.gco", ProfileManager.scripts.next_print_gcode || ""));
+            } else {
+                WirelessPrintingPage.showMonitor();
+            }
+        }
+        await WirelessPrintingPage.uploadFiles(files);
     }
 
     static async sendCommand(cmd) {
@@ -1278,7 +1289,7 @@ class WirelessPrintingPage {
     static updateWirelessMenu() {
         if(WirelessPrintingPage.dropdown) {
             const el = WirelessPrintingPage.dropdown;
-            const selectedProfile   = WirelessPrintingPage.canSaveProfile() && settings.get("printer_name");
+            const selectedProfile   = WirelessPrintingPage.canUpload() && settings.get("printer_name");
             const availableProfiles = Object.keys(WirelessPrintingPage.loadWirelessProfileList());
             el.options.length = 0;
             for(const k of availableProfiles) {
@@ -1405,6 +1416,7 @@ class UpdateFirmwarePage {
             files.push(await WirelessPrintingPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin')); // Must be last
             // Upload everything.
             try {
+                if(!await WirelessPrintingPage.checkIfPrinterIdle()) return;
                 await WirelessPrintingPage.uploadFiles(files);
                 alert("The wireless module has been upgraded.");
             } catch (e) {

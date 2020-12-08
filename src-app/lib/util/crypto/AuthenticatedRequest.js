@@ -71,7 +71,7 @@ class AuthenticatedRequest {
                 options.onSignatureReady(hmac);
             }
             this.validateUrl(options.methodUrl);
-            await this.fetchXHR(options.methodUrl, {
+            return await this.fetchXHR(options.methodUrl, {
                 method: method,
                 body: payload,
                 onProgress: options.onProgress,
@@ -129,7 +129,7 @@ class AuthenticatedRequest {
     }
 
     static async doGet(options) {
-        await this.signAndSendRequest(options, "GET", null);
+        return await this.signAndSendRequest(options, "GET", null);
     }
 
     /**
