@@ -247,14 +247,14 @@ class SynDaverWiFi {
         return await response.json();
     }
 
-    static async isPrinting() {
-        const json = await SynDaverWiFi.status();
+    static async isPrinting(status) {
+        const json = status || await SynDaverWiFi.status();
         return json.status == "printing" || json.status == "paused";
     }
 
-    static async numberOfJobs() {
-        const json = await SynDaverWiFi.status();
-        return json.jobsWaiting + (json.status == "printing" || json.status == "paused") ? 1 : 0;
+    static async numberOfJobs(status) {
+        const json = status || await SynDaverWiFi.status();
+        return json.jobsWaiting + ((json.status == "printing" || json.status == "paused") ? 1 : 0);
     }
 
     static async getFile(path) {
