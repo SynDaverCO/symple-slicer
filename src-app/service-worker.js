@@ -113,7 +113,7 @@ const filesToCache = [
     'lib/three/ShaderPass.js',
     'lib/three/TransformControls.js',
     'lib/three/three.min.js',
-    'lib/util/crypto/AuthenticatedRequest.js',
+    'lib/util/crypto/SynDaverWiFi.js',
     'lib/util/gcode/GCodeParser.js',
     'lib/util/gcode/Toolpath.js',
     'lib/util/geometry/FaceRotationHelper.js',

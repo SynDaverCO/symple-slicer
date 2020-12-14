@@ -874,7 +874,7 @@ class PrintAndPreviewPage {
             alert("There is nothing to print")
             return
         }
-        const file = WirelessPrintingPage.fileFromBlob("printjob.gco", gcode_blob);
+        const file = SynDaverWiFi.fileFromBlob("printjob.gco", gcode_blob);
         try {
             await WirelessPrintingPage.uploadOrQueueFiles([file]);
         } catch (e) {
@@ -1062,6 +1062,7 @@ class WirelessPrintingPage {
         s.number(   "Signal strength:",                              {id: "wifi_strength", units: "dBm"});
         s.button(   "Stop",                                          {id: "wifi_stop", onclick: WirelessPrintingPage.stopPrint, disabled: "disabled"});
         s.button(   "Pause",                                         {id: "wifi_pause_resume", onclick: WirelessPrintingPage.pauseResumePrint, disabled: "disabled"});
+        s.button(   "Manage",                                        {id: "wifi_manage", onclick: WirelessPrintingPage.onManagePrinter, disabled: "disabled"});
 
         WirelessPrintingPage.loadSettings();
         WirelessPrintingPage.onInput();
@@ -1082,6 +1083,11 @@ class WirelessPrintingPage {
     static onChange() {
         // Save all changed elements to local storage
         localStorage.setItem(event.currentTarget.id,event.currentTarget.value);
+    }
+
+    static onManagePrinter() {
+        let printer_addr = settings.get("printer_addr");
+        window.open("http://" + printer_addr);
     }
 
     static onSaveClicked() {
@@ -1140,23 +1146,12 @@ class WirelessPrintingPage {
         if(printer_pass.length == 0 || printer_addr.length == 0) {
             throw Error("Please configure wireless printing using the \"Configure Wireless\" from the \"Tasks\" menu");
         }
+        SynDaverWiFi.setHostname('http://' + printer_addr);
+        SynDaverWiFi.setPassword(printer_pass);
+        SynDaverWiFi.onProgress((bytes, totalBytes) => ProgressBar.progress(bytes/totalBytes));
+        ProgressBar.message("Uploading to printer");
         try {
-            let totalBytes = 0;
-            let completedBytes = 0;
-            for(const file of files) {
-                totalBytes += file.size;
-            }
-            for(const file of files) {
-                ProgressBar.message("Uploading \"" + file.name + "\"");
-                await AuthenticatedRequest.doPost({
-                    statusUrl:        'http://' + printer_addr + "/status",
-                    methodUrl:        'http://' + printer_addr + "/" + file.name,
-                    password:         printer_pass,
-                    file:             file,
-                    onProgress:       bytes => ProgressBar.progress((completedBytes + bytes)/totalBytes)
-                });
-                completedBytes += file.size;
-            }
+            await SynDaverWiFi.uploadFiles(files);
         } finally {
             ProgressBar.hide();
         }
@@ -1165,7 +1160,7 @@ class WirelessPrintingPage {
     static async uploadOrQueueFiles(files) {
         if(await WirelessPrintingPage.isPrinterBusy()) {
             if(confirm("The printer is busy. Click OK to upload the file for printing next.")) {
-                files.unshift(WirelessPrintingPage.fileFromStr("printjob.gco", ProfileManager.scripts.next_print_gcode || ""));
+                files.unshift(SynDaverWiFi.fileFromStr("printjob.gco", ProfileManager.scripts.next_print_gcode || ""));
             } else {
                 WirelessPrintingPage.showMonitor();
             }
@@ -1173,7 +1168,7 @@ class WirelessPrintingPage {
         await WirelessPrintingPage.uploadFiles(files);
     }
 
-    static async sendCommand(cmd) {
+    static async catchErrors(callback) {
         const printer_pass = settings.get("printer_pass");
         const printer_addr = settings.get("printer_addr");
         if(printer_pass.length == 0 || printer_addr.length == 0) {
@@ -1181,40 +1176,20 @@ class WirelessPrintingPage {
             return
         }
         try {
-            await AuthenticatedRequest.doGet({
-                statusUrl:        'http://' + printer_addr + "/status",
-                methodUrl:        'http://' + printer_addr + "/" + cmd,
-                password:         printer_pass
-            });
+            SynDaverWifi.setHostname('http://' + printer_addr);
+            SynDaverWiFi.setPassword(printer_pass);
+            return await callback();
         } catch (e) {
             console.error(e);
             alert(e);
         }
     }
 
-    static fileFromBlob(fileName, blob) {
-        blob.lastModifiedDate = new Date();
-        blob.name = fileName;
-        return blob;
-    }
-
-    static fileFromStr(fileName, str) {
-        let blob = new Blob([str], {type : 'text/plain'});
-        blob.lastModifiedDate = new Date();
-        blob.name = fileName;
-        return blob;
-    }
-
-    static async fileFromUrl(fileName, url) {
-        let fw = await fetch(url);
-        let blob = await fw.blob();
-        return WirelessPrintingPage.fileFromBlob(fileName, blob);
-    }
-
     static async onTimer() {
         let progress = document.getElementById('wifi_progress');
         let strength = document.getElementById('wifi_strength');
         let status   = document.getElementById('wifi_status');
+        let manage   = document.getElementById('wifi_manage');
 
         function isHidden(el) {
             return (el.offsetParent === null);
@@ -1226,20 +1201,30 @@ class WirelessPrintingPage {
         if(!isHidden(progress)) {
             const printer_addr = settings.get("printer_addr");
             if(printer_addr.length == 0) return;
-            let json = await fetchJSON('http://' + printer_addr + "/status");
-            progress.value = json.progress;
-            strength.value = json.wifiRSSI;
-            status.value   = json.status;
-            const printing = json.status == "printing" || json.status == "paused";
-            settings.enable('#wifi_stop', printing);
-            settings.enable('#wifi_pause_resume', printing);
-            document.getElementById("wifi_pause_resume").innerHTML = json.status == "printing" ? "Pause" : "Resume";
+            try {
+                let json = await fetchJSON('http://' + printer_addr + "/status");
+                progress.value = json.progress;
+                strength.value = json.wifiRSSI;
+                status.value   = json.status;
+                const printing = json.status == "printing" || json.status == "paused";
+                settings.enable('#wifi_stop', printing);
+                settings.enable('#wifi_pause_resume', printing);
+                settings.enable('#wifi_manage', true);
+                document.getElementById("wifi_pause_resume").innerHTML = json.status == "printing" ? "Pause" : "Resume";
+            } catch(e) {
+                progress.value = 0;
+                strength.value = 0;
+                status.value   = "unavailable";
+                settings.enable('#wifi_stop',         false);
+                settings.enable('#wifi_pause_resume', false);
+                settings.enable('#wifi_manage',       false);
+            }
         }
     }
 
     static async stopPrint() {
         if(confirm("Are you sure you want to stop the print? Press OK to stop the print, Cancel otherwise.")) {
-            WirelessPrintingPage.sendCommand("stop");
+            await WirelessPrintingPage.catchErrors(() => SynDaverWiFi.stopPrint());
         }
     }
 
@@ -1260,8 +1245,8 @@ class WirelessPrintingPage {
 
     static async pauseResumePrint() {
         let status = document.getElementById('wifi_status');
-        if(status.value == "printing") await WirelessPrintingPage.sendCommand("pause");
-        if(status.value == "paused")   await WirelessPrintingPage.sendCommand("resume");
+        if(status.value == "printing") await WirelessPrintingPage.catchErrors(() => SynDaverWiFi.pausePrint());
+        if(status.value == "paused")   await WirelessPrintingPage.catchErrors(() => SynDaverWiFi.resumePrint());
     }
 
     static showMonitor() {
@@ -1406,14 +1391,14 @@ class UpdateFirmwarePage {
             // An upgrade set includes the various print scripts as well as the firmware file.
             let files = [];
             if(ProfileManager.scripts) {
-                files.push(WirelessPrintingPage.fileFromStr("pause.gco",    ProfileManager.scripts.pause_print_gcode  || ""));
-                files.push(WirelessPrintingPage.fileFromStr("cancel.gco",   ProfileManager.scripts.stop_print_gcode   || ""));
-                files.push(WirelessPrintingPage.fileFromStr("resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
-                files.push(WirelessPrintingPage.fileFromStr("badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    ProfileManager.scripts.pause_print_gcode  || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   ProfileManager.scripts.stop_print_gcode   || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
             }
-            files.push(await WirelessPrintingPage.fileFromUrl("index.html",   'config/syndaver/machine_firmware/SynDaver_WiFi.html'));
-            files.push(await WirelessPrintingPage.fileFromUrl("serial.html",   'config/syndaver/machine_firmware/SynDaver_WiFi_Serial.html'));
-            files.push(await WirelessPrintingPage.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin')); // Must be last
+            files.push(await SynDaverWiFi.fileFromUrl("index.html",   'config/syndaver/machine_firmware/SynDaver_WiFi.html'));
+            files.push(await SynDaverWiFi.fileFromUrl("serial.html",  'config/syndaver/machine_firmware/SynDaver_WiFi_Serial.html'));
+            files.push(await SynDaverWiFi.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin')); // Must be last
             // Upload everything.
             try {
                 if(!await WirelessPrintingPage.checkIfPrinterIdle()) return;

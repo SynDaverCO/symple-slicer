@@ -1,5 +1,5 @@
 /**
- * AuthenticatedRequest
+ * SynDaverWiFi.js
  * Copyright (C) 2020  SynDaver Labs, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,57 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+/**
+ * Does an authenticated request to the SynDaver WiFi Module
+ * by signing the request with an HMAC to prevent a malicious
+ * user, who does not know the printer's password, from sending
+ * files intended to damage the printer or cause fires.
+ *
+ * Prerequisites:
+ *     sjcl/sjcl.min.js
+ *     sjcl/codecArrayBuffer.js
+ */
 class AuthenticatedRequest {
-    /**
-     * Does an authenticated request to the SynDaver WiFi Module.
-     * The protocol is meant to provide authentication, not
-     * confidentiality. The goal is to ensure that a print can
-     * only be started if the user knows the printer's password
-     * to prevent a malicious user from sending files intended to
-     * damage the printer or cause fires.
-     *
-     * The protocol is thought to be resistant to impersonation,
-     * man-in-the-middle and replay attacks. It consists of the
-     * following process:
-     *
-     *  - The client does a GET request to "http://baseUrl/status"
-     *  - The host generates a random 32-bit number and returns it
-     *    in the "nonce" attribute of a JSON response
-     *  - The host will use the ESP32 hardware random number generator
-     *    for the nonce.
-     *  - The client generates a preamble that consists of the HTTP
-     *    method, the cannonical URL path, the nonce as a decimal and
-     *    newline, i.e: "PUT /file.gco 1118992010\n"
-     *  - The client concatenates the preamble and request body and
-     *    generates a SHA256 HMAC over the data using the end-user
-     *    entered password
-     *  - The client submits the file using PUT or POST with an
-     *    Authorization header of type "SYN1-HMAC-SHA256" and the
-     *    first 32 characters of the hexadecimal HMAC.
-     *  - The host saves the file to the local SD card and then
-     *    generates an HMAC over the file contents and the nonce
-     *    using the password saved on the printer.
-     *  - If the generated HMAC matches the HMAC uploaded by the
-     *    client, the authentication succeeds and the print starts.
-     *  - Immediately, a new nonce is generated for the next upload.
-     *  - If the generated HMAC does not match, the file is
-     *    discarded. This can be caused by an incorrect password,
-     *    a corrupted upload or the use of an outdated nonce by
-     *    the client.
-     *  - In the case of authentication failure, the nonce remains
-     *    unchanged.
-     *
-     * The HTTP methods GET and DELETE are similar, except that no
-     * file data is transmitted and the HMAC is computed only over
-     * the nonce.
-     */
-
     static async signAndSendRequest(options, method, payload) {
-        let status = await this.getJSON(options.statusUrl);
+        const status = await this.getJSON(options.statusUrl);
         if(status.protocol && status.protocol >= 1) {
             // New protocol, use Authorization header with 128 bit HMAC
-            let preamble = method + " " + this.cannonicalResource(options.methodUrl) + " " + status.nonce + "\n";
-            let hmac = await this.sign(options.password, preamble, payload);
+            const preamble = method + " " + this.cannonicalResource(options.methodUrl) + " " + status.nonce + "\n";
+            const hmac = await this.sign(options.password, preamble, payload);
             if(options.onSignatureReady) {
                 options.onSignatureReady(hmac);
             }
@@ -114,14 +80,17 @@ class AuthenticatedRequest {
         }
     }
 
+    static async doUpload(options, method = "PUT") {
+        const payload = options.file ? await this.fileToArrayBuffer(options.file) : null;
+        await this.signAndSendRequest(options, method, payload);
+    }
+
     static async doPut(options) {
-        let payload = options.file ? await this.fileToArrayBuffer(options.file) : null;
-        await this.signAndSendRequest(options, "PUT", payload);
+        await this.doUpload(options, "PUT");
     }
 
     static async doPost(options) {
-        let payload = options.file ? await this.fileToArrayBuffer(options.file) : null;
-        await this.signAndSendRequest(options, "POST", payload);
+        await this.doUpload(options, "POST");
     }
 
     static async doDelete(options) {
@@ -173,18 +142,21 @@ class AuthenticatedRequest {
         });
     }
 
-    static fetchWithTimeout (url, options, timeout = 3000) {
-        return Promise.race([
-            fetch(url, options),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('timeout')), timeout)
-            )
-        ]);
+    static async fetchWithTimeout (url, options, timeout = 3000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal  
+        });
+        clearTimeout(id);
+        return response;
     }
 
-    // Fetches JSON data from an URL
+    // Fetches JSON data from an URL, with a timeout
     static async getJSON(url) {
-        let response = await this.fetchWithTimeout(url);
+        const response = await fetch(url);
         return await response.json();
     }
 
@@ -192,7 +164,7 @@ class AuthenticatedRequest {
     static fileToArrayBuffer(file) {
         return new Promise((resolve, reject) => {
             try {
-                let reader = new FileReader();
+                const reader = new FileReader();
                 reader.readAsArrayBuffer(file);
                 reader.onloadend = evt => {
                     if (evt.target.readyState == FileReader.DONE && evt.target.result) {
@@ -211,12 +183,12 @@ class AuthenticatedRequest {
     // Legacy protocol support, should be removed at some point
 
     static async signAndSendRequest_legacy(options, method, payload) {
-        let status    = await this.getJSON(options.statusUrl);
-        let hmac      = await this.sign_legacy(payload, options.password, status.nonce);
+        const status    = await this.getJSON(options.statusUrl);
+        const hmac      = await this.sign_legacy(payload, options.password, status.nonce);
         if(options.onSignatureReady) {
             options.onSignatureReady(hmac);
         }
-        let url = options.methodUrl + (options.methodUrl.indexOf('?') != -1 ? "&" : "?") + "hmac=" + hmac;
+        const url = options.methodUrl + (options.methodUrl.indexOf('?') != -1 ? "&" : "?") + "hmac=" + hmac;
         this.validateUrl(url);
         await this.fetchXHR(url, {
             method: method,
@@ -243,5 +215,153 @@ class AuthenticatedRequest {
         const h = new sjcl.misc.hmac(pwdBits);
         const hmacBits = h.encrypt(msgBits);
         return sjcl.codec.hex.fromBits(hmacBits);
+    }
+}
+
+// Implements the specific requests implemented by "SynDaver WiFi.ino"
+class SynDaverWiFi {
+    static setHostname(host) {
+        SynDaverWiFi.host = host;
+    }
+
+    static setPassword(pass) {
+        SynDaverWiFi.pass = pass;
+    }
+
+    static onProgress(callback) {
+        SynDaverWiFi.prog = callback;
+    }
+
+    static getAbsoluteUrl(url) {
+        return SynDaverWiFi.host + url;
+    }
+
+    static async status() {
+        return await AuthenticatedRequest.getJSON(SynDaverWiFi.host + "/status");
+    }
+
+    static async listFiles(path) {
+        const url = SynDaverWiFi.host + path + "?list";
+        const response = await AuthenticatedRequest.fetchWithTimeout(url);
+        if (!response.ok || response.headers.get("Content-Type") != "text/json") return;
+        return await response.json();
+    }
+
+    static async isPrinting() {
+        const json = await SynDaverWiFi.status();
+        return json.status == "printing" || json.status == "paused";
+    }
+
+    static async numberOfJobs() {
+        const json = await SynDaverWiFi.status();
+        return json.jobsWaiting + (json.status == "printing" || json.status == "paused") ? 1 : 0;
+    }
+
+    static async getFile(path) {
+        return await AuthenticatedRequest.doGet({
+            statusUrl:        SynDaverWiFi.host + "/status",
+            methodUrl:        SynDaverWiFi.host + "/" + path,
+            password:         SynDaverWiFi.pass
+        });
+    }
+
+    static async printFile(path) {
+        await AuthenticatedRequest.doGet({
+            statusUrl:        SynDaverWiFi.host + "/status",
+            methodUrl:        SynDaverWiFi.host + "/print?path=" + path,
+            password:         SynDaverWiFi.pass
+        });
+    }
+
+    static async uploadFile(file, path, method = "POST") {
+        await AuthenticatedRequest.doUpload({
+            statusUrl:        SynDaverWiFi.host + "/status",
+            methodUrl:        SynDaverWiFi.host + path,
+            password:         SynDaverWiFi.pass,
+            onProgress:       bytes => SynDaverWiFi.prog(bytes, file.size),
+            file:             file
+        }, method);
+    }
+    
+    static async uploadFiles(files, method = "POST") {
+        let totalBytes = 0;
+        let completedBytes = 0;
+        for(const file of files) {
+            totalBytes += file.size;
+        }
+        for(const file of files) {
+            await AuthenticatedRequest.doUpload({
+                statusUrl:        SynDaverWiFi.host + "/status",
+                methodUrl:        SynDaverWiFi.host + "/" + file.name,
+                password:         SynDaverWiFi.pass,
+                onProgress:       bytes => SynDaverWiFi.prog(completedBytes + bytes, totalBytes),
+                file:             file
+            }, method);
+            completedBytes += file.size;
+        }
+    }
+
+    static async deleteFile(path) {
+        await AuthenticatedRequest.doDelete({
+            statusUrl:        SynDaverWiFi.host + "/status",
+            methodUrl:        SynDaverWiFi.host + path,
+            password:         SynDaverWiFi.pass
+        });
+    }
+
+    static async makeDirectory(path) {
+        await AuthenticatedRequest.doPut({
+            statusUrl:        SynDaverWiFi.host + "/status",
+            methodUrl:        SynDaverWiFi.host + path + "/",
+            password:         SynDaverWiFi.pass
+        });
+    }
+
+    static async reboot() {
+        await SynDaverWiFi.getFile("reboot");
+    }
+
+    static async pausePrint() {
+        await SynDaverWiFi.getFile("pause");
+    }
+
+    static async stopPrint() {
+        await SynDaverWiFi.getFile("stop");
+    }
+
+    static async resumePrint() {
+        await SynDaverWiFi.getFile("resume");
+    }
+
+    static async webSocketAllowControl() {
+        await SynDaverWiFi.getFile("ws_config?allow_control=1");
+    }
+
+    // Helper methods for creating file objects for uploading
+
+    static fileFromFile(fileName, file) {
+        const blob = file.slice(0, file.size, file.type);
+        blob.lastModifiedDate = new Date();
+        blob.name = fileName;
+        return blob;
+    }
+
+    static fileFromBlob(fileName, blob) {
+        blob.lastModifiedDate = new Date();
+        blob.name = fileName;
+        return blob;
+    }
+
+    static fileFromStr(fileName, str) {
+        let blob = new Blob([str], {type : 'text/plain'});
+        blob.lastModifiedDate = new Date();
+        blob.name = fileName;
+        return blob;
+    }
+
+    static async fileFromUrl(fileName, url) {
+        let fw = await fetch(url);
+        let blob = await fw.blob();
+        return SynDaverWiFi.fileFromBlob(fileName, blob);
     }
 }
