@@ -156,7 +156,7 @@ class AuthenticatedRequest {
 
     // Fetches JSON data from an URL, with a timeout
     static async getJSON(url) {
-        const response = await fetch(url);
+        const response = await AuthenticatedRequest.fetchWithTimeout(url);
         return await response.json();
     }
 
