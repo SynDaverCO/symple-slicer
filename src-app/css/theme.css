@@ -83,17 +83,6 @@ input, select {
     background:         transparent;
 }
 
-#help-post-print {
-    padding:            1em;
-    text-align:         center;
-}
-
-#help-post-print img {
-    margin:             1em;
-    mix-blend-mode:     darken;
-    width:              150px;
-}
-
 #help-viewport {
     margin-left:auto;
     margin-right:auto;

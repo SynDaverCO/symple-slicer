@@ -727,37 +727,45 @@ class PrintAndPreviewPage {
 
         s.category(   "Print Options",                               {open: "open"});
         const attr = {name: "print_destination", onchange: PrintAndPreviewPage.onOutputChanged};
-        s.radio( "Save a G-code file for printing:",                 {...attr, value: "file", checked: "checked"});
-        s.radio( "Send to printer using a USB cable:",               {...attr, value: "printer"});
-        s.radio( "Send to printer wirelessly:",                      {...attr, value: "wifi"});
+        s.radio( "Print through an USB cable:",                      {...attr, value: "print-to-usb"});
+        s.radio( "Print to printer wirelessly:",                     {...attr, value: "print-to-wifi"});
+        s.radio( "Save G-code to printer wirelessly:",               {...attr, value: "save-to-wifi"});
+        s.radio( "Save G-code to file for printing:",                {...attr, value: "save-to-file", checked: "checked"});
 
-        /* Choices for saving to file */
-        s.text(           "Save as:",                                {id: "gcode_filename", value: "output.gcode", className: "save-to-file webapp-only"});
-        s.choice(         "Printer:",                                {id: "printer_choices",                       className: "save-to-wifi"});
+        /* Choices for wireless and saving to file */
+        s.choice(         "Printer:",                                {id: "printer_choices", className: "printer_choices"});
+        s.text(           "Save as:",                                {id: "gcode_filename",  className: "gcode_filename", value: "output.gcode"});
         s.category();
 
         s.element(                                                   {id: "gcode-out-of-bounds"});
 
         s.footer();
-        s.div({className: "save-to-file"});
-        s.button(     "Save",                                        {onclick: PrintAndPreviewPage.onDownloadClicked});
-        s.buttonHelp( "Click this button to save a G-code file for your 3D printer.");
+
+        s.div({className: "print-to-usb"});
+        s.button(     "Print",                                       {onclick: PrintAndPreviewPage.onPrintClicked});
+        s.buttonHelp( "Click this button to print to your printer via a USB cable.");
         s.div();
 
-        s.div({className: "save-to-printer"});
-        s.button(     "Print",                                       {onclick: PrintAndPreviewPage.onPrintClicked});
-        s.buttonHelp( "Click this button to print to a USB attached printer");
+        s.div({className: "print-to-wifi"});
+        s.button(     "Print",                                       {onclick: PrintAndPreviewPage.onPrintToWiFi});
+        s.buttonHelp( "Click this button to print to your printer wirelessly.");
         s.div();
 
         s.div({className: "save-to-wifi"});
-        s.button(     "Print",                                       {onclick: PrintAndPreviewPage.onUploadClicked, id: "upload_btn"});
-        s.buttonHelp( "Click this button to print to a SynDaver WiFi printer");
+        s.button(     "Save",                                        {onclick: PrintAndPreviewPage.onUploadToWiFi});
+        s.buttonHelp( "Click this button to save G-code to your printer wirelessly.");
+        s.div();
+
+        s.div({className: "save-to-file"});
+        s.button(     "Save",                                        {onclick: PrintAndPreviewPage.onDownloadClicked});
+        s.buttonHelp( "Click this button to save G-code for your printer to a file.");
         s.div();
 
         if(!isDesktop) {
-            $("input[value='file']").parent().hide();
-            $("input[value='printer']").parent().hide();
-            $("input[value='wifi']").parent().hide();
+            $("input[value='print-to-usb']").parent().hide();
+            $("input[value='print-to-wifi']").parent().hide();
+            $("input[value='save-to-wifi']").parent().hide();
+            $("input[value='save-to-file']").parent().hide();
         }
 
         const defaultOutput = localStorage.getItem('data-output') || 'file';
@@ -774,8 +782,7 @@ class PrintAndPreviewPage {
 
     static onOutputChanged(e) {
         const dataOutput = e.target ? e.target.value : e;
-        $(settings.ui       ).attr('data-output', dataOutput);
-        $('#help-post-print').attr('data-output', dataOutput);
+        $(settings.ui).attr('data-output', dataOutput);
         localStorage.setItem('data-output', dataOutput);
     }
 
@@ -842,20 +849,22 @@ class PrintAndPreviewPage {
         PrintAndPreviewPage.onUpdatePreview();
     }
 
-    static onDownloadClicked() {
+    static nothingToPrint() {
         if(!gcode_blob) {
             alert("There is nothing to print")
-            return
+            return true;
         }
-        let fileName = settings.get("gcode_filename");
-        saveAs(gcode_blob, fileName);
+        return false;
+    }
+
+    static onDownloadClicked() {
+        if(PrintAndPreviewPage.nothingToPrint()) return;
+        const name = settings.get("gcode_filename");
+        saveAs(gcode_blob, name);
     }
 
     static async onPrintClicked() {
-        if(!gcode_blob) {
-            alert("There is nothing to print")
-            return
-        }
+        if(PrintAndPreviewPage.nothingToPrint()) return;
         if(featureRequiresDesktopVersion("Printing via USB")) {
             try {
                 await stream_gcode(await gcode_blob.text());
@@ -869,14 +878,26 @@ class PrintAndPreviewPage {
         }
     }
 
-    static async onUploadClicked() {
-        if(!gcode_blob) {
-            alert("There is nothing to print")
-            return
-        }
+    static async onPrintToWiFi() {
+        if(PrintAndPreviewPage.nothingToPrint()) return;
         const file = SynDaverWiFi.fileFromBlob("printjob.gco", gcode_blob);
         try {
             await WirelessPrintingPage.uploadOrQueueFiles([file]);
+        } catch (e) {
+            console.error(e);
+            alert(e);
+        }
+    }
+
+    static async onUploadToWiFi() {
+        if(PrintAndPreviewPage.nothingToPrint()) return;
+        const name = settings.get("gcode_filename");
+        const file = SynDaverWiFi.fileFromBlob(name, gcode_blob);
+        try {
+            await WirelessPrintingPage.uploadOrQueueFiles([file]);
+            if(confirm("This print has been saved to your printer. You can start a print at any time through the web management interface.\n\nClick OK to visit the web management interface now.")) {
+                WirelessPrintingPage.onManagePrinter();
+            }
         } catch (e) {
             console.error(e);
             alert(e);
@@ -1135,7 +1156,7 @@ class WirelessPrintingPage {
 
     static onInput() {
         settings.enable("#save_config_btn",  WirelessPrintingPage.canSaveProfile());
-        settings.enable("#upgrade_wifi_btn", WirelessPrintingPage.canUpload());
+        settings.enable(".canUpload",        WirelessPrintingPage.canUpload());
         settings.enable("#forget_wifi_btn",  WirelessPrintingPage.isWirelessProfileSaved());
     }
 
@@ -1149,7 +1170,7 @@ class WirelessPrintingPage {
         SynDaverWiFi.setHostname('http://' + printer_addr);
         SynDaverWiFi.setPassword(printer_pass);
         SynDaverWiFi.onProgress((bytes, totalBytes) => ProgressBar.progress(bytes/totalBytes));
-        ProgressBar.message("Uploading to printer");
+        ProgressBar.message("Sending to printer");
         try {
             await SynDaverWiFi.uploadFiles(files);
         } finally {
@@ -1365,13 +1386,13 @@ class WirelessPrintingPage {
 
 class UpdateFirmwarePage {
     static init(s) {
-        s.page(       "Update Firmware",                             {id: "page_flash_fw"});
-        s.category("Update Printer Firmware");
-        s.button(     "Update",                                      {onclick: UpdateFirmwarePage.onFlashPrinterClicked});
+        s.page(       "Update Firmware",                {id: "page_flash_fw"});
+        s.category(   "Update Printer Firmware");
+        s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashPrinterClicked});
         s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
 
-        s.category("Update Wireless Firmware");
-        s.button(     "Update",                                      {onclick: UpdateFirmwarePage.onFlashWirelessClicked, id: "upgrade_wifi_btn"});
+        s.category(   "Update Wireless Firmware");
+        s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashWirelessClicked, className: "canUpload"});
         s.buttonHelp( "Click this button to update the firmware on the wireless module wirelessly");
     }
 
