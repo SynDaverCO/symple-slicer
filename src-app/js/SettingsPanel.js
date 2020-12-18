@@ -727,7 +727,7 @@ class PrintAndPreviewPage {
 
         s.category(   "Print Options",                               {open: "open"});
         const attr = {name: "print_destination", onchange: PrintAndPreviewPage.onOutputChanged};
-        s.radio( "Print through an USB cable:",                      {...attr, value: "print-to-usb"});
+        s.radio( "Print through a USB cable:",                       {...attr, value: "print-to-usb"});
         s.radio( "Print to printer wirelessly:",                     {...attr, value: "print-to-wifi"});
         s.radio( "Save G-code to printer wirelessly:",               {...attr, value: "save-to-wifi"});
         s.radio( "Save G-code to file for printing:",                {...attr, value: "save-to-file", checked: "checked"});
@@ -753,7 +753,7 @@ class PrintAndPreviewPage {
 
         s.div({className: "save-to-wifi"});
         s.button(     "Save",                                        {onclick: PrintAndPreviewPage.onUploadToWiFi});
-        s.buttonHelp( "Click this button to save G-code to your printer wirelessly.");
+        s.buttonHelp( "Click this button to save G-code to your printer wirelessly (without printing).");
         s.div();
 
         s.div({className: "save-to-file"});
@@ -1389,7 +1389,7 @@ class UpdateFirmwarePage {
         s.page(       "Update Firmware",                {id: "page_flash_fw"});
         s.category(   "Update Printer Firmware");
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashPrinterClicked});
-        s.buttonHelp( "Click this button to update the firmware on an USB connected printer");
+        s.buttonHelp( "Click this button to update the firmware on a USB connected printer");
 
         s.category(   "Update Wireless Firmware");
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashWirelessClicked, className: "canUpload"});
