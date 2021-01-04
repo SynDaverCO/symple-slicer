@@ -898,7 +898,7 @@ class PrintAndPreviewPage {
         try {
             await ConfigWirelessPage.uploadOrQueueFiles([file]);
             if(confirm("This print has been saved to your printer. You can start a print at any time through the web management interface.\n\nClick OK to visit the web management interface now.")) {
-                MonitorWirelessPage.onManagePrinter();
+                ConfigWirelessPage.onManageClicked();
             }
         } catch (e) {
             console.error(e);
@@ -1161,6 +1161,12 @@ class ConfigWirelessPage {
         return true;
     }
 
+    static checkIfConfigured() {
+        if(!ConfigWirelessPage.profileContains(["printer_pass","printer_addr"])) {
+            throw Error("Please configure wireless printing using the \"Configure Wireless\" from the \"Tasks\" menu");
+        }
+    }
+
     static onInput() {
         settings.enable(".canUpload",          ConfigWirelessPage.profileContains(["printer_addr", "printer_pass"]));
         settings.enable("#export_config_btn",  ConfigWirelessPage.profileContains(["printer_name", "printer_pass", "wifi_ssid", "wifi_pass"]));
@@ -1170,11 +1176,7 @@ class ConfigWirelessPage {
 
     // Uploads files to the wireless module
     static async uploadFiles(files) {
-        const printer_pass = settings.get("printer_pass");
-        const printer_addr = settings.get("printer_addr");
-        if(printer_pass.length == 0 || printer_addr.length == 0) {
-            throw Error("Please configure wireless printing using the \"Configure Wireless\" from the \"Tasks\" menu");
-        }
+        ConfigWirelessPage.checkIfConfigured();
         SynDaverWiFi.setHostname('http://' + printer_addr);
         SynDaverWiFi.setPassword(printer_pass);
         SynDaverWiFi.onProgress((bytes, totalBytes) => ProgressBar.progress(bytes/totalBytes));
@@ -1188,13 +1190,14 @@ class ConfigWirelessPage {
 
     static async uploadOrQueueFiles(files) {
         if(await MonitorWirelessPage.isPrinterBusy()) {
-            if(confirm("The printer is busy. Click OK to upload the file for printing next.")) {
+            if(confirm("The printer is busy. Click OK to queue the file for printing next.")) {
                 files.unshift(SynDaverWiFi.fileFromStr("printjob.gco", ProfileManager.scripts.next_print_gcode || ""));
             } else {
-                settings.gotoPage("page_monitor_wifi");
+                return;
             }
         }
         await ConfigWirelessPage.uploadFiles(files);
+        settings.gotoPage("page_monitor_wifi");
     }
 
     /* The current wireless print profile is always stored in the elements of this page. However, to allow
@@ -1316,14 +1319,9 @@ class MonitorWirelessPage {
     }
 
     static async catchErrors(callback) {
-        const printer_pass = settings.get("printer_pass");
-        const printer_addr = settings.get("printer_addr");
-        if(printer_pass.length == 0 || printer_addr.length == 0) {
-            alert("Please configure the wireless module using the \"Configure Wireless\" from the \"Tasks\" menu")
-            return
-        }
         try {
-            SynDaverWifi.setHostname('http://' + printer_addr);
+            ConfigWirelessPage.checkIfConfigured();
+            SynDaverWiFi.setHostname('http://' + printer_addr);
             SynDaverWiFi.setPassword(printer_pass);
             return await callback();
         } catch (e) {
