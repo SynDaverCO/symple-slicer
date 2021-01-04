@@ -1269,6 +1269,7 @@ class ConfigWirelessPage {
         clearFromStorage("printer_addr");
         clearFromStorage("wifi_ssid");
         clearFromStorage("wifi_pass");
+        document.getElementById("printer_addr").placeholder = "Use DHCP if blank";
         ConfigWirelessPage.saveWirelessProfileList(profiles);
     }
 
