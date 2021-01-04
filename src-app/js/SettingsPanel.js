@@ -1076,12 +1076,11 @@ class WirelessPrintingPage {
         s.text(           "Network Password:",                       {...no_save, id: "wifi_pass",    placeholder: "Required",
                                                                          tooltip: "Type in the password of the wireless access point you want your printer to connect to"});
 
-        s.separator(                                                 {type: "br"});
-        s.button(     "Save",                                        {onclick: WirelessPrintingPage.onSaveClicked, id: "save_config_btn"});
-        s.buttonHelp( "Click this button to save WiFi configuration G-code to run on your printer");
+        s.button(     "Remember",                                    {onclick: WirelessPrintingPage.onRememberClicked, id: "remember_wifi_btn"});
+        s.button(     "Forget",                                      {onclick: WirelessPrintingPage.onForgetClicked,   id: "forget_wifi_btn"});
         s.separator();
-        s.button(     "Forget",                                      {onclick: WirelessPrintingPage.forgetWirelessProfile, id: "forget_wifi_btn"});
-        s.buttonHelp( "Click this button to forget this wireless configuration");
+        s.button(     "Export",                                      {onclick: WirelessPrintingPage.onExportClicked, id: "export_config_btn"});
+        s.buttonHelp( "Click to export WiFi configuration G-code to run on your printer");
 
         s.category( "Monitor Wireless Printing",                     {id: "monitor_wifi"});
         s.progress( "Print progress:",                               {id: "wifi_progress", value: 0});
@@ -1117,7 +1116,7 @@ class WirelessPrintingPage {
         window.open("http://" + printer_addr);
     }
 
-    static onSaveClicked() {
+    static onExportClicked() {
         const wifi_ssid = settings.get("wifi_ssid");
         const wifi_pass = settings.get("wifi_pass");
         let   printer_addr = settings.get("printer_addr");
@@ -1136,12 +1135,24 @@ class WirelessPrintingPage {
         const blob = new Blob([config], {type: "text/plain;charset=utf-8"});
         saveAs(blob, "wifi_config.gco");
         if(printer_addr == "dhcp") {
-            alert("After running the G-code on the printer, please type the address displayed by the printer in the \"IP Address\" field (example: 192.168.0.10)");
+            alert("After running the G-code on the printer, please type the address displayed by the printer in the \"IP Address\" field (example: 192.168.0.10) and then click \"Remember\"");
             document.getElementById("printer_addr").placeholder = "Enter printer's IP here";
         }
+    }
+
+    static onRememberClicked() {
         WirelessPrintingPage.saveWirelessProfile();
         WirelessPrintingPage.updateWirelessMenu();
         WirelessPrintingPage.onInput(); // Change disabled state of "Forget" button
+        alert("The settings have been saved");
+    }
+
+    static onForgetClicked() {
+        if(confirm("You are about to remove this printer from Symple Slicer. Press OK to proceed.")) {
+            WirelessPrintingPage.forgetWirelessProfile();
+            WirelessPrintingPage.updateWirelessMenu();
+            WirelessPrintingPage.onInput(); // Change the state of the "Forget" button
+        }
     }
 
     static canSaveProfile() {
@@ -1153,17 +1164,18 @@ class WirelessPrintingPage {
 
     }
 
-    static canUpload() {
-        const  printer_pass = settings.get("printer_pass");
-        const  printer_addr = settings.get("printer_addr");
-        return printer_addr.length && printer_pass.length;
-
+    static profileContains(fields) {
+        for (const field of fields) {
+            if(!settings.get(field).length) return false;
+        }
+        return true;
     }
 
     static onInput() {
-        settings.enable("#save_config_btn",  WirelessPrintingPage.canSaveProfile());
-        settings.enable(".canUpload",        WirelessPrintingPage.canUpload());
-        settings.enable("#forget_wifi_btn",  WirelessPrintingPage.isWirelessProfileSaved());
+        settings.enable(".canUpload",          WirelessPrintingPage.profileContains(["printer_addr", "printer_pass"]));
+        settings.enable("#export_config_btn",  WirelessPrintingPage.profileContains(["printer_name", "printer_pass", "wifi_ssid", "wifi_pass"]));
+        settings.enable("#remember_wifi_btn",  WirelessPrintingPage.profileContains(["printer_name", "printer_pass", "wifi_ssid", "printer_addr"]));
+        settings.enable("#forget_wifi_btn",    WirelessPrintingPage.isWirelessProfileSaved());
     }
 
     // Uploads files to the wireless module
@@ -1301,7 +1313,7 @@ class WirelessPrintingPage {
     static updateWirelessMenu() {
         if(WirelessPrintingPage.dropdown) {
             const el = WirelessPrintingPage.dropdown;
-            const selectedProfile   = WirelessPrintingPage.canUpload() && settings.get("printer_name");
+            const selectedProfile   = settings.get("printer_name");
             const availableProfiles = Object.keys(WirelessPrintingPage.loadWirelessProfileList());
             el.options.length = 0;
             for(const k of availableProfiles) {
@@ -1330,7 +1342,7 @@ class WirelessPrintingPage {
     }
 
     static saveWirelessProfile() {
-        if(WirelessPrintingPage.canSaveProfile()) {
+        if(WirelessPrintingPage.profileContains(["printer_name", "printer_addr", "printer_pass", "wifi_ssid"])) {
             const profiles = WirelessPrintingPage.loadWirelessProfileList();
             profiles[settings.get("printer_name")] = {
                 printer_name: settings.get("printer_name"),
@@ -1352,19 +1364,15 @@ class WirelessPrintingPage {
     }
 
     static forgetWirelessProfile() {
-        if(confirm("You are about to remove the configuration associated with this printer from Symple Slicer")) {
-            const profiles = WirelessPrintingPage.loadWirelessProfileList();
-            delete profiles[settings.get("printer_name")];
-            let clearFromStorage = id => {document.getElementById(id).value = ""; localStorage.removeItem(id)};
-            clearFromStorage("printer_name");
-            clearFromStorage("printer_pass");
-            clearFromStorage("printer_addr");
-            clearFromStorage("wifi_ssid");
-            clearFromStorage("wifi_pass");
-            WirelessPrintingPage.saveWirelessProfileList(profiles);
-            WirelessPrintingPage.updateWirelessMenu();
-            WirelessPrintingPage.onInput(); // Change the state of the "Forget" button
-        }
+        const profiles = WirelessPrintingPage.loadWirelessProfileList();
+        delete profiles[settings.get("printer_name")];
+        let clearFromStorage = id => {document.getElementById(id).value = ""; localStorage.removeItem(id)};
+        clearFromStorage("printer_name");
+        clearFromStorage("printer_pass");
+        clearFromStorage("printer_addr");
+        clearFromStorage("wifi_ssid");
+        clearFromStorage("wifi_pass");
+        WirelessPrintingPage.saveWirelessProfileList(profiles);
     }
 
     static loadWirelessProfile(profileName) {
@@ -1381,12 +1389,12 @@ class WirelessPrintingPage {
             loadFromProfile("wifi_ssid");
         }
         WirelessPrintingPage.saveWirelessProfileList(profiles);
-        WirelessPrintingPage.onInput(); // Change the state of the "Forget" button
     }
 
     static changeWirelessProfile(profileName) {
         WirelessPrintingPage.saveWirelessProfile();
         WirelessPrintingPage.loadWirelessProfile(profileName);
+        WirelessPrintingPage.onInput(); // Change the state of the "Forget" button
     }
 }
 
