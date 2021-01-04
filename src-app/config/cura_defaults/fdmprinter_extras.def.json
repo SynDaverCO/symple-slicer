@@ -92,6 +92,42 @@
             "maximum_value": "200",
             "default_value": 160,
             "settable_per_mesh": false
+        },
+        "machine_head_with_fans_x_min":
+        {
+            "label": "X Min",
+            "description": "Negative distance from the left of the printhead to the center of the nozzle. Used to prevent collisions between previous prints and the printhead when printing \"One at a Time\"",
+            "unit": "mm",
+            "type": "float",
+            "default_value": -20,
+            "settable_per_extruder": false
+        },
+        "machine_head_with_fans_y_min":
+        {
+            "label": "Y Min",
+            "description": "Negative distance from the front of the printhead to the center of the nozzle. Used to prevent collisions between previous prints and the printhead when printing \"One at a Time\"",
+            "unit": "mm",
+            "type": "float",
+            "default_value": -10,
+            "settable_per_extruder": false
+        },
+        "machine_head_with_fans_x_max":
+        {
+            "label": "X Max",
+            "description": "Positive distance from the right of the printhead to the center of the nozzle. Used to prevent collisions between previous prints and the printhead when printing \"One at a Time\"",
+            "unit": "mm",
+            "type": "float",
+            "default_value": 10,
+            "settable_per_extruder": false
+        },
+        "machine_head_with_fans_y_max":
+        {
+            "label": "Y Max",
+            "description": "Positive distance from the rear of the printhead to the center of the nozzle. Used to prevent collisions between previous prints and the printhead when printing \"One at a Time\"",
+            "unit": "mm",
+            "type": "float",
+            "default_value": 10,
+            "settable_per_extruder": false
         }
     }
 }

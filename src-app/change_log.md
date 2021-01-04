@@ -3,6 +3,8 @@ SynDaver Symple Slicer v1.0.15
 
 * Fixed incorrect print time on prints longer than a day
 * Compute print progress based on time rather than layers
+* '''Slicing UI:''' Added "Print Sequence" option to "Special Modes"
+* '''Slicing UI:''' Added printhead dimensions to "Machine Settings"
 
 SynDaver Symple Slicer v1.0.14
 ==============================

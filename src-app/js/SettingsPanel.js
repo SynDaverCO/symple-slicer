@@ -636,6 +636,7 @@ class SliceObjectsPage {
         s.fromSlicer(       "material_flow");
 
         s.category(   "Special Modes");
+        s.fromSlicer(       "print_sequence");
         s.fromSlicer(       "magic_spiralize");
         s.fromSlicer(       "magic_fuzzy_skin_enabled");
 
@@ -936,8 +937,13 @@ class MachineSettingsPage {
     static init(s) {
         s.page(       "Machine Settings",                            {id: "page_machine"});
 
-        s.category(   "Hot End");
+        s.category(   "Printhead Settings");
         s.fromSlicer(     "machine_nozzle_size");
+        s.fromSlicer(     "machine_head_with_fans_x_min");
+        s.fromSlicer(     "machine_head_with_fans_y_min");
+        s.fromSlicer(     "machine_head_with_fans_x_max");
+        s.fromSlicer(     "machine_head_with_fans_y_max");
+        s.fromSlicer(     "gantry_height");
 
         s.category(   "Auto Leveling");
         s.fromSlicer(     "machine_probe_type");
