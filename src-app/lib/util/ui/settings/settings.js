@@ -131,7 +131,10 @@ class SettingsUI {
         SettingsUI._label(container, description, attr);
         var el = SettingsUI._input(container, "radio", attr);
         if(attr && attr.name) {
-            this.getters[attr.name] = function() {return document.querySelector('input[name="'+attr.name+'"]:checked').value};
+            this.getters[attr.name] = function() {
+                const el = document.querySelector('input[name="'+attr.name+'"]:checked');
+                return el ? el.value : "";
+            };
         }
         return el;
     }
