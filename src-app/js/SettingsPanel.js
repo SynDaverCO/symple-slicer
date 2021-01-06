@@ -33,8 +33,8 @@ class SettingsPanel {
         PrintAndPreviewPage.init(s);
         MachineSettingsPage.init(s);
         StartAndEndGCodePage.init(s);
+        ConfigWirelessPage.init(s);
         if(isDesktop) {
-            ConfigWirelessPage.init(s);
             MonitorWirelessPage.init(s);
             UpdateFirmwarePage.init(s);
         }
@@ -735,8 +735,8 @@ class PrintAndPreviewPage {
         s.radio( "Save G-code to file for printing:",                {...attr, value: "save-to-file", checked: "checked"});
 
         /* Choices for wireless and saving to file */
-        s.choice(         "Printer:",                                {id: "printer_choices", className: "printer_choices"});
         s.text(           "Save as:",                                {id: "gcode_filename",  className: "gcode_filename", value: "output.gcode"});
+        s.choice(         "Wireless capable printer:",               {id: "printer_choices", className: "printer_choices"});
         s.category();
 
         s.element(                                                   {id: "gcode-out-of-bounds"});
@@ -763,17 +763,33 @@ class PrintAndPreviewPage {
         s.buttonHelp( "Click this button to save G-code for your printer to a file.");
         s.div();
 
-        if(!isDesktop) {
-            $("input[value='print-to-usb']").parent().hide();
-            $("input[value='print-to-wifi']").parent().hide();
-            $("input[value='save-to-wifi']").parent().hide();
-            $("input[value='save-to-file']").parent().hide();
-        }
-
         const defaultOutput = localStorage.getItem('data-output') || 'file';
         PrintAndPreviewPage.setOutput(defaultOutput);
 
         ConfigWirelessPage.manageWirelessMenu("printer_choices");
+    }
+
+    static updateOutputChoices() {
+        const selectedChoice = settings.get("print_destination");
+        let selectedChoiceHidden = false;
+        
+        function showOrHide(id, show) {
+            if(show) {
+                $("input[value='" + id + "']").parent().show();
+            } else {
+                $("input[value='" + id + "']").parent().hide();
+                if(selectedChoice == id) selectedChoiceHidden = true;
+            }
+        }
+
+        const hasWireless = ConfigWirelessPage.savedProfileCount() > 0;
+        showOrHide("print-to-usb",  isDesktop);
+        showOrHide("print-to-wifi", hasWireless);
+        showOrHide("save-to-wifi",  hasWireless);
+
+        if(selectedChoiceHidden) {
+            PrintAndPreviewPage.setOutput("save-to-file");
+        }
     }
 
     static setOutput(what) {
@@ -897,7 +913,7 @@ class PrintAndPreviewPage {
         const file = SynDaverWiFi.fileFromBlob(name, gcode_blob);
         try {
             await ConfigWirelessPage.uploadOrQueueFiles([file]);
-            if(confirm("This print has been saved to your printer. You can start a print at any time through the web management interface.\n\nClick OK to visit the web management interface now.")) {
+            if(isDesktop && confirm("This print has been saved to your printer. You can start a print at any time through the web management interface.\n\nClick OK to visit the web management interface now.")) {
                 ConfigWirelessPage.onManageClicked();
             }
         } catch (e) {
@@ -1078,16 +1094,17 @@ class ConfigWirelessPage {
         s.button(     "Remember",                                    {onclick: ConfigWirelessPage.onRememberClicked, id: "remember_wifi_btn"});
         s.button(     "Forget",                                      {onclick: ConfigWirelessPage.onForgetClicked,   id: "forget_wifi_btn"});
         if(isDesktop) {
-            s.button(     "Monitor",                                 {onclick: ConfigWirelessPage.onMonitorClicked,  className: "canUpload"});
+            s.button( "Monitor",                                     {onclick: ConfigWirelessPage.onMonitorClicked,  className: "canUpload"});
         }
         s.button(     "Manage\u2026",                                {onclick: ConfigWirelessPage.onManageClicked,   className: "canUpload"});
         s.separator();
         s.button(     "Export",                                      {onclick: ConfigWirelessPage.onExportClicked, id: "export_config_btn"});
-        s.buttonHelp( "Click to export WiFi configuration G-code to run on your printer");
+        s.buttonHelp( "Click to export configuration G-code for a wireless-capable SynDaver printer");
 
         ConfigWirelessPage.loadSettings();
         ConfigWirelessPage.onInput();
         ConfigWirelessPage.updateWirelessMenu();
+        PrintAndPreviewPage.updateOutputChoices();
     }
 
     static loadSettings() {
@@ -1105,10 +1122,11 @@ class ConfigWirelessPage {
     }
 
     static onExportClicked() {
-        const wifi_ssid = settings.get("wifi_ssid");
-        const wifi_pass = settings.get("wifi_pass");
+        const wifi_ssid    = settings.get("wifi_ssid");
+        const wifi_pass    = settings.get("wifi_pass");
         let   printer_addr = settings.get("printer_addr");
         const printer_pass = settings.get("printer_pass");
+        const printer_name = settings.get("printer_name");
         if(!printer_addr) {
             printer_addr = "dhcp";
         }
@@ -1116,8 +1134,9 @@ class ConfigWirelessPage {
             "M118 P0 wifi_mode: sta\n" +
             "M118 P0 wifi_ssid: " + wifi_ssid + "\n" +
             "M118 P0 wifi_pass: " + wifi_pass + "\n" +
-            "M118 P0 wifi_addr: " + printer_addr + "\n" +
-            "M118 P0 post_pass: " + printer_pass + "\n" +
+            "M118 P0 printer_addr: " + printer_addr + "\n" +
+            "M118 P0 printer_pass: " + printer_pass + "\n" +
+            "M118 P0 printer_name: " + printer_name + "\n" +
             "M118 P0 wifi_save_config\n" +
             "M118 P0 wifi_restart\n";
         const blob = new Blob([config], {type: "text/plain;charset=utf-8"});
@@ -1131,6 +1150,7 @@ class ConfigWirelessPage {
     static onRememberClicked() {
         ConfigWirelessPage.saveWirelessProfile();
         ConfigWirelessPage.updateWirelessMenu();
+        PrintAndPreviewPage.updateOutputChoices();
         ConfigWirelessPage.onInput(); // Change disabled state of "Forget" button
         alert("The settings have been saved");
     }
@@ -1139,15 +1159,34 @@ class ConfigWirelessPage {
         if(confirm("You are about to remove this printer from Symple Slicer. Press OK to proceed.")) {
             ConfigWirelessPage.forgetWirelessProfile();
             ConfigWirelessPage.updateWirelessMenu();
+            PrintAndPreviewPage.updateOutputChoices();
             ConfigWirelessPage.onInput(); // Change the state of the "Forget" button
         }
     }
 
-    static onManageClicked() {
-        if(confirm("Click OK to connect to the printer using a web browser.")) {
-            let printer_addr = settings.get("printer_addr");
-            window.open("http://" + printer_addr);
+    static postMessageToWireless(message) {
+        const msg = "A new web browser tab will be opened to your printer; click OK to proceed.\nYou will then be prompted to allow interaction from another web page; click OK to allow."
+        const printer_addr = settings.get("printer_addr");
+        const url = "http://" + printer_addr;
+        let target = ConfigWirelessPage.wirelessPopup;
+        
+        if(target && !target.closed) {
+            target.focus();
+            target.postMessage(message, url);
+        } else if(confirm(msg)) {
+            target = window.open(url, "syndaver_wireless");
+            ConfigWirelessPage.wirelessPopup = target;
+            if(target) {
+                setTimeout(() => target.postMessage(message, url), 3000);
+            } else {
+                alert('Please make sure your popup blocker is disabled and try again.');
+            }
         }
+    }
+
+    static onManageClicked() {
+        const printer_pass = settings.get("printer_pass");
+        ConfigWirelessPage.postMessageToWireless({password: printer_pass});
     }
 
     static onMonitorClicked() {
@@ -1161,10 +1200,14 @@ class ConfigWirelessPage {
         return true;
     }
 
-    static checkIfConfigured() {
+    static setHostnameAndPassword() {
         if(!ConfigWirelessPage.profileContains(["printer_pass","printer_addr"])) {
             throw Error("Please configure wireless printing using the \"Configure Wireless\" from the \"Tasks\" menu");
         }
+        const printer_addr = settings.get("printer_addr");
+        const printer_pass = settings.get("printer_pass");
+        SynDaverWiFi.setHostname('http://' + printer_addr);
+        SynDaverWiFi.setPassword(printer_pass);
     }
 
     static onInput() {
@@ -1176,9 +1219,7 @@ class ConfigWirelessPage {
 
     // Uploads files to the wireless module
     static async uploadFiles(files) {
-        ConfigWirelessPage.checkIfConfigured();
-        SynDaverWiFi.setHostname('http://' + printer_addr);
-        SynDaverWiFi.setPassword(printer_pass);
+        ConfigWirelessPage.setHostnameAndPassword();
         SynDaverWiFi.onProgress((bytes, totalBytes) => ProgressBar.progress(bytes/totalBytes));
         ProgressBar.message("Sending to printer");
         try {
@@ -1189,15 +1230,20 @@ class ConfigWirelessPage {
     }
 
     static async uploadOrQueueFiles(files) {
-        if(await MonitorWirelessPage.isPrinterBusy()) {
-            if(confirm("The printer is busy. Click OK to queue the file for printing next.")) {
-                files.unshift(SynDaverWiFi.fileFromStr("printjob.gco", ProfileManager.scripts.next_print_gcode || ""));
-            } else {
-                return;
+        if(isDesktop) {
+            if(await MonitorWirelessPage.isPrinterBusy()) {
+                if(confirm("The printer is busy. Click OK to queue the file for printing next.")) {
+                    files.unshift(SynDaverWiFi.fileFromStr("printjob.gco", ProfileManager.scripts.next_print_gcode || ""));
+                } else {
+                    return;
+                }
             }
+            await ConfigWirelessPage.uploadFiles(files);
+            settings.gotoPage("page_monitor_wifi");
+        } else {
+            const printer_pass = settings.get("printer_pass");
+            ConfigWirelessPage.postMessageToWireless({password: printer_pass, files: files});
         }
-        await ConfigWirelessPage.uploadFiles(files);
-        settings.gotoPage("page_monitor_wifi");
     }
 
     /* The current wireless print profile is always stored in the elements of this page. However, to allow
@@ -1224,6 +1270,14 @@ class ConfigWirelessPage {
                 el.selectedIndex = -1;
             }
         }
+    }
+
+    static savedProfileCount() {
+        if(ConfigWirelessPage.dropdown) {
+            const el = ConfigWirelessPage.dropdown;
+            return el.options.length;
+        }
+        return 0;
     }
 
     static async onProfileChanged(event) {
@@ -1320,9 +1374,7 @@ class MonitorWirelessPage {
 
     static async catchErrors(callback) {
         try {
-            ConfigWirelessPage.checkIfConfigured();
-            SynDaverWiFi.setHostname('http://' + printer_addr);
-            SynDaverWiFi.setPassword(printer_pass);
+            ConfigWirelessPage.setHostnameAndPassword();
             return await callback();
         } catch (e) {
             console.error(e);

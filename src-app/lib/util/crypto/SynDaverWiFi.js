@@ -341,22 +341,15 @@ class SynDaverWiFi {
 
     static fileFromFile(fileName, file) {
         const blob = file.slice(0, file.size, file.type);
-        blob.lastModifiedDate = new Date();
-        blob.name = fileName;
-        return blob;
+        return SynDaverWiFi.fileFromBlob(fileName, blob);
     }
 
     static fileFromBlob(fileName, blob) {
-        blob.lastModifiedDate = new Date();
-        blob.name = fileName;
-        return blob;
+        return new File([blob], fileName, {type: blob.type});
     }
 
     static fileFromStr(fileName, str) {
-        let blob = new Blob([str], {type : 'text/plain'});
-        blob.lastModifiedDate = new Date();
-        blob.name = fileName;
-        return blob;
+        return new File([str], fileName, {type: "text/plain"});
     }
 
     static async fileFromUrl(fileName, url) {
