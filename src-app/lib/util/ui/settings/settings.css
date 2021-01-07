@@ -50,7 +50,9 @@ body.debug .setting-ui {
 .settings-panel .parameter {
     display:            flex;
     justify-content:    space-between;
-    margin:             0.3em 0;
+    margin-top:         0.3em;
+    margin-bottom:      0.3em;
+    margin-right:       0.3em;
 }
 
 .settings-panel h1 {

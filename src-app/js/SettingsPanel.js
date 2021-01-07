@@ -1182,7 +1182,7 @@ class ConfigWirelessPage {
     }
 
     static postMessageToWireless(message) {
-        const msg = "A new web browser tab will be opened to your printer; click OK to proceed.\nYou will then be prompted to allow interaction from another web page; click OK to allow."
+        const msg = "A web browser window will be opened to your printer.\nIf you have a popup blocker, you will need to allow popups from this web site.\nIn the new window, you will be asked to allow interaction to your printer; click OK to allow."
         const printer_addr = settings.get("printer_addr");
         const url = "http://" + printer_addr;
         let target = ConfigWirelessPage.wirelessPopup;
@@ -1191,7 +1191,7 @@ class ConfigWirelessPage {
             target.focus();
             target.postMessage(message, url);
         } else if(confirm(msg)) {
-            target = window.open(url, "syndaver_wireless");
+            target = window.open(url, "syndaver_wireless", "menubar=no,location=no,resizable=yes,scrollbars=yes,status=no");
             ConfigWirelessPage.wirelessPopup = target;
             if(target) {
                 setTimeout(() => target.postMessage(message, url), 3000);
