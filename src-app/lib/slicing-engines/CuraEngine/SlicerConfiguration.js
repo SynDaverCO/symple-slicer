@@ -118,7 +118,7 @@ class SlicerConfiguration {
         for(const filename of fileList) {
             fetchJSON(filename)
             .then(json => this.onDataReady(filename, json))
-            .catch(error => alert(error));
+            .catch(error => {alert(error); throw error});
         }
     }
 
