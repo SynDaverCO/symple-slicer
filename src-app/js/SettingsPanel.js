@@ -670,7 +670,7 @@ class SliceObjectsPage {
                     el.addEventListener('change', (event) => slicer.setOption(key, parseFloat(event.target.value)));
                     break;
                 case 'str':
-                    el = s.textarea(label, attr);
+                    el = s.textarea(label + ":", attr);
                     valueSetter[key] = (key, val) => {el.value = val;}
                     el.addEventListener('change', (event) => slicer.setOption(key, event.target.value));
                     break;
@@ -1041,6 +1041,23 @@ class AdvancedFeaturesPage {
         s.separator(                                                 {type: "br"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: AdvancedFeaturesPage.onImportClicked});
         s.buttonHelp( "Importing settings from a file will override all printer &amp; material presets.");
+
+        s.category(   "External Data Sources");
+        s.html('<div id="profile_sources_warn">These options are for advanced users and are not supported by SynDaver. Use at your own risk.</div><br>');
+        s.textarea("Additional Profile URLs:",                       {id: "profile_sources",
+            tooltip: "Network URLs to \"profile_list.toml\" files for additional profiles (one per line)."});
+        s.button(     "Save",                                        {onclick: AdvancedFeaturesPage.onSaveProfileSources});
+
+        AdvancedFeaturesPage.refreshDataSources();
+    }
+
+    static refreshDataSources() {
+        document.getElementById("profile_sources").value = ProfileManager.getURLs();
+    }
+
+    static onSaveProfileSources() {
+        ProfileManager.setURLs(settings.get("profile_sources"));
+        alert("These changes will take into effect when you next start Symple Slicer");
     }
 
     static onImportChanged(file) {

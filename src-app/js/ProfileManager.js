@@ -109,9 +109,17 @@ class ProfileManager {
         let oldList = localStorage.getItem("profile_urls") || "";
         url = url.toString();
         if(oldList.indexOf(url) === -1) {
-            oldList += " " + url;
+            oldList += "\n" + url;
             localStorage.setItem("profile_urls", oldList.trim());
         }
+    }
+
+    static getURLs() {
+        return localStorage.getItem("profile_urls") || "";
+    }
+
+    static setURLs(list) {
+        localStorage.setItem("profile_urls", list);
     }
 
     // Populate the pull down menus in the UI with a list of available profiles
@@ -139,7 +147,7 @@ class ProfileManager {
                 okay = false
             }
         }
-        if(!okay) alert("Unable to retrieve one or more profile lists")
+        if(!okay) alert("Unable to load from one or more profile URLs.\nTo correct this problem, adjust \"Advanced Features -> External Data Sources\"");
     }
 
     /**

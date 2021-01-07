@@ -82,6 +82,11 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     flex-grow:          1;
 }
 
+#machine_start_gcode, #machine_end_gcode {
+    width:              75vw;
+    height:             75vh;
+}
+
 #about {
     padding:            2em;
     padding-top:        0;

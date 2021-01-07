@@ -31,14 +31,14 @@ class SettingsUI {
 
         this.currentPage   = null;
 
-        var that = this;
+        const that = this;
         this.menu.onchange = function() {
             that.gotoPage(that.menu.value);
         };
 
         this.header.appendChild(this.menu);
 
-        var el      = document.createElement("hr");
+        const el      = document.createElement("hr");
         this.header.appendChild(el);
 
         this.onPageExit  = function(page) {};
@@ -48,7 +48,7 @@ class SettingsUI {
     // private:
 
     static addTag(parent, type, attr_list) {
-        var el = document.createElement(type);
+        const el = document.createElement(type);
         if(attr_list) {
             for (const attr in attr_list) {
                 if(typeof attr_list[attr] !== 'undefined') {
@@ -99,7 +99,7 @@ class SettingsUI {
             SettingsUI.addTag(this.menu, "option", {innerHTML: menuText, value: attr.id});
         }
         // Create the page itself and make it the target of future DOM insertions.
-        let el = SettingsUI.addTag(this.ui, "div", attr);
+        const el = SettingsUI.addTag(this.ui, "div", attr);
         el.classList.add("settings-panel");
         el.classList.add(attr.id);
         this.page_id = attr.id;
@@ -109,7 +109,7 @@ class SettingsUI {
 
     footer(attr) {
         this.category();
-        let el = this.page(null, {id: this.page_id, className: "footer settings-panel"});
+        const el = this.page(null, {id: this.page_id, className: "footer settings-panel"});
         this.separator();
         if(attr && attr.hasOwnProperty("className")) {
             el.classList.add(attr.className);
@@ -117,9 +117,9 @@ class SettingsUI {
     }
 
     toggle(description, attr) {
-        var container = SettingsUI._param(this.target_dom, attr, false);
+        const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
-        var el = SettingsUI._input(container, "checkbox", attr);
+        const el = SettingsUI._input(container, "checkbox", attr);
         if(attr && attr.id) {
             this.getters[attr.id] = function() {return document.getElementById(attr.id).checked};
         }
@@ -127,19 +127,22 @@ class SettingsUI {
     }
 
     radio(description, attr) {
-        var container = SettingsUI._param(this.target_dom, attr, false);
+        const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
-        var el = SettingsUI._input(container, "radio", attr);
+        const el = SettingsUI._input(container, "radio", attr);
         if(attr && attr.name) {
-            this.getters[attr.name] = function() {return document.querySelector('input[name="'+attr.name+'"]:checked').value};
+            this.getters[attr.name] = function() {
+                const el = document.querySelector('input[name="'+attr.name+'"]:checked');
+                return el ? el.value : "";
+            };
         }
         return el;
     }
 
     number(description, attr) {
-        var container = SettingsUI._param(this.target_dom, attr, true);
+        const container = SettingsUI._param(this.target_dom, attr, true);
         SettingsUI._label(container, description, attr);
-        var el = SettingsUI._input(container, "number", attr);
+        const el = SettingsUI._input(container, "number", attr);
         if(attr) {
             if(attr.id) {
                 this.getters[attr.id] = function() {return parseFloat(document.getElementById(attr.id).value);}
@@ -153,9 +156,9 @@ class SettingsUI {
     }
 
     slider(description, attr) {
-        var container = SettingsUI._param(this.target_dom, attr, false);
+        const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
-        var el = SettingsUI._input(container, "range", attr);
+        const el = SettingsUI._input(container, "range", attr);
         if(attr && attr.id) {
             this.getters[attr.id] = function() {return parseFloat(document.getElementById(attr.id).value);}
         }
@@ -163,9 +166,9 @@ class SettingsUI {
     }
 
     text(description, attr) {
-        var container = SettingsUI._param(this.target_dom, attr, true);
+        const container = SettingsUI._param(this.target_dom, attr, true);
         SettingsUI._label(container, description, attr);
-        var el = SettingsUI._input(container, "text", attr);
+        const el = SettingsUI._input(container, "text", attr);
         if(attr && attr.id) {
             this.getters[attr.id] = function() {return document.getElementById(attr.id).value};
         }
@@ -173,9 +176,9 @@ class SettingsUI {
     }
 
     choice(description, attr) {
-        var container = SettingsUI._param(this.target_dom, attr, false);
+        const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
-        var el = SettingsUI.addTag(container, "select", SettingsUI._copyAttr({}, attr, ["id", "multiple"]));
+        const el = SettingsUI.addTag(container, "select", SettingsUI._copyAttr({}, attr, ["id", "multiple"]));
         if(attr && attr.id) {
             this.getters[attr.id] = function() {return document.getElementById(attr.id).value;}
         }
@@ -189,7 +192,7 @@ class SettingsUI {
     }
 
     progress(description, attr) {
-        var container = SettingsUI._param(this.target_dom, attr, false);
+        const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
         return SettingsUI.addTag(container, "progress", SettingsUI._copyAttr({}, attr, ["id", "value", "max"]));
     }
@@ -203,8 +206,8 @@ class SettingsUI {
             this.target_dom = this.target_dom.parentElement;
         }
         if(text) {
-            var details = SettingsUI.addTag(this.target_dom, "details", attr);
-            var summary = SettingsUI.addTag(details, "summary");
+            const details = SettingsUI.addTag(this.target_dom, "details", attr);
+            const summary = SettingsUI.addTag(details, "summary");
             this.target_dom = summary;
             this.heading(text);
             this.target_dom = details;
@@ -232,7 +235,7 @@ class SettingsUI {
     }
 
     button(label, attr_list) {
-        var attr = Object.assign({innerHTML: label}, attr_list || {});
+        const attr = Object.assign({innerHTML: label}, attr_list || {});
         return SettingsUI.addTag(this._lastButtonGroup(), "button", attr);
     }
 
@@ -240,10 +243,14 @@ class SettingsUI {
         SettingsUI.addTag(this._lastButtonGroup(true), "div", {innerHTML:text, className: "button-label"});
     }
 
-    textarea(label, attr) {
-        this.heading(label);
-        var container = SettingsUI.addTag(this.target_dom, "div", {className: "parameter"});
-        return SettingsUI.addTag(container, "textarea", {id: attr.id});
+    textarea(description, attr) {
+        SettingsUI._label(this.target_dom, description, attr);
+        const container = SettingsUI.addTag(this.target_dom, "div", {className: "parameter"});
+        const el = SettingsUI.addTag(container, "textarea", {id: attr.id});
+        if(attr && attr.id) {
+            this.getters[attr.id] = function() {return document.getElementById(attr.id).value};
+        }
+        return el;
     }
 
     div(attr) {

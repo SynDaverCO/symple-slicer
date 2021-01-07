@@ -84,8 +84,13 @@ input, select {
 }
 
 #help-viewport {
-    margin-left:auto;
-    margin-right:auto;
+    margin-left:        auto;
+    margin-right:       auto;
+}
+
+#profile_sources_warn, #profile_sources {
+    font-size:          small;
+    width:              50vw;
 }
 
 .warning {

@@ -50,6 +50,7 @@ body.debug .setting-ui {
 .settings-panel .parameter {
     display:            flex;
     justify-content:    space-between;
+    margin:             0.3em 0;
 }
 
 .settings-panel h1 {
@@ -67,17 +68,13 @@ body.debug .setting-ui {
     text-align:         center;
 }
 
-.settings-panel .parameter {
-    margin:             4px;
-}
-
 .settings-panel details {
-    margin-top:    0.25em;
-    margin-bottom: 0.5em;
+    margin-top:         0.25em;
+    margin-bottom:      0.5em;
 }
 
 .settings-panel summary {
-    margin-bottom: 0.5em;
+    margin-bottom:      0.5em;
 }
 
 .settings-panel summary > h1 {
@@ -117,11 +114,6 @@ body.debug .setting-ui {
     min-width:          250px;
     flex-grow:          1;
     font-size:          13px;
-}
-
-.settings-panel textarea {
-    width:              75vw;
-    height:             75vh;
 }
 
 .settings-panel input[type=text],
