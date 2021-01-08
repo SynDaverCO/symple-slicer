@@ -135,6 +135,7 @@ const filesToCache = [
     'lib/util/ui/navcube/navcube.js',
     'lib/util/ui/progress/progress.css',
     'lib/util/ui/progress/progress.js',
+    'lib/util/ui/settings/editable-select.js',
     'lib/util/ui/settings/settings.css',
     'lib/util/ui/settings/settings.js',
     'lib/util/ui/toolbar/toolbar.css',

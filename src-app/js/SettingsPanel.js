@@ -772,7 +772,7 @@ class PrintAndPreviewPage {
     static updateOutputChoices() {
         const selectedChoice = settings.get("print_destination");
         let selectedChoiceHidden = false;
-        
+
         function showOrHide(id, show) {
             if(show) {
                 $("input[value='" + id + "']").parent().show();
@@ -1096,7 +1096,7 @@ class ConfigWirelessPage {
         const to_save = {oninput: ConfigWirelessPage.onInput, onchange: ConfigWirelessPage.onChange};
         s.heading(   "Printer Configuration:");
         s.text(           "Choose Printer Name:",                    {...to_save, id: "printer_name", placeholder: "Required",
-                                                                         tooltip: "Choose a name for this printer"});
+                                                                         tooltip: "Choose a name for this printer", dropdown: true});
         s.text(           "Set Printer Password:",                   {...to_save, id: "printer_pass", placeholder: "Required",
                                                                          tooltip: "Set a password to prevent unauthorized use of your printer"});
         s.text(           "IP Address:",                             {...to_save, id: "printer_addr", placeholder: "Use DHCP if blank",
@@ -1122,6 +1122,8 @@ class ConfigWirelessPage {
         ConfigWirelessPage.onInput();
         ConfigWirelessPage.updateWirelessMenu();
         PrintAndPreviewPage.updateOutputChoices();
+
+        document.getElementById("printer_name").addEventListener("change", ConfigWirelessPage.onNameChange);
     }
 
     static loadSettings() {
@@ -1131,6 +1133,10 @@ class ConfigWirelessPage {
         loadFromStorage("printer_name");
         loadFromStorage("printer_pass");
         loadFromStorage("printer_addr");
+    }
+
+    static onNameChange() {
+        ConfigWirelessPage.loadWirelessProfile(event.currentTarget.value);
     }
 
     static onChange() {
@@ -1186,7 +1192,7 @@ class ConfigWirelessPage {
         const printer_addr = settings.get("printer_addr");
         const url = "http://" + printer_addr;
         let target = ConfigWirelessPage.wirelessPopup;
-        
+
         if(target && !target.closed) {
             target.focus();
             target.postMessage(message, url);
@@ -1286,6 +1292,7 @@ class ConfigWirelessPage {
             if(!availableProfiles.includes(selectedProfile)) {
                 el.selectedIndex = -1;
             }
+            document.getElementById("printer_name").setChoices(availableProfiles);
         }
     }
 

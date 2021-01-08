@@ -168,7 +168,7 @@ class SettingsUI {
     text(description, attr) {
         const container = SettingsUI._param(this.target_dom, attr, true);
         SettingsUI._label(container, description, attr);
-        const el = SettingsUI._input(container, "text", attr);
+        const el = attr.dropdown ? SettingsUI.addTag(container, "editable-select", attr) : SettingsUI._input(container, "text", attr);
         if(attr && attr.id) {
             this.getters[attr.id] = function() {return document.getElementById(attr.id).value};
         }

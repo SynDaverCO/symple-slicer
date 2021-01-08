@@ -119,7 +119,8 @@ body.debug .setting-ui {
 }
 
 .settings-panel input[type=text],
-.settings-panel input[type=number] {
+.settings-panel input[type=number],
+.settings-panel editable-select {
     box-sizing:         border-box;
     padding:            1px 2px;
     width:              12em;
