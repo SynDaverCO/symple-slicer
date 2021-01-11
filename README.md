@@ -22,6 +22,11 @@ attached printers and flash printer firmware is under development. For
 developers familiar with [Electron], there are build instructions in
 the 'docs' directory.
 
+Issues and Feature Requests
+---------------------------
+
+If you have issues or feature requests for Symple Slicer, please reach out to "3dsupport@syndaver.com"
+
 Easy to use, easy to print
 --------------------------
 
