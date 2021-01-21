@@ -124,6 +124,7 @@ const filesToCache = [
     'lib/util/io/GeometryLoaderWorker.js',
     'lib/util/io/LoadResource.js',
     'lib/util/io/StlReader.js',
+    'lib/util/io/TOMLWriter.js',
     'lib/util/misc/ParseQuery.js',
     'lib/util/misc/ResettableTimer.js',
     'lib/util/misc/Wikify.js',
