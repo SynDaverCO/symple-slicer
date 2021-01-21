@@ -21,8 +21,8 @@ function showAbout() {
     document.getElementById("about").style.display = "block";
 }
 
-function hideAbout(evt) {
-    if(evt && event.target.tagName == "A") {
+function hideAbout() {
+    if(event && event.target.tagName == "A") {
         return;
     }
     document.getElementById("about").style.display = "none";
