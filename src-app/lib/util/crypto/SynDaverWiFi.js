@@ -249,12 +249,12 @@ class SynDaverWiFi {
 
     static async isPrinting(status) {
         const json = status || await SynDaverWiFi.status();
-        return json.status == "printing" || json.status == "paused";
+        return json.state == "printing" || json.state == "paused";
     }
 
     static async numberOfJobs(status) {
         const json = status || await SynDaverWiFi.status();
-        return json.jobsWaiting + ((json.status == "printing" || json.status == "paused") ? 1 : 0);
+        return json.jobsWaiting + ((json.state == "printing" || json.state == "paused") ? 1 : 0);
     }
 
     static async getFile(path) {

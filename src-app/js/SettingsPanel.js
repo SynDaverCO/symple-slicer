@@ -1380,7 +1380,7 @@ class ConfigWirelessPage {
 class MonitorWirelessPage {
     static init(s) {
         s.page(     null,                                            {id: "page_monitor_wifi"});
-        s.text(     "Printer status:",                               {id: "wifi_status"});
+        s.text(     "Printer state:",                                {id: "wifi_state"});
         s.number(   "Signal strength:",                              {id: "wifi_strength", units: "dBm"});
         s.separator(                                                 {type: "br"});
         s.progress( "Print progress:",                               {id: "wifi_progress", value: 0});
@@ -1410,7 +1410,7 @@ class MonitorWirelessPage {
         const printer_addr = settings.get("printer_addr");
         if(printer_addr.length == 0) return false;
         const result = await fetchJSON('http://' + printer_addr + "/status");
-        return result.status == "printing" ||  result.status == "paused";
+        return result.state == "printing" ||  result.state == "paused";
     }
 
     static async checkIfPrinterIdle() {
@@ -1422,9 +1422,9 @@ class MonitorWirelessPage {
     }
 
     static async pauseResumePrint() {
-        let status = document.getElementById('wifi_status');
-        if(status.value == "printing") await MonitorWirelessPage.catchErrors(() => SynDaverWiFi.pausePrint());
-        if(status.value == "paused")   await MonitorWirelessPage.catchErrors(() => SynDaverWiFi.resumePrint());
+        let state = document.getElementById('wifi_state');
+        if(state.value == "printing") await MonitorWirelessPage.catchErrors(() => SynDaverWiFi.pausePrint());
+        if(state.value == "paused")   await MonitorWirelessPage.catchErrors(() => SynDaverWiFi.resumePrint());
     }
 
     static async stopPrint() {
@@ -1436,7 +1436,7 @@ class MonitorWirelessPage {
     static async onTimer() {
         let progress = document.getElementById('wifi_progress');
         let strength = document.getElementById('wifi_strength');
-        let status   = document.getElementById('wifi_status');
+        let state   = document.getElementById('wifi_state');
 
         function isHidden(el) {
             return (el.offsetParent === null);
@@ -1452,15 +1452,15 @@ class MonitorWirelessPage {
                 let json = await fetchJSON('http://' + printer_addr + "/status");
                 progress.value = json.progress;
                 strength.value = json.wifiRSSI;
-                status.value   = json.status;
-                const printing = json.status == "printing" || json.status == "paused";
+                state.value   = json.state;
+                const printing = json.state == "printing" || json.state == "paused";
                 settings.enable('#wifi_stop', printing);
                 settings.enable('#wifi_pause_resume', printing);
-                document.getElementById("wifi_pause_resume").innerHTML = json.status == "printing" ? "Pause" : "Resume";
+                document.getElementById("wifi_pause_resume").innerHTML = json.state == "printing" ? "Pause" : "Resume";
             } catch(e) {
                 progress.value = 0;
                 strength.value = 0;
-                status.value   = "unavailable";
+                state.value   = "unavailable";
                 settings.enable('#wifi_stop',         false);
                 settings.enable('#wifi_pause_resume', false);
             }
