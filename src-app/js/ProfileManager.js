@@ -26,39 +26,33 @@ class ProfileManager {
     }
 
     static _loadProfileStr(str, baseUrl) {
+        // Convert any URLs into absolute paths relative to the profile
+        const makeAbsolute = path => (baseUrl && path) ? new URL(path, baseUrl).toString() : path;
         const config = toml.parse(str);
-        if(config.hasOwnProperty("usb")) {
-            // Convert any URLs relative to the profile into absolute paths
-            if(baseUrl && config.usb.hasOwnProperty("firmware")) {
-                config.usb.firmware = new URL(config.usb.firmware, baseUrl).toString();
-            }
+        if(config.usb) {
+            config.usb.firmware = makeAbsolute(config.usb.firmware);
             ProfileManager.usb = config.usb;
         }
-        if(config.hasOwnProperty("scripts")) {
-            ProfileManager.scripts = config.scripts;
+        if(config.wireless) {
+            if(config.wireless.uploads) {
+                for(const pair of config.wireless.uploads) {
+                    pair[1] = makeAbsolute(pair[1]);
+                }
+            }
+            ProfileManager.wireless = config.wireless;
         }
-        if(config.hasOwnProperty("settings")) {
+        if(config.settings) {
             slicer.setMultiple(config.settings);
         }
-        if(config.hasOwnProperty("metadata")) {
+        if(config.metadata) {
+            // Merge the meta data with any existing metadata
             ProfileManager.metadata = Object.assign(ProfileManager.metadata || {}, config.metadata);
         }
     }
 
     static _saveProfileStr(options) {
-        const toml = new TOMLFormatter();
-        if(ProfileManager.metadata) {
-            toml.writeCategory("metadata");
-            toml.writeProperties(ProfileManager.metadata);
-        }
-        if(ProfileManager.usb) {
-            toml.writeCategory("usb");
-            toml.writeProperties(ProfileManager.usb);
-        }
-        if(ProfileManager.scripts) {
-            toml.writeCategory("scripts");
-            toml.writeProperties(ProfileManager.scripts);
-        }
+        const toml = new TOMLWriter();
+        toml.writeProperties(ProfileManager, ["metadata", "usb", "wireless"]);
         toml.writeCategory("settings");
         slicer.dumpSettings(toml, options);
         return toml.str;
@@ -174,68 +168,6 @@ class ProfileManager {
     }
 
     static exportConfiguration(options) {
-        return TOMLFormatter.alignComments(ProfileManager._saveProfileStr(options));
-    }
-}
-
-class TOMLFormatter {
-    constructor() {
-        this.str = "";
-    }
-
-    writeCategory(category) {
-        this.str += "[" + category + "]\n\n";
-    }
-
-    /**
-     * Writes a value into the TOML file
-     *
-     *   key     - the name of the value
-     *   value   - the value
-     *   comment - if provided, this is added as a comment at the end of the line
-     *   enabled - If false, the entire line is commented out
-     */
-    writeValue(key, value, comment, enabled = true) {
-        let val_str;
-        switch(typeof value) {
-            case "object":
-            case "boolean":
-            case "object":
-            case "number":
-                val_str = JSON.stringify(value);
-                break;
-            case "string":
-                if(value.indexOf('\n') != -1) {
-                    val_str = '"""\n' + value + '"""';
-                } else {
-                    val_str = '"' + value + '"';
-                }
-                break;
-        }
-        if(!enabled) {
-            this.str += "# ";
-            val_str = val_str.replace(/\n/g, "\n#"); // Comment out each line of a multi-line values
-        }
-        this.str += key + " = " + val_str;
-        if(comment) {
-            this.str += " # " + comment;
-        }
-        this.str += "\n";
-    }
-
-    writeProperties(obj) {
-        for (const [key, value] of Object.entries(obj)) {
-            this.writeValue(key, value);
-        }
-    }
-
-    // Reformats the TOML file so all the comments line up
-    static alignComments(str) {
-        const comment  = /^(..*?)([#;].*)$/gm;
-        let   tab_stop = 0;
-        for(const m of str.matchAll(comment)) {
-            tab_stop = Math.max(tab_stop, m[1].length);
-        }
-        return str.replace(comment, (m, p1, p2) => p1.padEnd(tab_stop) + p2)
+        return TOMLWriter.alignComments(ProfileManager._saveProfileStr(options));
     }
 }

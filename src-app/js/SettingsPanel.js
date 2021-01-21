@@ -1493,17 +1493,24 @@ class UpdateFirmwarePage {
 
     static async onFlashWirelessClicked() {
         if(featureRequiresDesktopVersion("Updating firmware")) {
+            if(!ProfileManager.wireless) {
+                alert("The selected printer does not have wireless capabilities");
+                return;
+            }
             // An upgrade set includes the various print scripts as well as the firmware file.
             let files = [];
-            if(ProfileManager.scripts) {
-                files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    ProfileManager.scripts.pause_print_gcode  || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   ProfileManager.scripts.stop_print_gcode   || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   ProfileManager.scripts.resume_print_gcode || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", ProfileManager.scripts.probe_fail_gcode   || ""));
+            if(ProfileManager.wireless.scripts) {
+                const s = ProfileManager.wireless.scripts;
+                files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    s.pause_print_gcode  || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   s.stop_print_gcode   || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   s.resume_print_gcode || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", s.probe_fail_gcode   || ""));
             }
-            files.push(await SynDaverWiFi.fileFromUrl("index.html",   'config/syndaver/machine_firmware/SynDaver_WiFi.html'));
-            files.push(await SynDaverWiFi.fileFromUrl("serial.html",  'config/syndaver/machine_firmware/SynDaver_WiFi_Serial.html'));
-            files.push(await SynDaverWiFi.fileFromUrl("firmware.bin", 'config/syndaver/machine_firmware/SynDaver_WiFi.bin')); // Must be last
+            if(ProfileManager.wireless.uploads) {
+                for(const pair of ProfileManager.wireless.uploads) {
+                    files.push(await SynDaverWiFi.fileFromUrl(pair[0], pair[1]));
+                }
+            }
             // Upload everything.
             try {
                 if(!await MonitorWirelessPage.checkIfPrinterIdle()) return;
