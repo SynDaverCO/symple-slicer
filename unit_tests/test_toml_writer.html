@@ -1,0 +1,41 @@
+<!--
+WebSlicer
+Copyright (C) 2020  SynDaver Labs, Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<script src="unit_test_functions.js"></script>
+
+<script src="../src-app/lib/util/io/TOMLWriter.js"></script>
+
+<script>
+    function toml(data) {
+        const toml = new TOMLWriter();
+        toml.writeProperties(data);
+        return toml.str.trim();
+    }
+    
+    function testTOML(lhs, rhs) {
+        assertEquals(lhs, "'" + rhs + "'");
+    }
+
+    testTOML( 'toml({value:2.0})',            'value = 2');
+    testTOML( 'toml({value:"str"})',          'value = "str"');
+    testTOML( 'toml({value:"foo\\nbar\\n"})', 'value = """\\nfoo\\nbar\\n"""');
+    testTOML( 'toml({value:[1.0,2.0]})',      'value = [1,2]');
+    testTOML( 'toml({value:[[1.0],[2.0]]})',  'value = [[1],[2]]');
+    testTOML( 'toml({value:{foo:1,bar:2}})',  '[value]\\n\\nfoo = 1\\nbar = 2');
+
+    summarize();
+</script>
