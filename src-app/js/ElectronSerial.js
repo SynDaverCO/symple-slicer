@@ -78,12 +78,13 @@ async function flashFirmwareWithStk(usb) {
 }
 
 async function flashFirmware() {
-    if(!ProfileManager.usb) {
+    const usb = ProfileManager.getSection("usb");
+    if(!usb) {
         throw Error("No serial port information for this profile");
     }
-    switch(ProfileManager.usb.flasher) {
-        case "bossa":    await flashFirmwareWithBossa(ProfileManager.usb); break;
-        case "stk500v2": await flashFirmwareWithStk(ProfileManager.usb); break;
+    switch(usb.flasher) {
+        case "bossa":    await flashFirmwareWithBossa(usb); break;
+        case "stk500v2": await flashFirmwareWithStk(usb); break;
     }
 }
 
@@ -91,8 +92,8 @@ async function stream_gcode(gcode) {
     if(!ProfileManager.usb) {
         throw Error("No serial port information for this profile");
     }
-    const usb     = ProfileManager.usb;
-    const scripts = ProfileManager.scripts;
+    const usb     = ProfileManager.getSection("usb");
+    const scripts = ProfileManager.getSection("scripts");
 
     try {
         const marlin = await import('../lib/serial-tools/gcode-sender/MarlinSerialProtocol.js');

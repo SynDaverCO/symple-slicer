@@ -18,41 +18,55 @@
  */
 
 class ProfileManager {
+    // Clears out any configuration information in the ProfileManager object.
     static _loadDefaults() {
-        delete ProfileManager.usb;
-        delete ProfileManager.scripts;
-        delete ProfileManager.settings;
-        delete ProfileManager.metadata;
+        ProfileManager.profile = {};
     }
 
+    static getSection(section) {
+        return ProfileManager.profile[section];
+    }
+
+    // Parses a TOML string and loads the profile. Slicer settings are sent to the slicer,
+    // while other settings are stored in the ProfileManager object.
     static _loadProfileStr(str, baseUrl) {
-        // Convert any URLs into absolute paths relative to the profile
-        const makeAbsolute = path => (baseUrl && path) ? new URL(path, baseUrl).toString() : path;
         const config = toml.parse(str);
+
+        // Convert any URLs into absolute paths relative to the profile
+        function makeAbsolute(path) {
+            if(baseUrl && path) {
+                return new URL(path, baseUrl).toString();
+            }
+            return path;
+        }
+
         if(config.usb) {
             config.usb.firmware = makeAbsolute(config.usb.firmware);
-            ProfileManager.usb = config.usb;
         }
-        if(config.wireless) {
-            if(config.wireless.uploads) {
-                for(const pair of config.wireless.uploads) {
-                    pair[1] = makeAbsolute(pair[1]);
-                }
+        if(config.wireless && config.wireless.uploads) {
+            for(const pair of config.wireless.uploads) {
+                pair[1] = makeAbsolute(pair[1]);
             }
-            ProfileManager.wireless = config.wireless;
         }
-        if(config.settings) {
-            slicer.setMultiple(config.settings);
+
+        // Merge data from the config with data that may already exist in the ProfileManager object
+        function mergeSection(section) {
+            const src = config[section];
+            const dst = ProfileManager.profile[section] || {};
+            ProfileManager.profile[section] = Object.assign(dst, src);
         }
-        if(config.metadata) {
-            // Merge the meta data with any existing metadata
-            ProfileManager.metadata = Object.assign(ProfileManager.metadata || {}, config.metadata);
-        }
+        mergeSection("metadata");
+        mergeSection("usb");
+        mergeSection("wireless");
+        mergeSection("scripts");
     }
 
+    // Writes out the current profile as a TOML formatted string
     static _saveProfileStr(options) {
         const toml = new TOMLWriter();
-        toml.writeProperties(ProfileManager, ["metadata", "usb", "wireless"]);
+        if(ProfileManager.profile) {
+            toml.writeProperties(ProfileManager.profile, ["metadata", "usb", "wireless","scripts"]);
+        }
         toml.writeCategory("settings");
         slicer.dumpSettings(toml, options);
         return toml.str;
@@ -171,3 +185,5 @@ class ProfileManager {
         return TOMLWriter.alignComments(ProfileManager._saveProfileStr(options));
     }
 }
+
+ProfileManager.profile = {};

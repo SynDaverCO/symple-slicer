@@ -249,8 +249,9 @@ class MaterialNotesPage {
     }
 
     static loadProfileNotes() {
-        if(ProfileManager.hasOwnProperty("metadata") && ProfileManager.metadata.hasOwnProperty("material_notes")) {
-            $("#material_notes").html(ProfileManager.metadata.material_notes);
+        const metadata = ProfileManager.getSection("metadata");
+        if(metadata && metadata.material_notes) {
+            $("#material_notes").html(metadata.material_notes);
             return true;
         }
         $("#material_notes").empty();
@@ -1256,7 +1257,8 @@ class ConfigWirelessPage {
         if(isDesktop) {
             if(await MonitorWirelessPage.isPrinterBusy()) {
                 if(confirm("The printer is busy. Click OK to queue the file for printing next.")) {
-                    files.unshift(SynDaverWiFi.fileFromStr("printjob.gco", ProfileManager.scripts.next_print_gcode || ""));
+                    const scripts = ProfileManager.getSection("scripts");
+                    files.unshift(SynDaverWiFi.fileFromStr("printjob.gco", scripts.next_print_gcode || ""));
                 } else {
                     return;
                 }
@@ -1493,21 +1495,22 @@ class UpdateFirmwarePage {
 
     static async onFlashWirelessClicked() {
         if(featureRequiresDesktopVersion("Updating firmware")) {
-            if(!ProfileManager.wireless) {
+            const wireless = ProfileManager.getSection("wireless");
+            if(!wireless) {
                 alert("The selected printer does not have wireless capabilities");
                 return;
             }
             // An upgrade set includes the various print scripts as well as the firmware file.
             let files = [];
-            if(ProfileManager.wireless.scripts) {
-                const s = ProfileManager.wireless.scripts;
+            if(wireless.scripts) {
+                const s = ProfileManager.getSection("scripts");
                 files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    s.pause_print_gcode  || ""));
                 files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   s.stop_print_gcode   || ""));
                 files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   s.resume_print_gcode || ""));
                 files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", s.probe_fail_gcode   || ""));
             }
-            if(ProfileManager.wireless.uploads) {
-                for(const pair of ProfileManager.wireless.uploads) {
+            if(wireless.uploads) {
+                for(const pair of wireless.uploads) {
                     files.push(await SynDaverWiFi.fileFromUrl(pair[0], pair[1]));
                 }
             }
