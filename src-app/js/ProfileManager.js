@@ -59,6 +59,11 @@ class ProfileManager {
         mergeSection("usb");
         mergeSection("wireless");
         mergeSection("scripts");
+
+        // Apply the slicer settings
+        if(config.settings) {
+            slicer.setMultiple(config.settings);
+        }
     }
 
     // Writes out the current profile as a TOML formatted string
