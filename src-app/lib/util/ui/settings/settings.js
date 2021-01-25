@@ -53,7 +53,10 @@ class SettingsUI {
             for (const attr in attr_list) {
                 if(typeof attr_list[attr] !== 'undefined') {
                     el[attr] = attr_list[attr];
-                    el.setAttribute(attr, attr_list[attr]);
+                    if(typeof attr_list[attr] !== 'function') {
+                        // Set the attribute for everything except event handlers.
+                        el.setAttribute(attr, attr_list[attr]);
+                    }
                 }
             }
         }
