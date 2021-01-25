@@ -119,8 +119,10 @@ class ProfileManager {
             "config/profiles/profile_list.toml"
         ].join('\n');
 
-        let profileList = localStorage.getItem("profile_urls").trim();
-        if(!profileList) {
+        let profileList = localStorage.getItem("profile_urls");
+        if(profileList) {
+            profileList = profileList.trim();
+        } else {
             profileList = defaultProfileList;
             localStorage.setItem("profile_urls", defaultProfileList);
         }
