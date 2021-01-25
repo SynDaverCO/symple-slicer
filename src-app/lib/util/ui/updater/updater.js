@@ -49,7 +49,7 @@ class Updater extends UpdateDialog {
     // If a service worker is available, it will Wikify content
     // for us, otherwise we have to do it here.
     static wikifyChangeLog(id) {
-        if(!navigator.serviceWorker.controller) {
+        if('serviceWorker' in navigator && !navigator.serviceWorker.controller) {
             const iframe = document.getElementById(id);
             fetchText(iframe.src.replace(".md.html", ".md")).then(str => {
                 iframe.srcdoc = wikify(str, {css: "css/markdown.css"});
@@ -68,7 +68,7 @@ class Updater extends UpdateDialog {
     }
 
     static firstTimeNotification() {
-        if(navigator.serviceWorker.controller === null) {
+        if('serviceWorker' in navigator && navigator.serviceWorker.controller === null) {
             UpdateDialog.showReleaseNotes();
         }
     }
