@@ -6,7 +6,6 @@ To build the Electron desktop app, install node.js on your machine then:
 ```
 git clone git@github.com:SynDaverCO/symple-slicer.git
 cd symple-slicer
-git submodule update --init
 npm install
 ```
 
@@ -64,4 +63,19 @@ To create a web release of Symple Slicer:
 ./build-web-release.sh
 ```
 
+Hosting Symple Slicer Web
+-------------------------
 
+Symple Slicer Web makes use of a service worker for the auto update and to allow the webapp to be used offline.
+This functionality is complex and the following web server requirements must be met:
+
+  1) The web server must be HTTPS capable.
+  2) The web server must have a valid public certificate.
+  3) The file "service-worker.js" must be kept up-to-date with a list of files to cache on a user's client.
+
+It is suggested to use [GitHub Pages] for hosting as it meets the first and second requirements.
+
+If you wish to have a HTTP-only hosting, delete the "service-worker.js" file. This will allow Symple Slicer
+to operate as a static web page.
+
+[GitHub Pages]: https://pages.github.com/

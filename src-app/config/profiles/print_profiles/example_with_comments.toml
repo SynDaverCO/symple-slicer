@@ -1,0 +1,14 @@
+[metadata]
+
+date = "1/1/2021"
+material_notes = "If provided, this field is shown in the material notes panel."
+
+[settings]
+
+# This section lists settings that are passed to the Cura Engine. For a
+# complete list of available settings, go to "Advanced Features" and
+# export a TOML file with all the checkboxes checked. Alternatively, you
+# can consult the JSON files in "config/cura_defaults" directory.
+
+material_bed_temperature = 75
+material_print_temperature = 200

@@ -1043,10 +1043,10 @@ class AdvancedFeaturesPage {
         s.button(     "Apply",                                       {id: "import_settings", onclick: AdvancedFeaturesPage.onImportClicked});
         s.buttonHelp( "Importing settings from a file will override all printer &amp; material presets.");
 
-        s.category(   "External Data Sources");
+        s.category(   "Data Sources");
         s.html('<div id="profile_sources_warn">These options are for advanced users and are not supported by SynDaver. Use at your own risk.</div><br>');
-        s.textarea("Additional Profile URLs:",                       {id: "profile_sources",
-            tooltip: "Network URLs to \"profile_list.toml\" files for additional profiles (one per line)."});
+        s.textarea("Profile URLs:",                                  {id: "profile_sources", spellcheck: "false",
+            tooltip: "Network URLs to \"profile_list.toml\" files for profiles (one per line)."});
         s.button(     "Save",                                        {onclick: AdvancedFeaturesPage.onSaveProfileSources});
 
         AdvancedFeaturesPage.refreshDataSources();

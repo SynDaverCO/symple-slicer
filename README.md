@@ -27,6 +27,19 @@ Issues and Feature Requests
 
 If you have issues or feature requests for Symple Slicer, please reach out to "3dsupport@syndaver.com"
 
+Adding User Profiles
+--------------------
+
+*User made profiles are not supported by SynDaver. Use this functionality at your own risk*
+
+If you have created profiles for your own printers or materials, you can add them to Symple Slicer.
+To add profiles to Symple Slicer, host your customized profiles on [GitHub Pages] and then add the
+network URL of the "profile_list.toml" file to the "Data Sources" box under "Advanced Options":
+
+![Data Sources](https://github.com/SynDaverCO/symple-slicer/raw/master/docs/images/DataSources.PNG)
+
+For an example profile and documentation, look in the [src-app/config/profiles] directory.
+
 Easy to use, easy to print
 --------------------------
 
@@ -99,5 +112,7 @@ configuration files.
 [WebAssembly]: https://webassembly.org
 [TOML]: https://en.wikipedia.org/wiki/TOML
 [Electron]: https://www.electronjs.org/
+[GitHub Pages]: https://pages.github.com/
+[src-app/config/profiles]: https://github.com/SynDaverCO/symple-slicer/tree/master/src-app/config/profiles
 
 [logo]: https://github.com/SynDaverCO/symple-slicer/raw/master/src-app/images/screenshot.png "SynDaver Symple Slicer"

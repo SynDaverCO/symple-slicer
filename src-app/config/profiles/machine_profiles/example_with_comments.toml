@@ -1,0 +1,89 @@
+[metadata]
+
+date = "1/1/2021"
+
+[usb]
+
+# This section allows Symple Slicer Desktop to flash .bin or .hex files to printers.
+# Only Atmel AVR and SAM architectures are supported. Use either "bossa" or "stk500v2"
+# for "flasher". The "samba_vendor_id" are used for identify a printer in the SAM-BA
+# bootloader while "marlin_vendor_id" is used to identify the printer otherwise.
+# This section is ignored by Symple Slicer Web Edition.
+
+flasher                                        = "bossa"
+firmware                                       = "../machine_firmware/firmware.bin"
+baudrate                                       = 250000
+samba_vendor_id                                = "03EB"
+samba_product_id                               = "6124"
+marlin_vendor_id                               = "27B1"
+marlin_product_id                              = "0001"
+
+[wireless]
+
+# This section specifies which files are uploaded to the SynDaver Wireless module by
+# Symple Slicer Desktop. This section is ignored by Symple Slicer Web Edition.
+
+uploads = [
+    ["index.html",                             "../machine_firmware/index.html"],
+    ["firmware.bin",                           "../machine_firmware/firmware.bin"]
+]
+
+[scripts]
+
+# This section specifies scripts which are used by Symple Slicer Desktop for USB
+# printing and by the SynDaver Wireless module. This section is ignored by Symple
+# Slicer Web Edition.
+
+stop_print_gcode                               = """
+M140 S0                                        ; turn off heated bed
+M104 S0                                        ; turn off hotend
+M107                                           ; turn off fan
+M73 P0                                         ; clear progress bar
+G27                                            ; park nozzle
+M77                                            ; stop print timer
+M117 Print stopped.
+"""
+
+pause_print_gcode                              = """
+M76                                            ; pause print timer
+M117 Print paused.
+M25                                            ; pause print
+"""
+
+resume_print_gcode                             = """
+M108                                           ; resume print
+M75                                            ; start print timer
+M117 Printing...
+"""
+
+next_print_gcode                               = """
+M0 Please clear the print bed and press \"Okay\" to start the next print.
+"""
+
+[settings]
+
+# This section lists settings that are passed to the Cura Engine. For a
+# complete list of available settings, go to "Advanced Features" and
+# export a TOML file with all the checkboxes checked. Alternatively, you
+# can consult the JSON files in "config/cura_defaults" directory.
+
+gantry_height                                  = 30
+machine_depth                                  = 100
+machine_end_gcode                              = """
+M140 S0                                        ; start bed cooling
+M104 S0                                        ; disable hotend
+M107                                           ; disable fans
+M77                                            ; stop print timer
+M117 Print Complete.
+"""
+machine_gcode_flavor                           = "RepRap (Marlin/Sprinter)"
+machine_heated_bed                             = true
+machine_height                                 = 100
+machine_name                                   = "Sample Printer"
+machine_start_gcode                            = """
+M75                                            ; start print timer
+G28                                            ; home all axes
+M117 Starting Print
+"""
+machine_width                                  = 100
+material_diameter                              = 1.75 # mm

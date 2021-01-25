@@ -92,7 +92,14 @@ class ProfileManager {
         if(!stored_config) return false;
 
         console.log("Loaded settings from local storage");
-        ProfileManager.importConfiguration(stored_config, true);
+        try {
+            ProfileManager.importConfiguration(stored_config, true);
+        } catch (e) {
+            alert("Unable to load profile from last session");
+            console.error(e);
+            console.log(stored_config);
+            return false;
+        }
         return true;
    }
 
@@ -107,15 +114,17 @@ class ProfileManager {
      * exists in the local storage, add those as well.
      */
     static getProfileUrls() {
-        let profileUrls = ["config/syndaver/profile_list.toml"];
+        const defaultProfileList = [
+            "config/syndaver/profile_list.toml",
+            "config/profiles/profile_list.toml"
+        ].join('\n');
 
-        if(typeof(Storage) === "undefined") return profileUrls;
-
-        const extra = localStorage.getItem("profile_urls");
-        if(extra) {
-            profileUrls = profileUrls.concat(extra.split(/\s+/));
+        let profileList = localStorage.getItem("profile_urls").trim();
+        if(!profileList) {
+            profileList = defaultProfileList;
+            localStorage.setItem("profile_urls", defaultProfileList);
         }
-        return profileUrls;
+        return profileList.split(/\s+/);
     }
 
     static addProfileUrl(url) {
@@ -150,17 +159,17 @@ class ProfileManager {
         for(const url of ProfileManager.getProfileUrls()) {
             const baseUrl = new URL(url, document.location)
             try {
-                const data = await fetchText(url)
-                const config = toml.parse(data)
                 console.log("Loading profile list from", baseUrl.toString())
-                addMenuEntries(baseUrl, config, "machine_profiles", printer_menu)
-                addMenuEntries(baseUrl, config, "print_profiles",   material_menu)
+                const data = await fetchText(url);
+                const config = toml.parse(data);
+                addMenuEntries(baseUrl, config, "machine_profiles", printer_menu);
+                addMenuEntries(baseUrl, config, "print_profiles",   material_menu);
             } catch(e) {
                 console.warn("Unable to load profiles from", url)
                 okay = false
             }
         }
-        if(!okay) alert("Unable to load from one or more profile URLs.\nTo correct this problem, adjust \"Advanced Features -> External Data Sources\"");
+        if(!okay) alert("Unable to load from one or more profile URLs.\nTo correct this problem, adjust \"Advanced Features -> Data Sources\"");
     }
 
     /**

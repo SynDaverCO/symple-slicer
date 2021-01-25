@@ -53,6 +53,7 @@ class SettingsUI {
             for (const attr in attr_list) {
                 if(typeof attr_list[attr] !== 'undefined') {
                     el[attr] = attr_list[attr];
+                    el.setAttribute(attr, attr_list[attr]);
                 }
             }
         }
@@ -88,7 +89,7 @@ class SettingsUI {
             SettingsUI._copyAttr(
                 {type: type, autocomplete: "off"},
                 attr,
-                ["id", "onclick", "oninput", "onchange", "min", "max", "step", "checked", "value", "name", "placeholder"]
+                ["id", "onclick", "oninput", "onchange", "min", "max", "step", "checked", "value", "name", "placeholder", "spellcheck"]
             ));
     }
 
@@ -246,7 +247,7 @@ class SettingsUI {
     textarea(description, attr) {
         SettingsUI._label(this.target_dom, description, attr);
         const container = SettingsUI.addTag(this.target_dom, "div", {className: "parameter"});
-        const el = SettingsUI.addTag(container, "textarea", {id: attr.id});
+        const el = SettingsUI.addTag(container, "textarea", SettingsUI._copyAttr({}, attr, ["id", "spellcheck"]));
         if(attr && attr.id) {
             this.getters[attr.id] = function() {return document.getElementById(attr.id).value};
         }
