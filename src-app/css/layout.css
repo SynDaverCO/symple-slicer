@@ -92,6 +92,7 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     padding-top:        0;
     padding-left:       14em;
     overflow:           auto;
+    display:            none;
 }
 
 #about img {
@@ -107,6 +108,15 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     margin-left:        auto;
     width:              80%;
     border-spacing:     1em 2px;
+}
+
+#openSource {
+    height:             35vh;
+    overflow:           hidden auto;
+}
+
+#about p:last-child {
+    margin-bottom:      0;
 }
 
 /* Trick to keep iframe responsive from https://benmarshall.me/responsive-iframes */
