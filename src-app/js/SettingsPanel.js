@@ -1500,19 +1500,23 @@ class UpdateFirmwarePage {
                 alert("The selected printer does not have wireless capabilities");
                 return;
             }
-            // An upgrade set includes the various print scripts as well as the firmware file.
+            // An upgrade set includes the various print scripts as well as the firmware files.
             let files = [];
-            if(wireless.scripts) {
-                const s = ProfileManager.getSection("scripts");
-                files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    s.pause_print_gcode  || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   s.stop_print_gcode   || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   s.resume_print_gcode || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", s.probe_fail_gcode   || ""));
+            const scripts = ProfileManager.getSection("scripts");
+            if(scripts) { 
+                files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    scripts.pause_print_gcode  || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   scripts.stop_print_gcode   || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   scripts.resume_print_gcode || ""));
+                files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", scripts.probe_fail_gcode   || ""));
             }
             if(wireless.uploads) {
                 for(const pair of wireless.uploads) {
                     files.push(await SynDaverWiFi.fileFromUrl(pair[0], pair[1]));
                 }
+            }
+            if(wireless.length == 0) {
+                alert("Nothing to upload. The wireless configuration in the profile may be incomplete.");
+                return;
             }
             // Upload everything.
             try {
