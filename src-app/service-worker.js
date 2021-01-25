@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 72
+    cacheVersion: 75
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -40,11 +40,10 @@ const filesToCache = [
     'config/cura_defaults/fdmprinter.def.json',
     'config/cura_defaults/fdmprinter_errata.def.json',
     'config/cura_defaults/fdmprinter_extras.def.json',
-    'config/syndaver/machine_profiles/cura_default.toml',
+    'config/syndaver/profile_list.toml',
     'config/syndaver/machine_profiles/syndaver_axi.toml',
     'config/syndaver/print_profiles/abs_standard_stable.toml',
     'config/syndaver/print_profiles/asa_standard_stable.toml',
-    'config/syndaver/print_profiles/cura_default.toml',
     'config/syndaver/print_profiles/carbon-fiber-nylon_standard_stable.toml',
     'config/syndaver/print_profiles/copperfill_standard_stable.toml',
     'config/syndaver/print_profiles/fibretuff_standard_stable.toml',
@@ -54,7 +53,9 @@ const filesToCache = [
     'config/syndaver/print_profiles/pla_standard_stable.toml',
     'config/syndaver/print_profiles/tpu85_standard_stable.toml',
     'config/syndaver/print_profiles/tpu95_standard_stable.toml',
-    'config/syndaver/profile_list.toml',
+    'config/profiles/profile_list.toml',
+    'config/profiles/machine_profiles/cura_default.toml',
+    'config/profiles/print_profiles/cura_default.toml',
     'css/layout.css',
     'css/markdown.css',
     'css/theme.css',
