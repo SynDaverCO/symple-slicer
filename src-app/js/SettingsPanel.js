@@ -560,87 +560,13 @@ class SliceObjectsPage {
 
         s.page(       "Slice Objects",                               {id: "page_slice", className: "scrollable"});
 
-        s.category(   "Print Strength");
-        s.fromSlicer(       "infill_sparse_density");
-        s.fromSlicer(       "infill_pattern");
-
-        s.category(   "Print Speed");
-        s.fromSlicer(       "layer_height");
-        s.fromSlicer(       "layer_height_0");
-        s.fromSlicer(       "speed_print");
-        s.fromSlicer(       "speed_layer_0");
-        //s.fromSlicer(       "speed_infill");
-        //s.fromSlicer(       "speed_wall");
-        s.fromSlicer(       "speed_support");
-        s.fromSlicer(       "speed_travel");
-        //s.fromSlicer(       "speed_travel_layer_0");
-
-        s.category(   "Shell");
-        s.fromSlicer(       "wall_thickness");
-        s.fromSlicer(       "top_layers");
-        s.fromSlicer(       "bottom_layers");
-        s.fromSlicer(       "initial_bottom_layers");
-        s.fromSlicer(       "top_bottom_pattern");
-        s.fromSlicer(       "top_bottom_pattern_0");
-        s.fromSlicer(       "z_seam_type");
-        s.fromSlicer(       "z_seam_position");
-        s.fromSlicer(       "z_seam_x");
-        s.fromSlicer(       "z_seam_y");
-        s.fromSlicer(       "infill_before_walls");
-        s.fromSlicer(       "ironing_enabled");
-
-        s.category(   "Retraction");
-        s.fromSlicer(       "retraction_enable");
-        s.fromSlicer(       "retraction_amount");
-        s.fromSlicer(       "retraction_speed");
-        s.fromSlicer(       "retraction_combing");
-
-        s.category(   "Temperatures");
-        s.fromSlicer(       "material_print_temperature");
-        s.fromSlicer(       "material_print_temperature_layer_0");
-        s.fromSlicer(       "material_bed_temperature");
-        s.fromSlicer(       "material_bed_temperature_layer_0");
-        s.fromSlicer(       "material_probe_temperature");
-        s.fromSlicer(       "material_soften_temperature");
-        s.fromSlicer(       "material_wipe_temperature");
-        s.fromSlicer(       "material_part_removal_temperature");
-        s.fromSlicer(       "material_keep_part_removal_temperature");
-
-        s.category(   "Cooling");
-        s.fromSlicer(       "cool_fan_enabled");
-        s.fromSlicer(       "cool_fan_speed_min");
-        s.fromSlicer(       "cool_fan_speed_max");
-        s.fromSlicer(       "cool_min_layer_time_fan_speed_max");
-        s.fromSlicer(       "cool_min_layer_time");
-        s.fromSlicer(       "cool_min_speed");
-
-        s.category(   "Support &amp; Adhesion");
-        s.fromSlicer(       "support_enable");
-        s.fromSlicer(       "support_type");
-        s.fromSlicer(       "support_pattern");
-        s.fromSlicer(       "support_infill_rate");
-        s.fromSlicer(       "support_angle");
-        s.fromSlicer(       "support_z_distance");
-        s.fromSlicer(       "support_xy_distance");
-        s.fromSlicer(       "support_xy_distance_overhang");
-        s.fromSlicer(       "support_interface_skip_height");
-        s.fromSlicer(       "adhesion_type");
-        s.fromSlicer(       "brim_width");
-        s.fromSlicer(       "brim_gap");
-        s.fromSlicer(       "raft_airgap");
-        s.fromSlicer(       "raft_surface_layers");
-        s.fromSlicer(       "skirt_line_count");
-        s.fromSlicer(       "support_brim_enable");
-        s.fromSlicer(       "support_interface_enable");
-
-        s.category(   "Filament");
-        s.fromSlicer(       "material_diameter");
-        s.fromSlicer(       "material_flow");
-
-        s.category(   "Special Modes");
-        s.fromSlicer(       "print_sequence");
-        s.fromSlicer(       "magic_spiralize");
-        s.fromSlicer(       "magic_fuzzy_skin_enabled");
+        for(const item of SliceObjectsPage.slicerSettings) {
+            if(item.endsWith(":")) {
+                s.category(item.slice(0,-1));
+            } else if(!item.startsWith("#")){
+                s.fromSlicer(item);
+            }
+        }
 
         s.footer();
         s.button(     "Slice",                                       {onclick: SliceObjectsPage.onSliceClicked});
@@ -1558,3 +1484,87 @@ class HelpAndInfoPage {
         settings.gotoPage("page_help");
     }
 }
+
+SliceObjectsPage.slicerSettings = [
+    "Print Strength:",
+        "infill_sparse_density",
+        "infill_pattern",
+
+    "Print Speed:",
+        "layer_height",
+        "layer_height_0",
+        "speed_print",
+        "speed_layer_0",
+        "#speed_infill",
+        "#speed_wall",
+        "speed_support",
+        "speed_travel",
+        "#speed_travel_layer_0",
+
+    "Shell:",
+        "wall_thickness",
+        "top_layers",
+        "bottom_layers",
+        "initial_bottom_layers",
+        "top_bottom_pattern",
+        "top_bottom_pattern_0",
+        "z_seam_type",
+        "z_seam_position",
+        "z_seam_x",
+        "z_seam_y",
+        "infill_before_walls",
+        "ironing_enabled",
+
+    "Retraction:",
+        "retraction_enable",
+        "retraction_amount",
+        "retraction_speed",
+        "retraction_combing",
+
+    "Temperatures:",
+        "material_print_temperature",
+        "material_print_temperature_layer_0",
+        "material_bed_temperature",
+        "material_bed_temperature_layer_0",
+        "material_probe_temperature",
+        "material_soften_temperature",
+        "material_wipe_temperature",
+        "material_part_removal_temperature",
+        "material_keep_part_removal_temperature",
+
+    "Cooling:",
+        "cool_fan_enabled",
+        "cool_fan_speed_min",
+        "cool_fan_speed_max",
+        "cool_min_layer_time_fan_speed_max",
+        "cool_min_layer_time",
+        "cool_min_speed",
+
+    "Support &amp; Adhesion:",
+        "support_enable",
+        "support_type",
+        "support_pattern",
+        "support_infill_rate",
+        "support_angle",
+        "support_z_distance",
+        "support_xy_distance",
+        "support_xy_distance_overhang",
+        "support_interface_skip_height",
+        "adhesion_type",
+        "brim_width",
+        "brim_gap",
+        "raft_airgap",
+        "raft_surface_layers",
+        "skirt_line_count",
+        "support_brim_enable",
+        "support_interface_enable",
+
+    "Filament:",
+        "material_diameter",
+        "material_flow",
+
+    "Special Modes:",
+        "print_sequence",
+        "magic_spiralize",
+        "magic_fuzzy_skin_enabled"
+];
