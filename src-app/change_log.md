@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v1.0.16
+==============================
+
+* Fixed incorrect naming of files with "stl" in their names.
+* Added support for Axi 2
+
 SynDaver Symple Slicer v1.0.15
 ==============================
 
