@@ -52,6 +52,7 @@ class ProfileManager {
         // Merge data from the config with data that may already exist in the ProfileManager object
         function mergeSection(section) {
             const src = config[section];
+            if(!src) return;
             const dst = ProfileManager.profile[section] || {};
             ProfileManager.profile[section] = Object.assign(dst, src);
         }
