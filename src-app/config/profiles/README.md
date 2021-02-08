@@ -46,10 +46,10 @@ be hidden. This keeps the UI uncluttered when there aren't any choices to be mad
 
 The contents of each TOML file section are keys and values, separated by an equal sign.
 The text after the pound sign is a comment. In the following examples, we use the comment
-to show you the URL of the corresponding profile file. Example:
+to show you the default URL for the corresponding profile file. Example:
 
 ```
-[machine_manufacturer]
+[machine_manufacturers]
 syndaver  = "SynDaver"
 ultimaker = "Ultimaker"
 
@@ -70,23 +70,23 @@ and no other attribute. In *long form*, each item has a subsection in the TOML
 file and can have one or more attributes. Example:
 
 ```
-[machine_profiles.syndaver_axi_1]
+[machine_profiles.syndaver_axi_1]     # machine_profiles/syndaver_axi_1.toml
 name           = "SynDaver Axi"
 
-[machine_profiles.syndaver_axi_2]
+[machine_profiles.syndaver_axi_2]     # machine_profiles/syndaver_axi_2.toml
 name           = "SynDaver Axi 2"
 
-[machine_profiles.ultimaker_s3]
+[machine_profiles.ultimaker_s3]       # machine_profiles/ultimaker_s3.toml
 name           = "Ultimaker S3"
 ```
 
 The use of *long form* allows more information to be associated with each item.
 We can use a **constraint** to cause the items in one drop down menu to only be
-shown when a *specific choice* is made in another drop down menu. This makes
-the menus dynamic. Example:
+shown when a *specific choice* is made in another drop down menu. This interlinks
+the menus and makes their contents dynamic. Example:
 
 ``` 
-[machine_manufacturer]
+[machine_manufacturers]
 syndaver  = "SynDaver"
 ultimaker = "Ultimaker"
 
@@ -126,9 +126,10 @@ machine        = "syndaver_axi_2"
 ```
 
 In this case, there is a generic PLA profile as well as two specialized PLA
-profiles.
+profiles for SynDaver machines. The user will see "PLA" in the Material menu,
+but what profile file is used will depend on their selections for Machine.
 
-Multiple constraints can be combined to make a very specific print profiles:
+Multiple constraints can be combined to make a very specific print profile:
 
 ```
 [material_brands]
@@ -149,8 +150,11 @@ brand         = "polymaker"
 quality       = "fast"
 ```
 
+In this example, when the "Material Brand" is "PolyMaker", one of two profiles
+will used depending on the choice of "Print Quality"
+
 For any items in "machine_profiles" and "print_profiles" section, the "url"
-has a default. In some circumstances, it may be useful to change it:
+has a default. In some circumstances, it may be useful to change that default:
 
 ```
 [print_profiles.pla]
