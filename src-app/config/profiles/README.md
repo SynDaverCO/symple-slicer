@@ -214,5 +214,5 @@ settings             | both       | Settings for Cura Engine
 Refer to [print_profiles/example_with_comments.toml] for more examples and
 descriptions of the fields in each section.
 
-[print_profiles/example_with_comments.toml]: https://github.com/SynDaverCO/symple-slicer/src-app/config/profiles/print_profiles/example_with_comments.toml
-[profiles/profile_list_complex.toml]: https://github.com/SynDaverCO/symple-slicer/src-app/config/profiles/profile_list_complex.toml
+[print_profiles/example_with_comments.toml]: https://github.com/SynDaverCO/symple-slicer/tree/master/src-app/config/profiles/print_profiles/example_with_comments.toml
+[profiles/profile_list_complex.toml]: https://github.com/SynDaverCO/symple-slicer/tree/master/src-app/config/profiles/profile_list_complex.toml
