@@ -1,0 +1,63 @@
+[machine_manufacturers]
+syndaver       = "SynDaver"
+ultimaker      = "UltiMaker"
+
+[machine_profiles.syndaver_axi_1]
+manufacturer   = "syndaver"
+name           = "SynDaver Axi"
+
+[machine_profiles.syndaver_axi_2]
+manufacturer   = "syndaver"
+name           = "SynDaver Axi 2"
+
+[machine_profiles.ultimaker_s3]
+manufacturer   = "ultimaker"
+name           = "Ultimaker S3"
+
+[machine_profiles.ultimaker_s5]
+manufacturer   = "ultimaker"
+name           = "Ultimaker S5"
+
+[machine_toolheads.e3d_hermera_axi_1]
+name           = "E3D Hermera"
+machine        = "syndaver_axi_1"
+
+[machine_toolheads.e3d_hermera_axi_2]
+name           = "E3D Hermera"
+machine        = "syndaver_axi_2"
+
+[print_quality]
+standard       = "Standard"
+best           = "Best"
+
+[material_brands]
+polymaker      = "PolyMaker"
+ic3d           = "IC3D"
+protopasta     = "Proto-Pasta"
+
+[print_profiles.generic_pla]
+name           = "Generic PLA"
+
+[print_profiles.syn_pla_std]
+name           = "PolyMaker PLA (Standard)"
+manufacturer   = "syndaver"
+quality        = "standard"
+brand          = "polymaker"
+
+[print_profiles.syn_abs_std]
+name           = "PolyMaker ABS (Standard)"
+manufacturer   = "syndaver"
+quality        = "standard"
+brand          = "polymaker"
+
+[print_profiles.syn_pla_best]
+manufacturer   = "syndaver"
+quality        = "best"
+brand          = "polymaker"
+name           = "PolyMaker PLA (Best)"
+
+[print_profiles.syn_abs_best]
+manufacturer   = "syndaver"
+quality        = "best"
+brand          = "polymaker"
+name           = "PolyMaker ABS (Best)"

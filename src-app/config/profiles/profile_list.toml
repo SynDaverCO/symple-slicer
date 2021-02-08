@@ -2,9 +2,11 @@
 # to names as it appears in the UI drop down menus
 
 [machine_profiles]
-
+manufacturer = "*"
 cura_default = "Cura Default"
 
-[print_profiles]
+[material_brands]
+generic = "Unbranded"
 
+[print_profiles]
 cura_default = "Cura Default"

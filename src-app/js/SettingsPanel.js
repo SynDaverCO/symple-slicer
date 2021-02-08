@@ -68,26 +68,6 @@ class SettingsPanel {
         }
     }
 
-    static async initProfiles(printer_menu, material_menu) {
-        try {
-            await ProfileManager.populateProfileMenus(printer_menu, material_menu);
-
-            SelectProfilesPage.setUseLastSettings(ProfileManager.hasStoredProfile());
-
-            if(ProfileManager.loadStoredProfile()) {
-                MachineSettingsPage.onPrinterSizeChanged();
-            } else {
-                // If no startup profile is found, load first profile from the selection box
-                SelectProfilesPage.onApplyPreset(true);
-            }
-        } catch(error) {
-            alert(error);
-            console.error(error);
-        }
-
-        window.onunload = ProfileManager.onUnloadHandler;
-    }
-
     static onPageExit(page) {
         if(page == "page_print") {
             stage.hideToolpath();
@@ -140,7 +120,7 @@ class SettingsPanel {
             let cmd = data.split(/\s+/);
             switch(cmd[0]) {
                 case "add_profile_url":
-                    ProfileManager.addProfileUrl(cmd[1]);
+                    ProfileLibrary.addURL(cmd[1]);
                     alert("New profiles will be available upon reload");
                     break;
                 case "clear_local_storage":
@@ -160,16 +140,24 @@ class SettingsPanel {
 
 class SelectProfilesPage {
     static init(s) {
+        let attr;
+
         s.page(       "Select Profiles",                             {id: "page_profiles"});
 
-        const attr = {name: "keep_settings", onchange: SelectProfilesPage.onKeepSettingsChanged};
+        attr = {name: "keep_settings", onchange: SelectProfilesPage.onKeepSettingsChanged};
         s.radio( "Use slicer settings from last session",            {...attr, value: "yes", checked: "checked"});
         s.radio( "Load new slicer settings from profiles:",          {...attr, value: "no"});
 
-        s.div({className: "load-profiles"});
+        s.div({id: "profile_choices", className: "load-profiles"});
         s.separator(                                                 {type: "br"});
-        const printer_menu = s.choice( "Printer:",                   {id: "preset_select"});
-        const material_menu = s.choice( "Material:",                 {id: "material_select"});
+        attr = {onchange: SelectProfilesPage.onDropDownChange};
+        const manufacturer_menu = s.choice( "Manufacturer:",         {...attr, id: "machine_manufacturers"});
+        const printer_menu = s.choice(      "Printer:",              {...attr, id: "machine_profiles"});
+        const upgrades_menu = s.choice(     "Upgrades:",             {...attr, id: "machine_upgrades"});
+        const toolhead_menu = s.choice(     "Toolhead:",             {...attr, id: "machine_toolheads"});
+        const quality_menu = s.choice(      "Quality:",              {...attr, id: "print_quality"});
+        const brand_menu = s.choice(        "Material Brand:",       {...attr, id: "material_brands"});
+        const material_menu = s.choice(     "Material:",             {...attr, id: "print_profiles"});
         s.div();
 
         s.footer();
@@ -185,16 +173,126 @@ class SelectProfilesPage {
         s.div();
 
         this.setUseLastSettings(true);
-        SettingsPanel.initProfiles(printer_menu, material_menu);
+        this.initProfiles({
+            machine_manufacturers: manufacturer_menu,
+            machine_profiles: printer_menu,
+            machine_upgrades: upgrades_menu,
+            machine_toolheads: toolhead_menu,
+            print_quality: quality_menu,
+            material_brands: brand_menu,
+            print_profiles: material_menu
+        });
+
+        // Add a special style sheet to the body of the document
+        this.styles = document.createElement("style");
+        document.head.appendChild(this.styles);
+    }
+
+    static async initProfiles(menus) {
+        try {
+            await this.populateProfileMenus(menus);
+
+            this.setUseLastSettings(ProfileManager.hasStoredProfile());
+
+            if(ProfileManager.loadStoredProfile()) {
+                MachineSettingsPage.onPrinterSizeChanged();
+            } else {
+                // If no startup profile is found, load first profile from the selection box
+                this.onApplyPreset(true);
+            }
+
+            this.onDropDownChange();
+        } catch(error) {
+            alert(error);
+            console.error(error);
+        }
+        window.onunload = ProfileManager.onUnloadHandler;
+    }
+    
+    // Populate the pull down menus in the UI with a list of available profiles
+    static async populateProfileMenus(menus) {
+        for(const profile of await ProfileLibrary.fetch()) {
+            if(menus.hasOwnProperty(profile.type)) {
+                const menu = menus[profile.type];
+                menu.option(
+                    profile.name,
+                    {value: profile.id}
+                );
+                // Any constraints are added as attributes to the option so we can
+                // hide them using a dynamic style sheet.
+                const opt = menu.element.lastElementChild;
+                for(const s of ProfileLibrary.constraints) {
+                    if(profile[s]) opt.setAttribute(s, profile[s]);
+                }
+            }
+        }
+    }
+
+    static onDropDownChange(e) {
+        function hideNonMatchingOptions(key, value) {
+            return '#profile_choices option[' + key + ']:not([' + key + '="' + value + '"]) {display: none}\n';
+        }
+        function isHidden(el) {
+            return window.getComputedStyle(el).getPropertyValue('display') === 'none';
+        }
+        function chooseOtherIfHidden(id) {
+            const el = document.getElementById(id);
+            let opt = el.firstChild;
+            while(opt && !opt.selected) opt = opt.nextElementSibling;
+            if(opt && isHidden(opt)) {
+                opt = el.firstChild;
+                while(opt && isHidden(opt)) opt = opt.nextElementSibling;
+                if(opt) {
+                    el.value = opt.value;
+                    return true;
+                } else {
+                    el.removeAttribute("value");
+                }
+            }
+            return false;
+        }
+        function hideIfNoChoices(id) {
+            const el = document.getElementById(id);
+            let opt = el.firstChild;
+            let count = 0;
+            while(opt) {
+                if(!isHidden(opt)) count++;
+                opt = opt.nextElementSibling;
+            }
+            settings.setVisibility("#"+id, count > 1);
+        }
+        while(true) {
+            SelectProfilesPage.styles.innerText =
+                hideNonMatchingOptions('manufacturer', settings.get("machine_manufacturers")) +
+                hideNonMatchingOptions('machine',      settings.get("machine_profiles")) +
+                hideNonMatchingOptions('upgrade',      settings.get("machine_upgrades")) +
+                hideNonMatchingOptions('toolhead',     settings.get("machine_toolheads")) +
+                hideNonMatchingOptions('quality',      settings.get("print_quality")) +
+                hideNonMatchingOptions('brand',        settings.get("material_brands"));
+            if(chooseOtherIfHidden("machine_profiles")) continue;
+            if(chooseOtherIfHidden("machine_upgrades")) continue;
+            if(chooseOtherIfHidden("machine_toolheads")) continue;
+            if(chooseOtherIfHidden("material_brands")) continue;
+            if(chooseOtherIfHidden("print_profiles")) continue;
+            break;
+        }
+        hideIfNoChoices("machine_manufacturers");
+        hideIfNoChoices("machine_upgrades");
+        hideIfNoChoices("machine_toolheads");
+        hideIfNoChoices("print_quality");
+        hideIfNoChoices("material_brands");
     }
 
     static async onApplyPreset(atStartup) {
-        const printer  = settings.get("preset_select");
-        const material = settings.get("material_select");
-
         try {
             ProgressBar.message("Loading profiles");
-            await ProfileManager.applyPresets(printer, material);
+            await ProfileManager.applyPresets({
+                machine:  settings.get("machine_profiles"),
+                upgrade:  settings.get("machine_upgrades"),
+                toolhead: settings.get("machine_toolheads"),
+                quality:  settings.get("print_quality"),
+                material: settings.get("print_profiles")
+            });
             MachineSettingsPage.onPrinterSizeChanged();
             if(!atStartup) {
                 alert("The new presets have been applied.");
@@ -979,11 +1077,11 @@ class AdvancedFeaturesPage {
     }
 
     static refreshDataSources() {
-        document.getElementById("profile_sources").value = ProfileManager.getURLs();
+        document.getElementById("profile_sources").value = ProfileLibrary.getURLs();
     }
 
     static onSaveProfileSources() {
-        ProfileManager.setURLs(settings.get("profile_sources"));
+        ProfileLibrary.setURLs(settings.get("profile_sources"));
         alert("These changes will take into effect when you next start Symple Slicer");
     }
 
@@ -1429,7 +1527,7 @@ class UpdateFirmwarePage {
             // An upgrade set includes the various print scripts as well as the firmware files.
             let files = [];
             const scripts = ProfileManager.getSection("scripts");
-            if(scripts) { 
+            if(scripts) {
                 files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    scripts.pause_print_gcode  || ""));
                 files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   scripts.stop_print_gcode   || ""));
                 files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   scripts.resume_print_gcode || ""));

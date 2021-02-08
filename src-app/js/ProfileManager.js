@@ -17,6 +17,133 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+function mergeProperties(copyTo, copyFrom, depth = 1) {
+    for(const property in copyFrom) {
+        if(!copyTo.hasOwnProperty(property) || depth == 0) {
+            copyTo[property] = copyFrom[property];
+        } else {
+            mergeProperties(copyTo[property], copyFrom[property], depth - 1);
+        }
+    }
+}
+
+class ProfileLibrary {
+    static getURLs() {
+        return localStorage.getItem("profile_urls") || "";
+    }
+
+    static setURLs(list) {
+        localStorage.setItem("profile_urls", list);
+    }
+
+    static addURL(url) {
+        let oldList = localStorage.getItem("profile_urls") || "";
+        url = url.toString();
+        if(oldList.indexOf(url) === -1) {
+            oldList += "\n" + url;
+            localStorage.setItem("profile_urls", oldList.trim());
+        }
+    }
+
+    /**
+     * Returns a list of URLs to fetch profiles from. By default,
+     * only the default profiles, but if "profile_urls"
+     * exists in the local storage, add those as well.
+     */
+    static get urlList() {
+        let urls = localStorage.getItem("profile_urls");
+        if(!urls) {
+            urls = ProfileLibrary.defaultProfileLists.join('\n');
+            localStorage.setItem("profile_urls", urls);
+        }
+        return urls.trim().split(/\s+/);
+    }
+
+    /**
+     * Fetch all the profile lists from the network and returns a list of profile
+     * descriptors with the following fields:
+     *
+     *   label: A human readable name for the profile
+     *   url:   An absolute URL to the profile's resource
+     *   type:  The type of profile, from the TOML section heading
+     *
+     */
+    static async fetch() {
+        function makeProfileDescriptor(section, key, value, baseUrl, defaults) {
+            // Process an abbreviated profile definition
+            const desc = Object.assign({
+                id:   key,
+                name: value,
+                type: section
+            }, defaults);
+            // Process an expanded profile definition
+            if(typeof value === "object") {
+                desc.name = key;
+                for(const prop of ["name", "url"].concat(ProfileLibrary.constraints)) {
+                    if(value.hasOwnProperty(prop)) {
+                        desc[prop] = value[prop];
+                    }
+                }
+            }
+            // Fill in defaults
+            if(desc.type == "machine_profiles" && !desc.manufacturer) desc.manufacturer = "generic";
+            if(desc.type == "print_profiles"   && !desc.brand)        desc.brand        = "generic";
+            if(["machine_profiles", "print_profiles"].includes(desc.type) && !desc.url) {
+                desc.url = section + "/" + key + ".toml";
+            }
+            if(desc.type == "print_profiles"   && !desc.brand)        desc.brand        = "generic";
+            if(desc.manufacturer == "*") delete desc.manufacturer;
+            if(desc.brand == "*")        delete desc.brand;
+            // Make URL absolute
+            if(desc.url) {
+                desc.url = new URL(desc.url, baseUrl).toString();
+            }
+            return desc;
+        }
+
+        const profiles = [];
+        let okay = true;
+        for(const url of ProfileLibrary.urlList) {
+            const baseUrl = new URL(url, document.location);
+            try {
+                console.log("Loading profile list from", baseUrl.toString());
+                const data = await fetchText(url);
+                const conf = toml.parse(data);
+                for(const [sectionName, section] of Object.entries(conf)) {
+                    // Pull out any default constraints from the section
+                    const defaults = {};
+                    for(const s of ProfileLibrary.constraints) {
+                        if(section.hasOwnProperty(s)) {
+                            defaults[s] = section[s];
+                            delete section[s];
+                        }
+                    }
+                    // Process remaining entries
+                    for (const [key, value] of Object.entries(section)) {
+                        profiles.push(makeProfileDescriptor(sectionName, key, value, baseUrl, defaults));
+                    }
+                }
+            } catch(e) {
+                console.warn("Unable to load profiles from", url)
+                console.error(e)
+                okay = false;
+            }
+        }
+        if(!okay) alert("Unable to load from one or more profile URLs.\nTo correct this problem, adjust \"Advanced Features -> Data Sources\"");
+
+        ProfileLibrary.profiles = profiles;
+        return profiles;
+    }
+
+    static getDescriptor(type, id) {
+        for(const profile of ProfileLibrary.profiles) {
+            if(profile.type === type && profile.id === id) {
+                return profile;
+            }
+        }
+    }
+}
+
 class ProfileManager {
     // Clears out any configuration information in the ProfileManager object.
     static _loadDefaults() {
@@ -49,22 +176,14 @@ class ProfileManager {
             }
         }
 
-        // Merge data from the config with data that may already exist in the ProfileManager object
-        function mergeSection(section) {
-            const src = config[section];
-            if(!src) return;
-            const dst = ProfileManager.profile[section] || {};
-            ProfileManager.profile[section] = Object.assign(dst, src);
-        }
-        mergeSection("metadata");
-        mergeSection("usb");
-        mergeSection("wireless");
-        mergeSection("scripts");
-
         // Apply the slicer settings
         if(config.settings) {
             slicer.setMultiple(config.settings);
+            delete config.settings;
         }
+
+        // Merge data from the config with data that may already exist in the ProfileManager object
+        mergeProperties(ProfileManager.profile, config);
     }
 
     // Writes out the current profile as a TOML formatted string
@@ -98,7 +217,6 @@ class ProfileManager {
         } catch (e) {
             alert("Unable to load profile from last session");
             console.error(e);
-            console.log(stored_config);
             return false;
         }
         return true;
@@ -110,86 +228,27 @@ class ProfileManager {
     }
 
     /**
-     * Returns a list of URLs to fetch profiles from. By default,
-     * only the default profiles, but if "profile_urls"
-     * exists in the local storage, add those as well.
-     */
-    static getProfileUrls() {
-        const defaultProfileList = [
-            "config/syndaver/profile_list.toml",
-            "config/profiles/profile_list.toml"
-        ].join('\n');
-
-        let profileList = localStorage.getItem("profile_urls");
-        if(profileList) {
-            profileList = profileList.trim();
-        } else {
-            profileList = defaultProfileList;
-            localStorage.setItem("profile_urls", defaultProfileList);
-        }
-        return profileList.split(/\s+/);
-    }
-
-    static addProfileUrl(url) {
-        let oldList = localStorage.getItem("profile_urls") || "";
-        url = url.toString();
-        if(oldList.indexOf(url) === -1) {
-            oldList += "\n" + url;
-            localStorage.setItem("profile_urls", oldList.trim());
-        }
-    }
-
-    static getURLs() {
-        return localStorage.getItem("profile_urls") || "";
-    }
-
-    static setURLs(list) {
-        localStorage.setItem("profile_urls", list);
-    }
-
-    // Populate the pull down menus in the UI with a list of available profiles
-    static async populateProfileMenus(printer_menu, material_menu) {
-        function addMenuEntries(baseUrl, config, type, menu) {
-            if(config.hasOwnProperty(type)) {
-                for (const [key, value] of Object.entries(config[type])) {
-                    let profile_url = new URL(type + "/" + key + ".toml", baseUrl);
-                    menu.option(value, {value: profile_url});
-                }
-            }
-        }
-
-        let okay = true
-        for(const url of ProfileManager.getProfileUrls()) {
-            const baseUrl = new URL(url, document.location)
-            try {
-                console.log("Loading profile list from", baseUrl.toString())
-                const data = await fetchText(url);
-                const config = toml.parse(data);
-                addMenuEntries(baseUrl, config, "machine_profiles", printer_menu);
-                addMenuEntries(baseUrl, config, "print_profiles",   material_menu);
-            } catch(e) {
-                console.warn("Unable to load profiles from", url)
-                okay = false
-            }
-        }
-        if(!okay) alert("Unable to load from one or more profile URLs.\nTo correct this problem, adjust \"Advanced Features -> Data Sources\"");
-    }
-
-    /**
      * Loads a specific print profile. These profiles are stored as TOML files.
      */
-    static async loadPresets(type, url) {
+    static async loadPresets(type, value) {
+        const desc = ProfileLibrary.getDescriptor(type, value);
+        if(!desc) return;
+        const url = desc.url;
+        if(!url) return;
         const data = await fetchText(url);
-        console.log("Loaded", type, "profile from", url);
+        console.log("Loaded", type, " from", url);
         ProfileManager._loadProfileStr(data, url);
     }
 
     // Apply a selection from the menu
-    static async applyPresets(printer, material) {
+    static async applyPresets(presets) {
         slicer.loadDefaults();
         ProfileManager._loadDefaults();
-        await ProfileManager.loadPresets("machine", printer);
-        await ProfileManager.loadPresets("print", material);
+        await ProfileManager.loadPresets("machine_profiles",  presets.machine);
+        await ProfileManager.loadPresets("machine_upgrades",  presets.upgrade);
+        await ProfileManager.loadPresets("machine_toolheads", presets.toolhead);
+        await ProfileManager.loadPresets("print_quality",     presets.quality);
+        await ProfileManager.loadPresets("print_profiles",    presets.material);
     }
 
     static importConfiguration(data, initial) {
@@ -204,3 +263,8 @@ class ProfileManager {
 }
 
 ProfileManager.profile = {};
+ProfileLibrary.defaultProfileLists = [
+    "config/syndaver/profile_list.toml",
+    "config/profiles/profile_list.toml"
+];
+ProfileLibrary.constraints = ["manufacturer","machine","upgrade","toolhead","brand","quality"];

@@ -182,13 +182,13 @@ class SettingsUI {
     choice(description, attr) {
         const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
-        const el = SettingsUI.addTag(container, "select", SettingsUI._copyAttr({}, attr, ["id", "multiple"]));
+        const el = SettingsUI.addTag(container, "select", SettingsUI._copyAttr({}, attr, ["id", "multiple","onchange"]));
         if(attr && attr.id) {
             this.getters[attr.id] = function() {return document.getElementById(attr.id).value;}
         }
         return {
             option: function(text, op_attr) {
-                SettingsUI.addTag(el, "option", {innerHTML: text, value: op_attr.value});
+                SettingsUI.addTag(el, "option", SettingsUI._copyAttr({innerHTML: text}, op_attr, ["value", "style"]));
                 return this;
             },
             element: el
