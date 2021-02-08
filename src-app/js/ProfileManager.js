@@ -102,34 +102,42 @@ class ProfileLibrary {
         }
 
         const profiles = [];
-        let okay = true;
+        let fetchError = false;
         for(const url of ProfileLibrary.urlList) {
             const baseUrl = new URL(url, document.location);
+            let data, conf;
             try {
                 console.log("Loading profile list from", baseUrl.toString());
-                const data = await fetchText(url);
-                const conf = toml.parse(data);
-                for(const [sectionName, section] of Object.entries(conf)) {
-                    // Pull out any default constraints from the section
-                    const defaults = {};
-                    for(const s of ProfileLibrary.constraints) {
-                        if(section.hasOwnProperty(s)) {
-                            defaults[s] = section[s];
-                            delete section[s];
-                        }
-                    }
-                    // Process remaining entries
-                    for (const [key, value] of Object.entries(section)) {
-                        profiles.push(makeProfileDescriptor(sectionName, key, value, baseUrl, defaults));
-                    }
-                }
+                data = await fetchText(url);
             } catch(e) {
                 console.warn("Unable to load profiles from", url)
                 console.error(e)
-                okay = false;
+                fetchError = true;
+                continue;
+            }
+            try {
+                conf = toml.parse(data);
+            } catch(e) {
+                alert(e.toString() + "\n\nFile: " + url + "\nLine: " + e.line + "\nColumn: " + e.column);
+                console.log(e);
+                continue;
+            }
+            for(const [sectionName, section] of Object.entries(conf)) {
+                // Pull out any default constraints from the section
+                const defaults = {};
+                for(const s of ProfileLibrary.constraints) {
+                    if(section.hasOwnProperty(s)) {
+                        defaults[s] = section[s];
+                        delete section[s];
+                    }
+                }
+                // Process remaining entries
+                for (const [key, value] of Object.entries(section)) {
+                    profiles.push(makeProfileDescriptor(sectionName, key, value, baseUrl, defaults));
+                }
             }
         }
-        if(!okay) alert("Unable to load from one or more profile URLs.\nTo correct this problem, adjust \"Advanced Features -> Data Sources\"");
+        if(fetchError) alert("Unable to load from one or more profile URLs.\nTo correct this problem, adjust \"Advanced Features -> Data Sources\"");
 
         ProfileLibrary.profiles = profiles;
         return profiles;
@@ -157,7 +165,15 @@ class ProfileManager {
     // Parses a TOML string and loads the profile. Slicer settings are sent to the slicer,
     // while other settings are stored in the ProfileManager object.
     static _loadProfileStr(str, baseUrl) {
-        const config = toml.parse(str);
+        let config;
+        try {
+            config = toml.parse(str);
+        } catch (e) {
+            const file = baseUrl ? baseUrl.split("/").pop() : "Saved Profile";
+            alert(e.toString() + "\n\nFile: " + baseUrl.split("/").pop() + "\nLine: " + e.line + "\nColumn: " + e.column);
+            console.log(e);
+            return;
+        }
 
         // Convert any URLs into absolute paths relative to the profile
         function makeAbsolute(path) {
