@@ -35,8 +35,8 @@ print_quality          | Quality:        | quality      | A list of finish quali
 material_brands        | Material Brand: | brand        | A list of material brands or vendors
 print_profiles&dagger; | Material:       |    -         | A list of print profiles (i.e. materials)
 
-&dagger; Symple Slicer calls "Material" profiles "print_profiles" because in practice,
-an good profile is dependent on particulars of the material, toolhead and printer.
+_&dagger; Symple Slicer calls "Material" profiles "print_profiles" because in practice,
+a good profile is dependent on particulars of the material, toolhead and printer._
 
 A profile list can contain as many or as few of these sections as necessary. If a
 section appears in any of the profile lists, a corresponding drop down menu will appear
