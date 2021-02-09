@@ -70,3 +70,35 @@ function redirectToDesktopDownload() {
         window.location.href = url;
     }
 }
+
+function showUserGuide() {
+    let win = window.open('guide/symple_slicer_users_guide.md.txt', '', 'menubar=no');
+    if(isDesktop) {
+        // When running as a desktop app there is no service worker
+        // to wikify the contents, so we need to do it ourselves.
+        win.addEventListener('load', wikifyOnLoad, false);
+    }
+}
+
+// Allow Symple Slicer to receive messages via postMessage
+function onMessage(e) {
+    switch(e.data.cmd) {
+        case "clear":
+            stage.removeAll();
+            break;
+        case "place":
+            if(e.data.files) {
+                SettingsPanel.loadFiles(e.data.files);
+            }
+            if(e.data.urls) {
+                SettingsPanel.fetchFiles(e.data.urls);
+            }
+            break;
+    }
+}
+
+// The electron app calls this when the user selects Open... from the File menu
+
+function onFileOpen() {
+    document.getElementById('model_file').click();
+}

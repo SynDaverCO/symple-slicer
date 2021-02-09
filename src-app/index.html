@@ -384,19 +384,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 ProgressBar.progress(progress);
             }
 
-            function showUserGuide() {
-                let win = window.open('guide/symple_slicer_users_guide.md.txt', '', 'menubar=no');
-                if(isDesktop) {
-                    // When running as a desktop app there is no service worker
-                    // to wikify the contents, so we need to do it ourselves.
-                    win.addEventListener('load', wikifyOnLoad, false);
-                }
-            }
+            window.addEventListener('message', onMessage);
 
-            // Triggers for electron app
-
-            function selectModelFiles() {
-                document.getElementById('model_file').click();
+            if(query.url) {
+                SettingsPanel.loadFileFromUrls([decodeURIComponent(query.url)]);
             }
         </script>
     </body>

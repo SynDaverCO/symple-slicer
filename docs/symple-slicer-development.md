@@ -78,4 +78,29 @@ It is suggested to use [GitHub Pages] for hosting as it meets the first and seco
 If you wish to have a HTTP-only hosting, delete the "service-worker.js" file. This will allow Symple Slicer
 to operate as a static web page.
 
+Query String Parameters
+-----------------------
+
+When opening Symple Slicer, the following query string parameters may be provided:
+
+Parameter | Effect
+----------|----------------------------------
+url       | Load a model from URL&dagger;
+profiles  | Use profile list from URL&dagger;
+
+_&dagger; If resources are on a different domain than Symple Slicer, they must be on a CORS enabled server, such as [GitHub Pages]. URL paths must be escaped with `encodeURIComponent`._
+
+Message Interface
+-----------------
+
+An open Symple Slicer window will accept a limited number of messages issued via `postMessage`, they include:
+
+Action                     | Example
+---------------------------|----------------------------------------------------------------
+Place STL from URL&dagger; | `target.postMessage({cmd: 'place', urls: [url1, url2 ...]})`
+Place STL by File          | `target.postMessage({cmd: 'place', files: [file1, file2 ...]})`
+Clear Bed                  | `target.postMessage({cmd: 'clear')`
+
+_&dagger; If resources are on a different domain than Symple Slicer, they must be on a CORS enabled server, such as [GitHub Pages]._
+
 [GitHub Pages]: https://pages.github.com/

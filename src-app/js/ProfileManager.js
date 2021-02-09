@@ -56,6 +56,10 @@ class ProfileLibrary {
             urls = ProfileLibrary.defaultProfileLists.join('\n');
             localStorage.setItem("profile_urls", urls);
         }
+        if(query.profiles) {
+            // Allow the profiles to be overriden from the query string.
+            urls = query.profiles;
+        }
         return urls.trim().split(/\s+/);
     }
 

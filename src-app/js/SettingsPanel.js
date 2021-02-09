@@ -53,6 +53,12 @@ class SettingsPanel {
         // Set up the global drag and drop handler
         window.addEventListener("dragover", SettingsPanel.onDragOver, false);
         window.addEventListener("drop",     SettingsPanel.onWindowDrop);
+
+        // Process any load requests.
+        if(this.deferredFileLoad) {
+            this.onWindowDrop(this.deferredFileLoad);
+            settings.gotoPage("page_profiles");
+        }
     }
 
     // onchange handler for enforcing the min and max values.
@@ -71,6 +77,43 @@ class SettingsPanel {
     static onPageExit(page) {
         if(page == "page_print") {
             stage.hideToolpath();
+        }
+    }
+
+    static getFilenameFromUrl(url) {
+        const pathname = new URL(url, document.location).pathname;
+        const index = pathname.lastIndexOf('/');
+        return (-1 !== index) ? pathname.substring(index + 1) : pathname;
+    }
+
+    static async fetchFiles(urlList) {
+        const files = [];
+        for(const url of urlList) {
+            console.log(url);
+            const data = await fetch(url);
+            const blob = await data.blob();
+            const file = new File([blob], this.getFilenameFromUrl(url), {type: blob.type});
+            files.push(file);
+        }
+        this.loadFiles(files);
+    }
+
+    static loadFiles(files) {
+        // Create a synthetic onDrop event that will be dispatched
+        // once Symple Slicer is initialized.
+        const evt = {
+            stopPropagation: () => {},
+            preventDefault: () => {},
+            dataTransfer: {
+                files: files,
+                getData: () => null
+            }
+        };
+        if(settings) {
+            this.onWindowDrop(evt);
+            settings.gotoPage("page_profiles");
+        } else {
+            this.deferredFileLoad = evt;
         }
     }
 
@@ -208,7 +251,7 @@ class SelectProfilesPage {
         }
         window.onunload = ProfileManager.onUnloadHandler;
     }
-    
+
     // Populate the pull down menus in the UI with a list of available profiles
     static async populateProfileMenus(menus) {
         for(const profile of await ProfileLibrary.fetch()) {

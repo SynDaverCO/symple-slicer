@@ -72,7 +72,7 @@ function createMenu(win) {
                 {
                     label: 'Open file(s)\u2026',
                     accelerator: 'CommandOrControl+O',
-                    click: () => win.webContents.executeJavaScript('selectModelFiles()', true)
+                    click: () => win.webContents.executeJavaScript('onFileOpen()', true)
                 },
                 { type: 'separator' },
                 isMac ? { role: 'close' } : { role: 'quit' }
