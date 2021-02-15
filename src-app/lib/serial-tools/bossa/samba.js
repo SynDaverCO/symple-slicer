@@ -51,6 +51,7 @@ export class Samba {
         const cmd = "S" + Samba.hex8(addr) + "," + Samba.hex8(data.length) + "#";
         await this.serial.write(cmd);
         await this.serial.flush();
+        await this.serial.wait(0); // Without this I get a read timeout
         await this.serial.write(data);
         await this.serial.flush();
 
@@ -97,7 +98,7 @@ export class Samba {
         await this.serial.flush();
         while(true) {
             const data = await this.serial.read(1);
-            const s = data.toString();
+            const s = String.fromCharCode(data[0]);
             if (s == '\r') {
                 return version_string.trim();
             }
@@ -110,7 +111,7 @@ export class Samba {
         const vector = await this.readWord(0x0);
 
         if ((vector & 0xff000000) == 0xea000000) {
-            return await this.readWord(0xfffff240);
+            return this.readWord(0xfffff240);
         }
         // Else use the Atmel SAM3 or SAM4 or SAMD registers
 
@@ -120,7 +121,7 @@ export class Samba {
 
         // Check if it is Cortex M0+
         if (part_no == 0xC600) {
-            return await this.readWord(0x41002018) & 0xFFFF00FF;
+            return this.readWord(0x41002018) & 0xFFFF00FF;
         }
         // Else assume M3 or M4
         var cid = await this.readWord(0x400e0740);
@@ -159,6 +160,7 @@ export class Samba {
         const cmd = "w" + Samba.hex8(address) + ",4#";
         await this.serial.write(cmd);
         await this.serial.flush();
+        await this.serial.wait(0); // Without this under Web Serial, I get a FlashLockError
         const bytes = await this.serial.read(4);
         const value = Samba.littleEndian(bytes);
         // console.log("...Read from addr=" + hex(address) + "[" + hex(value)+ "]")

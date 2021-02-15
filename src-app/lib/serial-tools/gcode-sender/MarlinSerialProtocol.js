@@ -497,6 +497,8 @@ export class MarlinSerialProtocol {
         this.gotError              = false;
         this.marlinPendingCommands = 0;
         this.marlinAvailBuffer     = this.marlinBufSize;
+        await this.serial.write('\n');
+        await this.serial.flush();
         await this._flushReadBuffer();
         await this._resetMarlinLineCounter();
     }

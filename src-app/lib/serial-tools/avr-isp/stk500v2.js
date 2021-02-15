@@ -135,11 +135,7 @@ export class Stk500v2 extends IspBase {
             const preamble = [0x13, page_size >> 8, page_size & 0xFF, 0xc1, 0x0a, 0x40, 0x4c, 0x20, 0x00, 0x00];
             const payload  = flash_data.slice(i * page_size, i * page_size + page_size);
             await this.sendMessage(preamble.concat(payload));
-            if (this._has_checksum) {
-                this.onProgress((i + 1) / load_count)
-            } else {
-                this.onProgress((i + 1) / (load_count * 2))
-            }
+            this.onProgress((i + 1) / load_count)
         }
         console.log("...DONE");
     }
@@ -171,7 +167,7 @@ export class Stk500v2 extends IspBase {
             for (let i = 0; i < load_count; i++) {
                 const msg = await this.sendMessage([0x14, 0x01, 0x00, 0x20]);
                 const recv = msg.slice(2,0x102);
-                this.onProgress((load_count + i + 1)/(load_count * 2));
+                this.onProgress((i + 1)/load_count);
                 for (let j = 0; j < 0x100; j++) {
                     if (i * 0x100 + j < length && flash_data[i * 0x100 + j] != recv[j]) {
                         throw new IspError("Verify error at: " + i * 0x100 + j);
@@ -248,21 +244,4 @@ export class Stk500v2 extends IspBase {
             }
         }
     }
-
-    find_devices(filter) {
-        return SequentialSerial.matchPorts(filter);
-    }
-
-    reset_and_close() {
-        return this.close();
-    }
-
-    flash_firmware(data) {
-        return this.programChip(data);
-    }
-
-    // Event handlers which can be overriden by the caller
-
-    // Called with a progress value from 0 to 1
-    onProgress(progress) {}
 }

@@ -36,6 +36,8 @@ class SettingsPanel {
         ConfigWirelessPage.init(s);
         if(isDesktop) {
             MonitorWirelessPage.init(s);
+        }
+        if(hasSerial) {
             UpdateFirmwarePage.init(s);
         }
         AdvancedFeaturesPage.init(s);
@@ -851,7 +853,7 @@ class PrintAndPreviewPage {
         }
 
         const hasWireless = ConfigWirelessPage.savedProfileCount() > 0;
-        showOrHide("print-to-usb",  isDesktop);
+        showOrHide("print-to-usb",  hasSerial);
         showOrHide("print-to-wifi", hasWireless);
         showOrHide("save-to-wifi",  hasWireless);
 
@@ -951,15 +953,13 @@ class PrintAndPreviewPage {
 
     static async onPrintClicked() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
-        if(featureRequiresDesktopVersion("Printing via USB")) {
-            try {
-                await stream_gcode(await gcode_blob.text());
-            } catch(err) {
-                if(!(err instanceof PrintAborted)) {
-                    // Report all errors except for user initiated abort
-                    console.error(err);
-                    alert(err);
-                }
+        try {
+            await stream_gcode(await gcode_blob.text());
+        } catch(err) {
+            if(!(err instanceof PrintAborted)) {
+                // Report all errors except for user initiated abort
+                console.error(err);
+                alert(err);
             }
         }
     }
@@ -1550,13 +1550,11 @@ class UpdateFirmwarePage {
     }
 
     static async onFlashPrinterClicked() {
-        if(featureRequiresDesktopVersion("Updating firmware")) {
-            try {
-                await flashFirmware();
-            } catch(err) {
-                console.error(err);
-                alert(err);
-            }
+        try {
+            await flashFirmware();
+        } catch(err) {
+            console.error(err);
+            alert(err);
         }
     }
 

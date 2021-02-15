@@ -17,10 +17,14 @@ To run the online version of Symple Slicer, use the following links:
 | Stable      | https://syndaverco.github.io/slicer      |
 | Development | https://syndaverco.github.io/slicer-beta |
 
-An off-line desktop version of Symple Slicer which can print to USB
-attached printers and flash printer firmware is under development. For
-developers familiar with [Electron], there are build instructions in
-the 'docs' directory.
+The current web version has experimental support for [Web Serial API]
+when "Experimental Web Platform features" is enabled in Chrome and
+"?enableSerial=1" is appended to the URL.
+
+An Electron based desktop version of Symple Slicer which can print
+to USB attached printers and flash printer firmware is also available.
+For developers familiar with [Electron], there are build instructions
+in the 'docs' directory.
 
 Issues and Feature Requests
 ---------------------------
@@ -113,6 +117,7 @@ configuration files.
 [TOML]: https://en.wikipedia.org/wiki/TOML
 [Electron]: https://www.electronjs.org/
 [GitHub Pages]: https://pages.github.com/
+[Web Serial API]: https://www.chromestatus.com/feature/6577673212002304
 [src-app/config/profiles]: https://github.com/SynDaverCO/symple-slicer/tree/master/src-app/config/profiles
 
 [logo]: https://github.com/SynDaverCO/symple-slicer/raw/master/src-app/images/screenshot.png "SynDaver Symple Slicer"

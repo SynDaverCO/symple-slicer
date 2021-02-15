@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <title>SynDaver Symple Slicer</title>
         <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
         <link rel="manifest" href="manifest.webmanifest">
-        <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src blob: file: https://syndaverco.github.io http://localhost:8000;" />
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob: file: ;" />
         <meta property="og:url"                    content="https://SynDaverCO.github.io/slicer/" />
         <meta property="og:type"                   content="article" />
         <meta property="og:title"                  content="SynDaver Symple Slicer" />
@@ -35,6 +35,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <meta property="og:image:height"           content="630" />
     </head>
     <body>
+        <script src="lib/util/misc/ParseQuery.js"></script>
+        <script>
+            var query        = parseQuery();
+        </script>
         <script src="lib/jquery/jquery-3.5.0.min.js"></script>
         <script src="lib/util/misc/Wikify.js"></script>
         <script src="lib/util/ui/updater/updater.js"></script>
@@ -60,7 +64,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/util/io/GeometryLoader.js"></script>
         <script src="lib/util/io/TOMLWriter.js"></script>
         <script src="lib/util/misc/ResettableTimer.js"></script>
-        <script src="lib/util/misc/ParseQuery.js"></script>
         <script src="lib/util/ui/settings/editable-select.js"></script>
         <script src="lib/util/ui/settings/settings.js"></script>
         <script src="lib/util/ui/toolbar/toolbar.js"></script>
@@ -101,10 +104,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="lib/three/OutlinePass.js"></script>
         <!-- ***************** Prequisites for OutlinePass.js ***************** -->
 
-        <!-- ****************** Prequisites for Electron app ****************** -->
-        <script src="js/ElectronSerial.js"></script>
-        <!-- ****************** Prequisites for Electron app ****************** -->
-
         <link rel="stylesheet" type="text/css" href="css/layout.css">
         <link rel="stylesheet" type="text/css" href="css/theme.css">
 
@@ -116,6 +115,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="js/SettingsPanel.js"></script>
         <script src="js/ProfileManager.js"></script>
         <script src="js/OtherUI.js"></script>
+        <script src="js/WebSerialAdapter.js"></script>
+        <script src="js/SerialPort.js"></script>
 
         <!-- Trick for colorizing images: https://css-tricks.com/color-filters-can-turn-your-gray-skies-blue/
              The target color is rgb(0.00 0.18 0.38) but for some reason we need to use (0.00, 0.03, 0.12) in
@@ -317,8 +318,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             splashScreen();
 
             // Selector based on whether we are running as a desktop app or webapp-only
-
-            const isDesktop = typeof SequentialSerial !== 'undefined';
+            // This will be set to true in ElectronPreload if running as an Electron app.
+            if(typeof isDesktop === 'undefined') {
+                isDesktop = false;
+            }
             $("BODY").attr('data-platform', isDesktop ? 'desktop' : 'webapp');
 
             var canvas       = document.getElementById("webgl");
@@ -326,7 +329,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var renderLoop   = new RenderLoop(canvas, stage);
             var toolbar      = new ToolbarUI("toolbar");
             var navCube      = new NavCube("#navCube");
-            var query        = parseQuery();
 
             renderLoop.setView("front");
 

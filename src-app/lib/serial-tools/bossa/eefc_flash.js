@@ -232,11 +232,7 @@ export class EEFC_Flash {
             throw Error("FlashPageError");
         }
         await this.wordCopy.setDstAddr(this.chip.addr + page * this.chip.size);
-        if (this.onBufferA) {
-            await this.wordCopy.setSrcAddr(this.pageBufferA);
-        } else {
-            await this.wordCopy.setSrcAddr(this.pageBufferB);
-        }
+        await this.wordCopy.setSrcAddr(this.activePageBuffer);
         this.onBufferA = !this.onBufferA;
         await this.waitFSR();
         await this.wordCopy.runv();
@@ -263,18 +259,13 @@ export class EEFC_Flash {
          * directly from the flash so instead, we copy the flash page to
          * SRAM and read it from there.
          */
-        if (this.onBufferA) {
-            await this.wordCopy.setDstAddr(this.pageBufferA);
-        } else {
-            await this.wordCopy.setDstAddr(this.pageBufferB);
-        }
+        await this.wordCopy.setDstAddr(this.activePageBuffer);
         await this.wordCopy.setSrcAddr(this.chip.addr + page * this.chip.size);
         await this.waitFSR();
         await this.wordCopy.runv();
 
-        return await this.samba.read(this.onBufferA ? this.pageBufferA : this.pageBufferB, this.chip.size);
+        return this.samba.read(this.onBufferA ? this.pageBufferA : this.pageBufferB, this.chip.size);
     }
-
 
     async waitFSR() {
         var tries = 0;
@@ -311,11 +302,11 @@ export class EEFC_Flash {
     }
 
     async readFRR0() {
-        return await this.samba.readWord(this.chip.regs + 0x00C);
+        return this.samba.readWord(this.chip.regs + 0x00C);
     }
 
     async readFRR1() {
-        return await this.samba.readWord(this.chip.regs + 0x20C);
+        return this.samba.readWord(this.chip.regs + 0x20C);
     }
 
     // ------------ Adding Functions common to Flash console.log here for now -------------
@@ -332,19 +323,19 @@ export class EEFC_Flash {
     }
 
     async loadBuffer(data) {
-        if (this.onBufferA) {
-            await this.samba.write(this.pageBufferA, data);
-        } else {
-            await this.samba.write(this.pageBufferB, data);
-        }
+        await this.samba.write(this.activePageBuffer, data);
+    }
+
+    async readBuffer() {
+        return this.samba.read(this.activePageBuffer, this.chip.size);
+    }
+
+    get activePageBuffer() {
+        return this.onBufferA ? this.pageBufferA : this.pageBufferB
     }
 
     async writeBuffer(dst_addr, size) {
-        if (this.onBufferA) {
-            await this.samba.writeBuffer(this.pageBufferA, dst_addr + this.chip.addr, size);
-        } else {
-            await this.samba.writeBuffer(this.pageBufferB, dst_addr + this.chip.addr, size);
-        }
+        await this.samba.writeBuffer(this.activePageBuffer, dst_addr + this.chip.addr, size);
     }
 
     async checksumBuffer(start_addr, size) {

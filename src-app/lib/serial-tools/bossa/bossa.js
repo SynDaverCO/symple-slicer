@@ -47,6 +47,16 @@ export class BOSSA {
         this.flash = null;
     }
 
+    static compareArray(a,b,len) {
+        if(a.length < len || b.length < len) return false;
+        for(let i = 0; i < len; i++) {
+            if(a[i] != b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     async reset_to_bootloader(port) {
         console.log("...Initializing serial with ", port);
         this.serial = new SequentialSerial();
@@ -56,15 +66,14 @@ export class BOSSA {
         await this.serial.setDTR(false);
         await this.serial.close();
 
-        // After this new serial device should appear within max 2 seconds..
-        await this.serial.wait(2000);
+        // After this new serial device should appear within max 5 seconds..
+        await this.serial.wait(5000);
         this.serial = null;
     }
 
     async connect(port) {
         console.log("...Trying to connect with bootloader on", port );
 
-        //this.serial = new SerialPort(port, {baudRate: 921600});
         this.serial = new SequentialSerial();
         await this.serial.open(port, 921600);
 
@@ -93,13 +102,14 @@ export class BOSSA {
             this.flash = null;
             throw new Error("Unsupported flash type");
         }
+
+        await this.flash.start();
     }
 
-    async flash_firmware(arrayBuffer) {
+    async flash_firmware(arrayBuffer, maxRetries = 3) {
         const data = new Uint8Array(arrayBuffer);
         console.log("...Flashing firmware");
 
-        await this.flash.start();
         console.log("...Unlock all regions");
         await this.flash.unlockAll();
 
@@ -118,43 +128,68 @@ export class BOSSA {
 
         // Using Legacy write
         for (let page = 0; page < num_pages; page++) {
-            this.onProgress(0.5 * page / num_pages);
+            this.onProgress(page / num_pages);
             const offset = page * page_size;
             const pageData = data.slice(offset, offset + page_size);
             await this.flash.loadBuffer(pageData);
+            // The original bossa implementation does not read back the buffer
+            // before writing it to flash, but doing so catches serial errors.
+            for(let retries = 0; retries < maxRetries; retries++) {
+                const readBack = await this.flash.readBuffer();
+                if(BOSSA.compareArray(pageData, readBack, pageData.length)) break;
+                console.log("...Upload corruption detected. Resending page", page);
+                await this.flash.loadBuffer(pageData);
+            }
             await this.flash.writePage(page);
+        }
+        this.onProgress(1);
+    }
+
+    async verify_firmware(arrayBuffer) {
+        const data = new Uint8Array(arrayBuffer);
+
+        const file_size = data.length;
+        const page_size = this.flash.pageSize();
+
+        const num_pages = Math.floor( (file_size + page_size - 1) / page_size);
+        if (num_pages > this.flash.numPages()) {
+            throw new Error("FileSizeError")
         }
 
         // Verify firmware write
         console.log("...Verifying", file_size, "bytes from flash (", num_pages, "pages)");
-        for (var page = 0; page < num_pages; page++) {
-            this.onProgress(0.5 + 0.5 * page / num_pages);
+        for (let page = 0; page < num_pages; page++) {
+            this.onProgress(page / num_pages);
             const offset = page * page_size;
             const pageData = data.slice(offset, offset + page_size);
-            const verifyData = await this.flash.readPage(page);
-            for(let i = 0; i < pageData.length; i++) {
-                if(verifyData[i] != pageData[i]) {
-                    console.log("Verify fail at byte", i, "Got:", verifyData[i], "expected:", pageData[i]);
-                    throw new Error("Write verification failed");
-                }
+            const readBack = await this.flash.readPage(page);
+            if(!BOSSA.compareArray(pageData, readBack, pageData.length)) {
+                throw new Error("Write verification failed on page " + page);
             }
         }
         this.onProgress(1);
+    }
 
+    async enable_boot_flag() {
         console.log("...Set boot flash true");
         await this.flash.setBootFlash(true);
     }
 
     async reset_and_close() {
-        console.log("...CPU reset");
-        await this.samba.reset();
+        if(this.samba) {
+            console.log("...CPU reset");
+            await this.samba.reset();
+            this.samba = null;
+        }
 
-        console.log("...Closing Serial");
-        await this.serial.close();
+        if(this.serial) {
+            console.log("...Closing Serial");
+            await this.serial.close();
 
-        // Wait for 5secs for port to re-appear
-        await this.serial.wait(5000);
-        this.serial = null;
+            // Wait for 5 secs for port to re-appear
+            await this.serial.wait(5000);
+            this.serial = null;
+        }
     }
 
     find_devices(filter) {

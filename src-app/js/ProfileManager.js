@@ -210,7 +210,7 @@ class ProfileManager {
     static _saveProfileStr(options) {
         const toml = new TOMLWriter();
         if(ProfileManager.profile) {
-            toml.writeProperties(ProfileManager.profile, ["metadata", "usb", "wireless","scripts"]);
+            toml.writeProperties(ProfileManager.profile, ["metadata", "usb", "wireless", "scripts"]);
         }
         toml.writeCategory("settings");
         slicer.dumpSettings(toml, options);

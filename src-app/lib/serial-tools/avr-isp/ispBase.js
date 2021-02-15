@@ -38,7 +38,7 @@ export class IspError extends Error {};
 export class IspBase {
     // Base class for ISP based AVR programmers.
     // Functions in this class throw an IspError when something goes wrong.
-    async programChip(flash_data) {
+    async programChip(flash_data, flash = true, verify = true) {
         const signature = await this.getSignature();
         // Program a chip with the given flash data.
         this.cur_ext_addr = -1;
@@ -46,12 +46,16 @@ export class IspBase {
         if (!this.chip) {
             throw new IspError("Chip with signature: " + JSON.stringify(signature) + "not found");
         }
-        await this.chipErase();
-        
-        console.log("Flashing", flash_data.length, "bytes");
-        await this.writeFlash(flash_data);
-        console.log("Verifying", flash_data.length, "bytes");
-        await this.verifyFlash(flash_data);
+
+        if(flash) {
+            await this.chipErase();
+            console.log("Flashing", flash_data.length, "bytes");
+            await this.writeFlash(flash_data);
+        }
+        if(verify) {
+            console.log("Verifying", flash_data.length, "bytes");
+            await this.verifyFlash(flash_data);
+        }
         console.log("Completed");
     }
 
@@ -78,4 +82,30 @@ export class IspBase {
         // Verify the flash data, needs to be implemented in a subclass.
         throw new IspError("Called undefined verifyFlash");
     }
+
+    // Additional methods for Symple Slicer
+
+    find_devices(filter) {
+        return SequentialSerial.matchPorts(filter);
+    }
+
+    reset_and_close() {
+        return this.close();
+    }
+
+    flash_firmware(data) {
+        return this.programChip(data,true,false);
+    }
+
+    verify_firmware(data) {
+        return this.programChip(data,false,true);
+    }
+
+    enable_boot_flag() {
+    }
+
+    // Event handlers which can be overriden by the caller
+
+    // Called with a progress value from 0 to 1
+    onProgress(progress) {}
 }
