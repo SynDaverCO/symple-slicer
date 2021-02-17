@@ -37,10 +37,13 @@
 }
 
 .float-center {
+    box-sizing:         border-box;
     position:           absolute;
     top:                50%;
     left:               50%;
     transform:          translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px));
+    max-width:          calc(100% - 1em);
+    max-height:         calc(100% - 1em);
 }
 
 .defs-only {

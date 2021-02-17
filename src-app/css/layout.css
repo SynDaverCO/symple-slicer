@@ -92,7 +92,16 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     padding-top:        0;
     padding-left:       14em;
     overflow:           auto;
+    display:            flex;
+    flex-direction:     column;
+}
+
+#about.hidden {
     display:            none;
+}
+
+#about p {
+    margin:             0.5em 0;
 }
 
 #about img {
@@ -104,14 +113,14 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
 
 #about table {
     display:            table;
-    margin-right:       auto;
-    margin-left:        auto;
-    width:              80%;
+    margin-top:         0.5em;
+    margin-bottom:      0.5em;
+    margin-left:        1em;
     border-spacing:     1em 2px;
 }
 
 #openSource {
-    height:             35vh;
+    min-height:         3em;
     overflow:           hidden auto;
 }
 

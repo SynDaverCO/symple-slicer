@@ -24,7 +24,7 @@ function splashScreen() {
 }
 
 function showAbout() {
-    document.getElementById("about").style.display = "block";
+    document.getElementById("about").classList.remove("hidden");
     document.getElementById("no-splash").checked = localStorage.getItem('no-splash') == "true";
 }
 
@@ -32,7 +32,7 @@ function hideAbout() {
     if(event.target.tagName == "A" || event.target.tagName == "INPUT") {
         return;
     }
-    document.getElementById("about").style.display = "none";
+    document.getElementById("about").classList.add("hidden");
     localStorage.setItem('no-splash', document.getElementById("no-splash").checked);
 }
 
