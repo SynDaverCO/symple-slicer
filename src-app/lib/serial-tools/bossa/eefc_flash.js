@@ -319,6 +319,12 @@ export class EEFC_Flash {
     async unlockAll() {
         for (var region = 0; region < this.chip.lockRegions; region++) {
             await this.setLockRegion(region, false);
+            // This is not part of the original bossa implementation.
+            // Added for more robustness to serial errors.
+            if(await this.getLockRegion(region)) {
+                console.log("Retrying flash lock on", region);
+                await this.setLockRegion(region, false);
+            }
         }
     }
 

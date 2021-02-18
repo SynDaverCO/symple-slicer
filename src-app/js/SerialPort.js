@@ -77,6 +77,7 @@ async function flashFirmwareWithStk(usb) {
         ProgressBar.message("Writing firmware");
         await programmer.flash_firmware(firmware);
         ProgressBar.message("Verifying firmware");
+        await programmer.verify_firmware(firmware);
         await programmer.reset_and_close();
     } finally {
         ProgressBar.hide();
@@ -91,6 +92,7 @@ async function flashFirmware() {
     switch(usb.flasher) {
         case "bossa":    await flashFirmwareWithBossa(usb); break;
         case "stk500v2": await flashFirmwareWithStk(usb); break;
+        default: throw Error("Unknown flashing tool type: " + usb.flasher);
     }
 }
 
