@@ -41,12 +41,12 @@ export class Stk500v2 extends IspBase {
         this.last_addr = -1;
     }
 
-    async connect(port = "COM22", speed = 115200) {
+    async connect(port) {
         if (this.serial) {
             this.close();
         }
-        this.serial = new SequentialSerial();
-        await this.serial.open(port, speed, 1, 10000);
+        this.serial = port;
+        await this.serial.open(115200, 1, 10000);
         this.seq = 1;
 
         // Reset the controller

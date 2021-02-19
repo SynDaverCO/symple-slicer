@@ -17,40 +17,46 @@
  */
 
 async function flashFirmwareWithBossa(usb) {
-    ProgressBar.message("Loading firmware", usb.firmware);
+    ProgressBar.message("Downloading firmware");
     const data         = await fetchFile(usb.firmware);
     const bossa        = await import('../lib/serial-tools/bossa/bossa.js');
     const programmer   = new bossa.BOSSA();
-    const usb_marlin   = {vendorId: usb.marlin_vendor_id, productId: usb.marlin_product_id};
-    const usb_samba    = {vendorId: usb.samba_vendor_id,  productId: usb.samba_product_id};
+    const usb_marlin   = {usbVendorId: parseInt(usb.marlin_vendor_id, 16), usbProductId: parseInt(usb.marlin_product_id, 16)};
+    const usb_samba    = {usbVendorId: parseInt(usb.samba_vendor_id,  16), usbProductId: parseInt(usb.samba_product_id,  16)};
     try {
         ProgressBar.message("Finding printers");
         programmer.onProgress = ProgressBar.progress;
 
-        // See if there are active printers
-        let matches = this.skipMarlinCheck ? [] : await programmer.find_devices(usb_marlin);
-        // If printer is found, enter bootloader
-        if(matches.length > 0) {
-            await programmer.reset_to_bootloader(matches[0]);
-            if(!isDesktop) {
+        let port = await SequentialSerial.requestPort([usb_marlin, usb_samba]);
+
+        // Check to see if we need to reset the printer to the bootloader
+        const usbInfo = port.getInfo();
+        console.log(usbInfo);
+        if(usbInfo.usbVendorId  == usb_marlin.usbVendorId &&
+           usbInfo.usbProductId == usb_marlin.usbProductId) {
+            await programmer.reset_to_bootloader(port);
+            if(isDesktop) {
+                port = await SequentialSerial.requestPort([usb_samba]);
+            } else {
+                // With the web version, the browser requires a new button click to allow us to open another device.
                 alert("The printer is now ready for upgrading.\nClick the \"Upgrade\" button once again to proceed.\n\nThe printer's display may fade out during this process (this is normal)");
-                this.skipMarlinCheck = true;
                 return;
             }
         }
-        // See if there are now devices in the Samba bootloader
-        matches = await programmer.find_devices(usb_samba);
-        if(matches.length == 0) {
-            throw Error("Unable to enter bootloader");
-        }
-        this.skipMarlinCheck = true;
-        await programmer.connect(matches[0]);
+        await programmer.connect(port);
         ProgressBar.message("Writing firmware");
         await programmer.flash_firmware(data);
         ProgressBar.message("Verifying firmware");
         await programmer.verify_firmware(data);
         await programmer.enable_boot_flag();
-        this.skipMarlinCheck = false;
+    } catch(e) {
+        if(e instanceof DOMException) {
+            if(isDesktop) {
+                throw Error("No printers found");
+            }
+        } else {
+            console.error(e);
+        }
     } finally {
         ProgressBar.hide();
         await programmer.reset_and_close();
@@ -58,27 +64,32 @@ async function flashFirmwareWithBossa(usb) {
 }
 
 async function flashFirmwareWithStk(usb) {
+    ProgressBar.message("Downloading firmware");
+    const data         = await fetchFile(usb.firmware);
+    const stk          = await import('../lib/serial-tools/avr-isp/stk500v2.js');
+    const hex          = await import('../lib/serial-tools/avr-isp/intelHex.js');
+    const programmer   = new stk.Stk500v2();
+    const usb_marlin   = {usbVendorId: parseInt(usb.marlin_vendor_id, 16), usbProductId: parseInt(usb.marlin_product_id, 16)};
+    const firmware     = hex.IntelHex.decode(data);
     try {
-        ProgressBar.message("Loading firmware", usb.firmware);
-        const data         = await fetchFile(usb.firmware);
-        const stk          = await import('../lib/serial-tools/avr-isp/stk500v2.js');
-        const hex          = await import('../lib/serial-tools/avr-isp/intelHex.js');
-        const programmer   = new stk.Stk500v2();
-        const usb_marlin   = {vendorId: usb.marlin_vendor_id, productId: usb.marlin_product_id};
-        const firmware     = hex.IntelHex.decode(data);
         ProgressBar.message("Finding printers");
         programmer.onProgress = ProgressBar.progress;
 
-        matches = await programmer.find_devices(usb_marlin);
-        if(matches.length == 0) {
-            throw Error("No printers found");
-        }
-        await programmer.connect(matches[0]);
+        let port = await SequentialSerial.requestPort([usb_marlin]);
+        await programmer.connect(port);
         ProgressBar.message("Writing firmware");
         await programmer.flash_firmware(firmware);
         ProgressBar.message("Verifying firmware");
         await programmer.verify_firmware(firmware);
         await programmer.reset_and_close();
+    } catch(e) {
+        if(e instanceof DOMException) {
+            if(isDesktop) {
+                throw Error("No printers found");
+            }
+        } else {
+            console.error(e);
+        }
     } finally {
         ProgressBar.hide();
     }

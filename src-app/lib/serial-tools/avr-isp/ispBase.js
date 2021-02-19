@@ -85,10 +85,6 @@ export class IspBase {
 
     // Additional methods for Symple Slicer
 
-    find_devices(filter) {
-        return SequentialSerial.matchPorts(filter);
-    }
-
     reset_and_close() {
         return this.close();
     }

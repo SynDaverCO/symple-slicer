@@ -22,9 +22,8 @@ if (!window.SequentialSerial && "serial" in navigator && query.enableSerial) {
 
     class SequentialSerial {
 
-        constructor() {
-            this.decoder = new TextDecoder();
-            this.encoder = new TextEncoder();
+        constructor(port) {
+            this.serial = port;
         }
 
         /**
@@ -33,12 +32,13 @@ if (!window.SequentialSerial && "serial" in navigator && query.enableSerial) {
          * for data before throwing an exception
          */
 
-        async open(port, baud, timeout = 5) {
-            this.serial = port;
+        async open(baud, timeout = 5) {
+            this.decoder = new TextDecoder();
+            this.encoder = new TextEncoder();
             this.timeout = timeout;
-            await port.open({ baudRate: baud, bufferSize: 65536});
-            this.writer = port.writable.getWriter();
-            this.reader = port.readable.getReader();
+            await this.serial.open({baudRate: baud, bufferSize: 65536});
+            this.writer = this.serial.writable.getWriter();
+            this.reader = this.serial.readable.getReader();
             this.readBytes = [];
             this.readIndex = 0;
         }
@@ -150,27 +150,21 @@ if (!window.SequentialSerial && "serial" in navigator && query.enableSerial) {
             return this.serial.setSignals({ dataTerminalReady: value });
         }
 
+        getInfo() {
+            return this.serial.getInfo();
+        }
+
         /**
          * Returns a promise that resolves to a list of available ports.
          */
-        static getPorts(filter) {
-            return navigator.serial.getPorts();
+        static async getPorts() {
+            const ports = await navigator.serial.getPorts();
+            return ports.map(p => new SequentialSerial(p));
         }
 
-        static async matchPorts(filter) {
-            const filters = [];
-            if(filter.hasOwnProperty("vendorId") && filter.hasOwnProperty("productId")) {
-                filters.push({
-                    usbVendorId:  parseInt(filter.vendorId,  16),
-                    usbProductId: parseInt(filter.productId, 16)
-                });
-            };
-            try {
-                return [await navigator.serial.requestPort({filters})];
-            } catch(e) {
-                console.error(e);
-                return [];
-            }
+        static async requestPort(filters) {
+            const port = await navigator.serial.requestPort({filters});
+            return new SequentialSerial(port);
         }
     }
 
@@ -200,9 +194,9 @@ if (!window.SequentialSerial && "serial" in navigator && query.enableSerial) {
         }
     });
 
-    window.SequentialSerial   = SequentialSerial;
-    window.SerialTimeout      = SerialTimeout;
-    window.SerialDisconnected = SerialDisconnected;
+    window.SequentialSerial    = SequentialSerial;
+    window.SerialTimeout       = SerialTimeout;
+    window.SerialDisconnected  = SerialDisconnected;
     window.setPowerSaveEnabled = setPowerSaveEnabled;
     window.setPrintInProgress  = enabled => {isPrinting = enabled};
 

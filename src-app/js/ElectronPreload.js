@@ -26,9 +26,10 @@ class SerialDisconnected extends Error {}
 
 class SequentialSerial {
 
-    constructor() {
-        this.decoder = new TextDecoder();
-        this.encoder = new TextEncoder();
+    constructor(path, vendorId, productId) {
+        this.path = path;
+        this.usbVendorId = parseInt(vendorId, 16);
+        this.usbProductId = parseInt(productId, 16);
     }
 
     /**
@@ -37,10 +38,12 @@ class SequentialSerial {
      * for data before throwing an exception
      */
 
-    open(port, baud, timeout = 1) {
+    open(baud, timeout = 1) {
+        this.decoder = new TextDecoder();
+        this.encoder = new TextEncoder();
         this.timeout = timeout;
         return new Promise((resolve, reject) => {
-            this.serial = new SerialPort(port, {baudRate: baud});
+            this.serial = new SerialPort(this.path, {baudRate: baud});
             this.serial.on('error', reject);
             this.serial.on('open', resolve);
         });
@@ -131,23 +134,37 @@ class SequentialSerial {
         return new Promise((resolve, reject) => this.serial.set({dtr: value}, err => {if(err) reject(err); else resolve();}));
     }
 
-    /**
-     * Returns a promise that resolves to a list of available ports.
-     */
-    static getPorts(filter) {
-        return SerialPort.list();
+    getInfo() {
+        return {usbVendorId: this.usbVendorId, usbProductId: this.usbProductId};
     }
 
-    static async matchPorts(filter) {
-        var matchingDevices = [];
-        const ports = await SequentialSerial.getPorts();
-        for(let i = 0; i < ports.length; i++) {
-            if(filter.hasOwnProperty("vendorId")  && ports[i].vendorId  != filter.vendorId)  continue;
-            if(filter.hasOwnProperty("productId") && ports[i].productId != filter.productId) continue;
-            if(filter.hasOwnProperty("path")      && ports[i].path      != filter.path)      continue;
-            matchingDevices.push(ports[i].path);
+    static async getPorts() {
+        const ports = await SerialPort.list();
+        return ports.map(port => new SequentialSerial(port.path, port.vendorId, port.productId));
+    }
+
+    static isMatch(port, filters) {
+        if(!filters || filters.length == 0) return true;
+        for(const filter of filters) {
+            if(filter.hasOwnProperty("usbProductId") && !filter.hasOwnProperty("usbVendorId")) {
+                throw new TypeError("Filter must have usbVendorId if usbProductId is present");
+            }
+            if(filter.hasOwnProperty("usbVendorId")  && parseInt(port.vendorId, 16)  != filter.usbVendorId)  continue;
+            if(filter.hasOwnProperty("usbProductId") && parseInt(port.productId, 16) != filter.usbProductId) continue;
+            if(filter.hasOwnProperty("path")         && port.path                    != filter.path) continue;
+            return true;
         }
-        return matchingDevices;
+        return false;
+    }
+
+    static async requestPort(filters) {
+        const ports = await SerialPort.list();
+        for(let port of ports) {
+            if(SequentialSerial.isMatch(port, filters)) {
+                return new SequentialSerial(port.path, port.vendorId, port.productId);
+            }
+        }
+        throw DOMException("No ports available");
     }
 }
 

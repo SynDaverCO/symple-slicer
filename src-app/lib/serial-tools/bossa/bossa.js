@@ -59,8 +59,8 @@ export class BOSSA {
 
     async reset_to_bootloader(port) {
         console.log("...Initializing serial with ", port);
-        this.serial = new SequentialSerial();
-        await this.serial.open(port, 1200);
+        this.serial = port;
+        await this.serial.open(1200);
         await this.serial.setDTR(true);
         await this.serial.wait(100);
         await this.serial.setDTR(false);
@@ -74,8 +74,8 @@ export class BOSSA {
     async connect(port) {
         console.log("...Trying to connect with bootloader on", port );
 
-        this.serial = new SequentialSerial();
-        await this.serial.open(port, 921600);
+        this.serial = port;
+        await this.serial.open(921600);
 
         this.samba = new Samba(this.serial);
 
@@ -190,10 +190,6 @@ export class BOSSA {
             await this.serial.wait(5000);
             this.serial = null;
         }
-    }
-
-    find_devices(filter) {
-        return SequentialSerial.matchPorts(filter);
     }
 
     // Event handlers which can be overriden by the caller

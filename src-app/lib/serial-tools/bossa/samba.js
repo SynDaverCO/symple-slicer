@@ -161,7 +161,7 @@ export class Samba {
         const cmd = "w" + Samba.hex8(address) + ",4#";
         await this.serial.write(cmd);
         await this.serial.flush();
-        await this.serial.wait(0); // Avoid FlashLockError w/ Web Serial 
+        await this.serial.wait(0); // Avoid FlashLockError w/ Web Serial
         const bytes = await this.serial.read(4);
         const value = Samba.littleEndian(bytes);
         // console.log("...Read from addr=" + hex(address) + "[" + hex(value)+ "]")
