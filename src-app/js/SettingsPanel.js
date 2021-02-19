@@ -968,7 +968,10 @@ class PrintAndPreviewPage {
         if(PrintAndPreviewPage.nothingToPrint()) return;
         const file = SynDaverWiFi.fileFromBlob("printjob.gco", gcode_blob);
         try {
-            await ConfigWirelessPage.uploadOrQueueFiles([file]);
+            await ConfigWirelessPage.queueFile(file);
+            if(isDesktop) {
+                settings.gotoPage("page_monitor_wifi");
+            }
         } catch (e) {
             console.error(e);
             alert(e);
@@ -980,7 +983,7 @@ class PrintAndPreviewPage {
         const name = settings.get("gcode_filename");
         const file = SynDaverWiFi.fileFromBlob(name, gcode_blob);
         try {
-            await ConfigWirelessPage.uploadOrQueueFiles([file]);
+            await ConfigWirelessPage.uploadFiles([file]);
             if(isDesktop && confirm("This print has been saved to your printer. You can start a print at any time through the web management interface.\n\nClick OK to visit the web management interface now.")) {
                 ConfigWirelessPage.onManageClicked();
             }
@@ -1310,32 +1313,34 @@ class ConfigWirelessPage {
 
     // Uploads files to the wireless module
     static async uploadFiles(files) {
-        ConfigWirelessPage.setHostnameAndPassword();
-        SynDaverWiFi.onProgress((bytes, totalBytes) => ProgressBar.progress(bytes/totalBytes));
-        ProgressBar.message("Sending to printer");
-        try {
-            await SynDaverWiFi.uploadFiles(files);
-        } finally {
-            ProgressBar.hide();
-        }
-    }
-
-    static async uploadOrQueueFiles(files) {
         if(isDesktop) {
-            if(await MonitorWirelessPage.isPrinterBusy()) {
-                if(confirm("The printer is busy. Click OK to queue the file for printing next.")) {
-                    const scripts = ProfileManager.getSection("scripts");
-                    files.unshift(SynDaverWiFi.fileFromStr("printjob.gco", scripts.next_print_gcode || ""));
-                } else {
-                    return;
-                }
+            ConfigWirelessPage.setHostnameAndPassword();
+            SynDaverWiFi.onProgress((bytes, totalBytes) => ProgressBar.progress(bytes/totalBytes));
+            ProgressBar.message("Sending to printer");
+            try {
+                await SynDaverWiFi.uploadFiles(files);
+            } finally {
+                ProgressBar.hide();
             }
-            await ConfigWirelessPage.uploadFiles(files);
-            settings.gotoPage("page_monitor_wifi");
         } else {
+            // When running on the web, it is necessary to post a message to
+            // the wifi module rather than sending files directly.
             const printer_pass = settings.get("printer_pass");
             ConfigWirelessPage.postMessageToWireless({password: printer_pass, files: files});
         }
+    }
+
+    // Queue a file for printing on the wireless module, send separator if printer is busy
+    static async queueFile(file) {
+        if(await MonitorWirelessPage.isPrinterBusy()) {
+            if(confirm("The printer is busy. Click OK to queue the file for printing next.")) {
+                const scripts = ProfileManager.getSection("scripts");
+                files.unshift(SynDaverWiFi.fileFromStr("printjob.gco", scripts.next_print_gcode || ""));
+            } else {
+                return;
+            }
+        }
+        await ConfigWirelessPage.uploadFiles([file]);
     }
 
     /* The current wireless print profile is always stored in the elements of this page. However, to allow
@@ -1475,13 +1480,18 @@ class MonitorWirelessPage {
         }
     }
 
+    // If desktop, checks whether the printer is busy.
+    // If web, always returns false.
     static async isPrinterBusy() {
+        if(!isDesktop) return false;
         const printer_addr = settings.get("printer_addr");
         if(printer_addr.length == 0) return false;
         const result = await fetchJSON('http://' + printer_addr + "/status");
         return result.state == "printing" ||  result.state == "paused";
     }
 
+    // If desktop, checks whether the printer is idle
+    // If web, always returns true.
     static async checkIfPrinterIdle() {
         if(!await MonitorWirelessPage.isPrinterBusy()) return true;
         if(confirm("The selected printer is busy. Click OK to monitor the print in progress.")) {
@@ -1586,7 +1596,9 @@ class UpdateFirmwarePage {
         try {
             if(!await MonitorWirelessPage.checkIfPrinterIdle()) return;
             await ConfigWirelessPage.uploadFiles(files);
-            alert("The wireless module has been upgraded.");
+            if(isDesktop) {
+                alert("The wireless module has been upgraded.");
+            }
         } catch (e) {
             console.error(e);
             alert(e);
