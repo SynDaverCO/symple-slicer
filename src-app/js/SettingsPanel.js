@@ -1559,39 +1559,37 @@ class UpdateFirmwarePage {
     }
 
     static async onFlashWirelessClicked() {
-        if(featureRequiresDesktopVersion("Updating firmware")) {
-            const wireless = ProfileManager.getSection("wireless");
-            if(!wireless) {
-                alert("The selected printer does not have wireless capabilities");
-                return;
+        const wireless = ProfileManager.getSection("wireless");
+        if(!wireless) {
+            alert("The selected printer does not have wireless capabilities");
+            return;
+        }
+        // An upgrade set includes the various print scripts as well as the firmware files.
+        let files = [];
+        const scripts = ProfileManager.getSection("scripts");
+        if(scripts) {
+            files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    scripts.pause_print_gcode  || ""));
+            files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   scripts.stop_print_gcode   || ""));
+            files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   scripts.resume_print_gcode || ""));
+            files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", scripts.probe_fail_gcode   || ""));
+        }
+        if(wireless.uploads) {
+            for(const pair of wireless.uploads) {
+                files.push(await SynDaverWiFi.fileFromUrl(pair[0], pair[1]));
             }
-            // An upgrade set includes the various print scripts as well as the firmware files.
-            let files = [];
-            const scripts = ProfileManager.getSection("scripts");
-            if(scripts) {
-                files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    scripts.pause_print_gcode  || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   scripts.stop_print_gcode   || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   scripts.resume_print_gcode || ""));
-                files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", scripts.probe_fail_gcode   || ""));
-            }
-            if(wireless.uploads) {
-                for(const pair of wireless.uploads) {
-                    files.push(await SynDaverWiFi.fileFromUrl(pair[0], pair[1]));
-                }
-            }
-            if(wireless.length == 0) {
-                alert("Nothing to upload. The wireless configuration in the profile may be incomplete.");
-                return;
-            }
-            // Upload everything.
-            try {
-                if(!await MonitorWirelessPage.checkIfPrinterIdle()) return;
-                await ConfigWirelessPage.uploadFiles(files);
-                alert("The wireless module has been upgraded.");
-            } catch (e) {
-                console.error(e);
-                alert(e);
-            }
+        }
+        if(wireless.length == 0) {
+            alert("Nothing to upload. The wireless configuration in the profile may be incomplete.");
+            return;
+        }
+        // Upload everything.
+        try {
+            if(!await MonitorWirelessPage.checkIfPrinterIdle()) return;
+            await ConfigWirelessPage.uploadFiles(files);
+            alert("The wireless module has been upgraded.");
+        } catch (e) {
+            console.error(e);
+            alert(e);
         }
     }
 }
