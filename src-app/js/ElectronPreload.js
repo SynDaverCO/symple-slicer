@@ -164,7 +164,7 @@ class SequentialSerial {
                 return new SequentialSerial(port.path, port.vendorId, port.productId);
             }
         }
-        throw DOMException("No ports available");
+        throw new DOMException("No ports available");
     }
 }
 
@@ -177,3 +177,5 @@ window.setPowerSaveEnabled = enabled => ipcRenderer.send('setPowerSaveEnabled', 
 window.setPrintInProgress = enabled => ipcRenderer.send('setPrintInProgress', enabled);
 window.electronAppDownloadAndInstall = () => ipcRenderer.send('electronAppDownloadAndInstall');
 window.isDesktop = true;
+
+SequentialSerial.isWebSerial = false;
