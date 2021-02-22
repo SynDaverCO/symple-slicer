@@ -44,12 +44,15 @@ if (!window.SequentialSerial && "serial" in navigator && (typeof query === 'unde
         }
 
         async close() {
-            await this.reader.cancel();
-            await this.writer.releaseLock();
-            await this.reader.releaseLock();
-            await this.serial.close();
-            this.reader = null;
-            this.serial = null;
+            if(this.serial) {
+                await this.reader.cancel();
+                await this.writer.releaseLock();
+                await this.reader.releaseLock();
+                await this.serial.close();
+                this.reader = null;
+                this.writer = null;
+                this.serial = null;
+            }
         }
 
         /**
