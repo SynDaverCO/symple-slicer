@@ -58,7 +58,8 @@ if (!window.SequentialSerial && "serial" in navigator && (typeof query === 'unde
          * Returns a promise that resolves once all output data has been written
          */
         flush() {
-            //return this.wait(0);
+            // Web Serial API doesn't have a flush, yet this delay seems to be necessary to avoid read timeouts.
+            return this.wait(0);
         }
 
         discardBuffers() {

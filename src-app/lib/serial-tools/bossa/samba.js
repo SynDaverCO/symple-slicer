@@ -51,10 +51,8 @@ export class Samba {
         const cmd = "S" + Samba.hex8(addr) + "," + Samba.hex8(data.length) + "#";
         await this.serial.write(cmd);
         await this.serial.flush();
-        await this.serial.wait(0); // Avoid read timeout w/ Web Serial
         await this.serial.write(data);
         await this.serial.flush();
-        await this.serial.wait(0); // Avoid read timeout w/ Web Serial
 
         // Logger.log("...Write to addr=" + hex(addr) + " of " + str(size) + " bytes")
     }
@@ -161,7 +159,6 @@ export class Samba {
         const cmd = "w" + Samba.hex8(address) + ",4#";
         await this.serial.write(cmd);
         await this.serial.flush();
-        await this.serial.wait(0); // Avoid FlashLockError w/ Web Serial
         const bytes = await this.serial.read(4);
         const value = Samba.littleEndian(bytes);
         // console.log("...Read from addr=" + hex(address) + "[" + hex(value)+ "]")
@@ -173,7 +170,6 @@ export class Samba {
         const cmd = "W" + Samba.hex8(address) + "," + Samba.hex8(value) + "#";
         await this.serial.write(cmd);
         await this.serial.flush();
-        //await this.serial.wait(0); // Causes a major slowdown w/ Web Serial, not necessary.
     }
 
     async sleepSeconds(s) {
