@@ -61,8 +61,8 @@ customSliceFilter() {
     for f in $FILES
     do
         echo Rewriting slice operator on $f
-        perl -i -00pe 's/{\s*...([a-zA-Z.]+)\,([^{}]*)}/Object.assign({\2},\1)/igs' $f
-        perl -i -00pe 's/{([^{}]*)\,\s*...([a-zA-Z.]+)\s*}/Object.assign({\1},\2)/igs' $f
+        perl -i -00pe 's/{\s*\.\.\.([a-zA-Z.]+)\,([^{}]*)}/Object.assign({\2},\1)/igs' $f
+        perl -i -00pe 's/{([^{}]*)\,\s*\.\.\.([a-zA-Z.]+)\s*}/Object.assign({\1},\2)/igs' $f
     done
 }
 

@@ -1,5 +1,5 @@
 /**
- * WebSlicer
+ * SerialTools
  * Copyright (C) 2020 SynDaver Labs, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-if (!window.SequentialSerial && "serial" in navigator && query.enableSerial) {
+if (!window.SequentialSerial && "serial" in navigator && (!query || query.enableSerial)) {
     class SerialTimeout extends Error {}
     class SerialDisconnected extends Error {}
 
@@ -200,6 +200,7 @@ if (!window.SequentialSerial && "serial" in navigator && query.enableSerial) {
     window.setPowerSaveEnabled = setPowerSaveEnabled;
     window.setPrintInProgress  = enabled => {isPrinting = enabled};
 
+    SequentialSerial.isWebSerial = true;
 }
 
 var hasSerial = "SequentialSerial" in window;
