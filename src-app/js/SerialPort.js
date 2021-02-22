@@ -26,20 +26,10 @@ async function flashFirmware() {
     ProgressBar.message("Downloading firmware");
     const data = await fetchFile(usb.firmware);
     const attr = {usb_marlin, usb_samba, data};
-    try {
-        switch(usb.flasher) {
-            case "bossa":    await flashFirmwareWithBossa(attr); break;
-            case "stk500v2": await flashFirmwareWithStk(attr); break;
-            default: throw Error("Unknown flashing tool type: " + usb.flasher);
-        }
-    } catch(e) {
-        if(e instanceof DOMException) {
-            if(isDesktop) {
-                throw Error("No printers found");
-            }
-        } else {
-            console.error(e);
-        }
+    switch(usb.flasher) {
+        case "bossa":    await flashFirmwareWithBossa(attr); break;
+        case "stk500v2": await flashFirmwareWithStk(attr); break;
+        default: throw Error("Unknown flashing tool type: " + usb.flasher);
     }
 }
 

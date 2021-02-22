@@ -44,14 +44,13 @@ if (!window.SequentialSerial && "serial" in navigator && (typeof query === 'unde
         }
 
         async close() {
-            if(this.serial) {
+            if(this.reader) {
                 await this.reader.cancel();
                 await this.writer.releaseLock();
                 await this.reader.releaseLock();
-                await this.serial.close();
                 this.reader = null;
                 this.writer = null;
-                this.serial = null;
+                await this.serial.close();
             }
         }
 

@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 83
+    cacheVersion: 86
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -90,7 +90,6 @@ const filesToCache = [
     'js/SerialPort.js',
     'js/SettingsPanel.js',
     'js/Stage.js',
-    'js/WebSerialAdapter.js',
     'lib/FastestSmallestTextEncoderDecoder/EncoderDecoderTogether.min.js',
     'lib/FileSaver/FileSaver.js',
     'lib/circlepacker/circlepacker.min.js',
@@ -150,6 +149,8 @@ const filesToCache = [
     'lib/serial-tools/bossa/samba.js',
     'lib/serial-tools/bossa/wordcopy_applet.js',
     'lib/serial-tools/gcode-sender/MarlinSerialProtocol.js',
+    'lib/serial-tools/WebSerialAdapter.js',
+    'lib/serial-tools/FlashPrinters.js',
     'lib/util/ui/dialog/dialog.css',
     'lib/util/ui/dialog/dialog.js',
     'lib/util/ui/log/log.css',
