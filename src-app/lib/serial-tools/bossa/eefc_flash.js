@@ -264,7 +264,7 @@ export class EEFC_Flash {
         await this.waitFSR();
         await this.wordCopy.runv();
 
-        return this.samba.read(this.onBufferA ? this.pageBufferA : this.pageBufferB, this.chip.size);
+        return this.samba.read(this.activePageBuffer, this.chip.size);
     }
 
     async waitFSR() {
@@ -293,19 +293,19 @@ export class EEFC_Flash {
         }
     }
 
-    async writeFCR0(cmd, arg) {
-        await this.samba.writeWord(this.chip.regs + 0x004, (0x5a << 24) | (Math.floor(arg) << 8) | cmd );
+    writeFCR0(cmd, arg) {
+        return this.samba.writeWord(this.chip.regs + 0x004, (0x5a << 24) | (Math.floor(arg) << 8) | cmd );
     }
 
-    async writeFCR1(cmd, arg) {
-        await this.samba.writeWord(this.chip.regs + 0x204, (0x5a << 24) | (Math.floor(arg) << 8) | cmd );
+    writeFCR1(cmd, arg) {
+        return this.samba.writeWord(this.chip.regs + 0x204, (0x5a << 24) | (Math.floor(arg) << 8) | cmd );
     }
 
-    async readFRR0() {
+    readFRR0() {
         return this.samba.readWord(this.chip.regs + 0x00C);
     }
 
-    async readFRR1() {
+    readFRR1() {
         return this.samba.readWord(this.chip.regs + 0x20C);
     }
 
@@ -328,11 +328,11 @@ export class EEFC_Flash {
         }
     }
 
-    async loadBuffer(data) {
-        await this.samba.write(this.activePageBuffer, data);
+    loadBuffer(data) {
+        return this.samba.write(this.activePageBuffer, data);
     }
 
-    async readBuffer() {
+    readBuffer() {
         return this.samba.read(this.activePageBuffer, this.chip.size);
     }
 
@@ -340,11 +340,11 @@ export class EEFC_Flash {
         return this.onBufferA ? this.pageBufferA : this.pageBufferB
     }
 
-    async writeBuffer(dst_addr, size) {
-        await this.samba.writeBuffer(this.activePageBuffer, dst_addr + this.chip.addr, size);
+    writeBuffer(dst_addr, size) {
+        return this.samba.writeBuffer(this.activePageBuffer, dst_addr + this.chip.addr, size);
     }
 
-    async checksumBuffer(start_addr, size) {
+    checksumBuffer(start_addr, size) {
         return this.samba.checksumBuffer(start_addr + this.chip.addr, size);
     }
 

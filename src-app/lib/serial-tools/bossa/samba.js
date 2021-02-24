@@ -24,7 +24,15 @@
  *
  */
 
- // Implements the SAMBA protocol as described here: http://www.varsanofiev.com/inside/at91_sam_ba.htm
+ /**
+  * Implements the SAMBA protocol as described here:
+  *   http://www.varsanofiev.com/inside/at91_sam_ba.htm
+  *   https://sourceforge.net/p/lejos/wiki-nxt/SAM-BA%20Protocol/
+  *
+  * There seems to be some ambiguity in these documents about whether
+  * a command should be terminated with "#" or "#\n". The original
+  * bossa code used "#" but it seems "#\n" works better.
+  */
 
 export class Samba {
     constructor(serial) {
@@ -41,14 +49,14 @@ export class Samba {
 
     async SetBinary() {
         // Logger.log("...Set binary mode")
-        await this.serial.write('N#');
+        await this.serial.write('N#\n');
         await this.serial.flush();
         await this.serial.read(2); // Expects b'\n\r' here
     }
 
     async write(addr, data) {
         //cmd = str.encode("S" + str('%0*x' % (8,addr)) + "," + str('%0*x' % (8,len(data)))  + "#");
-        const cmd = "S" + Samba.hex8(addr) + "," + Samba.hex8(data.length) + "#";
+        const cmd = "S" + Samba.hex8(addr) + "," + Samba.hex8(data.length) + "#\n";
         await this.serial.write(cmd);
         await this.serial.flush();
         await this.serial.write(data);
@@ -62,19 +70,19 @@ export class Samba {
         // via USB.  If that is the case here, then read the first byte
         // with a readByte and then read one less than the requested size.
         const splitRead = size > 32 && !(size & (size - 1));
-        var firstByte;
+        let firstByte;
         if(splitRead) {
             firstByte = await this.readByte(addr);
             addr++;
             size--;
         }
 
-        const cmd = "R" + Samba.hex8(addr) + "," + Samba.hex8(size) + "#";
+        const cmd = "R" + Samba.hex8(addr) + "," + Samba.hex8(size) + "#\n";
         await this.serial.write(cmd);
         await this.serial.flush();
         const data = await this.serial.read(size);
         if(splitRead) {
-            var tmp = new Uint8Array(size + 1);
+            const tmp = new Uint8Array(size + 1);
             tmp[0] = firstByte;
             tmp.set(data, 1);
             return tmp;
@@ -85,7 +93,7 @@ export class Samba {
 
     async go(addr) {
         //cmd = str.encode("G" + str('%0*x' % (8,addr)) + "#");
-        const cmd = "G" + Samba.hex8(addr) + "#";
+        const cmd = "G" + Samba.hex8(addr) + "#\n";
         await this.serial.write(cmd);
         await this.serial.flush();
         // Logger.log("...Go to addr=" + hex(addr) )
@@ -93,7 +101,7 @@ export class Samba {
 
     async version() {
         var version_string = "";
-        await this.serial.write('V#');
+        await this.serial.write('V#\n');
         await this.serial.flush();
         while(true) {
             const data = await this.serial.read(1);
@@ -147,7 +155,7 @@ export class Samba {
     }
 
     async readByte(address) {
-        const cmd = "o" + Samba.hex8(address) + ",1#";
+        const cmd = "o" + Samba.hex8(address) + ",1#\n";
         await this.serial.write(cmd);
         await this.serial.flush();
         const bytes = await this.serial.read(1);
@@ -156,7 +164,7 @@ export class Samba {
 
     async readWord(address) {
         //cmd = str.encode("w" + str('%0*x' % (8,address)) + ",4#");
-        const cmd = "w" + Samba.hex8(address) + ",4#";
+        const cmd = "w" + Samba.hex8(address) + ",4#\n";
         await this.serial.write(cmd);
         await this.serial.flush();
         const bytes = await this.serial.read(4);
@@ -167,12 +175,12 @@ export class Samba {
 
     async writeWord(address, value) {
         //cmd = str.encode("W" + str('%0*x' % (8,address)) + "," + str('%0*x' % (8,value))  + "#");
-        const cmd = "W" + Samba.hex8(address) + "," + Samba.hex8(value) + "#";
+        const cmd = "W" + Samba.hex8(address) + "," + Samba.hex8(value) + "#\n";
         await this.serial.write(cmd);
         await this.serial.flush();
     }
 
-    async sleepSeconds(s) {
-        await this.serial.wait(s * 1000);
+    sleepSeconds(s) {
+        return this.serial.wait(s * 1000);
     }
 }
