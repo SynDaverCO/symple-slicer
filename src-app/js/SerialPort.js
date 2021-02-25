@@ -49,11 +49,7 @@ async function stream_gcode(gcode) {
 
         const usb_marlin   = {vendorId: usb.marlin_vendor_id, productId: usb.marlin_product_id};
         ProgressBar.message("Finding printers");
-        const matches = await SequentialSerial.matchPorts(usb_marlin);
-        if(matches.length == 0) {
-            throw Error("No printers found");
-        }
-        let port = matches[0];
+        const port = await SequentialSerial.requestPort([usb_marlin]);
 
         setPowerSaveEnabled(false);
         setPrintInProgress(true);
