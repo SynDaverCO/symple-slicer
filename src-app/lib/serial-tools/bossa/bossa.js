@@ -138,6 +138,7 @@ export class BOSSA {
                 const readBack = await this.flash.readBuffer();
                 if(BOSSA.compareArray(pageData, readBack, pageData.length)) break;
                 console.log("...Upload corruption detected. Resending page", page);
+                await this.samba.readByte(0xDEAD); // Something to grep for if monitoring
                 await this.flash.loadBuffer(pageData);
             }
             await this.flash.writePage(page);
