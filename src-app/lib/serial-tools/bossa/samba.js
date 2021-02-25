@@ -67,28 +67,23 @@ export class Samba {
 
     async read(addr, size) {
         // The SAM firmware has a bug reading powers of 2 over 32 bytes
-        // via USB.  If that is the case here, then read the first byte
-        // with a readByte and then read one less than the requested size.
+        // via USB.  If that is the case here, then send two commands.
+        // One to read one less byte followed by one to read the last byte.
         const splitRead = size > 32 && !(size & (size - 1));
-        let firstByte;
         if(splitRead) {
-            firstByte = await this.readByte(addr);
-            addr++;
             size--;
         }
 
         const cmd = "R" + Samba.hex8(addr) + "," + Samba.hex8(size) + "#\n";
         await this.serial.write(cmd);
-        await this.serial.flush();
-        const data = await this.serial.read(size);
         if(splitRead) {
-            const tmp = new Uint8Array(size + 1);
-            tmp[0] = firstByte;
-            tmp.set(data, 1);
-            return tmp;
-        } else {
-            return data;
+            // Request last byte
+            const cmd = "o" + Samba.hex8(addr + size) + ",1#\n";
+            await this.serial.write(cmd);
+            size++;
         }
+        await this.serial.flush();
+        return this.serial.read(size);
     }
 
     async go(addr) {
