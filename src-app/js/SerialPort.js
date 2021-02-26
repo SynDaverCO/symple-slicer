@@ -36,6 +36,7 @@ async function flashFirmware() {
 async function stream_gcode(gcode) {
     const usb     = ProfileManager.getSection("usb");
     const scripts = ProfileManager.getSection("scripts");
+    let port, asyncEvent = "", isPaused = false;
     if(!usb) {
         throw Error("No serial port information available for this profile");
     }
@@ -43,13 +44,12 @@ async function stream_gcode(gcode) {
         throw Error("No scripts information available for this profile");
     }
     try {
-        const marlin = await import('../lib/serial-tools/gcode-sender/MarlinSerialProtocol.js');
+        const usb_marlin = {usbVendorId: parseInt(usb.marlin_vendor_id, 16), usbProductId: parseInt(usb.marlin_product_id, 16)};
 
-        // Find an Archim board to connect to
+        // Find a printer to connect to
 
-        const usb_marlin   = {vendorId: usb.marlin_vendor_id, productId: usb.marlin_product_id};
         ProgressBar.message("Finding printers");
-        const port = await SequentialSerial.requestPort([usb_marlin]);
+        port = await SequentialSerial.requestPort([usb_marlin]);
 
         setPowerSaveEnabled(false);
         setPrintInProgress(true);
@@ -57,11 +57,10 @@ async function stream_gcode(gcode) {
         // Connect to the printer
         Log.clear();
         Log.write("Found printer on port", port);
-        var sio = new SequentialSerial();
-        await sio.open(port, usb.baudrate, 3, 10000);
+        await port.open(usb.baudrate, 3, 10000);
 
-        let asyncEvent = "";
-        let proto = new marlin.MarlinSerialProtocol(sio);
+        const msp = await import('../lib/serial-tools/gcode-sender/MarlinSerialProtocol.js');
+        const proto = new msp.MarlinSerialProtocol();
         proto.onDebugMsgCallback = Log.write;
         proto.onResendCallback = Log.write;
         proto.onResyncCallback = count => {
@@ -69,15 +68,15 @@ async function stream_gcode(gcode) {
                 asyncEvent = "abort";
             }
         };
+        await proto.open(port);
 
         // Split into individual lines
         gcode = gcode.split(/\r?\n/);
 
         // Stream the GCODE
         ProgressBar.message("Printing");
-
         ProgressBar.onAbort(() => {
-            let okay = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
+            const okay = confirm("About to stop the print. Click OK to stop, Cancel to keep printing.");
             if(okay) {
                 ProgressBar.message("Stopping...");
                 asyncEvent = "stop";
@@ -87,7 +86,6 @@ async function stream_gcode(gcode) {
         ProgressBar.onPause(async state => {asyncEvent = state ? "pauseWithScript" : "resumeWithScript"});
 
         // Stream the gcode to the printer
-        let isPaused = false;
         for(const [i, line] of gcode.entries()) {
             await proto.sendCmdReliable(line);
             while(!await proto.clearToSend() || isPaused) {
@@ -171,9 +169,10 @@ async function stream_gcode(gcode) {
         }
         await proto.finishPrint();
         Log.write("Print finished.");
-    } finally {
-        if(sio) {
-            sio.close();
+    }
+    finally {
+        if(port) {
+            port.close();
         }
         ProgressBar.hide();
         setPowerSaveEnabled(true);
