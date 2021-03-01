@@ -126,7 +126,7 @@ export class MarlinSerialProtocol {
      * as adding a checksum to each line, replying to resend
      * requests and keeping the Marlin buffer full
      */
-    constructor(serial) {
+    async open(serial) {
         this.serial                 = serial;
         this.marlinBufSize          = 5;
         this.marlinReserve          = 1;
@@ -142,7 +142,7 @@ export class MarlinSerialProtocol {
         this.resyncCount             = 0;
         this.encoder                = new TextEncoder();
         this.decoder                = new TextDecoder();
-        this.restart();
+        await this.restart();
     }
 
     _stripCommentsAndWhitespace(str) {
@@ -165,7 +165,7 @@ export class MarlinSerialProtocol {
 
     _addPositionAndChecksum(position, cmd) {
         // An GCODE with line number and checksum consists of N{position}{cmd}*{checksum}
-        let payload = "N" + position + cmd;
+        const payload = "N" + position + cmd;
         return payload + "*" + this._computeChecksum(payload);
     }
 

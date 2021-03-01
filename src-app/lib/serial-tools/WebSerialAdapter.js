@@ -45,12 +45,11 @@ if (!window.SequentialSerial && "serial" in navigator && (typeof query === 'unde
 
         async close() {
             if(this.reader) {
-                await this.reader.cancel();
                 await this.writer.releaseLock();
                 await this.reader.releaseLock();
+                await this.serial.close();
                 this.reader = null;
                 this.writer = null;
-                await this.serial.close();
             }
         }
 
@@ -58,15 +57,18 @@ if (!window.SequentialSerial && "serial" in navigator && (typeof query === 'unde
          * Returns a promise that resolves once all output data has been written
          */
         async flush() {
-            await this.writer.close();
-            this.writer = this.serial.writable.getWriter();
+            if(this.reader) {
+                await this.writer.ready;
+                await this.writer.close();
+                this.writer = this.serial.writable.getWriter();
+            }
         }
 
         async discardBuffers() {
             this.readBytes = [];
             this.readIndex = 0;
             await this.reader.close();
-            this.reader = this.serial.reader.getReader();
+            this.reader = this.serial.readable.getReader();
         }
 
         toUint8Array(data) {
