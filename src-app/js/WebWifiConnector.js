@@ -45,6 +45,18 @@ class WebWifiConnector {
         } else {
             console.log("Using existing iframe to interact with printer");
         }
+
+        function replyTimeout() {
+            target.remove();
+            ProgressBar.hide();
+            alert('No reply from printer. Please verify the network settings under "Wireless Printing" and then click "Manage..." to test connectivity.');
+        }
+
         setTimeout(() => target.contentWindow.postMessage(message, url), 3000);
+        this.timeoutId = setTimeout(replyTimeout, 10000);
+    }
+
+    static gotReply() {
+        clearTimeout(this.timeoutId);
     }
 }

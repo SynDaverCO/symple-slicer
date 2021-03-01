@@ -95,9 +95,11 @@ function onMessage(e) {
             }
             break;
         case "progress":
+            WebWifiConnector.gotReply();
             ProgressBar.progress(e.data.value);
             break;
         case "finished":
+            WebWifiConnector.gotReply();
             ProgressBar.hide();
             break;
     }
