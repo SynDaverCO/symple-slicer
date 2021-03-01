@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 89
+    cacheVersion: 92
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -90,6 +90,7 @@ const filesToCache = [
     'js/SerialPort.js',
     'js/SettingsPanel.js',
     'js/Stage.js',
+    'js/WebWifiConnector.js',
     'lib/FastestSmallestTextEncoderDecoder/EncoderDecoderTogether.min.js',
     'lib/FileSaver/FileSaver.js',
     'lib/circlepacker/circlepacker.min.js',

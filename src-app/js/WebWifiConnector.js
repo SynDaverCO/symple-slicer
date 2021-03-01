@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+// This class allows sending jobs to the wireless module via postMessage,
+// when otherwise a direct connection would be a forbidden CORS request.
 
 class WebWifiConnector {
     static postMessageToPopup(addr, message) {
