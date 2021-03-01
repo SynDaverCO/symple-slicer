@@ -82,7 +82,7 @@ if (!window.SequentialSerial && "serial" in navigator && (typeof query === 'unde
         /**
          * Returns a promise that resolves after some data has been written
          */
-        async write(data) {
+        write(data) {
             data = this.toUint8Array(data);
             return this.writer.write(data);
         }
@@ -103,8 +103,7 @@ if (!window.SequentialSerial && "serial" in navigator && (typeof query === 'unde
          * Returns a promise which resolves when "len" bytes have been read.
          */
         async read(len) {
-            let timeoutId;
-            let timeoutPromise = this.getTimeoutPromise();
+            const timeoutPromise = this.getTimeoutPromise();
             const dst = new Uint8Array(len);
             for(let i = 0; i < len;) {
                 if(this.readIndex == this.readBytes.length) {

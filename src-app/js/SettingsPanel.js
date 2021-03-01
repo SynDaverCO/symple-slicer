@@ -982,11 +982,9 @@ class PrintAndPreviewPage {
         if(PrintAndPreviewPage.nothingToPrint()) return;
         const name = settings.get("gcode_filename");
         const file = SynDaverWiFi.fileFromBlob(name, gcode_blob);
+        alert('The file will be saved to your printer for printing later.\n\nYou may start a print through the web management interface by selecting "Wireless Printing" from the menu and then clicking "Manage..."')
         try {
             await ConfigWirelessPage.uploadFiles([file]);
-            if(isDesktop && confirm("This print has been saved to your printer. You can start a print at any time through the web management interface.\n\nClick OK to visit the web management interface now.")) {
-                ConfigWirelessPage.onManageClicked();
-            }
         } catch (e) {
             console.error(e);
             alert(e);
@@ -1258,29 +1256,10 @@ class ConfigWirelessPage {
         }
     }
 
-    static postMessageToWireless(message) {
-        const msg = "A web browser window will be opened to your printer.\nIf you have a popup blocker, you will need to allow popups from this web site.\nIn the new window, you will be asked to allow interaction to your printer; click OK to allow."
-        const printer_addr = settings.get("printer_addr");
-        const url = "http://" + printer_addr;
-        let target = ConfigWirelessPage.wirelessPopup;
-
-        if(target && !target.closed) {
-            target.focus();
-            target.postMessage(message, url);
-        } else if(confirm(msg)) {
-            target = window.open(url, "syndaver_wireless", "menubar=no,location=no,resizable=yes,scrollbars=yes,status=no");
-            ConfigWirelessPage.wirelessPopup = target;
-            if(target) {
-                setTimeout(() => target.postMessage(message, url), 3000);
-            } else {
-                alert('Please make sure your popup blocker is disabled and try again.');
-            }
-        }
-    }
-
     static onManageClicked() {
+        const printer_addr = settings.get("printer_addr");
         const printer_pass = settings.get("printer_pass");
-        ConfigWirelessPage.postMessageToWireless({password: printer_pass});
+        WebWifiConnector.postMessageToPopup(printer_addr, {password: printer_pass});
     }
 
     static onMonitorClicked() {
@@ -1313,10 +1292,10 @@ class ConfigWirelessPage {
 
     // Uploads files to the wireless module
     static async uploadFiles(files) {
+        ProgressBar.message("Sending to printer");
         if(isDesktop) {
             ConfigWirelessPage.setHostnameAndPassword();
             SynDaverWiFi.onProgress((bytes, totalBytes) => ProgressBar.progress(bytes/totalBytes));
-            ProgressBar.message("Sending to printer");
             try {
                 await SynDaverWiFi.uploadFiles(files);
             } finally {
@@ -1325,8 +1304,9 @@ class ConfigWirelessPage {
         } else {
             // When running on the web, it is necessary to post a message to
             // the wifi module rather than sending files directly.
+            const printer_addr = settings.get("printer_addr");
             const printer_pass = settings.get("printer_pass");
-            ConfigWirelessPage.postMessageToWireless({password: printer_pass, files: files});
+            WebWifiConnector.postMessageAsEmbed(printer_addr, {password: printer_pass, files: files});
         }
     }
 

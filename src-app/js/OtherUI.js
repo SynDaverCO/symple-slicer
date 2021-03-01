@@ -94,6 +94,12 @@ function onMessage(e) {
                 SettingsPanel.fetchFiles(e.data.urls);
             }
             break;
+        case "progress":
+            ProgressBar.progress(e.data.value);
+            break;
+        case "finished":
+            ProgressBar.hide();
+            break;
     }
 }
 
