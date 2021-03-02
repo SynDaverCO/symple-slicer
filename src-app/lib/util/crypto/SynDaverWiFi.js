@@ -123,9 +123,6 @@ class AuthenticatedRequest {
             }
             xhr.addEventListener("load", () => {
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    if(data && data.onProgress) {
-                       data.onProgress(100);
-                    }
                     resolve(xhr.response);
                 } else {
                     console.error("Error: ", xhr.status, xhr.statusText);
