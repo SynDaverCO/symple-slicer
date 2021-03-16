@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-if (!window.SequentialSerial && "serial" in navigator && (typeof query === 'undefined' || query.enableSerial)) {
+if (!window.SequentialSerial && "serial" in navigator) {
     class SerialTimeout extends Error {}
     class SerialDisconnected extends Error {}
 

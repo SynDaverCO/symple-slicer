@@ -4,6 +4,7 @@ SynDaver Symple Slicer v1.0.16
 * Prompt before scaling oversized objects to fit.
 * Fixed incorrect naming of files with "stl" in their names.
 * Added support for Axi 2
+* Added USB firmware flashing and tethered printing when Web Serial is available
 
 SynDaver Symple Slicer v1.0.15
 ==============================
