@@ -128,17 +128,20 @@ class Stage {
     /**
      * Shrinks an object to fit the print volume.
      */
-    scaleObjectToFit(object) {
+    scaleObjectToFit(object, ask) {
         const size = object.geometry.boundingBox.getSize(new THREE.Vector3());
         const scale = Math.min(
             this.printer.x_width / size.x,
             this.printer.y_depth / size.y,
-            this.printer.z_height / size.z,
-            1
+            this.printer.z_height / size.z
         );
-        object.scale.x = scale;
-        object.scale.y = scale;
-        object.scale.z = scale;
+        if(scale < 1) {
+            if(!ask || confirm("This model is too large to fit the print volume. Click OK to scale to fit, or CANCEL otherwise")) {
+                object.scale.x = scale;
+                object.scale.y = scale;
+                object.scale.z = scale;
+            }
+        }
     }
 
     /**
@@ -354,7 +357,7 @@ class Stage {
     addGeometry(geometry) {
         var obj = new PrintableObject(geometry);
         this.addObjects([obj]);
-        this.scaleObjectToFit(obj);
+        this.scaleObjectToFit(obj, true);
         this.dropObjectToFloor(obj);
         this.centerObjectOnPlatform(obj);
         this.arrangeObjectsOnPlatform(this.objects);
