@@ -22,20 +22,22 @@
 // when otherwise a direct connection would be a forbidden CORS request.
 
 class WebWifiConnector {
-    static postMessageToPopup(addr, message) {
+    static postMessageToTab(addr, message) {
         const url = "http://" + addr;
-        const msg = "A web browser tab will be opened to your printer.\nIn the new tab, you will be asked to allow interaction to your printer; click OK to allow."
-        if(confirm(msg)) {
-            const target = window.open(url, "syndaver_wireless");
-            if(target) {
-                setTimeout(() => target.postMessage(message, url), 3000);
-            } else {
-                alert('Please make sure your popup blocker is disabled and try again.');
-            }
+        const target = window.open(url, "syndaver_wireless");
+        if(target) {
+            this.postMessageAndExpectReply(target, url, message);
+        } else {
+            alert('Please make sure your popup blocker is disabled and try again.');
         }
     }
 
     static postMessageAsEmbed(addr, message) {
+        if(location.protocol != "http:") {
+            // If we are served as HTTPS, we cannot open an iframe
+            // to an HTTP resource, so open a tab instead.
+            return this.postMessageToTab(addr, message);
+        }
         const url = "http://" + addr;
         let target = document.querySelector('iframe[src="' + url + '"]');
         if(!target) { 
@@ -47,14 +49,16 @@ class WebWifiConnector {
         } else {
             console.log("Using existing iframe to interact with printer");
         }
+        this.postMessageAndExpectReply(target.contentWindow, url, message, () => target.remove());
+    }
 
+    static postMessageAndExpectReply(dest, url, message, timeoutCallback) {
         function replyTimeout() {
-            target.remove();
             ProgressBar.hide();
             alert('No reply from printer. Please verify the network settings under "Wireless Printing" and then click "Manage..." to test connectivity.');
+            if(timeoutCallback) timeoutCallback();
         }
-
-        setTimeout(() => target.contentWindow.postMessage(message, url), 3000);
+        setTimeout(() => dest.postMessage(message, url), 3000);
         this.timeoutId = setTimeout(replyTimeout, 10000);
     }
 

@@ -1259,7 +1259,7 @@ class ConfigWirelessPage {
     static onManageClicked() {
         const printer_addr = settings.get("printer_addr");
         const printer_pass = settings.get("printer_pass");
-        WebWifiConnector.postMessageToPopup(printer_addr, {password: printer_pass});
+        WebWifiConnector.postMessageToTab(printer_addr, {password: printer_pass});
     }
 
     static onMonitorClicked() {
