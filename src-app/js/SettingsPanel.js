@@ -45,6 +45,7 @@ class SettingsPanel {
 
         s.done();
 
+        s.onPageEnter = SettingsPanel.onPageEnter;
         s.onPageExit = SettingsPanel.onPageExit;
 
         PlaceObjectsPage.onDropModel();         // Disable buttons
@@ -79,6 +80,12 @@ class SettingsPanel {
     static onPageExit(page) {
         if(page == "page_print") {
             stage.hideToolpath();
+        }
+    }
+
+    static onPageEnter(page) {
+        if(page == "page_flash_fw") {
+            UpdateFirmwarePage.onEntry();
         }
     }
 
@@ -1531,12 +1538,23 @@ class UpdateFirmwarePage {
     static init(s) {
         s.page(       "Update Firmware",                {id: "page_flash_fw"});
         s.category(   "Update Printer Firmware");
+        s.text(       "Firmware:",                      {id: "printer_fw_filename"});
+        s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashPrinterClicked});
         s.buttonHelp( "Click this button to update the firmware on a USB connected printer");
 
         s.category(   "Update Wireless Firmware");
+        s.text(       "Firmware:",                      {id: "wireless_fw_version"});
+        s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashWirelessClicked, className: "canUpload"});
         s.buttonHelp( "Click this button to update the firmware on the wireless module wirelessly");
+    }
+
+    static onEntry() {
+        const usb = ProfileManager.getSection("usb");
+        if(usb && usb.firmware) {
+            document.getElementById("printer_fw_filename").value = usb.firmware.split('/').pop();
+        }
     }
 
     static async onFlashPrinterClicked() {
