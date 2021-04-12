@@ -149,9 +149,3 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     pointer-events:     none;
     border:             none;
 }
-
-/* The following is required for things to look good
-   under Edge, which does not support DETAILS or SUMMARY */
-DETAILS, SUMMARY {
-    display:            block;
-}
