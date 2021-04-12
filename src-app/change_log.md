@@ -1,18 +1,25 @@
+SynDaver Symple Slicer v1.0.17
+==============================
+
+* Upgrade Axi 1 firmware to R6
+* Upgrade Axi 2 firmware to R2
+* Upgrade start G-code for Axi 1 and Axi 2
+* '''Profiles:''' Update to ABS profile
+
 SynDaver Symple Slicer v1.0.16
 ==============================
 
 * Prompt before scaling oversized objects to fit.
 * Fixed incorrect naming of files with "stl" in their names.
+* Fixed incorrect print time on prints longer than a day
+* Compute print progress based on time rather than layers
 * Added support for Axi 2
 * Added USB firmware flashing and tethered printing when Web Serial is available
 
 SynDaver Symple Slicer v1.0.15
 ==============================
 
-* Fixed incorrect print time on prints longer than a day
-* Compute print progress based on time rather than layers
-* '''Slicing UI:''' Added "Print Sequence" option to "Special Modes"
-* '''Slicing UI:''' Added printhead dimensions to "Machine Settings"
+* '''Profiles:''' Updated PLA profile
 
 SynDaver Symple Slicer v1.0.14
 ==============================
