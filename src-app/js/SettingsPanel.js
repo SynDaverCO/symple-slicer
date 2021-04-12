@@ -1555,11 +1555,13 @@ class UpdateFirmwarePage {
         const wireless = ProfileManager.getSection("wireless");
         document.getElementById("printer_fw_filename").value = usb      && usb.firmware      ?      usb.firmware.split('/').pop() : "None available";
         document.getElementById("wireless_fw_version").value = wireless && wireless.firmware ? wireless.firmware.split('/').pop() : "None available";
+        if(usb && usb.firmware_confirmation && !confirm(usb.firmware_confirmation)) {
+            alert("Please select a profile corresponding to your printer and try again.");
+            settings.gotoPage("page_profiles");
+        }
     }
 
     static async onFlashPrinterClicked() {
-        const usb = ProfileManager.getSection("usb");
-        if(usb && usb.firmware_confirmation && !confirm(usb.firmware_confirmation)) return;
         try {
             await flashFirmware();
         } catch(err) {
