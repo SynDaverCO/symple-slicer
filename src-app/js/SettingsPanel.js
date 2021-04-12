@@ -37,9 +37,7 @@ class SettingsPanel {
         if(isDesktop) {
             MonitorWirelessPage.init(s);
         }
-        if(hasSerial) {
-            UpdateFirmwarePage.init(s);
-        }
+        UpdateFirmwarePage.init(s);
         AdvancedFeaturesPage.init(s);
         HelpAndInfoPage.init(s);
 
@@ -1551,13 +1549,19 @@ class UpdateFirmwarePage {
     }
 
     static onEntry() {
-        const usb = ProfileManager.getSection("usb");
-        const wireless = ProfileManager.getSection("wireless");
-        document.getElementById("printer_fw_filename").value = usb      && usb.firmware      ?      usb.firmware.split('/').pop() : "None available";
-        document.getElementById("wireless_fw_version").value = wireless && wireless.firmware ? wireless.firmware.split('/').pop() : "None available";
-        if(usb && usb.firmware_confirmation && !confirm(usb.firmware_confirmation)) {
-            alert("Please select a profile corresponding to your printer and try again.");
-            settings.gotoPage("page_profiles");
+        if(!hasSerial) {
+            alert("This browser is does not support serial capabilities. You will be taken to a page with additional information.");
+            window.open("https://syndaverco.github.io/firmware/");
+            settings.goBack();
+        } else {
+            const usb = ProfileManager.getSection("usb");
+            const wireless = ProfileManager.getSection("wireless");
+            document.getElementById("printer_fw_filename").value = usb      && usb.firmware      ?      usb.firmware.split('/').pop() : "None available";
+            document.getElementById("wireless_fw_version").value = wireless && wireless.firmware ? wireless.firmware.split('/').pop() : "None available";
+            if(usb && usb.firmware_confirmation && !confirm(usb.firmware_confirmation)) {
+                alert("Please select a profile corresponding to your printer and try again.");
+                settings.gotoPage("page_profiles");
+            }
         }
     }
 
