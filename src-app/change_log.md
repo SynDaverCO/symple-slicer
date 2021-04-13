@@ -1,9 +1,14 @@
 SynDaver Symple Slicer v1.0.17
 ==============================
 
-* Upgrade Axi 1 firmware to R6
-* Upgrade Axi 2 firmware to R2
-* Upgrade start G-code for Axi 1 and Axi 2
+* '''Firmware:''' New firmware for Axi (R6) and Axi 2 (R2)
+## New bed mesh editor
+## More efficient mesh probing
+## Improved reliability of probing
+## Added mesh compensation test pattern
+## Added "Z Probe Wizard" to "Probe Z Offset"
+## Added "Raise Z to Top" to "Move Axis" 
+* '''Start G-code:''' Fixes to start G-code for Axi 1 and Axi 2
 * '''Profiles:''' Update to ABS profile
 
 SynDaver Symple Slicer v1.0.16
