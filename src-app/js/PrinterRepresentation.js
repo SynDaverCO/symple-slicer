@@ -34,6 +34,16 @@ class PrinterRepresentation extends THREE.Object3D {
         this.constructRepresentation(printer);
     }
 
+    static applyStyleSheetColors() {
+        const frameColor = getColorValueFromElement("#print_volume", 'border-color');
+        const gridColor1 = getColorFloatArrayFromElement("#bed_grid", 'color');
+        const gridColor2 = getColorFloatArrayFromElement("#bed_grid", 'background-color');
+
+        PrinterRepresentation.wireframeMaterial.color = new THREE.Color(frameColor);
+        PrinterRepresentation.checkerboardMaterial.uniforms.color1.value = new THREE.Vector4(gridColor1[0], gridColor1[1], gridColor1[2]);
+        PrinterRepresentation.checkerboardMaterial.uniforms.color2.value = new THREE.Vector4(gridColor2[0], gridColor2[1], gridColor2[2]);
+    }
+
     constructRepresentation(printer) {
         if (printer.circular) {
             var segments = 64;

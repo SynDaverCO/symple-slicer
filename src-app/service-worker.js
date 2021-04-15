@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 111
+    cacheVersion: 112
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -67,7 +67,10 @@ const filesToCache = [
     'config/profiles/print_profiles/cura_default.toml',
     'css/layout.css',
     'css/markdown.css',
-    'css/theme.css',
+    'css/themes/classic.css',
+    'css/themes/gray-and-orange.css',
+    'css/themes/gray-and-blue.css',
+    'css/themes/red-blue-and-yellow.css',
     'images/favicon.ico',
     'images/icon_128px.png',
     'images/icon_180px.png',
@@ -138,6 +141,7 @@ const filesToCache = [
     'lib/util/io/StlReader.js',
     'lib/util/io/TOMLWriter.js',
     'lib/util/misc/ParseQuery.js',
+    'lib/util/misc/ParseColor.js',
     'lib/util/misc/ResettableTimer.js',
     'lib/util/misc/Wikify.js',
     'lib/serial-tools/avr-isp/chipDB.js',

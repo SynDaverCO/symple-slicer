@@ -23,6 +23,7 @@ body {
     bottom:             0;
     margin:             0;
     overflow:           hidden;
+    visibility:         hidden;
 }
 
 body.debug {
@@ -126,6 +127,28 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
 
 #about p:last-child {
     margin-bottom:      0;
+}
+
+#help-viewport {
+    margin-left:        auto;
+    margin-right:       auto;
+}
+
+#profile_sources_warn, #profile_sources {
+    width:              50vw;
+}
+
+.warning {
+    padding:            1em;
+    text-align:         center;
+    display:            none;
+}
+
+.close-box::after {
+    content:            "\002716";
+    position:           absolute;
+    top:                1vw;
+    right:              1.5vw;
 }
 
 /* Trick to keep iframe responsive from https://benmarshall.me/responsive-iframes */

@@ -64,6 +64,13 @@ class Stage {
         });
     }
 
+    static applyStyleSheetColors() {
+        const color = getColorArrayFromElement("#stl_normal", 'color');
+        Toolpath.colorMap["SKIN"] = color;
+        Toolpath.colorMap["WALL-OUTER"] = color;
+        Toolpath.colorMap["WALL-INNER"] = color;
+    }
+
     menuAction(key) {
         switch(key) {
             case "select_all"  : this.selectAll(); break;

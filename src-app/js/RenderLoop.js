@@ -23,13 +23,13 @@ class RenderLoop {
         var debugShadowLight = false;
         var backgroundColor = 0x757575;
 
-        var renderer = new THREE.WebGLRenderer({canvas:canvas});
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.setClearColor( backgroundColor );
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer = new THREE.WebGLRenderer({canvas:canvas});
+        this.renderer.setSize( window.innerWidth, window.innerHeight );
+        this.renderer.setClearColor( backgroundColor );
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        var camera   = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 10, 3000 );
+        var camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 10, 3000 );
         this.camera = camera;
         this.camera.position.set(0,0,-600);
 
@@ -56,7 +56,7 @@ class RenderLoop {
 
         // postprocessing
 
-        this.composer = new THREE.EffectComposer( renderer );
+        this.composer = new THREE.EffectComposer( this.renderer );
 
         var renderPass = new THREE.RenderPass( scene, camera );
         this.composer.addPass( renderPass );
@@ -74,7 +74,7 @@ class RenderLoop {
         this.orbit.addEventListener( 'change', onViewChanged );
         this.orbit.screenSpacePanning = true;
 
-        var control = new THREE.TransformControls( camera, renderer.domElement );
+        var control = new THREE.TransformControls( camera, this.renderer.domElement );
         scene.add( control );
 
         stage.selection.setTransformControl(control);
@@ -91,7 +91,7 @@ class RenderLoop {
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize( window.innerWidth, window.innerHeight );
+            mine.renderer.setSize( window.innerWidth, window.innerHeight );
             mine.composer.setSize( window.innerWidth, window.innerHeight );
 
             mine.orbit.update();
@@ -144,6 +144,16 @@ class RenderLoop {
         const topOrBottom = view == "top" || view == "bottom";
         this.fitInView(size);
         this.centerOnScreen(0, size.y / 2, 0, topOrBottom ? 0.5 : 0.4, 0.5);
+        this.render();
+    }
+
+    applyStyleSheetColors() {
+        const backgroundColor = getColorValueFromElement("#print_volume", 'background-color');
+        const glow1 = getColorFloatArrayFromElement("#stl_glow", 'color');
+        const glow2 = getColorFloatArrayFromElement("#stl_glow", 'background-color');
+        this.outlinePass.visibleEdgeColor = new THREE.Color(glow1[0], glow1[1], glow1[2]);
+        this.outlinePass.hiddenEdgeColor = new THREE.Color(glow2[0], glow2[1], glow2[2]);
+        this.renderer.setClearColor(backgroundColor);
         this.render();
     }
 

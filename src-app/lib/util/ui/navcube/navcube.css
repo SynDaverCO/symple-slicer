@@ -50,10 +50,6 @@
     overflow:                hidden;
     opacity:                 0.75;
     user-select:             none;
-
-    color:                   #002e62;
-    border:                  1px solid #002e62;
-    background-color:        LightGoldenRodYellow;
 }
 
 #navCube > #top {

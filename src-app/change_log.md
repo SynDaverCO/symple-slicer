@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.18
+==============================
+
+* '''Slicing UI:''' Added color theme choices under "Advanced Features"!
+
 SynDaver Symple Slicer v1.0.17
 ==============================
 

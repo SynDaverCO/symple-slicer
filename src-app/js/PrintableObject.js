@@ -26,6 +26,13 @@ class PrintableObject extends THREE.Mesh {
         this.castShadow = true;
     }
 
+    static applyStyleSheetColors() {
+        const normalColor = getColorValueFromElement("#stl_normal", 'color');
+        const errorColor = getColorValueFromElement("#stl_error", 'color');
+        PrintableObject.normalMaterial.color = new THREE.Color(normalColor);
+        PrintableObject.errorMaterial.color = new THREE.Color(errorColor);
+    }
+
     set error(error) {
         this.material = error ? PrintableObject.errorMaterial : PrintableObject.normalMaterial;
     }

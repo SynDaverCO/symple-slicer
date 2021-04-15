@@ -1095,6 +1095,13 @@ class AdvancedFeaturesPage {
     static init(s) {
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
+        s.category(   "User Interface");
+        s.choice(         "Theme:",                                  {id: "ui-theme", onchange: AdvancedFeaturesPage.onApplyTheme})
+         .option(         "Classic Theme",                           {value: "classic"})
+         .option(         "Red, Blue &amp; Yellow",                  {value: "red-blue-and-yellow"})
+         .option(         "Gray &amp; Blue",                         {value: "gray-and-blue"})
+         .option(         "Gray &amp; Orange",                       {value: "gray-and-orange"});
+
         s.category(   "Slicer Output");
         s.button(     "Show",                                        {onclick: Log.show});
         s.buttonHelp( "Click this button to show slicing engine logs.");
@@ -1123,6 +1130,38 @@ class AdvancedFeaturesPage {
         s.button(     "Save",                                        {onclick: AdvancedFeaturesPage.onSaveProfileSources});
 
         AdvancedFeaturesPage.refreshDataSources();
+        AdvancedFeaturesPage.verifyThemeSelection();
+    }
+
+    static onApplyTheme() {
+        localStorage.setItem("theme", settings.get("ui-theme"));
+        location.reload();
+    }
+
+    static verifyThemeSelection() {
+        const theme = localStorage.getItem("theme");
+        const dropdown = document.getElementById('ui-theme');
+        dropdown.value = theme;
+        if (dropdown.value !== theme) {
+            dropdown.selectedIndex = 0;
+            this.onApplyTheme();
+        }
+    }
+
+    static linkThemeStyleSheet() {
+        const theme = localStorage.getItem("theme") || "classic";
+        const link = document.createElement("link");
+        link.type = "text/css";
+        link.rel = "stylesheet";
+        link.href = "css/themes/" + theme + ".css";
+        link.onload = function () {
+            PrintableObject.applyStyleSheetColors();
+            PrinterRepresentation.applyStyleSheetColors();
+            Stage.applyStyleSheetColors();
+            renderLoop.applyStyleSheetColors();
+            document.body.style.visibility = "visible";
+        };
+        document.head.appendChild(link);
     }
 
     static refreshDataSources() {

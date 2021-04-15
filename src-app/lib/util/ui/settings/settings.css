@@ -62,11 +62,9 @@ body.debug .setting-ui {
 }
 
 .settings-panel th {
-    background-color:   Khaki;
 }
 
 .settings-panel td {
-    background-color:   White;
     text-align:         center;
 }
 
