@@ -16,32 +16,68 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+:root {
+    --panel-color:      LightGoldenRodYellow;
+    --syn-color:        #002e62;
+    --daver-color:      #96172e;
+}
+
 body {
     font-family:        Tahoma, Verdana, Segoe, sans-serif;
+}
+
+#print_volume {
+    background-color:   #757575;
+    border-color:       white;
+}
+
+#bed_grid {
+    background-color:   #7f7f7f;
+    color:              #8c8c8c;
+}
+
+#stl_normal {
+    color:              #fafad2;
+}
+
+#stl_error {
+    color:              #fa3e34;
+}
+
+#stl_glow {
+    color:              white;
+    background-color:   #190a05;
 }
 
 summary:focus {
     outline:            0;
 }
 
+#navCube > div {
+    opacity:            0.75;
+    color:              var(--syn-color);
+    border:             1px solid var(--syn-color);
+    background-color:   var(--panel-color);
+}
+
 .context-menu-list {
-    background-color:   LightGoldenRodYellow;
+    background-color:   var(--panel-color);
 }
 
 .context-menu-item {
-    background-color:   LightGoldenRodYellow;
+    background-color:   var(--panel-color);
 }
 
 
 .panel-style {
-    color:              #002e62;
-    background-color:   LightGoldenRodYellow;
-    border:             1px solid #002e62;
+    color:              var(--syn-color);
+    background-color:   var(--panel-color);
+    border:             1px solid var(--syn-color);
     box-shadow:         5px 5px 10px #222222;
 }
 
 hr {
-    background-color:   #002e62;
+    background-color:   var(--syn-color);
     height:             1px;
     border:             none;
 }
@@ -51,7 +87,7 @@ button[disabled] {
 }
 
 #about a:link, #about a:visited {
-    color:              #96172e;
+    color:              var(--daver-color);
 }
 
 #about {
@@ -59,19 +95,20 @@ button[disabled] {
 }
 
 #toolbar img {
-    mix-blend-mode:     darken;
     filter:             url(#colorize-blue);
 }
 
-@supports not (mix-blend-mode: darken) {
-    #toolbar img {
-        opacity:        0.25;
-    }
+#toolbar img:hover {
+    background-color:   white;
+    opacity:            1;
 }
 
-#toolbar img:hover {
-    mix-blend-mode:     normal;
-    opacity:            1;
+.settings-panel th {
+    background-color:   khaki;
+}
+
+.settings-panel td {
+    background-color:   white;
 }
 
 #console {
@@ -83,39 +120,27 @@ input, select {
     background:         transparent;
 }
 
-#help-viewport {
-    margin-left:        auto;
-    margin-right:       auto;
-}
-
 #profile_sources_warn, #profile_sources {
     font-size:          small;
-    width:              50vw;
 }
 
 .warning {
-    padding:            1em;
     color:              red;
     text-align:         center;
-    display:            none;
 }
 
 .close-box::after {
-    content:            "\002716";
-    position:           absolute;
-    top:                1vw;
-    right:              1.5vw;
     font-size:          150%;
 }
 
 .axis_r input, button.axis_r {
-    outline: 1px solid red;
+    outline:            1px solid red;
 }
 
 .axis_g input, button.axis_g {
-    outline: 1px solid green;
+    outline:            1px solid green;
 }
 
 .axis_b input, button.axis_b {
-    outline: 1px solid blue;
+    outline:            1px solid blue;
 }

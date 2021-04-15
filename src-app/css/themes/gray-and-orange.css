@@ -1,0 +1,189 @@
+/**
+ * WebSlicer
+ * Copyright (C) 2016 Marcio Teixeira
+ * Copyright (C) 2020 SynDaver Labs, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+:root {
+    --panel-color:      rgba(65, 65, 65, 1.0);
+    --syn-color:        #002e62;
+    --daver-color:      #96172e;
+    --accent-color-inv: #0094ff;
+    --accent-color:     #ff6b00;
+}
+
+body {
+    font-family:        Tahoma, Verdana, Segoe, sans-serif;
+    color:              white;
+}
+
+#print_volume {
+    background-color:   #969696;
+    border-color:       lightGray;
+}
+
+#bed_grid {
+    background-color:   #969696;
+    color:              #9e836f;
+}
+
+#stl_normal {
+    color:              var(--accent-color);
+}
+
+#stl_error {
+    color:              #fa3e34;
+}
+
+#stl_glow {
+    color:              white;
+    background-color:   #190a05;
+}
+
+input:focus, button:focus, select:focus {
+    outline:            3px solid var(--accent-color);
+}
+
+summary:focus {
+    outline:            0;
+}
+
+#navCube > div {
+    opacity:            0.75;
+    color:              white;
+    border:             1px solid var(--accent-color);
+    background-color:   darkGray;
+}
+
+.context-menu-list {
+    background-color:   var(--panel-color);
+}
+
+.context-menu-item {
+    background-color:   var(--panel-color);
+}
+
+.panel-style {
+    color:              white;
+    background-color:   var(--panel-color);
+    border-radius:      0.5em;
+}
+
+hr {
+    background-color:   var(--accent-color);
+    height:             1px;
+    border:             none;
+}
+
+summary {
+    color:              var(--accent-color);
+}
+
+input[type="file"] {
+    color:              black;
+}
+
+button {
+    color:              white;
+    background-color:   var(--accent-color);
+    border-radius:      0.5em;
+    border:             0;
+    padding:            0.25em 0.5em;
+}
+
+button[disabled] {
+    cursor:             not-allowed;
+    background-color:   darkGray;
+}
+
+#about a:link, #about a:visited {
+    color:              var(--accent-color);
+}
+
+#about {
+    user-select:        none;
+}
+
+#about img {
+    background:         white;
+    border:             0.5em solid white;
+    border-radius:      0.5em;
+}
+
+#toolbar {
+    border:             0;
+    background-color:   rgba(65, 65, 65, 0.75);
+}
+
+#toolbar img {
+    filter:             invert(100%);
+}
+
+#toolbar img:hover {
+    background-color:   var(--accent-color-inv);
+    filter:             invert(100%);
+}
+
+.settings-panel table {
+    border:             1px solid var(--accent-color);
+}
+
+.settings-panel th {
+    background-color:   var(--accent-color);
+    color:              white;
+}
+
+.settings-panel td {
+    color:              var(--accent-color);
+}
+
+#console {
+    background:         black;
+    color:              #ffdd77;
+}
+
+input, select {
+    background:         lightGray;
+}
+
+.has_units span {
+    color:              black;
+}
+
+#profile_sources_warn, #profile_sources {
+    font-size:          small;
+}
+
+.warning {
+    color:              red;
+    text-align:         center;
+}
+
+.close-box::after {
+    font-size:          150%;
+}
+
+.axis_r input, button.axis_r {
+    outline:            1px solid red;
+}
+
+.axis_g input, button.axis_g {
+    outline:            1px solid green;
+}
+
+.axis_b input, button.axis_b {
+    outline:            1px solid blue;
+}
