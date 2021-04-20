@@ -1,0 +1,10 @@
+# This file maps profile filenames (excluding .toml)
+# to names as it appears in the UI drop down menus
+
+[machine_profiles]
+
+my_printer = "My Example 3D Printer"
+
+[print_profiles]
+
+my_material = "My Example Print Material"

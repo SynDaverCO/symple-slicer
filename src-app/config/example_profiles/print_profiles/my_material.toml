@@ -1,0 +1,10 @@
+[metadata]
+
+date = "1/1/2021"
+material_notes = "Notes about this material"
+
+[settings]
+
+material_print_temperature = 200
+material_bed_temperature = 100
+material_bed_temperature_layer_0 = 100

@@ -1,0 +1,29 @@
+[metadata]
+
+date = "1/7/2021"
+
+[settings]
+
+machine_depth                                    = 100
+machine_end_gcode                                = """
+M400                                             ; wait for moves to finish
+M140 S0                                          ; start bed cooling
+M104 S0                                          ; disable hotend
+M107                                             ; disable fans
+M190 R0                                          ; wait for bed to cool down to removal temp
+M77                                              ; stop timer
+M117 Print Complete.                             ; print complete message
+"""
+machine_start_gcode                              = """
+M73 P0                                           ; clear progress bar
+M75                                              ; start print timer
+M140 S{material_bed_temperature_layer_0}         ; start bed heating up
+G28                                              ; home all axes
+G29                                              ; start auto-leveling sequence
+M109 R{material_print_temperature_layer_0}       ; wait for extruder to reach printing temp
+M190 R{material_bed_temperature_layer_0}         ; wait for bed to reach printing temp
+M117 Printing...                                 ; message on LCD
+"""
+machine_heated_bed                               = true
+machine_height                                   = 100
+machine_width                                    = 100

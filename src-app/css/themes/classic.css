@@ -17,7 +17,7 @@
  */
 
 :root {
-    --panel-color:      LightGoldenRodYellow;
+    --panel-color:      hsl(var(--accent-h), 80%, 90%);
     --syn-color:        #002e62;
     --daver-color:      #96172e;
 }
@@ -37,7 +37,7 @@ body {
 }
 
 #stl_normal {
-    color:              #fafad2;
+    color:              var(--panel-color);
 }
 
 #stl_error {

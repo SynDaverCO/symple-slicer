@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 112
+    cacheVersion: 117
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -56,7 +56,7 @@ const filesToCache = [
     'config/syndaver/print_profiles/tpu95_standard_stable.toml',
     'config/syndaver/machine_firmware/LICENSE.txt',
     'config/syndaver/machine_firmware/SynDaver_Axi_1_Marlin_R6_f62581db6d.bin',
-    'config/syndaver/machine_firmware/SynDaver_Axi_2_Marlin_R2_b56fb4412d.bin',
+    'config/syndaver/machine_firmware/SynDaver_Axi_2_Marlin_R3_560472df7b.bin',
     'config/syndaver/machine_firmware/SynDaver_WiFi.bin',
     'config/syndaver/machine_firmware/SynDaver_WiFi.html',
     'config/syndaver/machine_firmware/SynDaver_WiFi_Serial.html',
@@ -67,10 +67,10 @@ const filesToCache = [
     'config/profiles/print_profiles/cura_default.toml',
     'css/layout.css',
     'css/markdown.css',
+    'css/themes/syndaver-3d.css',
     'css/themes/classic.css',
-    'css/themes/gray-and-orange.css',
-    'css/themes/gray-and-blue.css',
-    'css/themes/red-blue-and-yellow.css',
+    'css/themes/darkness.css',
+    'css/themes/sporty.css',
     'images/favicon.ico',
     'images/icon_128px.png',
     'images/icon_180px.png',

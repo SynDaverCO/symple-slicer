@@ -1,7 +1,13 @@
 SynDaver Symple Slicer v1.0.18
 ==============================
 
+* '''Firmware:''' New firmware for Axi 2 (R3)
 * '''Slicing UI:''' Added color theme choices under "Advanced Features"!
+
+SynDaver Symple Slicer v1.0.171
+===============================
+
+* '''Firmware:''' Temporarily rollback Axi 2 firmware to R1
 
 SynDaver Symple Slicer v1.0.17
 ==============================

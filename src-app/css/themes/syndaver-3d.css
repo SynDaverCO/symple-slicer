@@ -18,30 +18,30 @@
  */
 
 :root {
-    --panel-color:      #404040;
+    --panel-color:      white;
     --syn-color:        #002e62;
     --daver-color:      #96172e;
-    --accent-color-inv: #ff8f35;
-    --accent-color:     #0070ca;
+    --daver-color-inv:  #69e8d1;
+    --blue-color:       hsl(204, 75%, 55%);
+    --pale-blue-color:  hsl(204, 50%, 97%);
 }
 
 body {
     font-family:        Tahoma, Verdana, Segoe, sans-serif;
-    color:              white;
 }
 
 #print_volume {
-    background-color:   #303030;
-    border-color:       gray;
+    background-color:   var(--pale-blue-color);
+    border-color:       var(--blue-color);
 }
 
 #bed_grid {
-    background-color:   #505050;
-    color:              #606060;
+    background-color:   lightBlue;
+    color:              #e7e7e8;
 }
 
 #stl_normal {
-    color:              var(--accent-color);
+    color:              var(--accent-rgb);
 }
 
 #stl_error {
@@ -54,7 +54,7 @@ body {
 }
 
 input:focus, button:focus, select:focus {
-    outline:            3px solid var(--accent-color);
+    outline:            3px solid var(--blue-color);
 }
 
 summary:focus {
@@ -63,9 +63,9 @@ summary:focus {
 
 #navCube > div {
     opacity:            0.75;
-    color:              black;
-    border:             1px solid black;
-    background-color:   lightGray;
+    color:              var(--syn-color);
+    border:             1px solid var(--syn-color);
+    background-color:   var(--panel-color);
 }
 
 .context-menu-list {
@@ -77,63 +77,63 @@ summary:focus {
 }
 
 .panel-style {
-    color:              white;
+    color:              var(--syn-color);
     background-color:   var(--panel-color);
-    border:             1px solid gray;
+    border:             1px solid var(--syn-color);
+    box-shadow:         3px 3px 8px #777777;
 }
 
 hr {
-    background-color:   lightGray;
+    background-color:   var(--syn-color);
     height:             1px;
     border:             none;
 }
 
-button[disabled] {
-    cursor:             not-allowed;
+button {
+    color:              white;
+    background-color:   var(--daver-color);
+    border-radius:      0.5em;
+    border:             0;
+    padding:            0.25em 0.5em;
 }
 
-input[type="file"] {
-    color:              black;
+button[disabled] {
+    cursor:             not-allowed;
+    background-color:   lightGray;
 }
 
 #about a:link, #about a:visited {
-    color:              lightBlue;
+    color:              var(--daver-color);
 }
 
 #about {
     user-select:        none;
 }
 
-#about img {
-    background:         white;
-    border:             0.5em solid white;
-    border-radius:      0.5em;
-}
-
 #toolbar {
-    background-color:   var(--panel-color);
+    /*background-color:   var(--syn-color);*/
+    background-color:   var(--pale-blue-color);
+    border:             0;
     border-radius:      0.5em;
 }
 
 #toolbar img {
-    filter:             invert(100%);
+    /*filter:             invert(100%);*/
+    filter:             url(#colorize-blue);
 }
 
 #toolbar img:hover {
-    background-color:   var(--accent-color-inv);
+    background-color:   var(--daver-color-inv);
+    opacity:            1;
     filter:             invert(100%);
 }
 
-.settings-panel table {
-    border:             1px solid lightGray;
-}
-
 .settings-panel th {
-    background-color:   darkGray;
-    color:              white;
+    background-color:   var(--pale-blue-color);
 }
 
 .settings-panel td {
+    background-color:   white;
 }
 
 #console {
@@ -142,11 +142,7 @@ input[type="file"] {
 }
 
 input, select {
-    background:         lightGray;
-}
-
-.has_units span {
-    color:              black;
+    background:         transparent;
 }
 
 #profile_sources_warn, #profile_sources {

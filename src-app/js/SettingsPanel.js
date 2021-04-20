@@ -1096,11 +1096,13 @@ class AdvancedFeaturesPage {
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
         s.category(   "User Interface");
-        s.choice(         "Theme:",                                  {id: "ui-theme", onchange: AdvancedFeaturesPage.onApplyTheme})
-         .option(         "Classic Theme",                           {value: "classic"})
-         .option(         "Red, Blue &amp; Yellow",                  {value: "red-blue-and-yellow"})
-         .option(         "Gray &amp; Blue",                         {value: "gray-and-blue"})
-         .option(         "Gray &amp; Orange",                       {value: "gray-and-orange"});
+        s.choice(         "Theme:",                                  {id: "ui-theme"})
+         .option(             "SynDaver 3D",                         {value: "syndaver-3d"})
+         .option(             "Classic",                             {value: "classic"})
+         .option(             "Darkness",                            {value: "darkness"})
+         .option(             "Sporty",                              {value: "sporty"});
+        s.color(          "Accent Color:",                           {id: "ui-accent"});
+        s.button(         "Apply",                                   {onclick: AdvancedFeaturesPage.onApplyTheme})
 
         s.category(   "Slicer Output");
         s.button(     "Show",                                        {onclick: Log.show});
@@ -1134,22 +1136,39 @@ class AdvancedFeaturesPage {
     }
 
     static onApplyTheme() {
-        localStorage.setItem("theme", settings.get("ui-theme"));
+        localStorage.setItem("ui-theme",  settings.get("ui-theme"));
+        localStorage.setItem("ui-accent", settings.get("ui-accent"));
         location.reload();
     }
 
     static verifyThemeSelection() {
-        const theme = localStorage.getItem("theme");
+        const theme = localStorage.getItem("ui-theme");
         const dropdown = document.getElementById('ui-theme');
+        const accent   = document.getElementById('ui-accent');
         dropdown.value = theme;
         if (dropdown.value !== theme) {
             dropdown.selectedIndex = 0;
             this.onApplyTheme();
         }
+        accent.value = localStorage.getItem("ui-accent") || "#fafad2";
+    }
+
+    static cssAccentColorRule(color) {
+        const rgb = parseHexColor(color);
+        const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+        console.log(color, rgb, hsl);
+        return ":root {" +
+            "--accent-rgb: " + color + ";" +
+            "--accent-inv: " + formatHexColor(255-rgb.r,255-rgb.g,255-rgb.b) + ";" +
+            "--accent-h: " + hsl.h + ";" +
+            "--accent-s: " + hsl.s + "%;" +
+            "--accent-l: " + hsl.l + "%;" +
+            "};"
     }
 
     static linkThemeStyleSheet() {
-        const theme = localStorage.getItem("theme") || "classic";
+        const theme = localStorage.getItem("ui-theme") || "classic";
+        // Apply the stylesheet
         const link = document.createElement("link");
         link.type = "text/css";
         link.rel = "stylesheet";
@@ -1162,6 +1181,12 @@ class AdvancedFeaturesPage {
             document.body.style.visibility = "visible";
         };
         document.head.appendChild(link);
+        // Add a special entry for the accent color
+        if(!this.styles) {
+            this.styles = document.createElement("style");
+            document.head.appendChild(this.styles);
+        }
+        this.styles.innerText = this.cssAccentColorRule(localStorage.getItem("ui-accent") || "#0070CA");
     }
 
     static refreshDataSources() {

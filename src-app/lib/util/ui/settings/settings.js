@@ -159,6 +159,16 @@ class SettingsUI {
         return el;
     }
 
+    color(description, attr) {
+        const container = SettingsUI._param(this.target_dom, attr, true);
+        SettingsUI._label(container, description, attr);
+        const el = SettingsUI._input(container, "color", attr);
+        if(attr && attr.id) {
+            this.getters[attr.id] = function() {return document.getElementById(attr.id).value};
+        }
+        return el;
+    }
+
     slider(description, attr) {
         const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);

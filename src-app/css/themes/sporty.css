@@ -18,30 +18,30 @@
  */
 
 :root {
-    --panel-color:      white;
+    --panel-color:      rgba(65, 65, 65, 1.0);
     --syn-color:        #002e62;
     --daver-color:      #96172e;
-    --daver-color-inv:  #69e8d1;
-    --accent-color:     #3ea9e2;
-    --pale-blue-color:  #e0e9ef;
+    --accent-darker:    hsl(var(--accent-h), var(--accent-s), 25%);
+    --accent-lighter:   hsl(var(--accent-h), var(--accent-s), 80%);
 }
 
 body {
     font-family:        Tahoma, Verdana, Segoe, sans-serif;
+    color:              white;
 }
 
 #print_volume {
-    background-color:   var(--pale-blue-color);
-    border-color:       var(--accent-color);
+    background-color:   #969696;
+    border-color:       lightGray;
 }
 
 #bed_grid {
-    background-color:   lightBlue;
-    color:              #e7e7e8;
+    background-color:   #969696;
+    color:              hsl(var(--accent-h), 20%, 50%);
 }
 
 #stl_normal {
-    color:              #f8c533;
+    color:              var(--accent-rgb);
 }
 
 #stl_error {
@@ -54,7 +54,7 @@ body {
 }
 
 input:focus, button:focus, select:focus {
-    outline:            3px solid var(--accent-color);
+    outline:            3px solid var(--accent-lighter);
 }
 
 summary:focus {
@@ -63,9 +63,9 @@ summary:focus {
 
 #navCube > div {
     opacity:            0.75;
-    color:              var(--syn-color);
-    border:             1px solid var(--syn-color);
-    background-color:   var(--panel-color);
+    color:              white;
+    border:             1px solid var(--accent-darker);
+    background-color:   darkGray;
 }
 
 .context-menu-list {
@@ -77,63 +77,79 @@ summary:focus {
 }
 
 .panel-style {
-    color:              var(--syn-color);
+    color:              white;
     background-color:   var(--panel-color);
-    border:             1px solid var(--syn-color);
-    box-shadow:         3px 3px 8px #777777;
+    border-radius:      0.5em;
 }
 
 hr {
-    background-color:   var(--syn-color);
+    background-color:   var(--accent-lighter);
     height:             1px;
     border:             none;
 }
 
+summary {
+    color:              var(--accent-lighter);
+}
+
+input[type="file"] {
+    color:              black;
+}
+
 button {
     color:              white;
-    background-color:   var(--daver-color);
+    background-color:   gray;
     border-radius:      0.5em;
     border:             0;
     padding:            0.25em 0.5em;
+    font-weight:        bold;
 }
 
 button[disabled] {
     cursor:             not-allowed;
-    background-color:   lightGray;
+    color:              gray;
+    background-color:   #505050;
 }
 
 #about a:link, #about a:visited {
-    color:              var(--daver-color);
+    color:              var(--accent-lighter);
 }
 
 #about {
     user-select:        none;
 }
 
-#toolbar {
-    /*background-color:   var(--syn-color);*/
-    background-color:   var(--pale-blue-color);
-    border:             0;
+#about img {
+    background:         white;
+    border:             0.5em solid white;
     border-radius:      0.5em;
 }
 
-#toolbar img {
-    /*filter:             invert(100%);*/
-    filter:             url(#colorize-blue);
+#toolbar {
+    border:             0;
+    background-color:   rgba(65, 65, 65, 0.75);
 }
 
-#toolbar img:hover {
-    background-color:   var(--daver-color-inv);
-    opacity:            1;
+#toolbar img {
     filter:             invert(100%);
 }
 
+#toolbar img:hover {
+    filter:             none;
+    background-color:   var(--accent-lighter);
+}
+
+.settings-panel table {
+    border:             1px solid var(--accent-rgb);
+}
+
 .settings-panel th {
-    background-color:   var(--pale-blue-color);
+    background-color:   var(--accent-rgb);
+    color:              white;
 }
 
 .settings-panel td {
-    background-color:   white;
+    color:              var(--accent-rgb);
 }
 
 #console {
@@ -142,7 +158,11 @@ button[disabled] {
 }
 
 input, select {
-    background:         transparent;
+    background:         lightGray;
+}
+
+.has_units span {
+    color:              black;
 }
 
 #profile_sources_warn, #profile_sources {
