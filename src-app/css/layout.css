@@ -67,8 +67,9 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
 
 /* The following group of rules manage the children of the radio buttons on the "Select Profiles" page */
 
-.settings-ui[data-keep-settings="yes"] .load-profiles {display: none;}
-.settings-ui[data-keep-settings="no"]  .keep-settings {display: none;}
+.settings-ui:not([data-profile-source="from-profiles"])   .load-profiles {display: none;}
+.settings-ui:not([data-profile-source="from-session"])    .keep-settings {display: none;}
+.settings-ui:not([data-profile-source="from-import"])     .import-settings {display: none;}
 
 #material_notes:empty:after {
     content: "No special instructions for this material";

@@ -48,7 +48,6 @@ class SettingsPanel {
 
         PlaceObjectsPage.onDropModel();         // Disable buttons
         PlaceObjectsPage.onDropImage();         // Disable buttons
-        AdvancedFeaturesPage.onImportChanged(); // Disable buttons
         PlaceObjectsPage.onLoadTypeChanged();
 
         // Set up the global drag and drop handler
@@ -146,8 +145,8 @@ class SettingsPanel {
                     id = "model_file";
                     break;
                 case 'toml':
-                    settings.gotoPage("page_advanced");
-                    settings.expand("import_settings");
+                    SelectProfilesPage.setProfileSource('from-import');
+                    settings.gotoPage("page_profiles");
                     id = "toml_file";
                     break;
                 case 'jpg':
@@ -194,9 +193,10 @@ class SelectProfilesPage {
 
         s.page(       "Select Profiles",                             {id: "page_profiles"});
 
-        attr = {name: "keep_settings", onchange: SelectProfilesPage.onKeepSettingsChanged};
-        s.radio( "Load slicer settings from profiles:",              {...attr, value: "no", checked: "checked"});
-        s.radio( "Use slicer settings from last session",            {...attr, value: "yes"});
+        attr = {name: "profile-source", onchange: SelectProfilesPage.onProfileSourceChanged};
+        s.radio( "Load slicer settings for printer and material:",   {...attr, value: "from-profiles", checked: "checked"});
+        s.radio( "Remember slicer settings from last session",       {...attr, value: "from-session"});
+        s.radio( "Import slicer setting from .toml file",            {...attr, value: "from-import"});
 
         s.div({id: "profile_choices", className: "load-profiles"});
         s.separator(                                                 {type: "br"});
@@ -210,6 +210,11 @@ class SelectProfilesPage {
         const material_menu = s.choice(     "Material:",             {...attr, id: "print_profiles"});
         s.div();
 
+        s.div({className: "import-settings"});
+        s.separator(                                                 {type: "br"});
+        s.file(       "Drag and drop settings<br><small>(.TOML)</small>", {id: "toml_file", onchange: SelectProfilesPage.onImportChanged, mode: 'text'});
+        s.div();
+
         s.footer();
 
         s.div({className: "keep-settings"});
@@ -219,10 +224,15 @@ class SelectProfilesPage {
 
         s.div({className: "load-profiles"});
         s.button(     "Apply",                                       {onclick: SelectProfilesPage.onApplyPreset});
-        s.buttonHelp( "Click this button to apply selections and proceed to placing objects.");
+        s.buttonHelp( "Click this button to load profiles and proceed to placing objects.");
         s.div();
 
-        this.setUseLastSettings(false);
+        s.div({className: "import-settings"});
+        s.button(     "Apply",                                       {id: "import_settings", onclick: SelectProfilesPage.onImportClicked});
+        s.buttonHelp( "Click this button to import slicer settings and proceed to placing objects.");
+        s.div();
+
+        this.setProfileSource('from-profiles');
         this.initProfiles({
             machine_manufacturers: manufacturer_menu,
             machine_profiles: printer_menu,
@@ -233,6 +243,8 @@ class SelectProfilesPage {
             print_profiles: material_menu
         });
 
+        SelectProfilesPage.onImportChanged(false); // Disable buttons
+
         // Add a special style sheet to the body of the document
         this.styles = document.createElement("style");
         document.head.appendChild(this.styles);
@@ -241,15 +253,13 @@ class SelectProfilesPage {
     static async initProfiles(menus) {
         try {
             await this.populateProfileMenus(menus);
-
+            this.onDropDownChange();
             if(ProfileManager.loadStoredProfile()) {
                 MachineSettingsPage.onPrinterSizeChanged();
             } else {
                 // If no startup profile is found, load first profile from the selection box
-                this.onApplyPreset(true);
+                this.loadPresets();
             }
-
-            this.onDropDownChange();
         } catch(error) {
             alert(error);
             console.error(error);
@@ -332,7 +342,19 @@ class SelectProfilesPage {
         hideIfNoChoices("material_brands");
     }
 
-    static async onApplyPreset(atStartup) {
+    static async onApplyPreset() {
+        try {
+            await SelectProfilesPage.loadPresets();
+            SelectProfilesPage.setProfileSource('from-session');
+            SelectProfilesPage.onNext();
+        }
+        catch(error) {
+            alert(error);
+            console.error(error);
+        }
+    }
+
+    static async loadPresets() {
         try {
             ProgressBar.message("Loading profiles");
             await ProfileManager.applyPresets({
@@ -343,18 +365,27 @@ class SelectProfilesPage {
                 material: settings.get("print_profiles")
             });
             MachineSettingsPage.onPrinterSizeChanged();
-            if(!atStartup) {
-                alert("The new presets have been applied.");
-            }
-        } catch(error) {
-            alert(error);
-            console.error(error);
-        } finally {
+        }  finally {
             ProgressBar.hide();
         }
+    }
 
-        SelectProfilesPage.setUseLastSettings(true);
-        SelectProfilesPage.onNext();
+    static onImportChanged(file) {
+        settings.enable("#import_settings", file);
+    }
+
+    static onImportClicked() {
+        try {
+            const el = settings.get("toml_file");
+            ProfileManager.importConfiguration(el.data);
+            el.clear();
+            MachineSettingsPage.onPrinterSizeChanged();
+            SelectProfilesPage.setProfileSource('from-session');
+            SelectProfilesPage.onImportChanged(false);
+            SelectProfilesPage.onNext();
+        } catch(e) {
+            alert(["Error:", e.message, "Line:", e.line].join(" "));
+        }
     }
 
     static onNext() {
@@ -365,19 +396,14 @@ class SelectProfilesPage {
         }
     }
 
-    static onKeepSettingsChanged(e) {
-        $(settings.ui).attr('data-keep-settings', e ? e.target.value : 'yes');
+    static onProfileSourceChanged(e) {
+        $(settings.ui).attr('data-profile-source', e ? e.target.value : 'from-profiles');
     }
 
-    static setUseLastSettings(useLastSettings) {
-        $('input[name="keep_settings"]').prop('checked', false);
-        if(useLastSettings) {
-            $('input[name="keep_settings"][value="yes"]').prop('checked', true);
-            $(settings.ui).attr('data-keep-settings', 'yes');
-        } else {
-            $('input[name="keep_settings"][value="no"]').prop('checked', true);
-            $(settings.ui).attr('data-keep-settings', 'no');
-        }
+    static setProfileSource(source) {
+        $('input[name="profile-source"]').prop('checked', false);
+        $('input[name="profile-source"][value="' + source + '"]').prop('checked', true);
+        $(settings.ui).attr('data-profile-source', source);
     }
 }
 
@@ -1118,12 +1144,6 @@ class AdvancedFeaturesPage {
         s.button(     "Export",                                      {onclick: AdvancedFeaturesPage.onExportClicked});
         s.buttonHelp( "Click this button to save current settings to a file on your computer.");
 
-        s.category(   "Import Settings",                             {id: "import_settings"});
-        s.file(       "Drag and drop settings<br><small>(.TOML)</small>", {id: "toml_file", onchange: AdvancedFeaturesPage.onImportChanged, mode: 'text'});
-        s.separator(                                                 {type: "br"});
-        s.button(     "Apply",                                       {id: "import_settings", onclick: AdvancedFeaturesPage.onImportClicked});
-        s.buttonHelp( "Importing settings from a file will override all printer &amp; material presets.");
-
         s.category(   "Data Sources");
         s.html('<div id="profile_sources_warn">These options are for advanced users and are not supported by SynDaver. Use at your own risk.</div><br>');
         s.textarea("Profile URLs:",                                  {id: "profile_sources", spellcheck: "false",
@@ -1155,7 +1175,6 @@ class AdvancedFeaturesPage {
     static cssAccentColorRule(color) {
         const rgb = parseHexColor(color);
         const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-        console.log(color, rgb, hsl);
         return ":root {" +
             "--accent-rgb: " + color + ";" +
             "--accent-inv: " + formatHexColor(255-rgb.r,255-rgb.g,255-rgb.b) + ";" +
@@ -1195,22 +1214,6 @@ class AdvancedFeaturesPage {
     static onSaveProfileSources() {
         ProfileLibrary.setURLs(settings.get("profile_sources"));
         alert("These changes will take into effect when you next start Symple Slicer");
-    }
-
-    static onImportChanged(file) {
-        settings.enable("#import_settings", file);
-    }
-
-    static onImportClicked() {
-        try {
-            const el = settings.get("toml_file");
-            ProfileManager.importConfiguration(el.data);
-            MachineSettingsPage.onPrinterSizeChanged();
-            alert("The new settings have been applied.");
-            el.clear();
-        } catch(e) {
-            alert(["Error:", e.message, "Line:", e.line].join(" "));
-        }
     }
 
     static onExportClicked() {
