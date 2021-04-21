@@ -210,7 +210,7 @@ class ProfileManager {
     static _saveProfileStr(options) {
         const toml = new TOMLWriter();
         if(ProfileManager.profile) {
-            toml.writeProperties(ProfileManager.profile, ["metadata", "usb", "wireless", "scripts"]);
+            toml.writeProperties(ProfileManager.profile, ["metadata", "based_on", "usb", "wireless", "scripts"]);
         }
         toml.writeCategory("settings");
         slicer.dumpSettings(toml, options);
@@ -258,6 +258,8 @@ class ProfileManager {
         const data = await fetchText(url);
         console.log("Loaded", type, " from", url);
         ProfileManager._loadProfileStr(data, url);
+        if(!ProfileManager.profile.hasOwnProperty("based_on")) ProfileManager.profile.based_on = {};
+        ProfileManager.profile.based_on[type] = value;
     }
 
     // Apply a selection from the menu

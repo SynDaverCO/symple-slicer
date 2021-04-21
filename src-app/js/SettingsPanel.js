@@ -253,13 +253,14 @@ class SelectProfilesPage {
     static async initProfiles(menus) {
         try {
             await this.populateProfileMenus(menus);
-            this.onDropDownChange();
             if(ProfileManager.loadStoredProfile()) {
                 MachineSettingsPage.onPrinterSizeChanged();
+                this.rememberProfileSelections(menus);
             } else {
                 // If no startup profile is found, load first profile from the selection box
                 this.loadPresets();
             }
+            this.onDropDownChange();
         } catch(error) {
             alert(error);
             console.error(error);
@@ -287,7 +288,22 @@ class SelectProfilesPage {
         }
     }
 
+    static async rememberProfileSelections(menus) {
+        // Preselect the previously used profile
+        const based_on = ProfileManager.getSection("based_on");
+        if(based_on) {
+            this.disableDropDownValidation = true;
+            for(const [key, menu] of Object.entries(menus)) {
+                if(based_on.hasOwnProperty(key)) {
+                    menu.element.value = based_on[key];
+                }
+            }
+            this.disableDropDownValidation = false;
+        }
+    }
+
     static onDropDownChange(e) {
+        if(this.disableDropDownValidation) return;
         function hideNonMatchingOptions(key, value) {
             return '#profile_choices option[' + key + ']:not([' + key + '="' + value + '"]) {display: none}\n';
         }
