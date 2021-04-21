@@ -397,6 +397,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             if(query.url) {
                 SettingsPanel.loadFileFromUrls([decodeURIComponent(query.url)]);
             }
+
+            var pendingResources = 2;
+            var onStyleSheetReady = onProfilesReady =  function () {
+                if(--pendingResources == 0)
+                document.body.style.visibility = "visible";
+            }
         </script>
     </body>
 </html>

@@ -195,8 +195,8 @@ class SelectProfilesPage {
         s.page(       "Select Profiles",                             {id: "page_profiles"});
 
         attr = {name: "keep_settings", onchange: SelectProfilesPage.onKeepSettingsChanged};
-        s.radio( "Use slicer settings from last session",            {...attr, value: "yes", checked: "checked"});
-        s.radio( "Load new slicer settings from profiles:",          {...attr, value: "no"});
+        s.radio( "Load slicer settings from profiles:",              {...attr, value: "no", checked: "checked"});
+        s.radio( "Use slicer settings from last session",            {...attr, value: "yes"});
 
         s.div({id: "profile_choices", className: "load-profiles"});
         s.separator(                                                 {type: "br"});
@@ -222,7 +222,7 @@ class SelectProfilesPage {
         s.buttonHelp( "Click this button to apply selections and proceed to placing objects.");
         s.div();
 
-        this.setUseLastSettings(true);
+        this.setUseLastSettings(false);
         this.initProfiles({
             machine_manufacturers: manufacturer_menu,
             machine_profiles: printer_menu,
@@ -242,8 +242,6 @@ class SelectProfilesPage {
         try {
             await this.populateProfileMenus(menus);
 
-            this.setUseLastSettings(ProfileManager.hasStoredProfile());
-
             if(ProfileManager.loadStoredProfile()) {
                 MachineSettingsPage.onPrinterSizeChanged();
             } else {
@@ -257,6 +255,7 @@ class SelectProfilesPage {
             console.error(error);
         }
         window.onunload = ProfileManager.onUnloadHandler;
+        onProfilesReady();
     }
 
     // Populate the pull down menus in the UI with a list of available profiles
@@ -1178,7 +1177,7 @@ class AdvancedFeaturesPage {
             PrinterRepresentation.applyStyleSheetColors();
             Stage.applyStyleSheetColors();
             renderLoop.applyStyleSheetColors();
-            document.body.style.visibility = "visible";
+            onStyleSheetReady();
         };
         document.head.appendChild(link);
         // Add a special entry for the accent color
