@@ -33,7 +33,7 @@ async function flashFirmwareWithBossa(attr) {
             await programmer.reset_to_bootloader(port);
             if(SequentialSerial.isWebSerial) {
                 // With the Web Serial API, the browser needs a new button click to allow us to open another device.
-                alert("The printer is now ready for upgrading.\nClick the \"Upgrade\" button once again to proceed.\n\nThe printer's display may fade out during this process (this is normal)");
+                alert("The printer is now ready for upgrading.\nClick the \"Update\" button once again to proceed.\n\nThe printer's display may fade out during this process (this is normal)");
                 return;
             } else {
                 // With Electron, we can immediately try to open another serial port
