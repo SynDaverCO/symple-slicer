@@ -1190,15 +1190,15 @@ class AdvancedFeaturesPage {
     }
 
     static verifyThemeSelection() {
-        const theme = localStorage.getItem("ui-theme");
         const dropdown = document.getElementById('ui-theme');
         const accent   = document.getElementById('ui-accent');
+        const theme    = localStorage.getItem("ui-theme");
+        accent.value   = localStorage.getItem("ui-accent") || "#fafad2";
         dropdown.value = theme;
         if (dropdown.value !== theme) {
             dropdown.selectedIndex = 0;
             this.onApplyTheme();
         }
-        accent.value = localStorage.getItem("ui-accent") || "#fafad2";
     }
 
     static cssAccentColorRule(color) {
@@ -1233,7 +1233,7 @@ class AdvancedFeaturesPage {
             this.styles = document.createElement("style");
             document.head.appendChild(this.styles);
         }
-        this.styles.innerText = this.cssAccentColorRule(localStorage.getItem("ui-accent") || "#0070CA");
+        this.styles.innerText = this.cssAccentColorRule(localStorage.getItem("ui-accent") || "#fafad2");
     }
 
     static refreshDataSources() {
