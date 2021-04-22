@@ -195,8 +195,8 @@ class SelectProfilesPage {
 
         attr = {name: "profile-source", onchange: SelectProfilesPage.onProfileSourceChanged};
         s.radio( "Load slicer settings for printer and material:",   {...attr, value: "from-profiles", checked: "checked"});
-        s.radio( "Remember slicer settings from last session",       {...attr, value: "from-session"});
-        s.radio( "Import slicer setting from .toml file",            {...attr, value: "from-import"});
+        s.radio( "Load slicer settings from saved file",             {...attr, value: "from-import"});
+        s.radio( "Keep slicer settings from last session",           {...attr, value: "from-session"});
 
         s.div({id: "profile_choices", className: "load-profiles"});
         s.separator(                                                 {type: "br"});
@@ -229,7 +229,7 @@ class SelectProfilesPage {
 
         s.div({className: "import-settings"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: SelectProfilesPage.onImportClicked});
-        s.buttonHelp( "Click this button to import slicer settings and proceed to placing objects.");
+        s.buttonHelp( "Click this button to load slicer settings and proceed to placing objects.");
         s.div();
 
         const defaultSource = localStorage.getItem('profile-source') || 'from-profiles';
@@ -758,6 +758,12 @@ class SliceObjectsPage {
             }
         }
 
+        s.category(   "Save Settings to File");
+        s.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only filename"});
+        s.separator(                                                 {type: "br"});
+        s.button(     "Save",                                        {onclick: SliceObjectsPage.onExportClicked});
+        s.buttonHelp( "Click this button to save the slicer settings to a file on your computer.");
+
         s.footer();
         s.button(     "Slice",                                       {onclick: SliceObjectsPage.onSliceClicked});
         s.buttonHelp( "Click this button to generate a G-code file for printing.");
@@ -826,6 +832,12 @@ class SliceObjectsPage {
             slicer.slice(filenames);
         }
     }
+
+     static onExportClicked() {
+        const options = {unchanged: false};
+        const filename = settings.get("save_filename");
+        AdvancedFeaturesPage.exportConfiguration(filename, options);
+    }
 }
 
 class PrintAndPreviewPage {
@@ -833,8 +845,8 @@ class PrintAndPreviewPage {
         s.page(       "Print and Preview",                           {id: "page_print"});
 
         s.category(   "Print Statistics",                            {open: "open"});
-        s.text(           "Print time",                              {id: "print_time"});
-        s.number(         "Filament used",                           {id: "print_filament", units: "m"});
+        s.text(           "Print time",                              {id: "print_time", className: "readonly"});
+        s.number(         "Filament used",                           {id: "print_filament", units: "m", className: "readonly"});
 
         s.category(   "Preview Options",                             {open: "open"});
         s.toggle(         "Show shell",                              {id: "show_shell", onclick: PrintAndPreviewPage.onUpdatePreview, checked: 'checked'});
@@ -842,7 +854,7 @@ class PrintAndPreviewPage {
         s.toggle(         "Show supports",                           {id: "show_support", onclick: PrintAndPreviewPage.onUpdatePreview});
         s.toggle(         "Show travel",                             {id: "show_travel", onclick: PrintAndPreviewPage.onUpdatePreview});
         s.slider(         "Show layer",                              {id: "preview_layer", oninput: PrintAndPreviewPage.onUpdateLayer});
-        s.number(         "Top layer",                               {id: "current_layer"});
+        s.number(         "Top layer",                               {id: "current_layer", className: "readonly"});
 
         s.category(   "Print Options",                               {open: "open"});
         const attr = {name: "print_destination", onchange: PrintAndPreviewPage.onOutputChanged};
@@ -852,7 +864,7 @@ class PrintAndPreviewPage {
         s.radio( "Save G-code to file for printing:",                {...attr, value: "save-to-file", checked: "checked"});
 
         /* Choices for wireless and saving to file */
-        s.text(           "Save as:",                                {id: "gcode_filename",  className: "gcode_filename", value: "output.gcode"});
+        s.text(           "Save as:",                                {id: "gcode_filename",  className: "gcode_filename filename", value: "output.gcode"});
         s.choice(         "Wireless capable printer:",               {id: "printer_choices", className: "printer_choices"});
         s.category();
 
@@ -1150,15 +1162,15 @@ class AdvancedFeaturesPage {
         s.button(     "Show",                                        {onclick: Log.show});
         s.buttonHelp( "Click this button to show slicing engine logs.");
 
-        s.category(   "Export Settings");
-        s.toggle(         "Show units and choices as comments",      {id: "export_with_choices"});
-        s.toggle(         "Show units descriptions as comments",     {id: "export_with_descriptions"});
-        s.toggle(         "Show implicit values as comments",        {id: "export_with_unchanged",
+        s.category(   "Save Settings with Comments");
+        s.toggle(         "Save units and choices",                  {id: "export_with_choices"});
+        s.toggle(         "Save description",                        {id: "export_with_descriptions"});
+        s.toggle(         "Save implicit values",                    {id: "export_with_unchanged",
            tooltip: "Include all values, including those absent in profiles and unchanged by the user. This provides documentation for values that may have been implicitly computed from other settings."});
         s.separator(                                                 {type: "br"});
-        s.text(       "Save as:",                                    {id: "export_filename", value: "config.toml", className: "webapp-only"});
+        s.text(       "Save as:",                                    {id: "export_filename", value: "slicer_settings.toml", className: "webapp-only filename"});
         s.separator(                                                 {type: "br"});
-        s.button(     "Export",                                      {onclick: AdvancedFeaturesPage.onExportClicked});
+        s.button(     "Save",                                        {onclick: AdvancedFeaturesPage.onExportClicked});
         s.buttonHelp( "Click this button to save current settings to a file on your computer.");
 
         s.category(   "Data Sources");
@@ -1234,13 +1246,18 @@ class AdvancedFeaturesPage {
     }
 
     static onExportClicked() {
-        var config = ProfileManager.exportConfiguration({
+        const options = {
             descriptions: settings.get("export_with_descriptions"),
             unchanged:    settings.get("export_with_unchanged"),
             choices:      settings.get("export_with_choices")
-        });
-        var blob = new Blob([config], {type: "text/plain;charset=utf-8"});
-        var filename = settings.get("export_filename");
+        };
+        const filename = settings.get("export_filename");
+        AdvancedFeaturesPage.exportConfiguration(filename, options);
+    }
+    
+    static exportConfiguration(filename, options) {
+        const config = ProfileManager.exportConfiguration(options);
+        const blob = new Blob([config], {type: "text/plain;charset=utf-8"});
         saveAs(blob, filename);
     }
 }
@@ -1522,8 +1539,8 @@ class ConfigWirelessPage {
 class MonitorWirelessPage {
     static init(s) {
         s.page(     null,                                            {id: "page_monitor_wifi"});
-        s.text(     "Printer state:",                                {id: "wifi_state"});
-        s.number(   "Signal strength:",                              {id: "wifi_strength", units: "dBm"});
+        s.text(     "Printer state:",                                {id: "wifi_state", className: "readonly"});
+        s.number(   "Signal strength:",                              {id: "wifi_strength", units: "dBm", className: "readonly"});
         s.separator(                                                 {type: "br"});
         s.progress( "Print progress:",                               {id: "wifi_progress", value: 0});
         s.button(   "Stop",                                          {id: "wifi_stop", onclick: MonitorWirelessPage.stopPrint, disabled: "disabled"});
@@ -1619,13 +1636,13 @@ class UpdateFirmwarePage {
     static init(s) {
         s.page(       "Update Firmware",                {id: "page_flash_fw"});
         s.category(   "Update Printer Firmware");
-        s.text(       "Firmware:",                      {id: "printer_fw_filename"});
+        s.text(       "Firmware:",                      {id: "printer_fw_filename", className: "filename readonly"});
         s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashPrinterClicked});
         s.buttonHelp( "Click this button to update the firmware on a USB connected printer");
 
         s.category(   "Update Wireless Firmware");
-        s.text(       "Firmware:",                      {id: "wireless_fw_version"});
+        s.text(       "Firmware:",                      {id: "wireless_fw_version", className: "filename readonly"});
         s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashWirelessClicked, className: "canUpload"});
         s.buttonHelp( "Click this button to update the firmware on the wireless module wirelessly");

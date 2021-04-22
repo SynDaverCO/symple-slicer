@@ -4,7 +4,9 @@ SynDaver Symple Slicer v1.0.18
 * '''Firmware:''' New firmware for Axi 2 (R3)
 * '''Slicing UI:''' Added color theme choices under "Advanced Features"!
 * '''Slicing UI:''' In "Select Profiles", choosing a printer and material is now the default.
-* '''Slicing UI:''' Import settings from TOML files is now under "Select Profiles" rather than "Advanced Features"
+* '''Slicing UI:''' Improved workflow for saving and loading custom slicer profiles.
+## Added "Save Settings to File" option under "Slice Objects"
+## Added "Import slicer settings" option to "Select Profiles" (formerly under "Advanced Features")
 
 SynDaver Symple Slicer v1.0.171
 ===============================

@@ -125,6 +125,13 @@ body.debug .setting-ui {
     border:             1px solid;
 }
 
+.settings-panel input[type=text].readonly,
+.settings-panel input[type=number].readonly,
+.settings-panel editable-select.readonly {
+    pointer-events:     none;
+    border:             none;
+}
+
 .settings-panel progress {
     box-sizing:         border-box;
     width:              12em;    

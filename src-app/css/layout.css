@@ -84,11 +84,6 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     min-height: 3em;
 }
 
-#gcode_filename, #printer_fw_filename, #wireless_fw_version {
-    width:              auto;
-    flex-grow:          1;
-}
-
 #machine_start_gcode, #machine_end_gcode {
     width:              75vw;
     height:             75vh;
@@ -174,7 +169,8 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     top:                0;
 }
 
-#print_time, #print_filament, #current_layer, #wifi_strength, #wifi_status, #printer_fw_filename, #wireless_fw_version {
-    pointer-events:     none;
-    border:             none;
+.filename {
+    width:              auto;
+    flex-grow:          1;
 }
+
