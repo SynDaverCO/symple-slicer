@@ -112,7 +112,7 @@ class ProfileLibrary {
             let data, conf;
             try {
                 console.log("Loading profile list from", baseUrl.toString());
-                data = await fetchText(url);
+                data = await fetchText(baseUrl);
             } catch(e) {
                 console.warn("Unable to load profiles from", url)
                 console.error(e)
