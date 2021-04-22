@@ -232,7 +232,8 @@ class SelectProfilesPage {
         s.buttonHelp( "Click this button to import slicer settings and proceed to placing objects.");
         s.div();
 
-        this.setProfileSource('from-profiles');
+        const defaultSource = localStorage.getItem('profile-source') || 'from-profiles';
+        this.setProfileSource(defaultSource);
         this.initProfiles({
             machine_manufacturers: manufacturer_menu,
             machine_profiles: printer_menu,
@@ -361,7 +362,6 @@ class SelectProfilesPage {
     static async onApplyPreset() {
         try {
             await SelectProfilesPage.loadPresets();
-            SelectProfilesPage.setProfileSource('from-session');
             SelectProfilesPage.onNext();
         }
         catch(error) {
@@ -396,7 +396,6 @@ class SelectProfilesPage {
             ProfileManager.importConfiguration(el.data);
             el.clear();
             MachineSettingsPage.onPrinterSizeChanged();
-            SelectProfilesPage.setProfileSource('from-session');
             SelectProfilesPage.onImportChanged(false);
             SelectProfilesPage.onNext();
         } catch(e) {
@@ -413,7 +412,9 @@ class SelectProfilesPage {
     }
 
     static onProfileSourceChanged(e) {
-        $(settings.ui).attr('data-profile-source', e ? e.target.value : 'from-profiles');
+        const source = e ? e.target.value : 'from-profiles';
+        $(settings.ui).attr('data-profile-source', source);
+        localStorage.setItem('profile-source', source);
     }
 
     static setProfileSource(source) {
