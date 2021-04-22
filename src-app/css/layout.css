@@ -23,7 +23,12 @@ body {
     bottom:             0;
     margin:             0;
     overflow:           hidden;
-    visibility:         hidden;
+}
+
+body.ready {
+    visibility:         visible;
+    opacity:            1;
+    transition:         visibility 0.3s linear,opacity 0.3s linear;
 }
 
 body.debug {

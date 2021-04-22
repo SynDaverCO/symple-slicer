@@ -35,6 +35,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <meta property="og:image:height"           content="630" />
     </head>
     <body>
+        <style>
+            /* Start hidden until all elements are loaded */
+            body {visibility: hidden; opacity: 0;}
+        </style>
         <script src="lib/util/misc/ParseQuery.js"></script>
         <script>
             var query        = parseQuery();
@@ -399,9 +403,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
 
             var pendingResources = 2;
-            var onStyleSheetReady = onProfilesReady =  function () {
-                if(--pendingResources == 0)
-                document.body.style.visibility = "visible";
+            var onStyleSheetReady = onProfilesReady = function () {
+                if(--pendingResources == 0) document.body.classList.add("ready");
             }
         </script>
     </body>
