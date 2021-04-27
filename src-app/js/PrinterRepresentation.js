@@ -39,6 +39,7 @@ class PrinterRepresentation extends THREE.Object3D {
         const gridColor1 = getColorFloatArrayFromElement("#bed_grid", 'color');
         const gridColor2 = getColorFloatArrayFromElement("#bed_grid", 'background-color');
 
+        PrinterRepresentation.labelMaterial.color = new THREE.Color(frameColor);
         PrinterRepresentation.wireframeMaterial.color = new THREE.Color(frameColor);
         PrinterRepresentation.checkerboardMaterial.uniforms.color1.value = new THREE.Vector4(gridColor1[0], gridColor1[1], gridColor1[2]);
         PrinterRepresentation.checkerboardMaterial.uniforms.color2.value = new THREE.Vector4(gridColor2[0], gridColor2[1], gridColor2[2]);
@@ -74,6 +75,16 @@ class PrinterRepresentation extends THREE.Object3D {
         this.box_frame.position.z = printer.z_height / 2;
         this.add(this.box_frame);
 
+        // Rear label
+        if(printer.name) {
+            this.label = this.createTextLabel(24, printer.name, printer.x_width/2);
+            this.label.mesh.rotation.x = Math.PI/2;
+            this.label.mesh.position.x = -printer.x_width/2 + this.label.width/2 + 5;
+            this.label.mesh.position.y =  printer.y_depth/2;
+            this.label.mesh.position.z =  printer.z_height - this.label.height/2 - 5;
+            this.add(this.label.mesh);
+        }
+
         // Light for casting shadows
 
         this.light.position.set( 0, 0, printer.z_height );
@@ -101,6 +112,58 @@ class PrinterRepresentation extends THREE.Object3D {
         }
     }
 
+    createTextLabel(size, str, maxWidth) {
+        const superSample = 2;
+        size *= superSample;
+
+        if(!this.ctx) {
+            this.ctx = document.createElement('canvas').getContext('2d');
+            const texture = new THREE.CanvasTexture(this.ctx.canvas);
+            texture.minFilter = THREE.LinearFilter;
+            texture.wrapS = THREE.ClampToEdgeWrapping;
+            texture.wrapT = THREE.ClampToEdgeWrapping;
+            PrinterRepresentation.labelMaterial.alphaMap = texture;
+        }
+
+        const ctx = this.ctx;
+        const font = `${size}px bold sans-serif`;
+        ctx.font = font;
+        // measure how long the label will be
+        const width = ctx.measureText(str).width;
+        const height = size;
+        ctx.canvas.width = width;
+        ctx.canvas.height = height;
+
+        // need to set font again after resizing canvas
+        ctx.font = font;
+        ctx.textBaseline = 'top';
+
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, width, height);
+        ctx.strokeStyle = 'white';
+        ctx.strokeText(str, 0, 0);
+
+        PrinterRepresentation.labelMaterial.alphaMap.needsUpdate = true;
+
+        const geometry = new THREE.PlaneBufferGeometry( width, height, 1 );
+        const mesh = new THREE.Mesh( geometry, PrinterRepresentation.labelMaterial );
+        const scale = maxWidth && (width / superSample < maxWidth) ? 1 / superSample : maxWidth / width;
+        mesh.scale.x = scale;
+        mesh.scale.y = scale;
+        mesh.scale.z = scale;
+
+        return {
+            geometry,
+            mesh,
+            width: width * scale,
+            height: height * scale
+        };
+    }
+
+    destroyTextLabel(label) {
+        label.geometry.dispose();
+    }
+
     destroyRepresentation() {
         this.remove(this.floor);
         this.remove(this.checkers);
@@ -108,6 +171,12 @@ class PrinterRepresentation extends THREE.Object3D {
 
         this.box_geometry.dispose();
         this.edge_geometry.dispose();
+
+        if(this.label) {
+            this.remove(this.label.mesh);
+            this.destroyTextLabel(this.label);
+            delete this.label;
+        }
     }
 
     update(printer) {
@@ -163,3 +232,5 @@ PrinterRepresentation.checkerboardMaterial = new THREE.ShaderMaterial({
 PrinterRepresentation.shadowMaterial = new THREE.ShadowMaterial({opacity: 0.25});
 
 PrinterRepresentation.wireframeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
+
+PrinterRepresentation.labelMaterial = new THREE.MeshBasicMaterial( { side: THREE.DoubleSide, transparent: true } );

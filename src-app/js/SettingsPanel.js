@@ -1114,7 +1114,8 @@ class MachineSettingsPage {
             origin_at_center:  settings.get("machine_center_is_zero"),
             x_width:           settings.get("machine_width"),
             y_depth:           settings.get("machine_depth"),
-            z_height:          settings.get("machine_height")
+            z_height:          settings.get("machine_height"),
+            name:              slicer.getOption("machine_name")
         });
         stage.arrangeObjectsOnPlatform();
         renderLoop.setView("front");

@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 121
+    cacheVersion: 128
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -180,10 +180,14 @@ const filesToCache = [
     'guide/images/firmware.png',
     'guide/images/help.png',
     'guide/images/install_chrome_app.png',
+    'guide/images/ip_address_page.png',
+    'guide/images/layflat_tool.png',
     'guide/images/lithophane_generated.png',
     'guide/images/lithophane_original.png',
     'guide/images/machine_settings.png',
     'guide/images/material_notes.png',
+    'guide/images/mirror_objects_tool.png',
+    'guide/images/move_objects_tool.png',
     'guide/images/place_objects.png',
     'guide/images/preview_all_layers.png',
     'guide/images/preview_infill.png',
@@ -193,10 +197,12 @@ const filesToCache = [
     'guide/images/preview_travel.png',
     'guide/images/print_and_preview.png',
     'guide/images/right_click_menu.png',
-    'guide/images/sympleslicer.png',
+    'guide/images/rotate_objects_tool.png',
+    'guide/images/scale_objects_tool.png',
     'guide/images/select_profiles.png',
     'guide/images/select_profiles2.png',
     'guide/images/slice_objects.png',
+    'guide/images/sympleslicer.png',
     'guide/images/tool_layflat_after.png',
     'guide/images/tool_layflat_before.png',
     'guide/images/tool_mirror.png',

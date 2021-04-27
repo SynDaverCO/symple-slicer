@@ -150,6 +150,10 @@ class SlicerInterface {
         this.config.set(name, value);
     }
 
+    getOption(name) {
+        return this.config.get(name);
+    }
+
     setMultiple(values) {
         this.config.setMultiple(values);
     }
