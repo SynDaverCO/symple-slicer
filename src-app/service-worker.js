@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 128
+    cacheVersion: 132
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -56,7 +56,7 @@ const filesToCache = [
     'config/syndaver/print_profiles/tpu95_standard_stable.toml',
     'config/syndaver/machine_firmware/LICENSE.txt',
     'config/syndaver/machine_firmware/SynDaver_Axi_1_Marlin_R6_f62581db6d.bin',
-    'config/syndaver/machine_firmware/SynDaver_Axi_2_Marlin_R3_560472df7b.bin',
+    'config/syndaver/machine_firmware/SynDaver_Axi_2_Marlin_R3_5b8060f4d8.bin',
     'config/syndaver/machine_firmware/SynDaver_WiFi.bin',
     'config/syndaver/machine_firmware/SynDaver_WiFi.html',
     'config/syndaver/machine_firmware/SynDaver_WiFi_Serial.html',

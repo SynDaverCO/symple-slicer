@@ -31,10 +31,14 @@ function parseColor(color) {
     }
 }
 
-function getColorArrayFromElement(selector, property) {
+function getStylePropertyFromElement(selector, property) {
     const el = document.querySelector(selector);
     const style = window.getComputedStyle(el);
-    return parseColor(style.getPropertyValue(property));
+    return style.getPropertyValue(property);
+}
+
+function getColorArrayFromElement(selector, property) {
+    return parseColor(getStylePropertyFromElement(selector,property));
 }
 
 function getColorValueFromElement(selector, property) {

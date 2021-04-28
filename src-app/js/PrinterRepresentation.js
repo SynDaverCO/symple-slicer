@@ -126,7 +126,8 @@ class PrinterRepresentation extends THREE.Object3D {
         }
 
         const ctx = this.ctx;
-        const font = `${size}px bold sans-serif`;
+        const fontFamily = getStylePropertyFromElement("body","font-family");
+        const font = `${size}px bold ${fontFamily}`;
         ctx.font = font;
         // measure how long the label will be
         const width = ctx.measureText(str).width;
@@ -140,8 +141,8 @@ class PrinterRepresentation extends THREE.Object3D {
 
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, width, height);
-        ctx.strokeStyle = 'white';
-        ctx.strokeText(str, 0, 0);
+        ctx.fillStyle = 'white';
+        ctx.fillText(str, 0, 0);
 
         PrinterRepresentation.labelMaterial.alphaMap.needsUpdate = true;
 
