@@ -1,7 +1,7 @@
 SynDaver Symple Slicer v1.0.18
 ==============================
 
-* '''Firmware:''' New firmware for Axi 2 (R3)
+* '''Firmware:''' New printer firmware for Axi 2 (R3) and wireless (v1.0.4)
 * '''Slicing UI:''' Show printer name in print volume
 * '''Slicing UI:''' Added color theme choices under "Advanced Features"!
 * '''Slicing UI:''' In "Select Profiles", choosing a printer and material is now the default.

@@ -19,10 +19,9 @@
 
 :root {
     --panel-color:      white;
-    --syn-color:        #002e62;
+    --syn-color:        hsl(212, 100%, 19%);
     --daver-color:      #96172e;
     --daver-color-inv:  #69e8d1;
-    --blue-color:       hsl(204, 75%, 55%);
     --pale-blue-color:  hsl(204, 50%, 97%);
 }
 
@@ -32,12 +31,12 @@ body {
 
 #print_volume {
     background-color:   var(--pale-blue-color);
-    border-color:       var(--blue-color);
+    border-color:       var(--syn-color);
 }
 
 #bed_grid {
-    background-color:   lightBlue;
-    color:              #e7e7e8;
+    background-color:   hsl(212, 100%, 75%);
+    color:              var(--pale-blue-color);
 }
 
 #stl_normal {
@@ -54,7 +53,7 @@ body {
 }
 
 input:focus, button:focus, select:focus {
-    outline:            3px solid var(--blue-color);
+    outline:            3px solid var(--syn-color);
 }
 
 summary:focus {

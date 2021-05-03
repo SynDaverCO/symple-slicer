@@ -77,11 +77,14 @@ class PrinterRepresentation extends THREE.Object3D {
 
         // Rear label
         if(printer.name) {
-            this.label = this.createTextLabel(24, printer.name, printer.x_width/2);
+            const lineHeight = printer.z_height / 24;
+            const margin = lineHeight / 2;
+            const maxWidth = printer.x_width - margin * 2;
+            this.label = this.createTextLabel(printer.name, maxWidth, lineHeight);
             this.label.mesh.rotation.x = Math.PI/2;
-            this.label.mesh.position.x = -printer.x_width/2 + this.label.width/2 + 5;
+            this.label.mesh.position.x = -printer.x_width/2 + this.label.width/2 + margin;
             this.label.mesh.position.y =  printer.y_depth/2;
-            this.label.mesh.position.z =  printer.z_height - this.label.height/2 - 5;
+            this.label.mesh.position.z =  printer.z_height - this.label.height/2 - margin;
             this.add(this.label.mesh);
         }
 
@@ -112,10 +115,7 @@ class PrinterRepresentation extends THREE.Object3D {
         }
     }
 
-    createTextLabel(size, str, maxWidth) {
-        const superSample = 2;
-        size *= superSample;
-
+    createTextLabel(str, maxWidth, maxHeight) {
         if(!this.ctx) {
             this.ctx = document.createElement('canvas').getContext('2d');
             const texture = new THREE.CanvasTexture(this.ctx.canvas);
@@ -127,11 +127,12 @@ class PrinterRepresentation extends THREE.Object3D {
 
         const ctx = this.ctx;
         const fontFamily = getStylePropertyFromElement("body","font-family");
-        const font = `${size}px bold ${fontFamily}`;
+        const fontSize = 24;
+        const font = `${fontSize}px bold ${fontFamily}`;
         ctx.font = font;
         // measure how long the label will be
         const width = ctx.measureText(str).width;
-        const height = size;
+        const height = fontSize;
         ctx.canvas.width = width;
         ctx.canvas.height = height;
 
@@ -148,7 +149,7 @@ class PrinterRepresentation extends THREE.Object3D {
 
         const geometry = new THREE.PlaneBufferGeometry( width, height, 1 );
         const mesh = new THREE.Mesh( geometry, PrinterRepresentation.labelMaterial );
-        const scale = maxWidth && (width / superSample < maxWidth) ? 1 / superSample : maxWidth / width;
+        const scale = Math.min(maxWidth / width, maxHeight / height);
         mesh.scale.x = scale;
         mesh.scale.y = scale;
         mesh.scale.z = scale;
