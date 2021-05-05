@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 140
+    cacheVersion: 141
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -198,11 +198,14 @@ const filesToCache = [
     'guide/images/print_and_preview.png',
     'guide/images/right_click_menu.png',
     'guide/images/rotate_objects_tool.png',
+    'guide/images/save_settings.png',
     'guide/images/scale_objects_tool.png',
     'guide/images/select_profiles.png',
     'guide/images/select_profiles2.png',
+    'guide/images/select_profiles3.png',
     'guide/images/slice_objects.png',
     'guide/images/sympleslicer.png',
+    'guide/images/tools.png',
     'guide/images/tool_layflat_after.png',
     'guide/images/tool_layflat_before.png',
     'guide/images/tool_mirror.png',
