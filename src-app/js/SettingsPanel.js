@@ -46,6 +46,7 @@ class SettingsPanel {
         s.onPageEnter = SettingsPanel.onPageEnter;
         s.onPageExit = SettingsPanel.onPageExit;
 
+        ConfigWirelessPage.onInput();           // Disable buttons
         PlaceObjectsPage.onDropModel();         // Disable buttons
         PlaceObjectsPage.onDropImage();         // Disable buttons
         PlaceObjectsPage.onLoadTypeChanged();
@@ -1294,7 +1295,6 @@ class ConfigWirelessPage {
         s.buttonHelp( "Click to export configuration G-code for a wireless-capable SynDaver printer");
 
         ConfigWirelessPage.loadSettings();
-        ConfigWirelessPage.onInput();
         ConfigWirelessPage.updateWirelessMenu();
         PrintAndPreviewPage.updateOutputChoices();
 
