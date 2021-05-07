@@ -1,7 +1,8 @@
 SynDaver Symple Slicer v1.0.19
 ==============================
 
-* '''Fimrware:''' Disable wireless "Update" button when wireless printer is unavailable.
+* '''Firmware:''' Add printer selection dropdown to "Update Wireless Firmware" page.
+* '''Firmware:''' Disable wireless "Update" button when wireless printer is unavailable.
 
 SynDaver Symple Slicer v1.0.18
 ==============================

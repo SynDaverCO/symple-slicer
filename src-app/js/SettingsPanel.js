@@ -896,7 +896,7 @@ class PrintAndPreviewPage {
         const defaultOutput = localStorage.getItem('data-output') || 'file';
         PrintAndPreviewPage.setOutput(defaultOutput);
 
-        ConfigWirelessPage.manageWirelessMenu("printer_choices");
+        ConfigWirelessPage.linkWirelessMenu("printer_choices");
     }
 
     static updateOutputChoices() {
@@ -1435,15 +1435,18 @@ class ConfigWirelessPage {
      * a new set of settings is read in.
      */
 
-    static manageWirelessMenu(id) {
-        ConfigWirelessPage.dropdown = document.getElementById(id);
+    static linkWirelessMenu(id) {
+        if(!ConfigWirelessPage.linkedMenus) ConfigWirelessPage.linkedMenus = [];
+        ConfigWirelessPage.linkedMenus.push(document.getElementById(id));
     }
 
     static updateWirelessMenu() {
-        if(ConfigWirelessPage.dropdown) {
-            const el = ConfigWirelessPage.dropdown;
-            const selectedProfile   = settings.get("printer_name");
-            const availableProfiles = Object.keys(ConfigWirelessPage.loadWirelessProfileList());
+        // Update the list of wireless profiles in the "Wireless Printing" page
+        const availableProfiles = Object.keys(ConfigWirelessPage.loadWirelessProfileList());
+        const selectedProfile   = settings.get("printer_name");
+        document.getElementById("printer_name").setChoices(availableProfiles);
+        // Update alias pull-down menus in other pages.
+        for(const el of ConfigWirelessPage.linkedMenus) {
             el.options.length = 0;
             for(const k of availableProfiles) {
                 el.add(new Option(k, k, false, k == selectedProfile));
@@ -1452,13 +1455,12 @@ class ConfigWirelessPage {
             if(!availableProfiles.includes(selectedProfile)) {
                 el.selectedIndex = -1;
             }
-            document.getElementById("printer_name").setChoices(availableProfiles);
         }
     }
 
     static savedProfileCount() {
-        if(ConfigWirelessPage.dropdown) {
-            const el = ConfigWirelessPage.dropdown;
+        if(ConfigWirelessPage.linkedMenus) {
+            const el = ConfigWirelessPage.linkedMenus[0];
             return el.options.length;
         }
         return 0;
@@ -1643,10 +1645,13 @@ class UpdateFirmwarePage {
         s.buttonHelp( "Click this button to update the firmware on a USB connected printer");
 
         s.category(   "Update Wireless Firmware");
+        s.choice(     "Printer to update:",             {id: "wifi_module_choices"});
         s.text(       "Firmware:",                      {id: "wireless_fw_version", className: "filename readonly"});
         s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashWirelessClicked, className: "canUpload"});
         s.buttonHelp( "Click this button to update the firmware on the wireless module wirelessly");
+
+        ConfigWirelessPage.linkWirelessMenu("wifi_module_choices");
     }
 
     static onEntry() {
