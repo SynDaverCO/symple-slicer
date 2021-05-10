@@ -139,6 +139,12 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     width:              50vw;
 }
 
+#lcd_warn {
+    padding:            1em;
+    text-align:         center;
+    color:              red;
+}
+
 .warning {
     padding:            1em;
     text-align:         center;

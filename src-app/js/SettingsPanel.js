@@ -1639,6 +1639,7 @@ class UpdateFirmwarePage {
     static init(s) {
         s.page(       "Update Firmware",                {id: "page_flash_fw"});
         s.category(   "Update Printer Firmware");
+        s.html('<div id="lcd_warn">During an update, the display on your printer will fade. This is normal.</div>');
         s.text(       "Firmware:",                      {id: "printer_fw_filename", className: "filename readonly"});
         s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashPrinterClicked});
