@@ -35,7 +35,7 @@ class PrinterRepresentation extends THREE.Object3D {
     }
 
     static applyStyleSheetColors() {
-        const frameColor = getColorValueFromElement("#print_volume", 'border-color');
+        const frameColor = getColorValueFromElement("#print_volume", 'border-top-color');
         const gridColor1 = getColorFloatArrayFromElement("#bed_grid", 'color');
         const gridColor2 = getColorFloatArrayFromElement("#bed_grid", 'background-color');
 
