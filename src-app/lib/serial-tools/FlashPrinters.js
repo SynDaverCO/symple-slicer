@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 const flashPrintersPath = document.currentScript.src.substring(0, document.currentScript.src.lastIndexOf("/"));
 
 async function flashFirmwareWithBossa(attr) {
@@ -25,11 +25,17 @@ async function flashFirmwareWithBossa(attr) {
         ProgressBar.message("Finding printers");
         programmer.onProgress = ProgressBar.progress;
 
-        let port = await SequentialSerial.requestPort([attr.usb_marlin, attr.usb_samba]);
+        const hasFilters = attr.usb_marlin && attr.usb_samba;
+        let port = await SequentialSerial.requestPort(hasFilters ? [attr.usb_marlin, attr.usb_samba] : []);
         // Check to see if we need to reset the printer to the bootloader
-        const usbInfo = port.getInfo();
-        if(usbInfo.usbVendorId  == attr.usb_marlin.usbVendorId &&
-           usbInfo.usbProductId == attr.usb_marlin.usbProductId) {
+        if(hasFilters) {
+            const usbInfo = port.getInfo();
+            this.needsReset = usbInfo.usbVendorId  == attr.usb_marlin.usbVendorId &&
+                              usbInfo.usbProductId == attr.usb_marlin.usbProductId;
+        } else {
+            this.needsReset = !this.needsReset;
+        }
+        if(this.needsReset) {
             await programmer.reset_to_bootloader(port);
             if(SequentialSerial.isWebSerial) {
                 // With the Web Serial API, the browser needs a new button click to allow us to open another device.
@@ -37,7 +43,7 @@ async function flashFirmwareWithBossa(attr) {
                 return;
             } else {
                 // With Electron, we can immediately try to open another serial port
-                port = await SequentialSerial.requestPort([attr.usb_samba]);
+                port = await SequentialSerial.requestPort(hasFilters ? [attr.usb_samba] : []);
             }
         }
         await programmer.connect(port);

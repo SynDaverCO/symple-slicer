@@ -139,7 +139,7 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     width:              50vw;
 }
 
-#lcd_warn {
+#lcd_warn, #custom_fw_warn {
     padding:            1em;
     text-align:         center;
     color:              red;

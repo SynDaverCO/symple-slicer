@@ -159,6 +159,11 @@ class SettingsPanel {
                     PlaceObjectsPage.onLoadTypeChanged("2d");
                     id = "image_file";
                     break;
+                case 'bin':
+                case 'hex':
+                    settings.gotoPage("page_advanced");
+                    settings.expand("custom_fw_upload")
+                    id = "custom_fw_file";
             }
             if(id) {
                 settings.get(id).drophandler(e);
@@ -1175,6 +1180,13 @@ class AdvancedFeaturesPage {
         s.button(     "Save",                                        {onclick: AdvancedFeaturesPage.onExportClicked});
         s.buttonHelp( "Click this button to save current settings to a file on your computer.");
 
+        s.category(   "Custom Firmware Update",                      {id: "custom_fw_upload"});
+        s.html('<div id="custom_fw_warn">Custom or beta firmware could damage your printer.<br>Use only if instructed by technical support.</div><br>');
+        s.file("Drag and drop firmware<br><small>(BIN or HEX)</small>", {id: "custom_fw_file", onchange: AdvancedFeaturesPage.onCustomFirmwareChanged, accept: ".hex,.bin", mode: "binary"});
+        s.separator(                                                 {type: "br"});
+        s.button(     "Update",                                      {id: "upload_custom_fw", onclick: AdvancedFeaturesPage.onCustomFlash});
+        s.buttonHelp( "Click this button to upload custom firmware via USB.");
+
         s.category(   "Data Sources");
         s.html('<div id="profile_sources_warn">These options are for advanced users and are not supported by SynDaver. Use at your own risk.</div><br>');
         s.textarea("Profile URLs:",                                  {id: "profile_sources", spellcheck: "false",
@@ -1183,8 +1195,19 @@ class AdvancedFeaturesPage {
 
         AdvancedFeaturesPage.refreshDataSources();
         AdvancedFeaturesPage.verifyThemeSelection();
+
+        AdvancedFeaturesPage.onCustomFirmwareChanged(false); // Disable buttons
     }
 
+    static onCustomFirmwareChanged(file) {
+        settings.enable("#upload_custom_fw", file);
+    }
+
+    static async onCustomFlash() {
+        const el = settings.get("custom_fw_file");
+        await flashCustomFirmware(el.data, el.filename);
+    }
+    
     static onApplyTheme() {
         localStorage.setItem("ui-theme",  settings.get("ui-theme"));
         localStorage.setItem("ui-accent", settings.get("ui-accent"));

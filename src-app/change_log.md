@@ -1,8 +1,12 @@
 SynDaver Symple Slicer v1.0.19
 ==============================
 
+* '''Profiles:''' Updated machine toolhead dimensions.
+* '''Firmware:''' Added warning about fading display during update.
 * '''Firmware:''' Add printer selection dropdown to "Update Wireless Firmware" page.
 * '''Firmware:''' Disable wireless "Update" button when wireless printer is unavailable.
+* '''Firmware:''' Update wireless firmware source code bundle to v1.0.4.
+* '''Advanced Features''' Added ability to upload custom firmware.
 
 SynDaver Symple Slicer v1.0.18
 ==============================

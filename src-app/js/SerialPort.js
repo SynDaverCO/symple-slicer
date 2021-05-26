@@ -33,6 +33,16 @@ async function flashFirmware() {
     }
 }
 
+async function flashCustomFirmware(data, filename) {
+    const extension = filename.split('.').pop().toLowerCase();
+    const attr = {data};
+    switch(extension) {
+        case "bin":    await flashFirmwareWithBossa(attr); break;
+        case "hex": await flashFirmwareWithStk(attr); break;
+        default: throw Error("Unknown flash file type: " + extension);
+    }
+}
+
 async function stream_gcode(gcode) {
     const usb     = ProfileManager.getSection("usb");
     const scripts = ProfileManager.getSection("scripts");
