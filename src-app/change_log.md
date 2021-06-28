@@ -2,6 +2,7 @@ SynDaver Symple Slicer v1.0.19
 ==============================
 
 * '''Profiles:''' Updated machine toolhead dimensions.
+* '''Profiles:''' Added silk PLA profile and updated PLA profile.
 * '''Firmware:''' Added warning about fading display during update.
 * '''Firmware:''' Add printer selection dropdown to "Update Wireless Firmware" page.
 * '''Firmware:''' Disable wireless "Update" button when wireless printer is unavailable.

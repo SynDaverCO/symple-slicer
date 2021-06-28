@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 148
+    cacheVersion: 152
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -52,6 +52,7 @@ const filesToCache = [
     'config/syndaver/print_profiles/pc-abs_standard_stable.toml',
     'config/syndaver/print_profiles/petg_standard_stable.toml',
     'config/syndaver/print_profiles/pla_standard_stable.toml',
+    'config/syndaver/print_profiles/silk_pla_standard_stable.toml',
     'config/syndaver/print_profiles/tpu85_standard_stable.toml',
     'config/syndaver/print_profiles/tpu95_standard_stable.toml',
     'config/syndaver/machine_firmware/LICENSE.txt',

@@ -1849,7 +1849,6 @@ SliceObjectsPage.slicerSettings = [
         "material_flow",
 
     "Special Modes:",
-        "print_sequence",
         "magic_spiralize",
         "magic_fuzzy_skin_enabled"
 ];
