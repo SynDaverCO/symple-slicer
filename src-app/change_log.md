@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.20
+==============================
+
+* '''Firmware:''' New printer firmware for Axi 1 (R7) and Axi 2 (R4)
+
 SynDaver Symple Slicer v1.0.19
 ==============================
 
