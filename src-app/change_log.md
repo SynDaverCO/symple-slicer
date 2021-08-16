@@ -1,3 +1,8 @@
+SynDaver Symple Slicer v1.0.21
+==============================
+
+* '''Firmware:''' Added Level and LevelUp
+
 SynDaver Symple Slicer v1.0.20
 ==============================
 
