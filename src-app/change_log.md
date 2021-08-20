@@ -2,6 +2,12 @@ SynDaver Symple Slicer v1.0.21
 ==============================
 
 * '''Firmware:''' Added Level and LevelUp
+* '''Firmware:''' Update wireless to v1.1.0
+## Added video stream for SynDaver Level Up
+## Added wireless settings report for SynDaver Level Up
+## Added ability to configure default gateway and subnet mask
+## Added ability to connect to an open access point
+## Fixed persistent "Printer unreachable" message
 
 SynDaver Symple Slicer v1.0.20
 ==============================
