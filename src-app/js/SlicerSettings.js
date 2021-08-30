@@ -55,7 +55,52 @@ class SlicerSettings {
 }
 
 SlicerSettings.slicerSettings = {
+    "syndaver-beginner" : [
+        // Settings list for beginners
+        "Print Strength:",
+            "infill_sparse_density",
+            "infill_pattern",
+
+        "Print Speed:",
+            "layer_height",
+            "speed_print",
+
+        "Shell:",
+            "wall_thickness",
+
+        "Retraction:",
+            "retraction_enable",
+            "retraction_amount",
+            "retraction_speed",
+            "retraction_combing",
+
+        "Temperatures:",
+            "material_print_temperature",
+            "material_print_temperature_layer_0",
+            "material_bed_temperature",
+            "material_bed_temperature_layer_0",
+            "material_probe_temperature",
+            "material_soften_temperature",
+            "material_wipe_temperature",
+            "material_part_removal_temperature",
+            "material_keep_part_removal_temperature",
+
+        "Cooling:",
+            "cool_fan_enabled",
+            "cool_fan_speed_min",
+            "cool_fan_speed_max",
+
+        "Support &amp; Adhesion:",
+            "support_enable",
+            "adhesion_type",
+
+        "Filament:",
+            "material_diameter",
+            "material_flow",
+        ],
+
     "syndaver-default" : [
+        // Default settings list
         "Print Strength:",
             "infill_sparse_density",
             "infill_pattern",

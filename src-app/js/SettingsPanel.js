@@ -1153,6 +1153,7 @@ class AdvancedFeaturesPage {
         s.category(   "User Interface");
         s.choice(         "Slicer Settings:",                        {id: "ui-slicer-settings", onchange: AdvancedFeaturesPage.onSlicerSettingsChanged})
          .option(             "SynDaver Default",                    {value: "syndaver-default"})
+         .option(             "SynDaver Beginner",                   {value: "syndaver-beginner"})
          .option(             "Expert: All Cura Settings",           {value: "cura-all"});
         s.choice(         "Theme:",                                  {id: "ui-theme"})
          .option(             "SynDaver 3D",                         {value: "syndaver-3d"})
