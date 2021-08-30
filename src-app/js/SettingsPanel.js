@@ -21,7 +21,7 @@
 var settings, gcode_blob, loaded_geometry;
 
 class SettingsPanel {
-    static init(id) {
+    static async init(id) {
         const s = settings = new SettingsUI(id);
         s.enableAutoTab();
 
@@ -29,7 +29,7 @@ class SettingsPanel {
         MaterialNotesPage.init(s);
         PlaceObjectsPage.init(s);
         ObjectTransformPage.init(s);
-        SliceObjectsPage.init(s);
+        await SliceObjectsPage.init(s);
         PrintAndPreviewPage.init(s);
         MachineSettingsPage.init(s);
         StartAndEndGCodePage.init(s);
@@ -751,18 +751,12 @@ class ObjectTransformPage {
 }
 
 class SliceObjectsPage {
-    static init(s) {
+    static async init(s) {
         SliceObjectsPage.initSlicerHelpers(s);
 
         s.page(       "Slice Objects",                               {id: "page_slice", className: "scrollable"});
 
-        for(const item of SliceObjectsPage.slicerSettings) {
-            if(item.endsWith(":")) {
-                s.category(item.slice(0,-1));
-            } else if(!item.startsWith("#")){
-                s.fromSlicer(item);
-            }
-        }
+        await SlicerSettings.populate(s);
 
         s.category(   "Save Settings to File");
         s.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only filename"});
@@ -781,9 +775,9 @@ class SliceObjectsPage {
     static initSlicerHelpers(s) {
         var valueSetter = {};
 
-        s.fromSlicer = function(key, attr) {
+        s.fromSlicer = function(key, attr, label_prefix = "") {
             var sd = slicer.getOptionDescriptor(key);
-            var label = sd.hasOwnProperty("label") ? sd.label : key;
+            var label = label_prefix + (sd.hasOwnProperty("label") ? sd.label : key);
             var el;
             var attr = {
                 ...attr,
@@ -1157,6 +1151,9 @@ class AdvancedFeaturesPage {
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
         s.category(   "User Interface");
+        s.choice(         "Slicer Settings:",                        {id: "ui-slicer-settings", onchange: AdvancedFeaturesPage.onSlicerSettingsChanged})
+         .option(             "SynDaver Default",                    {value: "syndaver-default"})
+         .option(             "Expert: All Cura Settings",           {value: "cura-all"});
         s.choice(         "Theme:",                                  {id: "ui-theme"})
          .option(             "SynDaver 3D",                         {value: "syndaver-3d"})
          .option(             "Classic",                             {value: "classic"})
@@ -1207,8 +1204,15 @@ class AdvancedFeaturesPage {
         const el = settings.get("custom_fw_file");
         await flashCustomFirmware(el.data, el.filename);
     }
+
+    static onSlicerSettingsChanged() {
+        if (settings.get("ui-slicer-settings") == "cura-all")
+            if (!confirm("You are about to enable all CuraEngine slicer settings, even those which are untested or which are known to not work.\n\nClick OK to proceed at your own risk or Cancel to use only the recommended settings."))
+                document.getElementById("ui-slicer-settings").value = "syndaver-default";
+    }
     
     static onApplyTheme() {
+        localStorage.setItem("ui-slicer-settings", settings.get("ui-slicer-settings"));
         localStorage.setItem("ui-theme",  settings.get("ui-theme"));
         localStorage.setItem("ui-accent", settings.get("ui-accent"));
         location.reload();
@@ -1769,86 +1773,3 @@ class HelpAndInfoPage {
         settings.gotoPage("page_help");
     }
 }
-
-SliceObjectsPage.slicerSettings = [
-    "Print Strength:",
-        "infill_sparse_density",
-        "infill_pattern",
-
-    "Print Speed:",
-        "layer_height",
-        "layer_height_0",
-        "speed_print",
-        "speed_layer_0",
-        "#speed_infill",
-        "#speed_wall",
-        "speed_support",
-        "speed_travel",
-        "#speed_travel_layer_0",
-
-    "Shell:",
-        "wall_thickness",
-        "top_layers",
-        "bottom_layers",
-        "initial_bottom_layers",
-        "top_bottom_pattern",
-        "top_bottom_pattern_0",
-        "z_seam_type",
-        "z_seam_position",
-        "z_seam_x",
-        "z_seam_y",
-        "infill_before_walls",
-        "ironing_enabled",
-
-    "Retraction:",
-        "retraction_enable",
-        "retraction_amount",
-        "retraction_speed",
-        "retraction_combing",
-
-    "Temperatures:",
-        "material_print_temperature",
-        "material_print_temperature_layer_0",
-        "material_bed_temperature",
-        "material_bed_temperature_layer_0",
-        "material_probe_temperature",
-        "material_soften_temperature",
-        "material_wipe_temperature",
-        "material_part_removal_temperature",
-        "material_keep_part_removal_temperature",
-
-    "Cooling:",
-        "cool_fan_enabled",
-        "cool_fan_speed_min",
-        "cool_fan_speed_max",
-        "cool_min_layer_time_fan_speed_max",
-        "cool_min_layer_time",
-        "cool_min_speed",
-
-    "Support &amp; Adhesion:",
-        "support_enable",
-        "support_type",
-        "support_pattern",
-        "support_infill_rate",
-        "support_angle",
-        "support_z_distance",
-        "support_xy_distance",
-        "support_xy_distance_overhang",
-        "support_interface_skip_height",
-        "adhesion_type",
-        "brim_width",
-        "brim_gap",
-        "raft_airgap",
-        "raft_surface_layers",
-        "skirt_line_count",
-        "support_brim_enable",
-        "support_interface_enable",
-
-    "Filament:",
-        "material_diameter",
-        "material_flow",
-
-    "Special Modes:",
-        "magic_spiralize",
-        "magic_fuzzy_skin_enabled"
-];

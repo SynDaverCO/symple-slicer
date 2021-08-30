@@ -1,6 +1,7 @@
 SynDaver Symple Slicer v1.0.21
 ==============================
 
+* '''Slicing UI:''' Added ability to enable other slicing settings under "Advanced Features"
 * '''Firmware:''' Added Level and LevelUp
 * '''Firmware:''' Update wireless to v1.1.0
 ## Added video stream for SynDaver Level Up
