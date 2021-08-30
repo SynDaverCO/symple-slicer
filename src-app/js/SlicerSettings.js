@@ -25,10 +25,11 @@ class SlicerSettings {
         if (!SlicerSettings.slicerSettings.hasOwnProperty(settings)) settings = "syndaver-default";
 
         for (const item of SlicerSettings.slicerSettings[settings]) {
+            const indent = item.match(/^\s*/)[0].length;
             if (item.endsWith(":")) {
                 s.category(item.slice(0,-1));
             } else if (!item.startsWith("#")){
-                s.fromSlicer(item);
+                s.fromSlicer(item.trim(),{},"\t".repeat(indent));
             }
         }
     }
@@ -68,7 +69,7 @@ SlicerSettings.slicerSettings = {
         "Temperatures:",
             "material_print_temperature",
             "material_bed_temperature",
-            "material_bed_temperature_layer_0",
+            " material_bed_temperature_layer_0",
 
         "Cooling:",
             "cool_fan_enabled",
@@ -93,38 +94,35 @@ SlicerSettings.slicerSettings = {
             "layer_height",
             "layer_height_0",
             "speed_print",
-            "speed_layer_0",
-            "#speed_infill",
-            "#speed_wall",
-            "speed_support",
+            " speed_layer_0",
+            " speed_support",
             "speed_travel",
-            "#speed_travel_layer_0",
 
         "Shell:",
             "wall_thickness",
             "top_layers",
             "bottom_layers",
-            "initial_bottom_layers",
+            " initial_bottom_layers",
             "top_bottom_pattern",
-            "top_bottom_pattern_0",
+            " top_bottom_pattern_0",
             "z_seam_type",
-            "z_seam_position",
-            "z_seam_x",
-            "z_seam_y",
+            " z_seam_position",
+            "  z_seam_x",
+            "  z_seam_y",
             "infill_before_walls",
             "ironing_enabled",
 
         "Retraction:",
             "retraction_enable",
-            "retraction_amount",
-            "retraction_speed",
+            " retraction_amount",
+            " retraction_speed",
             "retraction_combing",
 
         "Temperatures:",
             "material_print_temperature",
-            "material_print_temperature_layer_0",
+            " material_print_temperature_layer_0",
             "material_bed_temperature",
-            "material_bed_temperature_layer_0",
+            " material_bed_temperature_layer_0",
             "material_probe_temperature",
             "material_soften_temperature",
             "material_wipe_temperature",
@@ -141,22 +139,22 @@ SlicerSettings.slicerSettings = {
 
         "Support &amp; Adhesion:",
             "support_enable",
-            "support_type",
-            "support_pattern",
-            "support_infill_rate",
-            "support_angle",
-            "support_z_distance",
-            "support_xy_distance",
-            "support_xy_distance_overhang",
-            "support_interface_skip_height",
+            " support_type",
+            " support_pattern",
+            " support_infill_rate",
+            " support_angle",
+            " support_z_distance",
+            " support_xy_distance",
+            " support_xy_distance_overhang",
+            " support_interface_skip_height",
+            " support_brim_enable",
+            " support_interface_enable",
             "adhesion_type",
-            "brim_width",
-            "brim_gap",
-            "raft_airgap",
-            "raft_surface_layers",
-            "skirt_line_count",
-            "support_brim_enable",
-            "support_interface_enable",
+            " brim_width",
+            " brim_gap",
+            " raft_airgap",
+            " raft_surface_layers",
+            " skirt_line_count",
 
         "Filament:",
             "material_diameter",
