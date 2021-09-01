@@ -53,7 +53,7 @@ class SettingsUI {
             for (const attr in attr_list) {
                 if(typeof attr_list[attr] !== 'undefined') {
                     el[attr] = attr_list[attr];
-                    if(typeof attr_list[attr] !== 'function') {
+                    if(typeof attr_list[attr] !== 'function' && attr.toLowerCase() != "innerhtml" && attr.toLowerCase() != "classname") {
                         // Set the attribute for everything except event handlers.
                         el.setAttribute(attr, attr_list[attr]);
                     }
@@ -71,11 +71,20 @@ class SettingsUI {
         if(tabbable) {
             container.classList.add("tabbable-param");
         }
-        return SettingsUI.addTag(container, "span", {className: "parameter"});
+        container.classList.add("parameter");
+        return container;
     }
 
     static _label(container, description, attr) {
-        SettingsUI.addTag(container, "label", {innerHTML: description || "&nbsp;", "for": attr.id, title: attr.tooltip});
+        let margin = 0;
+        while(description.startsWith("\t")) {
+            description = description.substring(1);
+            margin += 1;
+        }
+        const label = SettingsUI.addTag(container, "label", {innerHTML: description || "&nbsp;", "for": attr.id, title: attr.tooltip});
+        if(margin) {
+            label.style.marginLeft = margin + "em";
+        }
     }
 
     static _copyAttr(dst, src, allowed) {
