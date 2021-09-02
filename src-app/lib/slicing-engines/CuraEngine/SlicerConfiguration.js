@@ -240,13 +240,19 @@ class SlicerConfiguration {
             }
             arg_list.push(key + '=' + str_value);
         }
-        for(const f of filenames) {
-            arg_list.push("-l");
-            arg_list.push(f);
-        }
         arg_list.push("-o");
         arg_list.push("output.gcode");
+        for(const f of filenames) {
+            if (this.oneAtATime()) arg_list.push("-g");
+            arg_list.push("-l");
+            arg_list.push(f);
+            if (this.oneAtATime()) arg_list.push("--next");
+        }
         return arg_list;
+    }
+
+    oneAtATime() {
+        return this.values.hasOwnProperty("print_sequence") && this.values["print_sequence"] == "one_at_a_time";
     }
 
     /**

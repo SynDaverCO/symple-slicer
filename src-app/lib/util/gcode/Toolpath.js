@@ -43,7 +43,7 @@ class Toolpath extends THREE.Object3D {
         
         gcode_parser.parse({
             motion:  (x, y, z, e) => this.nSegments++,
-            comment: (key, value) => {if(key == "LAYER") this.nLayers = Math.max(this.nLayers, parseInt(value))}
+            comment: (key, value) => {if(key == "LAYER") this.nLayers++}
         });
 
         this.lineSegmentEnds       = new Float32Array(this.nSegments*6); // 6 floats per segment
@@ -52,6 +52,7 @@ class Toolpath extends THREE.Object3D {
         
         this.layerEnd              = new Uint32Array(this.nLayers+1);
 
+        var currentLayer = 1;
         var i = 0;
         var last_x, last_y, last_z, last_e;
         var typeColorIndex   = Toolpath.typeList.indexOf("DEFAULT");
@@ -67,7 +68,7 @@ class Toolpath extends THREE.Object3D {
                         typeColorIndex = Toolpath.typeList.indexOf(value);
                     }
                     if(key == "LAYER") {
-                        this.layerEnd[parseInt(value)] = i;
+                        this.layerEnd[currentLayer++] = i;
                     }
                 },
             motion:
