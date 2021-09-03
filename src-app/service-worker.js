@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 176
+    cacheVersion: 177
 };
 
 const cacheName = 'v' + info.cacheVersion;
