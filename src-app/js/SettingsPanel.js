@@ -424,8 +424,7 @@ class SelectProfilesPage {
     }
 
     static setProfileSource(source) {
-        $('input[name="profile-source"]').prop('checked', false);
-        $('input[name="profile-source"][value="' + source + '"]').prop('checked', true);
+        settings.set("profile-source", source);
         $(settings.ui).attr('data-profile-source', source);
     }
 }
@@ -499,8 +498,7 @@ class PlaceObjectsPage {
             case '2d': $("#load_models").hide(); $("#load_images").show(); break;
         }
         if(typeof e == "string") {
-            $('[name="load_source"]').prop('checked', false);
-            $("input[name=load_source][value=" + mode + "]").prop('checked', true);
+            settings.set("load_source", mode);
         }
     }
 
@@ -922,8 +920,7 @@ class PrintAndPreviewPage {
     }
 
     static setOutput(what) {
-        $('input[name="print_destination"]').prop('checked', false);
-        $('input[name="print_destination"][value="' + what + '"]').prop('checked', true);
+        settings.set("print_destination", what);
         this.onOutputChanged(what)
     }
 

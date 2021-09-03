@@ -22,6 +22,7 @@ class SettingsUI {
         $(this.ui).addClass("settings-ui");
 
         this.getters       = {};
+        this.setters       = {};
 
         this.header        = SettingsUI.addTag(this.ui, "div");
 
@@ -149,6 +150,7 @@ class SettingsUI {
         const el = SettingsUI._input(container, "radio", attr);
         if(attr && attr.name) {
             this.getters[attr.name] = SettingsUI.radio_getter;
+            this.setters[attr.name] = SettingsUI.radio_setter;
         }
         return el;
     }
@@ -156,6 +158,11 @@ class SettingsUI {
     static radio_getter(name) {
         const el = document.querySelector('input[name="'+name+'"]:checked');
         return el ? el.value : "";
+    }
+
+    static radio_setter(name, value) {
+        $('input[name="' + name + '"]').prop('checked', false);
+        $('input[name="' + name + '"][value="' + value + '"]').prop('checked', true);
     }
 
     number(description, attr) {
@@ -522,6 +529,14 @@ class SettingsUI {
         } else {
             console.error("No getter defined for " + id);
             return undefined;
+        }
+    }
+
+    set(id, value) {
+        if(this.setters.hasOwnProperty(id)) {
+            this.setters[id](id, value);
+        } else {
+            console.error("No setter defined for " + id);
         }
     }
 
