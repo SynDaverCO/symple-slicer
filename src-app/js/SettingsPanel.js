@@ -480,11 +480,18 @@ class PlaceObjectsPage {
         s.button(     "Create",                                      {id: "add_litho", onclick: PlaceObjectsPage.onAddLitho});
         s.div();
 
+        s.category("Show Features");
+        s.toggle(     "Show Overhangs",                              {id: "show_overhangs", onchange: PlaceObjectsPage.onShowOverhangs, tooltip: "Highlight with red portions of the model that will benefit from support when printing."});
+
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: PlaceObjectsPage.onGotoSliceClicked});
         s.buttonHelp( "Click this button to proceed to slicing.");
 
         s.enable(".requires_objects", false);
+    }
+
+    static onShowOverhangs() {
+        OverhangShader.showOverhang(settings.get("show_overhangs"));
     }
 
     static onObjectCountChanged(count) {
@@ -773,6 +780,20 @@ class SliceObjectsPage {
     static initSlicerHelpers(s) {
         var valueSetter = {};
 
+        function updateSettingInSlicer(key, value) {
+            slicer.setOption(key, value);
+            SliceObjectsPage.onSlicerSettingsChanged(key, value);
+        }
+
+        function updateSettingFromSlicer(key, value) {
+            if(valueSetter.hasOwnProperty(key)) valueSetter[key](key, value);
+            SliceObjectsPage.onSlicerSettingsChanged(key, value)
+        }
+
+        function updateAttributeFromSlicer(key, attr) {
+            s.setVisibility("#" + key, attr.enabled);
+        }
+
         s.fromSlicer = function(key, attr, label_prefix = "") {
             var sd = slicer.getOptionDescriptor(key);
             var label = label_prefix + (sd.hasOwnProperty("label") ? sd.label : key);
@@ -811,8 +832,14 @@ class SliceObjectsPage {
             }
         }
 
-        slicer.onOptionChanged =    (name, val)  => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val);};
-        slicer.onAttributeChanged = (name, attr) => {s.setVisibility("#" + name, attr.enabled);};
+        slicer.onOptionChanged = updateSettingFromSlicer;
+        slicer.onAttributeChanged = updateAttributeFromSlicer;
+    }
+
+    static onSlicerSettingsChanged(name, val) {
+        switch(name) {
+            case "support_angle": OverhangShader.setAngle(val); break;
+        }
     }
 
     static onSliceClicked() {
@@ -1209,7 +1236,7 @@ class AdvancedFeaturesPage {
             if (!confirm("You are about to enable all CuraEngine slicer settings, even those which are untested or which are known to not work.\n\nClick OK to proceed at your own risk or Cancel to use only the recommended settings."))
                 document.getElementById("ui-slicer-settings").value = "syndaver-default";
     }
-    
+
     static onApplyTheme() {
         localStorage.setItem("ui-slicer-settings", settings.get("ui-slicer-settings"));
         localStorage.setItem("ui-theme",  settings.get("ui-theme"));
@@ -1282,7 +1309,7 @@ class AdvancedFeaturesPage {
         const filename = settings.get("export_filename");
         AdvancedFeaturesPage.exportConfiguration(filename, options);
     }
-    
+
     static exportConfiguration(filename, options) {
         const config = ProfileManager.exportConfiguration(options);
         const blob = new Blob([config], {type: "text/plain;charset=utf-8"});

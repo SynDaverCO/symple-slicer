@@ -580,8 +580,9 @@ class Stage {
         this.onFloorClicked(event);
     }
 
-    onViewChanged() {
+    onViewChanged(camera) {
         this.dragging = true;
+        OverhangShader.onViewChanged(camera);
     }
 
     onLayFlatClicked() {

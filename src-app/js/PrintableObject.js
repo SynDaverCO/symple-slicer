@@ -93,3 +93,5 @@ class PrintableObject extends THREE.Mesh {
 
 PrintableObject.normalMaterial  = new THREE.MeshPhongMaterial( { color: 0xfafad2, side: THREE.DoubleSide, flatShading: true } );
 PrintableObject.errorMaterial   = new THREE.MeshPhongMaterial( { color: 0xfa3e34, side: THREE.DoubleSide, flatShading: true } );
+
+OverhangShader.patchMaterial(PrintableObject.normalMaterial);
