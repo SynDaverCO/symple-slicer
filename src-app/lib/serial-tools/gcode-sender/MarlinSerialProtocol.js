@@ -132,6 +132,7 @@ export class MarlinSerialProtocol {
         this.marlinReserve          = 1;
         this.marlinAvailBuffer      = this.marlinBufSize;
         this.marlinPendingCommands  = 0;
+        this.marlinLastResend       = -1;
         this.history                = new GCodeHistory();
         this.asap                   = [];
         this.slowCommands           = /M109|M190|G28|G29|G425/;
@@ -353,6 +354,7 @@ export class MarlinSerialProtocol {
             let buffAvailable = parseInt(m[3]);
             this.marlinPendingCommands = Math.max(0, this.history.lastLineSent() - lastLineSeen);
             this.marlinAvailBuffer     = Math.min(this.marlinBufSize, buffAvailable) - this.marlinPendingCommands;
+            this.marlinLastResend      = -1;
             if (!this.usingAdvancedOk) {
                 this.usingAdvancedOk = true;
                 this.sendNotification("Marlin supports ADVANCED_OK");
@@ -362,6 +364,7 @@ export class MarlinSerialProtocol {
             // the Marlin buffer.
             this.marlinAvailBuffer     += 1;
             this.marlinPendingCommands -= 1;
+            this.marlinLastResend       = -1;
         }
     }
 
@@ -423,15 +426,10 @@ export class MarlinSerialProtocol {
         // Handle resend requests from Marlin. This happens when Marlin
         // detects a command with a checksum or line number error.
         let resendPos = this._isResendRequest(line) || this._isNoLineNumberErr(line);
-        if (resendPos) {
-            // If we got a resend requests, purge lines until input buffer is empty
-            // or timeout, but watch for any subsequent resend requests (we must
-            // only act on the last).
-            while (line != "") {
-                line = await this._readline(false);
-                resendPos = this._isResendRequest(line) || this._isNoLineNumberErr(line) || resendPos;
-            }
-            // Process the last received resend request:
+        if (resendPos && resendPos != this.marlinLastResend) {
+            // Ignore repeated resend requests for the same line
+            this.marlinLastResend = resendPos;
+            // Process the resend request:
             if (resendPos > this.history.position()) {
                 // If Marlin is asking us to step forward in time, reset its counter.
                 await this._resetMarlinLineCounter();
@@ -497,6 +495,7 @@ export class MarlinSerialProtocol {
         this.gotError              = false;
         this.marlinPendingCommands = 0;
         this.marlinAvailBuffer     = this.marlinBufSize;
+        this.marlinLastResend      = -1;
         await this.serial.write('\n');
         await this.serial.flush();
         await this._flushReadBuffer();
