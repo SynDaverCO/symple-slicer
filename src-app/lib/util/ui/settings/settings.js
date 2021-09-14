@@ -22,6 +22,7 @@ class SettingsUI {
         $(this.ui).addClass("settings-ui");
 
         this.getters       = {};
+        this.setters       = {};
 
         this.header        = SettingsUI.addTag(this.ui, "div");
 
@@ -134,9 +135,13 @@ class SettingsUI {
         SettingsUI._label(container, description, attr);
         const el = SettingsUI._input(container, "checkbox", attr);
         if(attr && attr.id) {
-            this.getters[attr.id] = function() {return document.getElementById(attr.id).checked};
+            this.getters[attr.id] = SettingsUI.toggle_getter;
         }
         return el;
+    }
+
+    static toggle_getter(id) {
+        return document.getElementById(id).checked;
     }
 
     radio(description, attr) {
@@ -144,12 +149,20 @@ class SettingsUI {
         SettingsUI._label(container, description, attr);
         const el = SettingsUI._input(container, "radio", attr);
         if(attr && attr.name) {
-            this.getters[attr.name] = function() {
-                const el = document.querySelector('input[name="'+attr.name+'"]:checked');
-                return el ? el.value : "";
-            };
+            this.getters[attr.name] = SettingsUI.radio_getter;
+            this.setters[attr.name] = SettingsUI.radio_setter;
         }
         return el;
+    }
+
+    static radio_getter(name) {
+        const el = document.querySelector('input[name="'+name+'"]:checked');
+        return el ? el.value : "";
+    }
+
+    static radio_setter(name, value) {
+        $('input[name="' + name + '"]').prop('checked', false);
+        $('input[name="' + name + '"][value="' + value + '"]').prop('checked', true);
     }
 
     number(description, attr) {
@@ -158,7 +171,7 @@ class SettingsUI {
         const el = SettingsUI._input(container, "number", attr);
         if(attr) {
             if(attr.id) {
-                this.getters[attr.id] = function() {return parseFloat(document.getElementById(attr.id).value);}
+                this.getters[attr.id] = SettingsUI.number_getter;
             }
             if(attr.units) {
                 SettingsUI.addTag(container, "span", {innerHTML: attr.units, className: "units"});
@@ -168,14 +181,22 @@ class SettingsUI {
         return el;
     }
 
+    static number_getter(id) {
+        return parseFloat(document.getElementById(id).value);
+    }
+
     color(description, attr) {
         const container = SettingsUI._param(this.target_dom, attr, true);
         SettingsUI._label(container, description, attr);
         const el = SettingsUI._input(container, "color", attr);
         if(attr && attr.id) {
-            this.getters[attr.id] = function() {return document.getElementById(attr.id).value};
+            this.getters[attr.id] = SettingsUI.color_getter;
         }
         return el;
+    }
+
+    static color_getter(id) {
+        return document.getElementById(id).value;
     }
 
     slider(description, attr) {
@@ -183,9 +204,13 @@ class SettingsUI {
         SettingsUI._label(container, description, attr);
         const el = SettingsUI._input(container, "range", attr);
         if(attr && attr.id) {
-            this.getters[attr.id] = function() {return parseFloat(document.getElementById(attr.id).value);}
+            this.getters[attr.id] = SettingsUI.slider_getter;
         }
         return el;
+    }
+
+    static slider_getter(id) {
+        return parseFloat(document.getElementById(id).value);
     }
 
     text(description, attr) {
@@ -193,9 +218,13 @@ class SettingsUI {
         SettingsUI._label(container, description, attr);
         const el = attr.dropdown ? SettingsUI.addTag(container, "editable-select", attr) : SettingsUI._input(container, "text", attr);
         if(attr && attr.id) {
-            this.getters[attr.id] = function() {return document.getElementById(attr.id).value};
+            this.getters[attr.id] = SettingsUI.text_getter;
         }
         return el;
+    }
+
+    static text_getter(id) {
+        return document.getElementById(id).value;
     }
 
     choice(description, attr) {
@@ -203,7 +232,7 @@ class SettingsUI {
         SettingsUI._label(container, description, attr);
         const el = SettingsUI.addTag(container, "select", SettingsUI._copyAttr({}, attr, ["id", "multiple","onchange"]));
         if(attr && attr.id) {
-            this.getters[attr.id] = function() {return document.getElementById(attr.id).value;}
+            this.getters[attr.id] = SettingsUI.choice_getter;
         }
         return {
             option: function(text, op_attr) {
@@ -212,6 +241,10 @@ class SettingsUI {
             },
             element: el
         }
+    }
+
+    static choice_getter(id) {
+        return document.getElementById(id).value;
     }
 
     progress(description, attr) {
@@ -271,9 +304,13 @@ class SettingsUI {
         const container = SettingsUI.addTag(this.target_dom, "div", {className: "parameter"});
         const el = SettingsUI.addTag(container, "textarea", SettingsUI._copyAttr({}, attr, ["id", "spellcheck"]));
         if(attr && attr.id) {
-            this.getters[attr.id] = function() {return document.getElementById(attr.id).value};
+            this.getters[attr.id] = SettingsUI.textarea_getter;
         }
         return el;
+    }
+
+    static textarea_getter(id) {
+        return document.getElementById(id).value;
     }
 
     div(attr) {
@@ -390,7 +427,7 @@ class SettingsUI {
 
         var fileContents = null;
 
-        this.getters[attr.id] = () => {
+        this.getters[attr.id] = id => {
             return {
                 data:        fileContents,
                 filename:    selectedFile.innerHTML,
@@ -486,17 +523,25 @@ class SettingsUI {
     }
 
 
-    get(option) {
-        if(this.getters.hasOwnProperty(option)) {
-            return this.getters[option]();
+    get(id) {
+        if(this.getters.hasOwnProperty(id)) {
+            return this.getters[id](id);
         } else {
-            alert(option + "undefined");
-            return null;
+            console.error("No getter defined for " + id);
+            return undefined;
         }
     }
 
-    exists(option) {
-        return this.getters.hasOwnProperty(option);
+    set(id, value) {
+        if(this.setters.hasOwnProperty(id)) {
+            this.setters[id](id, value);
+        } else {
+            console.error("No setter defined for " + id);
+        }
+    }
+
+    exists(id) {
+        return this.getters.hasOwnProperty(id);
     }
 
     enableAutoTab() {
