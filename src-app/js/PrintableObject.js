@@ -38,22 +38,16 @@ class PrintableObject extends THREE.Mesh {
     }
 
     generateConvexHull() {
-        var vertices;
-        if(!this.geometry instanceof THREE.BufferGeometry) {
-            vertices = this.geometry.vertices;
-        } else {
-            const positions = this.geometry.getAttribute('position');
-            vertices = [];
-            for(var i = 0; i < positions.count; i++) {
-                vertices.push(new THREE.Vector3(
-                    positions.array[i * 3 + 0],
-                    positions.array[i * 3 + 1],
-                    positions.array[i * 3 + 2]
-                ));
-            }
+        const vertices = [];
+        const positions = this.geometry.getAttribute('position');
+        for(var i = 0; i < positions.count; i++) {
+            vertices.push(new THREE.Vector3(
+                positions.array[i * 3 + 0],
+                positions.array[i * 3 + 1],
+                positions.array[i * 3 + 2]
+            ));
         }
         this.hull = new THREE.ConvexGeometry(vertices);
-        this.hull.computeFaceNormals();
     }
 
     /**
@@ -62,7 +56,7 @@ class PrintableObject extends THREE.Mesh {
      */
     static _applyAlgorithm(obj, relativeTo, result, func) {
         relativeTo.updateMatrixWorld();
-        var inverse   = new THREE.Matrix4().getInverse(relativeTo.matrixWorld);
+        var inverse   = new THREE.Matrix4().copy(relativeTo.matrixWorld).invert();
         var transform = new THREE.Matrix4();
         obj.traverse(child => {
             if (child.hasOwnProperty("hull")) {

@@ -48,40 +48,13 @@ function loadFromOBJ(data) {
 
 function loadFromSTL(data) {
     self.postMessage({cmd: 'progress', value: 0/4});
-    var geometry = GEOMETRY_READERS.readStl(data, GEOMETRY_READERS.THREEGeometryCreator);
+    var bufferGeometry = GEOMETRY_READERS.readStl(data, GEOMETRY_READERS.THREEBufferedGeometryCreator);
     self.postMessage({cmd: 'progress', value: 1/4});
-    geometry.mergeVertices();
+    THREE.BufferGeometryUtils.mergeVertices(bufferGeometry);
     self.postMessage({cmd: 'progress', value: 2/4});
-    var bufferGeometry = geometryToIndexedBufferGeometry(geometry);
-    geometry.dispose();
     self.postMessage({cmd: 'progress', value: 3/4});
     bufferGeometry.computeVertexNormals();
     return [bufferGeometry];
-}
-
-// It seems like the default routine for converting indexed Geometry to BufferGeometry removes
-// the indexing information. So, roll our own conversion.
-
-function geometryToIndexedBufferGeometry(geometry) {
-    var vertices = new Float32Array(geometry.vertices.length * 3);
-    var faces    = geometry.vertices.length > 65536 ?
-        new Uint32Array(geometry.faces.length    * 3) :
-        new Uint16Array(geometry.faces.length    * 3);
-    for(var i = 0; i < geometry.vertices.length; i++) {
-        vertices[i*3 + 0] = geometry.vertices[i].x;
-        vertices[i*3 + 1] = geometry.vertices[i].y;
-        vertices[i*3 + 2] = geometry.vertices[i].z;
-    }
-    for(var i = 0; i < geometry.faces.length; i++) {
-        faces[i*3 + 0] = geometry.faces[i].a;
-        faces[i*3 + 1] = geometry.faces[i].b;
-        faces[i*3 + 2] = geometry.faces[i].c;
-    }
-
-    var bufferGeometry = new THREE.BufferGeometry();
-    bufferGeometry.setIndex(new THREE.BufferAttribute(faces, 1));
-    bufferGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3 ));
-    return bufferGeometry;
 }
 
 function send(geometry) {

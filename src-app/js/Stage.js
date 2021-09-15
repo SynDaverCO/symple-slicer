@@ -102,7 +102,7 @@ class Stage {
 
     getBedMatrixWorldInverse() {
         var inv = new THREE.Matrix4();
-        return inv.getInverse(this.bedRelative.matrixWorld);
+        return inv.copy(this.bedRelative.matrixWorld).invert();
     }
 
     /**
@@ -355,7 +355,7 @@ class Stage {
             var geometry = obj.geometry.clone();
             var transform = obj.matrixWorld.clone();
             var worldToPrinterRepresentation = new THREE.Matrix4();
-            transform.premultiply(worldToPrinterRepresentation.getInverse(this.bedRelative.matrixWorld));
+            transform.premultiply(worldToPrinterRepresentation.copy(this.bedRelative.matrixWorld).invert());
             geometry.applyMatrix4(transform);
             return geometry;
         });

@@ -36,14 +36,14 @@ class FaceRotationHelper {
 
     /* Rotates a direction vector in world coordinates to object coordinates */
     worldDirectionToLocal(vector) {
-        const worldInverse = this.q.copy(this.worldQuaternion).inverse();
+        const worldInverse = this.q.copy(this.worldQuaternion).invert();
         return vector.applyQuaternion(worldInverse);
     }
 
     /* Transforms world coordinates to object coordinates */
     worldPositionToLocal(vector) {
         const inv = new THREE.Matrix4();
-        inv.getInverse(this.obj.matrixWorld);
+        inv.copy(this.obj.matrixWorld).invert();
         return vector.applyMatrix4(inv);
     }
 
@@ -97,15 +97,11 @@ class FaceRotationHelper {
     findIntersectingFace(geom, origin, direction) {
         const localOrigin    = this.worldPositionToLocal(origin.clone());
         const localDirection = this.worldDirectionToLocal(direction.clone());
-        const ray = new THREE.Ray(localOrigin, localDirection);
-        for(var i = 0; i < geom.faces.length; i++) {
-            const face = geom.faces[i];
-            const va   = geom.vertices[face.a];
-            const vb   = geom.vertices[face.b];
-            const vc   = geom.vertices[face.c];
-            if(ray.intersectTriangle(va, vb, vc, false, this.v)) {
-                return face;
-            }
+        const raycaster = new THREE.Raycaster(localOrigin, localDirection);
+        const mesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({side: THREE.DoubleSide}));
+        const intersections = raycaster.intersectObject(mesh);
+        if (intersections.length) {
+            return intersections[0].face;
         }
     }
 }
