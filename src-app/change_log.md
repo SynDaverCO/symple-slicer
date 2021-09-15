@@ -4,12 +4,13 @@ SynDaver Symple Slicer v1.0.21
 * '''Slicing UI:''' Added ability to enable different slicing settings under "Advanced Features"
 * '''Slicing UI:''' "Print Sequence" under "Special Modes" is now usable (no collision prevention, use with care!)
 * '''Firmware:''' Added Level and LevelUp
-* '''Firmware:''' Update wireless to v1.1.0
+* '''Firmware:''' Update wireless to v1.1.1
 ## Added video stream for SynDaver Level Up
 ## Added wireless settings report for SynDaver Level Up
 ## Added ability to configure default gateway and subnet mask
 ## Added ability to connect to an open access point
 ## Fixed persistent "Printer unreachable" message
+## Eliminate hesitation when recovering from serial errors
 
 SynDaver Symple Slicer v1.0.20
 ==============================
