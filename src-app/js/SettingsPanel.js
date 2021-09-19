@@ -1200,8 +1200,13 @@ class AdvancedFeaturesPage {
     }
 
     static async onCustomFlash() {
-        const el = settings.get("custom_fw_file");
-        await flashCustomFirmware(el.data, el.filename);
+        try {
+            const el = settings.get("custom_fw_file");
+            await flashCustomFirmware(el.data, el.filename);
+        } catch(err) {
+            console.error(err);
+            alert(err);
+        }
     }
 
     static onSlicerSettingsChanged() {

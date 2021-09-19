@@ -67,7 +67,7 @@ if (!window.SequentialSerial && "serial" in navigator) {
         async discardBuffers() {
             this.readBytes = [];
             this.readIndex = 0;
-            await this.reader.close();
+            await this.reader.cancel();
             this.reader = this.serial.readable.getReader();
         }
 

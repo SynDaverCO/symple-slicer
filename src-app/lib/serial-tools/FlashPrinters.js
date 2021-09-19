@@ -67,7 +67,7 @@ async function flashFirmwareWithStk(attr) {
         ProgressBar.message("Finding printers");
         programmer.onProgress = ProgressBar.progress;
 
-        let port = await SequentialSerial.requestPort([attr.usb_marlin]);
+        const port = await SequentialSerial.requestPort(attr.usb_marlin ? [attr.usb_marlin] : []);
         await programmer.connect(port);
         ProgressBar.message("Writing firmware");
         await programmer.flash_firmware(firmware);
