@@ -55,6 +55,13 @@ body.debug .setting-ui {
     margin-right:       0.3em;
 }
 
+.settings-panel .parameter.textarea {
+    display:            flex;
+    flex-direction:     column;
+    align-items:        stretch;
+    gap:                5px;
+}
+
 .settings-panel h1 {
     font-size:          13px;
     font-weight:        bold;

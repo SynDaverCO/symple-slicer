@@ -65,7 +65,7 @@ class OverhangShader {
     static setAngle(angle) {
         OverhangShader.userData.overhangAngle.value = angle;
     }
-    
+
     static showOverhang(enable) {
         OverhangShader.enabled = enable;
         OverhangShader.materials.forEach(m => m.needsUpdate = true);
