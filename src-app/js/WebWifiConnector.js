@@ -23,7 +23,7 @@
 
 class WebWifiConnector {
     static postMessageToTab(addr, message) {
-        const url = "http://" + addr;
+        const url = "http://" + addr + "?no-splash";
         const target = window.open(url, "syndaver_wireless");
         if(target) {
             this.postMessageAndExpectReply(target, url, message);
@@ -38,7 +38,7 @@ class WebWifiConnector {
             // to an HTTP resource, so open a tab instead.
             return this.postMessageToTab(addr, message);
         }
-        const url = "http://" + addr;
+        const url = "http://" + addr + "?no-splash";
         let target = document.querySelector('iframe[src="' + url + '"]');
         if(!target) { 
             target = document.createElement("iframe");

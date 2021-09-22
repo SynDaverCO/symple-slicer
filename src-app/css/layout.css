@@ -60,22 +60,6 @@ hr {
 BODY[data-platform="webapp"]  .desktop-only {display: none;}
 BODY[data-platform="desktop"] .webapp-only  {display: none;}
 
-/* The following group of rules manage the children of the radio buttons on the "Print and Preview" page */
-
-.settings-ui:not([data-output="print-to-usb"])                                    .print-to-usb    {display:    none;}
-.settings-ui:not([data-output="save-to-file"])                                    .save-to-file    {display:    none;}
-.settings-ui:not([data-output="save-to-wifi"])                                    .save-to-wifi    {display:    none;}
-.settings-ui:not([data-output="print-to-wifi"])                                   .print-to-wifi   {display:    none;}
-.settings-ui:not([data-output="print-to-wifi"]):not([data-output="save-to-wifi"]) .printer_choices {visibility: hidden;}
-.settings-ui:not([data-output="save-to-file"]):not([data-output="save-to-wifi"])  .gcode_filename  {visibility: hidden;}
-BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])      .gcode_filename  {visibility: hidden;}
-
-/* The following group of rules manage the children of the radio buttons on the "Select Profiles" page */
-
-.settings-ui:not([data-profile-source="from-profiles"])   .load-profiles {display: none;}
-.settings-ui:not([data-profile-source="from-session"])    .keep-settings {display: none;}
-.settings-ui:not([data-profile-source="from-import"])     .import-settings {display: none;}
-
 #material_notes:empty:after {
     content: "No special instructions for this material";
 }
@@ -87,6 +71,10 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
 #machine_start_gcode, #machine_end_gcode {
     width:              75vw;
     height:             75vh;
+}
+
+#gcode-every-code {
+    min-width:          30em;
 }
 
 #about {
@@ -175,7 +163,7 @@ BODY[data-platform="desktop"] .settings-ui:not([data-output="save-to-wifi"])    
     top:                0;
 }
 
-.filename {
+.stretch {
     width:              auto;
     flex-grow:          1;
 }

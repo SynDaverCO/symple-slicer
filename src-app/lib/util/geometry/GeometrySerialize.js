@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-function geometryToJSON(geometry) {
-    const bufferGeometry = geometry instanceof THREE.BufferGeometry ? geometry : new THREE.BufferGeometry().fromGeometry(geometry);
+function geometryToJSON(bufferGeometry) {
     const result = {data: [], transferables: []};
 
     function pushAttribute(name, attr) {
@@ -40,7 +39,8 @@ function geometryToJSON(geometry) {
 }
 
 function jsonToGeometry(json, needsBufferGeometry = false) {
-    var bufferGeometry = new THREE.BufferGeometry();
+    if (!needsBufferGeometry) {console.error("THREE.Geometry no longer supported"); return};
+    const bufferGeometry = new THREE.BufferGeometry();
     json.forEach(attr => {
         var ba;
         switch(attr.type) {
@@ -56,5 +56,5 @@ function jsonToGeometry(json, needsBufferGeometry = false) {
             bufferGeometry.setAttribute(attr.name, ba);
         }
     });
-    return needsBufferGeometry ? bufferGeometry : new THREE.Geometry().fromBufferGeometry(bufferGeometry);
+    return bufferGeometry;
 }

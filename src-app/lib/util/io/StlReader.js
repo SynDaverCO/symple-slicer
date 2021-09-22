@@ -112,6 +112,68 @@ var GEOMETRY_READERS = {};
         
     }
 
+    /* A sample creator object that returns THREE.BufferedGeometry */
+    GEOMETRY_READERS.THREEBufferedGeometryCreator = function() {
+        // Private:
+        var vertices = new Array();
+        var vIndex   = 0;
+        var face     = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+        var normal   = new THREE.Vector3();
+        var a        = new THREE.Vector3();
+        var b        = new THREE.Vector3();
+        var errors   = 0;
+        
+        // Privileged:
+        this.startLoop = function() {
+            vIndex = 0;
+        }
+
+        this.facetNorm = function(x,y,z) {
+            normal.set(x,y,z);
+        }
+
+        this.addVertex = function(x,y,z) {
+            if (vIndex < 3)
+                face[vIndex++].set(x,y,z);
+            else 
+                console.error("Too many vertices in STL triangle");
+        }
+
+        this.endLoop = function() {
+            // Check whether the face winding is correct.
+            if(correct_winding_order) {
+                a.subVectors(face[1], face[0]);
+                b.subVectors(face[2], face[0]);
+                const sign = a.cross(b).dot(normal);
+                if (sign < 0) {
+                    face.reverse();
+                    errors++;
+                }
+            }
+            vertices.push(face[0].x);
+            vertices.push(face[0].y);
+            vertices.push(face[0].z);
+            vertices.push(face[1].x);
+            vertices.push(face[1].y);
+            vertices.push(face[1].z);
+            vertices.push(face[2].x);
+            vertices.push(face[2].y);
+            vertices.push(face[2].z);
+        }
+
+        this.result = function() {
+            console.log("Created new geometry with " + vertices.length/9 + " faces" );
+            if(errors > 0) {
+                console.log("Adjusted winding order on", errors, "faces");
+            }
+            var geometry = new THREE.BufferGeometry();
+            geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array(vertices), 3 ) );
+            geometry.computeBoundingSphere();
+            return geometry;
+        }
+        
+    }
+
     /* Parses a string containing the contents of an ASCII STL
        file
      */

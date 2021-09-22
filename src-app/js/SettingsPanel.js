@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-var settings, gcode_blob, loaded_geometry;
+var settings, sliced_gcode, loaded_geometry;
 
 class SettingsPanel {
     static async init(id) {
@@ -204,7 +204,7 @@ class SelectProfilesPage {
         s.radio( "Load slicer settings from saved file",             {...attr, value: "from-import"});
         s.radio( "Keep slicer settings from last session",           {...attr, value: "from-session"});
 
-        s.div({id: "profile_choices", className: "load-profiles"});
+        s.div({dataRadio: "profile-source", dataValue: "from-profiles"});
         s.separator(                                                 {type: "br"});
         attr = {onchange: SelectProfilesPage.onDropDownChange};
         const manufacturer_menu = s.choice( "Manufacturer:",         {...attr, id: "machine_manufacturers"});
@@ -216,24 +216,24 @@ class SelectProfilesPage {
         const material_menu = s.choice(     "Material:",             {...attr, id: "print_profiles"});
         s.div();
 
-        s.div({className: "import-settings"});
+        s.div({dataRadio: "profile-source", dataValue: "from-import"});
         s.separator(                                                 {type: "br"});
         s.file(       "Drag and drop settings<br><small>(.TOML)</small>", {id: "toml_file", onchange: SelectProfilesPage.onImportChanged, mode: 'text'});
         s.div();
 
         s.footer();
 
-        s.div({className: "keep-settings"});
+        s.div({dataRadio: "profile-source", dataValue: "from-session"});
         s.button(     "Next",                                        {onclick: SelectProfilesPage.onNext});
         s.buttonHelp( "Click this button to proceed to placing objects.");
         s.div();
 
-        s.div({className: "load-profiles"});
+        s.div({dataRadio: "profile-source", dataValue: "from-profiles"});
         s.button(     "Apply",                                       {onclick: SelectProfilesPage.onApplyPreset});
         s.buttonHelp( "Click this button to load profiles and proceed to placing objects.");
         s.div();
 
-        s.div({className: "import-settings"});
+        s.div({dataRadio: "profile-source", dataValue: "from-import"});
         s.button(     "Apply",                                       {id: "import_settings", onclick: SelectProfilesPage.onImportClicked});
         s.buttonHelp( "Click this button to load slicer settings and proceed to placing objects.");
         s.div();
@@ -249,6 +249,8 @@ class SelectProfilesPage {
             material_brands: brand_menu,
             print_profiles: material_menu
         });
+
+        s.linkRadioToDivs('profile-source');
 
         SelectProfilesPage.onImportChanged(false); // Disable buttons
 
@@ -418,9 +420,7 @@ class SelectProfilesPage {
     }
 
     static onProfileSourceChanged(e) {
-        const source = e ? e.target.value : 'from-profiles';
-        $(settings.ui).attr('data-profile-source', source);
-        localStorage.setItem('profile-source', source);
+        localStorage.setItem('profile-source', e.target.value);
     }
 
     static setProfileSource(source) {
@@ -470,6 +470,7 @@ class PlaceObjectsPage {
         s.category("Place More");
         s.number(     "How many more to place?",                     {id: "place_quantity", value: "1", min: "1", max: "50", onchange: SettingsPanel.enforceMinMax});
         s.button(     "Place more",                                  {className: "place_more", onclick: PlaceObjectsPage.onAddToPlatform});
+        s.category();
         s.div();
 
         s.div({id: "load_images"});
@@ -480,11 +481,18 @@ class PlaceObjectsPage {
         s.button(     "Create",                                      {id: "add_litho", onclick: PlaceObjectsPage.onAddLitho});
         s.div();
 
+        s.category("Show Features");
+        s.toggle(     "Show Overhangs",                              {id: "show_overhangs", onchange: PlaceObjectsPage.onShowOverhangs, tooltip: "Highlight with red portions of the model that will benefit from support when printing."});
+
         s.footer();
         s.button(     "Next",                                        {className: "requires_objects", onclick: PlaceObjectsPage.onGotoSliceClicked});
         s.buttonHelp( "Click this button to proceed to slicing.");
 
         s.enable(".requires_objects", false);
+    }
+
+    static onShowOverhangs() {
+        OverhangShader.showOverhang(settings.get("show_overhangs"));
     }
 
     static onObjectCountChanged(count) {
@@ -773,6 +781,20 @@ class SliceObjectsPage {
     static initSlicerHelpers(s) {
         var valueSetter = {};
 
+        function updateSettingInSlicer(key, value) {
+            slicer.setOption(key, value);
+            SliceObjectsPage.onSlicerSettingsChanged(key, value);
+        }
+
+        function updateSettingFromSlicer(key, value) {
+            if(valueSetter.hasOwnProperty(key)) valueSetter[key](key, value);
+            SliceObjectsPage.onSlicerSettingsChanged(key, value)
+        }
+
+        function updateAttributeFromSlicer(key, attr) {
+            s.setVisibility("#" + key, attr.enabled);
+        }
+
         s.fromSlicer = function(key, attr, label_prefix = "") {
             var sd = slicer.getOptionDescriptor(key);
             var label = label_prefix + (sd.hasOwnProperty("label") ? sd.label : key);
@@ -811,8 +833,14 @@ class SliceObjectsPage {
             }
         }
 
-        slicer.onOptionChanged =    (name, val)  => {if(valueSetter.hasOwnProperty(name)) valueSetter[name](name, val);};
-        slicer.onAttributeChanged = (name, attr) => {s.setVisibility("#" + name, attr.enabled);};
+        slicer.onOptionChanged = updateSettingFromSlicer;
+        slicer.onAttributeChanged = updateAttributeFromSlicer;
+    }
+
+    static onSlicerSettingsChanged(name, val) {
+        switch(name) {
+            case "support_angle": OverhangShader.setAngle(val); break;
+        }
     }
 
     static onSliceClicked() {
@@ -854,41 +882,46 @@ class PrintAndPreviewPage {
         s.slider(         "Show layer",                              {id: "preview_layer", oninput: PrintAndPreviewPage.onUpdateLayer});
         s.number(         "Top layer",                               {id: "current_layer", className: "readonly"});
 
+        s.category(   "Post-Processing Options");
+        PauseAtLayer.init(s);
+
         s.category(   "Print Options",                               {open: "open"});
-        const attr = {name: "print_destination", onchange: PrintAndPreviewPage.onOutputChanged};
+        const attr = {name: "print_to", onchange: PrintAndPreviewPage.onOutputChanged};
         s.radio( "Print through a USB cable:",                       {...attr, value: "print-to-usb"});
         s.radio( "Print to printer wirelessly:",                     {...attr, value: "print-to-wifi"});
         s.radio( "Save G-code to printer wirelessly:",               {...attr, value: "save-to-wifi"});
         s.radio( "Save G-code to file for printing:",                {...attr, value: "save-to-file", checked: "checked"});
 
         /* Choices for wireless and saving to file */
-        s.text(           "Save as:",                                {id: "gcode_filename",  className: "gcode_filename filename", value: "output.gcode"});
-        s.choice(         "Wireless capable printer:",               {id: "printer_choices", className: "printer_choices"});
+        s.text(           "Save as:",                                {id: "gcode_filename",  className: "stretch", value: "output.gcode", dataRadio: "print_to", dataValue: "save-to-file save-to-wifi"});
+        s.choice(         "Wireless capable printer:",               {id: "printer_choices", dataRadio: "print_to", dataValue: "print-to-wifi save-to-wifi"});
         s.category();
 
         s.element(                                                   {id: "gcode-out-of-bounds"});
 
         s.footer();
 
-        s.div({className: "print-to-usb"});
+        s.div({dataRadio: "print_to", dataValue: "print-to-usb"});
         s.button(     "Print",                                       {onclick: PrintAndPreviewPage.onPrintClicked});
         s.buttonHelp( "Click this button to print to your printer via a USB cable.");
         s.div();
 
-        s.div({className: "print-to-wifi"});
+        s.div({dataRadio: "print_to", dataValue: "print-to-wifi"});
         s.button(     "Print",                                       {onclick: PrintAndPreviewPage.onPrintToWiFi});
         s.buttonHelp( "Click this button to print to your printer wirelessly.");
         s.div();
 
-        s.div({className: "save-to-wifi"});
+        s.div({dataRadio: "print_to", dataValue: "save-to-wifi"});
         s.button(     "Save",                                        {onclick: PrintAndPreviewPage.onUploadToWiFi});
         s.buttonHelp( "Click this button to save G-code to your printer wirelessly (without printing).");
         s.div();
 
-        s.div({className: "save-to-file"});
+        s.div({dataRadio: "print_to", dataValue: "save-to-file"});
         s.button(     "Save",                                        {onclick: PrintAndPreviewPage.onDownloadClicked});
         s.buttonHelp( "Click this button to save G-code for your printer to a file.");
         s.div();
+
+        s.linkRadioToDivs('print_to');
 
         const defaultOutput = localStorage.getItem('data-output') || 'file';
         PrintAndPreviewPage.setOutput(defaultOutput);
@@ -897,7 +930,7 @@ class PrintAndPreviewPage {
     }
 
     static updateOutputChoices() {
-        const selectedChoice = settings.get("print_destination");
+        const selectedChoice = settings.get("print_to");
         let selectedChoiceHidden = false;
 
         function showOrHide(id, show) {
@@ -920,13 +953,12 @@ class PrintAndPreviewPage {
     }
 
     static setOutput(what) {
-        settings.set("print_destination", what);
+        settings.set("print_to", what);
         this.onOutputChanged(what)
     }
 
     static onOutputChanged(e) {
         const dataOutput = e.target ? e.target.value : e;
-        $(settings.ui).attr('data-output', dataOutput);
         localStorage.setItem('data-output', dataOutput);
     }
 
@@ -952,8 +984,9 @@ class PrintAndPreviewPage {
     static readyToDownload(data) {
         ProgressBar.hide();
         settings.gotoPage("page_print");
-        var decoder = new TextDecoder();
-        this.loadSlicedGcode(decoder.decode(data));
+        const decoder = new TextDecoder();
+        const gcode = decoder.decode(data);
+        this.loadSlicedGcode(gcode);
     }
 
     static extractDataFromGcodeHeader(gcode) {
@@ -982,8 +1015,8 @@ class PrintAndPreviewPage {
     }
 
     static loadSlicedGcode(str) {
-        gcode_blob = new Blob([str], {type: "text/plain"});
-        var path = new GCodeParser(str);
+        sliced_gcode = str;
+        const path = new GCodeParser(str);
         stage.setGcodePath(path);
         const max = Math.max(0, stage.getGcodeLayers() - 1);
         $("#preview_layer").attr("max", max).val(max);
@@ -992,9 +1025,14 @@ class PrintAndPreviewPage {
         PrintAndPreviewPage.extractDataFromGcodeHeader(str);
         PrintAndPreviewPage.onUpdatePreview();
     }
+    
+    static getGcodeBlob() {
+        const postProcessed = PauseAtLayer.postProcess(sliced_gcode);
+        return new Blob([postProcessed], {type: "text/plain"});
+    }
 
     static nothingToPrint() {
-        if(!gcode_blob) {
+        if(!sliced_gcode) {
             alert("There is nothing to print")
             return true;
         }
@@ -1004,13 +1042,13 @@ class PrintAndPreviewPage {
     static onDownloadClicked() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
         const name = settings.get("gcode_filename");
-        saveAs(gcode_blob, name);
+        saveAs(PrintAndPreviewPage.getGcodeBlob(), name);
     }
 
     static async onPrintClicked() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
         try {
-            await stream_gcode(await gcode_blob.text());
+            await stream_gcode(await PrintAndPreviewPage.getGcodeBlob().text());
         } catch(err) {
             if(!(err instanceof PrintAborted)) {
                 // Report all errors except for user initiated abort
@@ -1022,7 +1060,7 @@ class PrintAndPreviewPage {
 
     static async onPrintToWiFi() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
-        const file = SynDaverWiFi.fileFromBlob("printjob.gco", gcode_blob);
+        const file = SynDaverWiFi.fileFromBlob("printjob.gco", PrintAndPreviewPage.getGcodeBlob());
         try {
             await ConfigWirelessPage.queueFile(file);
             if(isDesktop) {
@@ -1037,7 +1075,7 @@ class PrintAndPreviewPage {
     static async onUploadToWiFi() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
         const name = settings.get("gcode_filename");
-        const file = SynDaverWiFi.fileFromBlob(name, gcode_blob);
+        const file = SynDaverWiFi.fileFromBlob(name, PrintAndPreviewPage.getGcodeBlob());
         alert('The file will be saved to your printer for printing later.\n\nYou may start a print through the web management interface by selecting "Wireless Printing" from the menu and then clicking "Manage..."')
         try {
             await ConfigWirelessPage.uploadFiles([file]);
@@ -1171,7 +1209,7 @@ class AdvancedFeaturesPage {
         s.toggle(         "Save implicit values",                    {id: "export_with_unchanged",
            tooltip: "Include all values, including those absent in profiles and unchanged by the user. This provides documentation for values that may have been implicitly computed from other settings."});
         s.separator(                                                 {type: "br"});
-        s.text(       "Save as:",                                    {id: "export_filename", value: "slicer_settings.toml", className: "webapp-only filename"});
+        s.text(       "Save as:",                                    {id: "export_filename", value: "slicer_settings.toml", className: "webapp-only stretch"});
         s.separator(                                                 {type: "br"});
         s.button(     "Save",                                        {onclick: AdvancedFeaturesPage.onExportClicked});
         s.buttonHelp( "Click this button to save current settings to a file on your computer.");
@@ -1214,7 +1252,7 @@ class AdvancedFeaturesPage {
             if (!confirm("You are about to enable all CuraEngine slicer settings, even those which are untested or which are known to not work.\n\nClick OK to proceed at your own risk or Cancel to use only the recommended settings."))
                 document.getElementById("ui-slicer-settings").value = "syndaver-default";
     }
-    
+
     static onApplyTheme() {
         localStorage.setItem("ui-slicer-settings", settings.get("ui-slicer-settings"));
         localStorage.setItem("ui-theme",  settings.get("ui-theme"));
@@ -1287,7 +1325,7 @@ class AdvancedFeaturesPage {
         const filename = settings.get("export_filename");
         AdvancedFeaturesPage.exportConfiguration(filename, options);
     }
-    
+
     static exportConfiguration(filename, options) {
         const config = ProfileManager.exportConfiguration(options);
         const blob = new Blob([config], {type: "text/plain;charset=utf-8"});

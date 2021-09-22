@@ -51,12 +51,12 @@ class SettingsUI {
     static addTag(parent, type, attr_list) {
         const el = document.createElement(type);
         if(attr_list) {
-            for (const attr in attr_list) {
-                if(typeof attr_list[attr] !== 'undefined') {
-                    el[attr] = attr_list[attr];
-                    if(typeof attr_list[attr] !== 'function' && attr.toLowerCase() != "innerhtml" && attr.toLowerCase() != "classname") {
+            for (const [attr, val] of Object.entries(attr_list)) {
+                if(typeof val !== 'undefined') {
+                    el[attr] = val;
+                    if(typeof val !== 'function' && attr.toLowerCase() != "innerhtml" && attr.toLowerCase() != "classname") {
                         // Set the attribute for everything except event handlers.
-                        el.setAttribute(attr, attr_list[attr]);
+                        el.setAttribute(attr.replace(/^data/,"data-"), val);
                     }
                 }
             }
@@ -68,7 +68,7 @@ class SettingsUI {
     // privileged:
 
     static _param(container, attr, tabbable) {
-        container = SettingsUI.addTag(container, "div", SettingsUI._copyAttr({}, attr, ["className"]));
+        container = SettingsUI.addTag(container, "div", SettingsUI._copyAttr({}, attr, ["className","dataRadio","dataValue"]));
         if(tabbable) {
             container.classList.add("tabbable-param");
         }
@@ -84,7 +84,7 @@ class SettingsUI {
         }
         const label = SettingsUI.addTag(container, "label", {innerHTML: description || "&nbsp;", "for": attr.id, title: attr.tooltip});
         if(margin) {
-            label.style.marginLeft = margin + "em";
+            label.parentElement.style.marginLeft = margin + "em";
         }
     }
 
@@ -300,9 +300,10 @@ class SettingsUI {
     }
 
     textarea(description, attr) {
-        SettingsUI._label(this.target_dom, description, attr);
-        const container = SettingsUI.addTag(this.target_dom, "div", {className: "parameter"});
-        const el = SettingsUI.addTag(container, "textarea", SettingsUI._copyAttr({}, attr, ["id", "spellcheck"]));
+        const container = SettingsUI._param(this.target_dom, attr, true);
+        container.classList.add("textarea");
+        SettingsUI._label(container, description, attr);
+        const el = SettingsUI.addTag(container, "textarea", SettingsUI._copyAttr({}, attr, ["id", "spellcheck", "value"]));
         if(attr && attr.id) {
             this.getters[attr.id] = SettingsUI.textarea_getter;
         }
@@ -314,7 +315,6 @@ class SettingsUI {
     }
 
     div(attr) {
-        this.category(); // Close category
         if(attr) {
             this.target_dom = SettingsUI.addTag(this.target_dom, "div", attr);
         } else {
@@ -549,5 +549,17 @@ class SettingsUI {
             if(e.keyCode == 13) {
                 $(e.target).parents(".tabbable-param").next(".tabbable-param").find("input").focus().select();
         }};
+    }
+
+    static _linkedRadioHandler(e) {
+        $('*[data-radio="' + e.target.name + '"]').hide();
+        $('*[data-radio="' + e.target.name + '"][data-value~="' + e.target.value + '"]').show();
+    }
+
+    /* Allows a group of radio buttons to show/hide elements which are tagged with the "data-radio" and "data-value" attributes */
+    linkRadioToDivs(group) {
+        const el = $("[name='" + group + "']");
+        el.change(SettingsUI._linkedRadioHandler);
+        $("[name='" + group + "']:checked").trigger("change");
     }
 }

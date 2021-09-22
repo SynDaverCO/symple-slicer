@@ -100,7 +100,7 @@ class RenderLoop {
 
         function onViewChanged( event ) {
             mine.render();
-            stage.onViewChanged();
+            stage.onViewChanged(camera);
 
             const az = mine.orbit.getAzimuthalAngle() / Math.PI * 180;
             const po = mine.orbit.getPolarAngle()     / Math.PI * 180;

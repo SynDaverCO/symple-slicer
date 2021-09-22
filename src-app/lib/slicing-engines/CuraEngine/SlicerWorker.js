@@ -34,6 +34,7 @@ var sliceInfo = {
 
 self.importScripts('../../three/three.min.js');
 self.importScripts('../../util/geometry/GeometrySerialize.js');
+self.importScripts('../../util/geometry/GeometryAlgorithms.js');
 self.importScripts('CuraEngine.js');
 
 if(typeof TextEncoder === "undefined") {
@@ -141,7 +142,6 @@ function loadGeometry(geometry, filename) {
         self.postMessage({'cmd': 'stderr', 'str': "Bounding box " + geometry.boundingBox.min.x + ", " + geometry.boundingBox.min.y + ", " + geometry.boundingBox.max.x + ", " + geometry.boundingBox.max.y});
 
         self.postMessage({'cmd': 'stderr', 'str': "Writing binary STL as " + filename});
-        geometry.computeFaceNormals();
 
         var headerData = new Uint8Array(80);
         var uint16Data = new Uint16Array(1);
@@ -150,42 +150,49 @@ function loadGeometry(geometry, filename) {
 
         var f = FS.open(filename, "w");
 
+        // Unpack the buffered geometry
+        
+        const position = geometry.getAttribute('position');
+        const index = geometry.getIndex();
+
         // Write the 80 byte header
         FS.write(f, new Uint8Array(headerData.buffer), 0, headerData.length * headerData.BYTES_PER_ELEMENT);
 
         // Write the number of triangles
-        uint32Data[0] = geometry.faces.length;
+        uint32Data[0] = GeometryAlgorithms.countFaces(geometry);
         FS.write(f, new Uint8Array(uint32Data.buffer), 0, uint32Data.length * uint32Data.BYTES_PER_ELEMENT);
 
         // Write the triangle information
-        for(var i = 0; i < geometry.faces.length; i++) {
-            // Write the face normal
-            vectorData[0] = geometry.faces[i].normal.x;
-            vectorData[1] = geometry.faces[i].normal.y;
-            vectorData[2] = geometry.faces[i].normal.z;
-            FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
-            // Write the vertex A information
-            vectorData[0] = geometry.vertices[geometry.faces[i].a].x;
-            vectorData[1] = geometry.vertices[geometry.faces[i].a].y;
-            vectorData[2] = geometry.vertices[geometry.faces[i].a].z;
-            FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
-            // Write the vertex B information
-            vectorData[0] = geometry.vertices[geometry.faces[i].b].x;
-            vectorData[1] = geometry.vertices[geometry.faces[i].b].y;
-            vectorData[2] = geometry.vertices[geometry.faces[i].b].z;
-            FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
-            // Write the vertex C information
-            vectorData[0] = geometry.vertices[geometry.faces[i].c].x;
-            vectorData[1] = geometry.vertices[geometry.faces[i].c].y;
-            vectorData[2] = geometry.vertices[geometry.faces[i].c].z;
-            FS.write(f,  new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
-            // Write the attribute type count
-            uint16Data[0] = 0;
-            FS.write(f, new Uint8Array(uint16Data.buffer), 0, uint16Data.length * uint16Data.BYTES_PER_ELEMENT);
-        }
+        GeometryAlgorithms.forEachFace(geometry,
+            (face, i) => {
+                // Write the face normal
+                vectorData[0] = face.normal.x;
+                vectorData[1] = face.normal.y;
+                vectorData[2] = face.normal.z;
+                FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
+                // Write the vertex A information
+                vectorData[0] = face.a.x;
+                vectorData[1] = face.a.y;
+                vectorData[2] = face.a.z;
+                FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
+                // Write the vertex B information
+                vectorData[0] = face.b.x;
+                vectorData[1] = face.b.y;
+                vectorData[2] = face.b.z;
+                FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
+                // Write the vertex C information
+                vectorData[0] = face.c.x;
+                vectorData[1] = face.c.y;
+                vectorData[2] = face.c.z;
+                FS.write(f,  new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
+                // Write the attribute type count
+                uint16Data[0] = 0;
+                FS.write(f, new Uint8Array(uint16Data.buffer), 0, uint16Data.length * uint16Data.BYTES_PER_ELEMENT);
+            });
         FS.close(f);
         self.postMessage({'cmd': 'stderr', 'str': "Done writing binary STL"});
     } catch (err) {
+        console.error(err);
         Module.printErr('Unable to write STL file: ', err.message);
     }
 }
@@ -260,7 +267,7 @@ function receiveMessage(e) {
         case 'help':         help();                                                 break;
         case 'loadFromUrl':  loadFromUrl(data.url, data.filename);                   break;
         case 'loadFromBlob': loadFromBlob(data.blob, data.filename);                 break;
-        case 'loadGeometry': loadGeometry(jsonToGeometry(data.data), data.filename); break;
+        case 'loadGeometry': loadGeometry(jsonToGeometry(data.data,true), data.filename); break;
         case 'slice':        slice(data.args); get_stats(); get_file(data.args);     break;
         case 'stop':         stop();                                                 break;
         default:             Module.printErr('Unknown command: ' + cmd);

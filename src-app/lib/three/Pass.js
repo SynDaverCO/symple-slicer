@@ -1,84 +1,75 @@
-/*import {
-	OrthographicCamera,
-	PlaneBufferGeometry,
-	Mesh
-} from "../../../build/three.module.js";*/
+( function () {
 
-THREE.Pass = function() {
+	class Pass {
 
-	// if set to true, the pass is processed by the composer
-	this.enabled = true;
+		constructor() {
 
-	// if set to true, the pass indicates to swap read and write buffer after rendering
-	this.needsSwap = true;
+			// if set to true, the pass is processed by the composer
+			this.enabled = true; // if set to true, the pass indicates to swap read and write buffer after rendering
 
-	// if set to true, the pass clears its buffer before rendering
-	this.clear = false;
+			this.needsSwap = true; // if set to true, the pass clears its buffer before rendering
 
-	// if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
-	this.renderToScreen = false;
+			this.clear = false; // if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
 
-}
+			this.renderToScreen = false;
 
-Object.assign( THREE.Pass.prototype, {
+		}
 
-	setSize: function ( /* width, height */ ) {},
+		setSize() {}
 
-	render: function ( /* renderer, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
+		render() {
 
-		console.error( 'THREE.Pass: .render() must be implemented in derived pass.' );
+			console.error( 'THREE.Pass: .render() must be implemented in derived pass.' );
 
-	}
+		}
 
-} );
+	} // Helper for passes that need to fill the viewport with a single quad.
 
-// Helper for passes that need to fill the viewport with a single quad.
 
-THREE.Pass.FullScreenQuad = ( function () {
+	const _camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 ); // https://github.com/mrdoob/three.js/pull/21358
 
-	var camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
-	var geometry = new THREE.PlaneBufferGeometry( 2, 2 );
 
-	var FullScreenQuad = function ( material ) {
+	const _geometry = new THREE.BufferGeometry();
 
-		this._mesh = new THREE.Mesh( geometry, material );
+	_geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( [ - 1, 3, 0, - 1, - 1, 0, 3, - 1, 0 ], 3 ) );
 
-	};
+	_geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( [ 0, 2, 0, 0, 2, 0 ], 2 ) );
 
-	Object.defineProperty( FullScreenQuad.prototype, 'material', {
+	class FullScreenQuad {
 
-		get: function () {
+		constructor( material ) {
+
+			this._mesh = new THREE.Mesh( _geometry, material );
+
+		}
+
+		dispose() {
+
+			this._mesh.geometry.dispose();
+
+		}
+
+		render( renderer ) {
+
+			renderer.render( this._mesh, _camera );
+
+		}
+
+		get material() {
 
 			return this._mesh.material;
 
-		},
+		}
 
-		set: function ( value ) {
+		set material( value ) {
 
 			this._mesh.material = value;
 
 		}
 
-	} );
+	}
 
-	Object.assign( FullScreenQuad.prototype, {
-
-		dispose: function () {
-
-			this._mesh.geometry.dispose();
-
-		},
-
-		render: function ( renderer ) {
-
-			renderer.render( this._mesh, camera );
-
-		}
-
-	} );
-
-	return FullScreenQuad;
+	THREE.FullScreenQuad = FullScreenQuad;
+	THREE.Pass = Pass;
 
 } )();
-
-//export { Pass };
