@@ -765,7 +765,7 @@ class SliceObjectsPage {
         await SlicerSettings.populate(s);
 
         s.category(   "Save Settings to File");
-        s.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only filename"});
+        s.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only stretch"});
         s.separator(                                                 {type: "br"});
         s.button(     "Save",                                        {onclick: SliceObjectsPage.onExportClicked});
         s.buttonHelp( "Click this button to save the slicer settings to a file on your computer.");
@@ -1709,14 +1709,14 @@ class UpdateFirmwarePage {
         s.page(       "Update Firmware",                {id: "page_flash_fw"});
         s.category(   "Update Printer Firmware");
         s.html('<div id="lcd_warn">During an update, the display on your printer will fade. This is normal.</div>');
-        s.text(       "Firmware:",                      {id: "printer_fw_filename", className: "filename readonly"});
+        s.text(       "Firmware:",                      {id: "printer_fw_filename", className: "stretch readonly"});
         s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashPrinterClicked});
         s.buttonHelp( "Click this button to update the firmware on a USB connected printer");
 
         s.category(   "Update Wireless Firmware");
         s.choice(     "Printer to update:",             {id: "wifi_module_choices"});
-        s.text(       "Firmware:",                      {id: "wireless_fw_version", className: "filename readonly"});
+        s.text(       "Firmware:",                      {id: "wireless_fw_version", className: "stretch readonly"});
         s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashWirelessClicked, className: "canUpload"});
         s.buttonHelp( "Click this button to update the firmware on the wireless module wirelessly");
