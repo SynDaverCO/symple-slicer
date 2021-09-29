@@ -33,8 +33,9 @@ class PauseAtLayer {
 
     static patchGcode(gcode, isMatch, script) {
         const re = /^;LAYER:(\d+)\s*$/gm;
+        let number = 1;
         return gcode.replace(re,
-            (match,layer) => isMatch(parseInt(layer,10)) ? match + "\n" + script.replace("${layer}",layer).trim() : match
+            (match,layer) => isMatch(parseInt(layer,10)) ? match + "\n" + script.replace("${number}",number++).trim() : match
         );
     }
 
@@ -72,5 +73,5 @@ class PauseAtLayer {
 
 PauseAtLayer.gcode_default = `
 ; Save a photo on the Level Up
-M118 P0 wifi_photo photos/\${layer}.jpg
+M118 P0 wifi_photo photos/\${number}.jpg
 `;
