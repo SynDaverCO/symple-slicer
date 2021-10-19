@@ -12,7 +12,8 @@
   "author": "",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "electron": "^9.0.3",
-    "serialport": "^9.0.0"
+    "electron": "^15.2.0",
+    "serialport": "^9.0.0",
+    "yargs": "^15.3.1"
   }
 }
