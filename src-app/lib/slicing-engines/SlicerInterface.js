@@ -68,8 +68,7 @@ class SlicerInterface {
                  * the web worker to ensure a clean state
                  * for the next slice.
                  */
-                this._stopWorker();
-                this._startWorker();
+                this.reset();
                 break;
             case 'progress':
                 this.onProgress(data.value);
@@ -144,6 +143,11 @@ class SlicerInterface {
         this.worker.postMessage({
             'cmd':      'stop'
         });
+    }
+
+    reset() {
+        this._stopWorker();
+        this._startWorker();
     }
 
     setOption(name, value) {

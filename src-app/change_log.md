@@ -5,6 +5,7 @@ SynDaver Symple Slicer v1.1.0
 * '''Slicing UI:''' Added ability to enable different slicing settings under "Advanced Features"
 * '''Slicing UI:''' "Print Sequence" under "Special Modes" is now usable (no collision prevention, use with care!)
 * '''Slicing UI:''' Added ability to pause print at certain layers or insert custom G-code
+* '''Slicing UI:''' Added ability to cancel a slice.
 * '''Firmware:''' Added Level and LeveL UP
 * '''Firmware:''' Update wireless to v1.1.0
 ## Added video stream for SynDaver LeveL UP

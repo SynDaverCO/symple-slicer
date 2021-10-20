@@ -854,6 +854,12 @@ class SliceObjectsPage {
             });
             Log.clear();
             ProgressBar.message("Slicing...");
+            ProgressBar.onAbort(() => {
+                if(confirm("Click Okay to stop the slice in progress, or Cancel to allow it to continue.")) {
+                    slicer.reset();
+                    ProgressBar.hide();
+                }
+            }, "Stop slicing");
             ProgressBar.progress(0);
             slicer.slice(filenames);
         }

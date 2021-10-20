@@ -50,7 +50,7 @@ class ProgressBar {
     }
 
     // Assigns an abort callback and shows an abort button.
-    static onAbort(callback, str = "Abort") {
+    static onAbort(callback, tooltip) {
         $("#progress-dialog").addClass("hasAbort");
         $("#progress-dialog .stop").off("click");
         $("#progress-dialog .stop").on(
@@ -60,6 +60,7 @@ class ProgressBar {
                     $("#progress-dialog .stop").prop('disabled', false);
                 }
         });
+        if(tooltip) $("#progress-dialog .stop").prop('title', tooltip);
     }
 
     // Assigns a pause/resume callback and shows a pause button.
