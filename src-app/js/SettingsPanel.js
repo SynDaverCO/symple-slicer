@@ -204,7 +204,7 @@ class SelectProfilesPage {
         s.radio( "Load slicer settings from saved file",             {...attr, value: "from-import"});
         s.radio( "Keep slicer settings from last session",           {...attr, value: "from-session"});
 
-        s.div({dataRadio: "profile-source", dataValue: "from-profiles"});
+        s.div({id: "profile_choices", dataRadio: "profile-source", dataValue: "from-profiles"});
         s.separator(                                                 {type: "br"});
         attr = {onchange: SelectProfilesPage.onDropDownChange};
         const manufacturer_menu = s.choice( "Manufacturer:",         {...attr, id: "machine_manufacturers"});
