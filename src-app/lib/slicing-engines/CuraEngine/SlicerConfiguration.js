@@ -568,7 +568,19 @@ class SlicerConfiguration {
         var subexpressions = this.unpackSubexpressions(expr);
         var expr = subexpressions[0];
 
+        /**
+         * Special handling for things that look like:
+         *    infill_pattern not in ('concentric', 'cross', 'cross_3d', 'gyroid', 'lightning')
+         *    infill_pattern not in ['concentric', 'cross', 'cross_3d', 'gyroid', 'lightning']
+         */
+        function fixInStatement(m, lhs, not, expr) {
+            let i = parseInt(expr.substring(5)); // Find the associated subexpression
+            subexpressions[i] = subexpressions[i].replace(/\((.*)\)/,"[$1]") // Replace parents with square parens
+            return not + " " + expr + " .includes(" + lhs + ")";
+        }
+
         // Replace Python operators with equivalent Javascript
+        expr = expr.replace(/(\w+)\s+(not)\s+in\s+(expr_\d+ )/g, fixInStatement);
         expr = expr.replace(/([^(]*?) if (.*?) else /g, "$2 ? $1 : ");
         expr = expr.replace(/\bor\b/g,   "||");
         expr = expr.replace(/\band\b/g,  "&&");
