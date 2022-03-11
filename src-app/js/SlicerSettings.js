@@ -19,8 +19,8 @@
 
 class SlicerSettings {
     static async populate(s) {
-        const settings = localStorage.getItem("ui-slicer-settings") || query.slicer_settings || "syndaver-default";
-        
+        let settings = localStorage.getItem("ui-slicer-settings") || query.slicer_settings || "syndaver-default";
+
         if (settings == "cura-all") return this.populateCuraSettings(s);
         if (!SlicerSettings.slicerSettings.hasOwnProperty(settings)) settings = "syndaver-default";
 
@@ -58,13 +58,13 @@ class SlicerSettings {
 
 SlicerSettings.slicerSettings = {
     /************************** SynDaver3D 1st Slice ***************************/
-    "syndaver3d-1st-slice" : [
+    "syndaver-1st-slice" : [
         // My 1st Slice! 'Slicing' refers to the process of taking a 3D file and converting it into a G-code(.gco) file for 3D printing using a slicing software. 
         // Powering this software is a complex bundle of math called a 'Slicing Engine'. The slicing engine we support is the, open source, CURA slicing engine.
     ],
 
     /***************************** SynDaver Beginner ***************************/
-    "syndaver3d-beginner" : [
+    "syndaver-beginner" : [
         // Beginner settings list
         "Resolution:",
             "layer_height",
@@ -78,18 +78,18 @@ SlicerSettings.slicerSettings = {
             " z_seam_y",
             "z_seam_corner",
 
-        "Top/Bottom",
+        "Top/Bottom:",
             "top_layers",
             " bottom_layers",
             " initial_bottom_layers",
             "top_bottom_pattern",
             "top_bottom_pattern_0",
   
-        "Infill",
+        "Infill:",
             "infill_sparse_density",
             "infill_pattern",
 
-        "Material",
+        "Material:",
             "build_volume_temperature",
             "material_print_temperature",
             "material_print_temperature_layer_0",
@@ -98,7 +98,7 @@ SlicerSettings.slicerSettings = {
             "material_bed_temperature",
             "material_bed_temperature_layer_0",
 
-        "Speed",
+        "Speed:",
             "speed_print",
             "speed_travel",
             "speed_layer_0",
@@ -106,13 +106,13 @@ SlicerSettings.slicerSettings = {
             " speed_travel_layer_0",
             "skirt_brim_speed",
 
-        "Travel",
+        "Travel:",
             "retraction_enable",
             " retraction_amount",
             " retraction_speed",
             "retraction_combing",
 
-        "Cooling",
+        "Cooling:",
             "cool_fan_enabled",
             "cool_fan_speed",
             " cool_fan_speed_min",
@@ -122,7 +122,7 @@ SlicerSettings.slicerSettings = {
             "cool_min_layer_time",
             "cool_min_speed",
 
-        "Support",
+        "Support:",
             "support_extruder_nr",
             "support_structure",
             "support_pattern",
@@ -140,14 +140,14 @@ SlicerSettings.slicerSettings = {
             " support_interface_density",
             " support_interface_pattern",
 
-        "Platform Adhesion",
+        "Platform Adhesion:",
             "adhesion_type",
             "skirt_line_count",
             "skirt_gap",
             "brim_width",
             " brim_line_count",
 
-        "BlackMagic"
+        "BlackMagic:",
             "magic_spiralize",
             "smooth_spiralized_contours",
     ],
@@ -155,10 +155,10 @@ SlicerSettings.slicerSettings = {
     /***************************** SynDaver Default ***************************/
     "syndaver-default" : [
         // Default settings list
-        "Machine Settings",
+        "Machine Settings:",
             "machine_nozzle_size",
 
-        "Resolution",
+        "Resolution:",
             "layer_height",
             "layer_height_0",
             "line_width",
@@ -174,7 +174,7 @@ SlicerSettings.slicerSettings = {
             "  support_bottom_line_width",
             "initial_layer_line_width_factor",
 
-        "Shell",
+        "Shell:",
             "wall_thickness",
             " wall_line_count",
             "wall_0_wipe_dist",
@@ -194,7 +194,7 @@ SlicerSettings.slicerSettings = {
             "z_seam_corner",
             "z_seam_relative",
 
-        "Top/Bottom",
+        "Top/Bottom:",
             "roofing_layer_count",
             "top_bottom_thickness",
             " top_thickness",
@@ -225,7 +225,7 @@ SlicerSettings.slicerSettings = {
             "max_skin_angle_for_expansion",
             " min_skin_width_for_expansion",
 
-        "Infill",
+        "Infill:",
             "infill_sparse_density",
             " infill_line_distance",
             "infill_pattern",
@@ -249,7 +249,7 @@ SlicerSettings.slicerSettings = {
             "skin_edge_support_thickness",
             " skin_edge_support_layers",
 
-        "Material",
+        "Material:",
             "default_material_print_temperature",
             "build_volume_temperature",
             "material_print_temperature",
@@ -275,7 +275,7 @@ SlicerSettings.slicerSettings = {
             "material_flow_layer_0",
             "material_standby_temperature",
 
-        "Speed",
+        "Speed:",
             "speed_print",
             " speed_infill",
             " speed_wall",
@@ -295,7 +295,8 @@ SlicerSettings.slicerSettings = {
             "skirt_brim_speed",
             "speed_z_hop",
             "speed_slowdown_layers",
-            "speed_equalize_flow_width_factor",
+            "speed_equalize_flow_enabled",
+            "speed_equalize_flow_max",
             "acceleration_enabled",
             "acceleration_print",
             " acceleration_infill",
@@ -333,7 +334,7 @@ SlicerSettings.slicerSettings = {
             " jerk_travel_layer_0",
             "jerk_skirt_brim",
 
-        "Travel",
+        "Travel:",
             "retraction_enable",
             "retract_at_layer_change",
             "retraction_amount",
@@ -357,7 +358,7 @@ SlicerSettings.slicerSettings = {
             "retraction_hop_only_when_collides",
             "retraction_hop",
 
-        "Cooling",
+        "Cooling:",
             "cool_fan_enabled",
             "cool_fan_speed",
             " cool_fan_speed_min",
@@ -370,7 +371,7 @@ SlicerSettings.slicerSettings = {
             "cool_min_speed",
             "cool_lift_head",
 
-        "Support",
+        "Support:",
             "support_enable",
             "support_structure",
             "support_tree_angle",
@@ -437,7 +438,7 @@ SlicerSettings.slicerSettings = {
             "support_tower_maximum_supported_diameter",
             "support_tower_roof_angle",
 
-        "Platform Adhesion",
+        "Platform Adhesion:",
             "adhesion_type",
             "skirt_line_count",
             "skirt_gap",
@@ -479,7 +480,7 @@ SlicerSettings.slicerSettings = {
             " raft_interface_fan_speed",
             " raft_base_fan_speed",
 
-        "Mesh Fix",
+        "Mesh Fix:",
             "meshfix_union_all",
             "meshfix_union_all_remove_holes",
             "meshfix_extensive_stitching",
@@ -492,7 +493,7 @@ SlicerSettings.slicerSettings = {
             "meshfix_maximum_travel_resolution",
             "meshfix_maximum_deviation",
 
-        "BlackMagic",
+        "BlackMagic:",
             "infill_mesh",
             "infill_mesh_order",
             "cutting_mesh",
@@ -513,26 +514,26 @@ SlicerSettings.slicerSettings = {
     /************************** SynDaver Expert **************************/
    "syndaver-expert" : [
         // Expert settings list
-        "Machine Settings",
+        "Machine Settings:",
             "machine_name",
             "machine_show_variants",
-            "machine_start_gcode",
-            "machine_end_gcode",
+            "#machine_start_gcode",
+            "#machine_end_gcode",
             "material_guid",
             "material_diameter",
             "material_bed_temp_wait",
             "material_print_temp_wait",
             "material_print_temp_prepend",
             "material_bed_temp_prepend",
-            "machine_width",
-            "machine_depth",
-            "machine_height",
-            "machine_shape",
+            "#machine_width",
+            "#machine_depth",
+            "#machine_height",
+            "#machine_shape",
             "machine_buildplate_type",
-            "machine_heated_bed",
+            "#machine_heated_bed",
             "machine_heated_build_volume",
             "machine_always_write_active_tool",
-            "machine_center_is_zero",
+            "#machine_center_is_zero",
             "machine_extruder_count",
             "extruders_enabled_count",
             "machine_nozzle_tip_outer_diameter",
@@ -553,7 +554,7 @@ SlicerSettings.slicerSettings = {
             "machine_head_with_fans_polygon",
             "gantry_height",
             "machine_nozzle_id",
-            "machine_nozzle_size",
+            "#machine_nozzle_size",
             "machine_use_extruder_offset_to_offset_coords",
             "extruder_prime_pos_z",
             "extruder_prime_pos_abs",
@@ -579,7 +580,7 @@ SlicerSettings.slicerSettings = {
             "machine_minimum_feedrate",
             "machine_feeder_wheel_diameter",
 
-        "Resolution",
+        "Resolution:",
             "layer_height",
             "layer_height_0",
             "line_width",
@@ -596,29 +597,25 @@ SlicerSettings.slicerSettings = {
             " prime_tower_line_width",
             "initial_layer_line_width_factor",
 
-        "Shell",
+        "Shell:",
             "wall_extruder_nr",
             " wall_0_extruder_nr",
             " wall_x_extruder_nr",
             "wall_thickness",
             " wall_line_count",
-            "beading_strategy_type",
-            "wall_transition_threshold",
-            " wall_split_middle_threshold",
-            " wall_add_middle_threshold",
-            "wall_transition_length",
-            "wall_distribution_count",
-            "wall_transition_angle",
-            "wall_transition_filter_distance",
             "wall_0_wipe_dist",
             "wall_0_inset",
             "optimize_wall_printing_order",
-            "inset_direction",
+            "outer_inset_first",
             "alternate_extra_perimeter",
+            "travel_compensate_overlapping_walls_enabled",
+            " travel_compensate_overlapping_walls_0_enabled",
+            " travel_compensate_overlapping_walls_x_enabled",
+            "wall_min_flow",
+            "wall_min_flow_retract",
+            "fill_perimeter_gaps",
             "filter_out_tiny_gaps",
             "fill_outline_gaps",
-            "min_feature_size",
-            "min_bead_width",
             "xy_offset",
             "xy_offset_layer_0",
             "hole_xy_offset",
@@ -629,7 +626,7 @@ SlicerSettings.slicerSettings = {
             "z_seam_corner",
             "z_seam_relative",
 
-        "Top/Bottom",
+        "Top/Bottom:",
             "roofing_extruder_nr",
             "roofing_layer_count",
             "top_bottom_extruder_nr",
@@ -667,7 +664,7 @@ SlicerSettings.slicerSettings = {
             "max_skin_angle_for_expansion",
             " min_skin_width_for_expansion",
 
-        "Infill",
+        "Infill:",
             "infill_extruder_nr",
             "infill_sparse_density",
             " infill_line_distance",
@@ -698,7 +695,7 @@ SlicerSettings.slicerSettings = {
             " lightning_infill_prune_angle",
             " lightning_infill_straightening_angle",
 
-        "Material",
+        "Material:",
             "default_material_print_temperature",
             "build_volume_temperature",
             "material_print_temperature",
@@ -712,8 +709,6 @@ SlicerSettings.slicerSettings = {
             "material_adhesion_tendency",
             "material_surface_energy",
             "material_shrinkage_percentage",
-            " material_shrinkage_percentage_xy",
-            " material_shrinkage_percentage_z",
             "material_crystallinity",
             "material_anti_ooze_retracted_position",
             "material_anti_ooze_retraction_speed",
@@ -745,7 +740,7 @@ SlicerSettings.slicerSettings = {
             "material_flow_layer_0",
             "material_standby_temperature",
 
-        "Speed",
+        "Speed:",
             "speed_print",
             " speed_infill",
             " speed_wall",
@@ -766,7 +761,8 @@ SlicerSettings.slicerSettings = {
             "skirt_brim_speed",
             "speed_z_hop",
             "speed_slowdown_layers",
-            "speed_equalize_flow_width_factor",
+            "speed_equalize_flow_enabled",
+            "speed_equalize_flow_max",
             "acceleration_enabled",
             "acceleration_print",
             " acceleration_infill",
@@ -806,7 +802,7 @@ SlicerSettings.slicerSettings = {
             " jerk_travel_layer_0",
             "jerk_skirt_brim",
 
-        "Travel",
+        "Travel:",
             "retraction_enable",
             "retract_at_layer_change",
             "retraction_amount",
@@ -832,7 +828,7 @@ SlicerSettings.slicerSettings = {
             "retraction_hop_after_extruder_switch",
             "retraction_hop_after_extruder_switch_height",
 
-        "Cooling",
+        "Cooling:",
             "cool_fan_enabled",
             "cool_fan_speed",
             " cool_fan_speed_min",
@@ -845,7 +841,7 @@ SlicerSettings.slicerSettings = {
             "cool_min_speed",
             "cool_lift_head",
 
-        "Support",
+        "Support:",
             "support_enable",
             "support_extruder_nr",
             " support_infill_extruder_nr",
@@ -920,16 +916,11 @@ SlicerSettings.slicerSettings = {
             "support_mesh_drop_down",
             "support_meshes_present",
 
-        "Platform Adhesion",
+        "Platform Adhesion:",
             "prime_blob_enable",
             "extruder_prime_pos_x",
             "extruder_prime_pos_y",
             "adhesion_type",
-            "adhesion_extruder_nr",
-            " skirt_brim_extruder_nr",
-            " raft_base_extruder_nr",
-            " raft_interface_extruder_nr",
-            " raft_surface_extruder_nr",
             "skirt_line_count",
             "skirt_gap",
             "skirt_brim_minimal_length",
@@ -970,7 +961,7 @@ SlicerSettings.slicerSettings = {
             " raft_interface_fan_speed",
             " raft_base_fan_speed",
 
-        "Mesh Fix",
+        "Mesh Fix:",
             "meshfix_union_all",
             "meshfix_union_all_remove_holes",
             "meshfix_extensive_stitching",
@@ -982,9 +973,8 @@ SlicerSettings.slicerSettings = {
             "meshfix_maximum_resolution",
             "meshfix_maximum_travel_resolution",
             "meshfix_maximum_deviation",
-            "meshfix_maximum_extrusion_area_deviation",
 
-        "Magic",
+        "Magic:",
             "infill_mesh",
             "infill_mesh_order",
             "cutting_mesh",
@@ -999,7 +989,7 @@ SlicerSettings.slicerSettings = {
             "smooth_spiralized_contours",
             "relative_extrusion",
 
-        "Experimental",
+        "Experimental:",
             "slicing_tolerance",
             "roofing_line_width",
             "roofing_pattern",
@@ -1105,11 +1095,8 @@ SlicerSettings.slicerSettings = {
             " small_feature_max_length",
             "small_feature_speed_factor",
             "small_feature_speed_factor_0",
-            "material_alternate_walls",
-            "raft_remove_inside_corners",
-            "raft_base_wall_count",
 
-        "Command Line Settings",
+        "Command Line Settings:",
             "center_object",
             "mesh_position_x",
             "mesh_position_y",

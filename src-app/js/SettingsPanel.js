@@ -797,6 +797,10 @@ class SliceObjectsPage {
 
         s.fromSlicer = function(key, attr, label_prefix = "") {
             var sd = slicer.getOptionDescriptor(key);
+            if (sd === undefined) {
+                console.log("Unable to locate property", key);
+                return;
+            }
             var label = label_prefix + (sd.hasOwnProperty("label") ? sd.label : key);
             var el;
             var attr = {
@@ -1193,9 +1197,10 @@ class AdvancedFeaturesPage {
 
         s.category(   "User Interface");
         s.choice(         "Slicer Settings:",                        {id: "ui-slicer-settings", onchange: AdvancedFeaturesPage.onSlicerSettingsChanged})
-         .option(             "SynDaver Default",                    {value: "syndaver-default"})
+         .option(             "SynDaver 1st Slice",                  {value: "syndaver-1st-slice"})
          .option(             "SynDaver Beginner",                   {value: "syndaver-beginner"})
-         .option(             "SynDaver Ludacrous",                  {value: "syndaver-ludacrous"})
+         .option(             "SynDaver Default",                    {value: "syndaver-default"})
+         .option(             "SynDaver Expert",                     {value: "syndaver-expert"})
          .option(             "Expert: All Cura Settings",           {value: "cura-all"});
         s.choice(         "Theme:",                                  {id: "ui-theme"})
          .option(             "SynDaver 3D",                         {value: "syndaver-3d"})
