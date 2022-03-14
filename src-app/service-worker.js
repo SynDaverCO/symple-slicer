@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 200
+    cacheVersion: 201
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -45,6 +45,7 @@ const filesToCache = [
     'config/syndaver/machine_profiles/syndaver_axi_2.toml',
     'config/syndaver/machine_profiles/syndaver_level.toml',
     'config/syndaver/machine_profiles/syndaver_level_up.toml',
+    'config/syndaver/machine_profiles/syndaver_ng_2.toml',
     'config/syndaver/print_profiles/abs_standard_stable.toml',
     'config/syndaver/print_profiles/asa_standard_stable.toml',
     'config/syndaver/print_profiles/carbon-fiber-nylon_standard_stable.toml',
@@ -68,6 +69,8 @@ const filesToCache = [
     'config/syndaver/machine_firmware/SynDaver_WiFi_Serial.html',
     'config/syndaver/machine_firmware/syndaver-wifi-master.zip',
     'config/syndaver/machine_firmware/RepRapHost-master.zip',
+    'config/syndaver/machine_firmware/syndaver_ng2/NG2_firmware_test.zip',
+    'config/syndaver/machine_firmware/syndaver_ng2/Duet2CombinedFirmware.bin',
     'config/profiles/profile_list.toml',
     'config/profiles/machine_profiles/cura_default.toml',
     'config/profiles/print_profiles/cura_default.toml',
