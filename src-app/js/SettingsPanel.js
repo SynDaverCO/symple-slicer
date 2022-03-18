@@ -31,8 +31,6 @@ class SettingsPanel {
         ObjectTransformPage.init(s);
         await SliceObjectsPage.init(s);
         PrintAndPreviewPage.init(s);
-        MachineSettingsPage.init(s);
-        StartAndEndGCodePage.init(s);
         ConfigWirelessPage.init(s);
         if(isDesktop) {
             MonitorWirelessPage.init(s);
@@ -263,7 +261,7 @@ class SelectProfilesPage {
         try {
             await this.populateProfileMenus(menus);
             if(ProfileManager.loadStoredProfile()) {
-                MachineSettingsPage.onPrinterSizeChanged();
+                SliceObjectsPage.onPrinterSizeChanged();
                 this.rememberProfileSelections(menus);
             } else {
                 // If no startup profile is found, load first profile from the selection box
@@ -388,7 +386,7 @@ class SelectProfilesPage {
                 quality:  settings.get("print_quality"),
                 material: settings.get("print_profiles")
             });
-            MachineSettingsPage.onPrinterSizeChanged();
+            SliceObjectsPage.onPrinterSizeChanged();
         }  finally {
             ProgressBar.hide();
         }
@@ -403,7 +401,7 @@ class SelectProfilesPage {
             const el = settings.get("toml_file");
             ProfileManager.importConfiguration(el.data);
             el.clear();
-            MachineSettingsPage.onPrinterSizeChanged();
+            SliceObjectsPage.onPrinterSizeChanged();
             SelectProfilesPage.onImportChanged(false);
             SelectProfilesPage.onNext();
         } catch(e) {
@@ -844,7 +842,27 @@ class SliceObjectsPage {
     static onSlicerSettingsChanged(name, val) {
         switch(name) {
             case "support_angle": OverhangShader.setAngle(val); break;
+            case "machine_name":
+            case "machine_width":
+            case "machine_depth":
+            case "machine_height":
+            case "machine_center_is_zero":
+            case "machine_heated_bed":
+                SliceObjectsPage.onPrinterSizeChanged(); break;
         }
+    }
+
+    static onPrinterSizeChanged() {
+        stage.setPrinterCharacteristics({
+            circular:          slicer.getOption("machine_shape") == "elliptic",
+            origin_at_center:  slicer.getOption("machine_center_is_zero"),
+            x_width:           slicer.getOption("machine_width"),
+            y_depth:           slicer.getOption("machine_depth"),
+            z_height:          slicer.getOption("machine_height"),
+            name:              slicer.getOption("machine_name")
+        });
+        stage.arrangeObjectsOnPlatform();
+        renderLoop.setView("front");
     }
 
     static onSliceClicked() {
@@ -1120,74 +1138,6 @@ class PrintAndPreviewPage {
     static setOutputGcodeName(filename) {
         const filepart = x => x.substr(0, x.lastIndexOf('.')) || x;
         document.getElementById("gcode_filename").value = filepart(filename) + ".gco";
-    }
-}
-
-class MachineSettingsPage {
-    static init(s) {
-        s.page(       "Machine Settings",                            {id: "page_machine"});
-
-        s.category(   "Printhead Settings");
-        s.fromSlicer(     "machine_nozzle_size");
-        s.fromSlicer(     "machine_head_with_fans_x_min");
-        s.fromSlicer(     "machine_head_with_fans_y_min");
-        s.fromSlicer(     "machine_head_with_fans_x_max");
-        s.fromSlicer(     "machine_head_with_fans_y_max");
-        s.fromSlicer(     "gantry_height");
-
-        s.category(   "Auto Leveling");
-        s.fromSlicer(     "machine_probe_type");
-
-        s.category(   "Build Volume");
-        s.fromSlicer(     "machine_shape");
-        s.fromSlicer(     "machine_width",                           {className: "axis_r"});
-        s.fromSlicer(     "machine_depth",                           {className: "axis_g"});
-        s.fromSlicer(     "machine_height",                          {className: "axis_b"});
-        s.fromSlicer(     "machine_center_is_zero");
-        s.fromSlicer(     "machine_heated_bed");
-        s.button(     "Save Changes",                                {onclick: MachineSettingsPage.onPrinterSizeChanged});
-
-        s.category(   "Start &amp; End G-code");
-        s.buttonHelp( "Template to edit:");
-        s.button(         "Start",                                   {onclick: MachineSettingsPage.onEditStartGcode});
-        s.button(         "End",                                     {onclick: MachineSettingsPage.onEditEndGcode});
-    }
-
-    static onPrinterSizeChanged() {
-        stage.setPrinterCharacteristics({
-            circular:          settings.get("machine_shape") == "elliptic",
-            origin_at_center:  settings.get("machine_center_is_zero"),
-            x_width:           settings.get("machine_width"),
-            y_depth:           settings.get("machine_depth"),
-            z_height:          settings.get("machine_height"),
-            name:              slicer.getOption("machine_name")
-        });
-        stage.arrangeObjectsOnPlatform();
-        renderLoop.setView("front");
-    }
-
-    static onEditStartGcode() {
-        settings.gotoPage("page_start_gcode");
-    }
-
-    static onEditEndGcode() {
-        settings.gotoPage("page_end_gcode");
-    }
-}
-
-class StartAndEndGCodePage {
-    static init(s) {
-        s.page(       "",                                            {id: "page_start_gcode"});
-        s.fromSlicer(     "machine_start_gcode");
-        s.button(         "Done",                                    {onclick: StartAndEndGCodePage.doneEditingGcode});
-
-        s.page(       "",                                            {id: "page_end_gcode"});
-        s.fromSlicer(     "machine_end_gcode");
-        s.button(         "Done",                                    {onclick: StartAndEndGCodePage.doneEditingGcode});
-    }
-
-    static doneEditingGcode() {
-        settings.gotoPage("page_machine");
     }
 }
 

@@ -69,8 +69,7 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
 }
 
 #machine_start_gcode, #machine_end_gcode {
-    width:              75vw;
-    height:             75vh;
+    height:             8em;
 }
 
 #gcode-every-code {

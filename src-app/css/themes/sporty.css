@@ -178,14 +178,14 @@ input, select {
     font-size:          150%;
 }
 
-.axis_r input, button.axis_r {
+.axis_r input, button.axis_r, #machine_width {
     outline:            1px solid red;
 }
 
-.axis_g input, button.axis_g {
+.axis_g input, button.axis_g, #machine_depth {
     outline:            1px solid green;
 }
 
-.axis_b input, button.axis_b {
+.axis_b input, button.axis_b, #machine_height {
     outline:            1px solid blue;
 }

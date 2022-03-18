@@ -2,7 +2,8 @@ SynDaver Symple Slicer v1.1.0
 =============================
 
 * '''Slicing UI:''' Added ability to show overhangs when placing objects
-* '''Slicing UI:''' Added ability to enable different slicing settings under "Advanced Features"
+* '''Slicing UI:''' Added ability to select user expertise level under "Advanced Features"
+* '''Slicing UI:''' "Machine Settings" moved under "Slice Settings" when expertise level is "Expert"
 * '''Slicing UI:''' "Print Sequence" under "Special Modes" is now usable (no collision prevention, use with care!)
 * '''Slicing UI:''' Added ability to pause print at certain layers or insert custom G-code
 * '''Slicing UI:''' Added ability to cancel a slice.
