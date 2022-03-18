@@ -1719,19 +1719,20 @@ class UpdateFirmwarePage {
         }
         // An upgrade set includes the various print scripts as well as the firmware files.
         let files = [];
-        const scripts = ProfileManager.getSection("scripts");
-        if(scripts) {
-            files.push(SynDaverWiFi.fileFromStr("scripts/pause.gco",    scripts.pause_print_gcode  || ""));
-            files.push(SynDaverWiFi.fileFromStr("scripts/cancel.gco",   scripts.stop_print_gcode   || ""));
-            files.push(SynDaverWiFi.fileFromStr("scripts/resume.gco",   scripts.resume_print_gcode || ""));
-            files.push(SynDaverWiFi.fileFromStr("scripts/badprobe.gco", scripts.probe_fail_gcode   || ""));
-        }
         if(wireless.uploads) {
+            const scripts = ProfileManager.getSection("scripts");
             for(const pair of wireless.uploads) {
-                files.push(await SynDaverWiFi.fileFromUrl(pair[0], pair[1]));
+                let uploadDst = pair[0];
+                let uploadSrc = pair[1];
+                if(uploadSrc.startsWith("scripts:")) {
+                    uploadSrc = uploadSrc.replace(/^scripts:\s*/);
+                    files.push(SynDaverWiFi.fileFromStr(uploadDst, scripts[uploadSrc] || ""));
+                } else {
+                    files.push(await SynDaverWiFi.fileFromUrl(uploadDst, uploadSrc));
+                }
             }
         }
-        if(wireless.length == 0) {
+        if(files.length == 0) {
             alert("Nothing to upload. The wireless configuration in the profile may be incomplete.");
             return;
         }

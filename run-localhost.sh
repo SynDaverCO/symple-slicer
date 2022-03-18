@@ -1,2 +1,2 @@
 cd src-app
-python3.9 -m http.server 8000
+python3.8 -m http.server 8000
