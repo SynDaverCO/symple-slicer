@@ -19,12 +19,13 @@ class SettingsUI {
     constructor(elementId) {
         this.ui            = document.getElementById(elementId);
         this.target_dom    = undefined;
-        $(this.ui).addClass("settings-ui");
+        this.ui.classList.add("settings-ui");
 
         this.getters       = {};
         this.setters       = {};
 
         this.header        = SettingsUI.addTag(this.ui, "div");
+        this.header.classList.add("header");
 
         // Add the drop down menu
         this.menu          = document.createElement("select");
@@ -282,6 +283,7 @@ class SettingsUI {
         let group = this.target_dom.lastChild;
         if (!(group && group.classList.contains("incomplete-button-group"))) {
             group = SettingsUI.addTag(this.target_dom, "div", {className: "incomplete-button-group"})
+            SettingsUI.addTag(group, "div", {className: "button-label"});
         }
         if(closeGroup) {
             group.classList.remove("incomplete-button-group");
@@ -296,7 +298,8 @@ class SettingsUI {
     }
 
     buttonHelp(text) {
-        SettingsUI.addTag(this._lastButtonGroup(true), "div", {innerHTML:text, className: "button-label"});
+        const group = this._lastButtonGroup(true);
+        group.firstChild.innerHTML = text;
     }
 
     textarea(description, attr) {
