@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 206
+    cacheVersion: 213
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -59,6 +59,17 @@ const filesToCache = [
     'config/syndaver/print_profiles/silk_pla_standard_stable.toml',
     'config/syndaver/print_profiles/tpu85_standard_stable.toml',
     'config/syndaver/print_profiles/tpu95_standard_stable.toml',
+    'config/syndaver/print_profiles/level/asa_level_standard.toml',
+    'config/syndaver/print_profiles/level/carbon-fiber-nylon_level_standard.toml',
+    'config/syndaver/print_profiles/level/copperfill_level_standard.toml',
+    'config/syndaver/print_profiles/level/fibretuff_level_standard.toml',
+    'config/syndaver/print_profiles/level/nylon_level_standard.toml',
+    'config/syndaver/print_profiles/level/pc-abs_level_standard.toml',
+    'config/syndaver/print_profiles/level/petg_level_standard.toml',
+    'config/syndaver/print_profiles/level/pla-pro_level_standard.toml',
+    'config/syndaver/print_profiles/level/silk-pla_level_standard.toml',
+    'config/syndaver/print_profiles/level/tpu85_level_standard.toml',
+    'config/syndaver/print_profiles/level/tpu95_level_standard.toml',
     'config/syndaver/machine_firmware/LICENSE.txt',
     'config/syndaver/machine_firmware/SynDaver_Axi_1_Marlin_R7_c97c32e0f6.bin',
     'config/syndaver/machine_firmware/SynDaver_Axi_2_Marlin_R4_d365fe33af.bin',
