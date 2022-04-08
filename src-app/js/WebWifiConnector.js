@@ -22,8 +22,7 @@
 // when otherwise a direct connection would be a forbidden CORS request.
 
 class WebWifiConnector {
-    static postMessageToTab(addr, message) {
-        const url = "http://" + addr + "?no-splash";
+    static postMessageToTab(url, message) {
         const target = window.open(url, "syndaver_wireless");
         if(target) {
             this.postMessageAndExpectReply(target, url, message);
@@ -32,13 +31,12 @@ class WebWifiConnector {
         }
     }
 
-    static postMessageAsEmbed(addr, message) {
+    static postMessageAsEmbed(url, message) {
         if(location.protocol != "http:") {
             // If we are served as HTTPS, we cannot open an iframe
             // to an HTTP resource, so open a tab instead.
             return this.postMessageToTab(addr, message);
         }
-        const url = "http://" + addr + "?no-splash";
         let target = document.querySelector('iframe[src="' + url + '"]');
         if(!target) { 
             target = document.createElement("iframe");
