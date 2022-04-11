@@ -181,3 +181,7 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
     user-select:        none;
     color:              var(--syn-color);
 }
+
+#settings {
+    min-width:          30vw;
+}

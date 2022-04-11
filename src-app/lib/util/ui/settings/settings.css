@@ -122,7 +122,6 @@ body.debug .setting-ui {
 .settings-panel .button-label {
     vertical-align:     middle;
     width:              0px;
-    min-width:          250px;
     flex-grow:          1;
     font-size:          13px;
 }
