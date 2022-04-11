@@ -39,8 +39,6 @@ class SettingsPanel {
         AdvancedFeaturesPage.init(s);
         HelpAndInfoPage.init(s);
 
-        s.done();
-
         s.onPageEnter = SettingsPanel.onPageEnter;
         s.onPageExit = SettingsPanel.onPageExit;
 
@@ -56,8 +54,8 @@ class SettingsPanel {
         // Process any load requests.
         if(this.deferredFileLoad) {
             this.onWindowDrop(this.deferredFileLoad);
-            settings.gotoPage("page_profiles");
         }
+        settings.gotoPage("page_profiles");
     }
 
     // onchange handler for enforcing the min and max values.

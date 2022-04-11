@@ -27,24 +27,32 @@ class SettingsUI {
         this.header        = SettingsUI.addTag(this.ui, "div");
         this.header.classList.add("header");
 
+        this.currentPage   = null;
+
+        this.addMenu(this.header);
+
+        this.onPageExit  = function(page) {};
+        this.onPageEnter = function(page) {};
+    }
+
+    addMenu(parentMenu) {
         // Add the drop down menu
         this.menu          = document.createElement("select");
         this.menu.id       = "settingSelect";
-
-        this.currentPage   = null;
 
         const that = this;
         this.menu.onchange = function() {
             that.gotoPage(that.menu.value);
         };
 
-        this.header.appendChild(this.menu);
+        const hr = document.createElement("hr");
 
-        const el      = document.createElement("hr");
-        this.header.appendChild(el);
+        parentMenu.appendChild(this.menu);
+        parentMenu.appendChild(hr);
+    }
 
-        this.onPageExit  = function(page) {};
-        this.onPageEnter = function(page) {};
+    addMenuPage(menuText, menuPage) {
+        SettingsUI.addTag(this.menu, "option", {innerHTML: menuText, value: menuPage});
     }
 
     // private:
@@ -110,8 +118,8 @@ class SettingsUI {
     page(menuText, attr) {
         // Add a choice to the drop-down menu, unless menuText
         // is undefined, in which case this is a hidden page
-        if(menuText) {
-            SettingsUI.addTag(this.menu, "option", {innerHTML: menuText, value: attr.id});
+        if(menuText && this.menu) {
+            this.addMenuPage(menuText, attr.id);
         }
         // Create the page itself and make it the target of future DOM insertions.
         const el = SettingsUI.addTag(this.ui, "div", attr);
@@ -484,10 +492,6 @@ class SettingsUI {
         }
         da.addEventListener('dragover', handleDragOver, false);
         da.addEventListener('drop',     readSingleFile, false);
-    }
-
-    done() {
-        this.menu.onchange();
     }
 
     gotoPage(page) {
