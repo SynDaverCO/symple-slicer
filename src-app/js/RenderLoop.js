@@ -143,7 +143,7 @@ class RenderLoop {
         }
         const topOrBottom = view == "top" || view == "bottom";
         this.fitInView(size);
-        this.centerOnScreen(0, size.y / 2, 0, topOrBottom ? 0.5 : 0.4, 0.5);
+        this.centerOnScreen(0, size.y / 2, 0, topOrBottom ? 0.5 : 0.6, 0.5);
         this.render();
     }
 

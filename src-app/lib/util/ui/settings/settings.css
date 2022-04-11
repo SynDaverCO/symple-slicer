@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 .settings-ui {
-    padding:            10px 0;
+    padding:            10px 10px;
     box-sizing:         border-box; /* Don't add padding to height */
 
     min-width:          200px;
@@ -27,9 +27,8 @@
     flex-direction:     column;
 }
 
-.settings-ui div.header {
+.settings-ui.dock-right .header {
     text-align:         right;
-    padding:            0 10px;
 }
 
 body.debug .setting-ui {
@@ -45,6 +44,7 @@ body.debug .setting-ui {
     flex-shrink:        1;
     overflow:           auto;
     padding:            0 10px;
+    margin:             0 -10px;
 }
 
 .settings-panel.footer {
