@@ -167,3 +167,17 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
     flex-grow:          1;
 }
 
+.vertical {
+    display:            flex;
+    flex-direction:     column;
+}
+
+#buttons {
+    font-size:          24pt;
+    text-align:         center;
+    font-family:        serif;
+    font-weight:        bolder;
+    cursor:             pointer;
+    user-select:        none;
+    color:              var(--syn-color);
+}
