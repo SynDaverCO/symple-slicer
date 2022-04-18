@@ -173,13 +173,16 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
 }
 
 #buttons {
-    font-size:          24pt;
     text-align:         center;
-    font-family:        serif;
-    font-weight:        bolder;
     cursor:             pointer;
     user-select:        none;
     color:              var(--text-color);
+}
+
+#buttons span {
+    font-size:          24pt;
+    font-family:        serif;
+    font-weight:        bolder;
 }
 
 #settings {
