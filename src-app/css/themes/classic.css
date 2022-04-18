@@ -20,6 +20,7 @@
     --panel-color:      hsl(var(--accent-h), 80%, 90%);
     --syn-color:        #002e62;
     --daver-color:      #96172e;
+    --text-color:       var(--syn-color);
 }
 
 body {
@@ -70,7 +71,7 @@ summary:focus {
 
 
 .panel-style {
-    color:              var(--syn-color);
+    color:              var(--text-color);
     background-color:   var(--panel-color);
     border:             1px solid var(--syn-color);
     box-shadow:         5px 5px 10px #222222;

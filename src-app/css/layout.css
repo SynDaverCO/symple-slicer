@@ -179,7 +179,7 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
     font-weight:        bolder;
     cursor:             pointer;
     user-select:        none;
-    color:              var(--syn-color);
+    color:              var(--text-color);
 }
 
 #settings {

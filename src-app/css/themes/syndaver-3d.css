@@ -19,6 +19,7 @@
 
 :root {
     --panel-color:      white;
+    --text-color:       var(--syn-color);
     --syn-color:        hsl(212, 100%, 19%);
     --daver-color:      #96172e;
     --daver-color-inv:  #69e8d1;
@@ -76,7 +77,7 @@ summary:focus {
 }
 
 .panel-style {
-    color:              var(--syn-color);
+    color:              var(--text-color);
     background-color:   var(--panel-color);
     border:             1px solid var(--syn-color);
     box-shadow:         3px 3px 8px #777777;

@@ -18,6 +18,7 @@
  */
 
 :root {
+    --text-color:       white;
     --panel-color:      rgba(65, 65, 65, 1.0);
     --syn-color:        #002e62;
     --daver-color:      #96172e;
@@ -77,7 +78,7 @@ summary:focus {
 }
 
 .panel-style {
-    color:              white;
+    color:              var(--text-color);
     background-color:   var(--panel-color);
     border-radius:      0.5em;
 }
