@@ -188,4 +188,55 @@
                vertexIndex == face.b ||
                vertexIndex == face.c);
     }
- }
+
+    /**
+     * Generates the convex hull for a geometry
+     */
+    static makeConvexHull(geometry) {
+        const vertices = [];
+        GeometryAlgorithms.forEachVertex(geometry, (v, i) => {vertices.push(v.clone())});
+        return new THREE.ConvexGeometry(vertices);
+    }
+}
+
+class ObjectAlgorithms {
+    /**
+     * Generic method that calls a geometry algorithm on each of this object's
+     * subobjects with an appropriate transform matrix
+     */
+    static _applyAlgorithm(obj, relativeTo, result, func) {
+        relativeTo.updateMatrixWorld();
+        var inverse   = new THREE.Matrix4().copy(relativeTo.matrixWorld).invert();
+        var transform = new THREE.Matrix4();
+        obj.traverse(child => {
+            if (child.hasOwnProperty("geometry")) {
+                child.updateMatrixWorld();
+                transform.copy(inverse).multiply(child.matrixWorld);
+                result = func(child.geometry, transform, result, child);
+            }
+        });
+        return result;
+    }
+
+    /**
+     * Finds the lowest point on an object
+     *
+     * obj        - The object for which we wish to find the lowest point.
+     * relativeTo - Define "lowest" relative to this object's coordinate system.
+     */
+    static findLowestPoint(obj, relativeTo) {
+        return ObjectAlgorithms._applyAlgorithm(obj, relativeTo, null,
+            (geo, xform, data, child) => GeometryAlgorithms.findLowestPoint(geo, xform, data, child));
+    }
+
+    /**
+     * Finds the true bounding box of an object
+     *
+     * obj        - The object for which we wish to compute the bounding box.
+     * relativeTo - Relative to this object's coordinate system.
+     */
+    static findBoundingBox(obj, relativeTo, initialBox) {
+        return ObjectAlgorithms._applyAlgorithm(obj, relativeTo, initialBox,
+            (geo, xform, data, child) => GeometryAlgorithms.findBoundingBox(geo, xform, data));
+    }
+}

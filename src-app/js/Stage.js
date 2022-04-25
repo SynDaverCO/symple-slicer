@@ -244,7 +244,7 @@ class Stage {
      * Tests to see whether a particular object is within the print volume
      */
     testWithinBounds(obj) {
-        const bounds = PrintableObject.findBoundingBox(obj, this.bedRelative);
+        const bounds = ObjectAlgorithms.findBoundingBox(obj, this.bedRelative);
         bounds.min.z = Math.ceil(bounds.min.z); // Account for slight numerical imprecision
         return this.printVolume.containsBox(bounds);
     }
@@ -269,7 +269,7 @@ class Stage {
     getSelectionDimensions(scaled = true) {
         var box;
         this.selection.children.forEach(obj => {
-            box = PrintableObject.findBoundingBox(obj, this.selection, box);
+            box = ObjectAlgorithms.findBoundingBox(obj, this.selection, box);
         });
         var size = new THREE.Vector3();
         if(box) {
@@ -295,7 +295,7 @@ class Stage {
      * Drops an object so it touches the print platform
      */
     dropObjectToFloor(obj) {
-        const lowestPoint = PrintableObject.findLowestPoint(obj, this.bedRelative);
+        const lowestPoint = ObjectAlgorithms.findLowestPoint(obj, this.bedRelative);
         if(lowestPoint) {
             obj.position.z -= lowestPoint.z;
         }
@@ -308,7 +308,7 @@ class Stage {
      * the correction applied to the Z value text box.
      */
     get selectionHeightAdjustment() {
-        const lowestPoint = PrintableObject.findLowestPoint(this.selection, this.bedRelative);
+        const lowestPoint = ObjectAlgorithms.findLowestPoint(this.selection, this.bedRelative);
         return lowestPoint ? this.selection.position.z - lowestPoint.z : 0;
     }
 
@@ -326,11 +326,14 @@ class Stage {
         boundingBox.setFromObject(obj);
         const center = boundingBox.getCenter(new THREE.Vector3());
 
-        // Step 2: Find the face in the convex hull intersected by a ray
-        //         from the center of the object downwards
-        const restingFace = helper.findIntersectingFace(obj.hull, center, downVector);
+        // Step 2: Find the convex hull for the object
+        const hull = obj.getConvexHull();
 
-        // Step 3: Rotate object so that the object lays on that face.
+        // Step 3: Find the face in the convex hull intersected by a ray
+        //         from the center of the object downwards
+        const restingFace = helper.findIntersectingFace(hull, center, downVector);
+
+        // Step 4: Rotate object so that the object lays on that face.
         if(restingFace) {
             helper.alignFaceNormalToVector(restingFace, downVector);
         } else {
