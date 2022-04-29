@@ -190,6 +190,21 @@
     }
 
     /**
+     * Call a function for each vertice in the geometry
+     *
+     *  geometry    - Geometry to work with.
+     *  transform   - Matrix to apply to geometry
+     *  callback    - Callback
+     */
+    static iterateVertices(geometry, transform, callback) {
+        GeometryAlgorithms.forEachVertex(geometry, v => {
+            v.applyMatrix4(transform);
+            callback(v);
+        });
+        return callback;
+    }
+
+    /**
      * Generates the convex hull for a geometry
      */
     static makeConvexHull(geometry) {
@@ -238,5 +253,53 @@ class ObjectAlgorithms {
     static findBoundingBox(obj, relativeTo, initialBox) {
         return ObjectAlgorithms._applyAlgorithm(obj, relativeTo, initialBox,
             (geo, xform, data, child) => GeometryAlgorithms.findBoundingBox(geo, xform, data));
+    }
+
+    /**
+     * Finds all vertices in an object
+     *
+     * obj        - The object for which we wish to compute the vertices.
+     * relativeTo - Relative to this object's coordinate system.
+     */
+    static findVertices(obj, relativeTo) {
+        const vertices = [];
+        ObjectAlgorithms._applyAlgorithm(obj, relativeTo, null,
+            (geo, xform, data, child) =>
+                GeometryAlgorithms.iterateVertices(geo, xform, v => vertices.push(v.clone())));
+        return vertices;
+    }
+
+    /**
+     * Finds the hull convex of an object
+     *
+     * obj        - The object for which we wish to compute the hull.
+     * relativeTo - Relative to this object's coordinate system.
+     */
+    static findConvexHull(obj, relativeTo) {
+        return new THREE.ConvexGeometry(ObjectAlgorithms.findVertices(obj, relativeTo));
+    }
+
+    /**
+     * Finds the bounding box of an object
+     *
+     * obj        - The object for which we wish to compute bounding box.
+     * relativeTo - Relative to this object's coordinate system.
+     */
+     static findBoundingBox(obj, relativeTo) {
+        const box = new THREE.Box3();
+        box.setFromPoints(ObjectAlgorithms.findVertices(obj, relativeTo));
+        return box;
+    }
+
+    /**
+     * Finds the bounding sphere of an object
+     *
+     * obj        - The object for which we wish to compute the hull.
+     * relativeTo - Relative to this object's coordinate system.
+     */
+     static findBoundingSphere(obj, relativeTo) {
+        const sphere = new THREE.Sphere();
+        sphere.setFromPoints(ObjectAlgorithms.findVertices(obj, relativeTo));
+        return sphere;
     }
 }

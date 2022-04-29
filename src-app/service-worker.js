@@ -111,6 +111,7 @@ const filesToCache = [
     'js/PrinterRepresentation.js',
     'js/ProfileManager.js',
     'js/RenderLoop.js',
+    'js/ObjectGroup.js',
     'js/SelectionGroup.js',
     'js/SerialPort.js',
     'js/SettingsPanel.js',
