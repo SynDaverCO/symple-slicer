@@ -8,10 +8,7 @@ SynDaver Symple Slicer v1.1.0
 * '''Slicing UI:''' Added ability to pause print at certain layers or insert custom G-code
 * '''Slicing UI:''' Added ability to cancel a slice.
 * '''Slicer''' Upgraded CuraEngine to 4.12.1
-* '''Firmware:''' Added Level and LeveL UP
 * '''Firmware:''' Update wireless to v1.1.0
-## Added video stream for SynDaver LeveL UP
-## Added wireless settings report for SynDaver LeveL UP
 ## Added ability to configure default gateway and subnet mask
 ## Added ability to connect to an open access point
 ## Fixed persistent "Printer unreachable" message

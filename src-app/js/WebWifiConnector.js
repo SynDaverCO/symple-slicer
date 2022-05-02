@@ -35,7 +35,7 @@ class WebWifiConnector {
         if(location.protocol != "http:") {
             // If we are served as HTTPS, we cannot open an iframe
             // to an HTTP resource, so open a tab instead.
-            return this.postMessageToTab(addr, message);
+            return this.postMessageToTab(url, message);
         }
         let target = document.querySelector('iframe[src="' + url + '"]');
         if(!target) { 
