@@ -1332,7 +1332,7 @@ class ConfigWirelessPage {
     static getPrinterUrl() {
         const printer_addr = settings.get("printer_addr");
         const printer_pass = settings.get("printer_pass");
-        return "http://" + addr + "?no-splash=1";
+        return "http://" + printer_addr + "?no-splash=1";
     }
 
     static loadSettings() {
@@ -1397,6 +1397,7 @@ class ConfigWirelessPage {
     }
 
     static onManageClicked() {
+        const printer_pass = settings.get("printer_pass");
         WebWifiConnector.postMessageToTab(ConfigWirelessPage.getPrinterUrl(), {password: printer_pass});
     }
 
@@ -1442,6 +1443,7 @@ class ConfigWirelessPage {
         } else {
             // When running on the web, it is necessary to post a message to
             // the wifi module rather than sending files directly.
+            const printer_pass = settings.get("printer_pass");
             WebWifiConnector.postMessageAsEmbed(ConfigWirelessPage.getPrinterUrl(), {password: printer_pass, files: files});
         }
     }
