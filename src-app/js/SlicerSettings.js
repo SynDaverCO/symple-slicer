@@ -19,20 +19,26 @@
 
 class SlicerSettings {
     static async populate(s) {
-        let settings = localStorage.getItem("ui-slicer-settings") || query.slicer_settings || "syndaver-default";
+        let settings = localStorage.getItem("ui-slicer-settings") || query.slicer_settings || "1st-slice";
 
-        if (settings == "cura-all") return this.populateCuraSettings(s);
-        if (!SlicerSettings.slicerSettings.hasOwnProperty(settings)) settings = "syndaver-default";
+        if (settings == "cura-all") {
+            this.populateCuraSettings(s);
+        } else {
+            if (!SlicerSettings.slicerSettings.hasOwnProperty(settings)) settings = "1st-slice";
 
-        for (const item of SlicerSettings.slicerSettings[settings]) {
-            const indent = item.match(/^\s*/)[0].length;
-            if(item.startsWith("#")) continue;
-            if (item.endsWith(":")) {
-                s.category(item.slice(0,-1));
-            } else {
-                s.fromSlicer(item.trim(),{},"\t".repeat(indent));
+            for (const item of SlicerSettings.slicerSettings[settings]) {
+                const indent = item.match(/^\s*/)[0].length;
+                if(item.startsWith("#")) continue;
+                if(item.startsWith("<")) {
+                    s.html(item);
+                } else if (item.endsWith(":")) {
+                    s.category(item.slice(0,-1));
+                } else {
+                    s.fromSlicer(item.trim(),{},"\t".repeat(indent));
+                }
             }
         }
+        return settings;
     }
 
     static async populateCuraSettings(s) {
@@ -58,13 +64,14 @@ class SlicerSettings {
 
 SlicerSettings.slicerSettings = {
     /************************** SynDaver3D 1st Slice ***************************/
-    "syndaver-1st-slice" : [
+    "1st-slice" : [
         // My 1st Slice! 'Slicing' refers to the process of taking a 3D file and converting it into a G-code(.gco) file for 3D printing using a slicing software. 
         // Powering this software is a complex bundle of math called a 'Slicing Engine'. The slicing engine we support is the, open source, CURA slicing engine.
+        "<div id='first_slice_warn'>The recommended settings for the selected material will be used.<p>To customize, go to &quot;Advanced Features&quot; and change your &quot;User Interface&quot; experience.</div><br>"
     ],
 
     /***************************** SynDaver Beginner ***************************/
-    "syndaver-beginner" : [
+    "beginner" : [
         // Beginner settings list
         "Resolution:",
             "layer_height",
@@ -152,8 +159,8 @@ SlicerSettings.slicerSettings = {
             "smooth_spiralized_contours",
     ],
 
-    /***************************** SynDaver Default ***************************/
-    "syndaver-default" : [
+    /***************************** SynDaver Intermediate ***************************/
+    "intermediate" : [
         // Default settings list
         "Machine Settings:",
             "machine_nozzle_size",
@@ -512,7 +519,7 @@ SlicerSettings.slicerSettings = {
 
 
     /************************** SynDaver Expert **************************/
-   "syndaver-expert" : [
+   "expert" : [
         // Expert settings list
         "Machine Settings:",
             "machine_name",

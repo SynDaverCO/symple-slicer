@@ -758,13 +758,15 @@ class SliceObjectsPage {
 
         s.page(       "Slice Objects",                               {id: "page_slice", className: "scrollable"});
 
-        await SlicerSettings.populate(s);
+        const mode = await SlicerSettings.populate(s);
 
-        s.category(   "Save Settings to File");
-        s.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only stretch"});
-        s.separator(                                                 {type: "br"});
-        s.button(     "Save",                                        {onclick: SliceObjectsPage.onExportClicked});
-        s.buttonHelp( "Click this button to save the slicer settings to a file on your computer.");
+        if (mode != "1st-slice") {
+            s.category(   "Save Settings to File");
+            s.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only stretch"});
+            s.separator(                                                 {type: "br"});
+            s.button(     "Save",                                        {onclick: SliceObjectsPage.onExportClicked});
+            s.buttonHelp( "Click this button to save the slicer settings to a file on your computer.");
+        }
 
         s.footer();
         s.button(     "Slice",                                       {onclick: SliceObjectsPage.onSliceClicked});
@@ -1143,13 +1145,13 @@ class AdvancedFeaturesPage {
     static init(s) {
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
-        s.category(   "User Interface");
+        s.category(   "User Interface",                              {open: "open"});
         s.choice(         "Slicer Settings:",                        {id: "ui-slicer-settings", onchange: AdvancedFeaturesPage.onSlicerSettingsChanged})
-         .option(             "SynDaver 1st Slice",                  {value: "syndaver-1st-slice"})
-         .option(             "SynDaver Beginner",                   {value: "syndaver-beginner"})
-         .option(             "SynDaver Default",                    {value: "syndaver-default"})
-         .option(             "SynDaver Expert",                     {value: "syndaver-expert"})
-         .option(             "Expert: All Cura Settings",           {value: "cura-all"});
+         .option(             "SynDaver 1st Slice",                  {value: "1st-slice"})
+         .option(             "SynDaver Beginner",                   {value: "beginner"})
+         .option(             "SynDaver Intermediate",               {value: "intermediate"})
+         .option(             "SynDaver Expert",                     {value: "expert"})
+         .option(             "All Cura Settings",                   {value: "cura-all"});
         s.choice(         "Theme:",                                  {id: "ui-theme"})
          .option(             "SynDaver 3D",                         {value: "syndaver-3d"})
          .option(             "Classic",                             {value: "classic"})
