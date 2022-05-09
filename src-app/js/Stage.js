@@ -39,7 +39,7 @@ class Stage {
         }
         this.selection.onTransformEnd = () => {
             this.dropObjectToFloor(this.selection);
-            this.highlightOutOfBounds(this.selection.children);
+            this.highlightOutOfBounds(this.getPrintableObjects(this.selection));
         };
         this.selection.onSelectionChanged = ObjectTransformPage.onSelectionChanged;
 
@@ -95,7 +95,7 @@ class Stage {
     setPrinterCharacteristics(printer) {
         if(!this.printerRepresentation) {
             this.printerRepresentation = new PrinterRepresentation(printer);
-        } else {  
+        } else {
             this.printerRepresentation.update(printer);
         }
         this.bedRelative = this.printerRepresentation.bedRelative;
@@ -176,7 +176,9 @@ class Stage {
 
         // Create an array of circles for the packing algorithm
 
-        for(const [index, object] of this.placedObjects.children.entries()) {
+        const objects = this.getTopLevelObjects();
+
+        for(const [index, object] of objects.entries()) {
             const isAbsoluteCenter =  objectsToArrange && objectsToArrange[0] == object;
             const isPulledToCenter = !objectsToArrange || objectsToArrange.includes(object);
             if(isAbsoluteCenter) {
@@ -211,7 +213,7 @@ class Stage {
         var packingUpdate = (updatedCircles) => {
             for (let id in updatedCircles) {
                 const index = parseInt(id.substring(1));
-                const object = this.placedObjects.children[index];
+                const object = objects[index];
                 const circle = updatedCircles[id];
                 object.position.x += circle.delta.x;
                 object.position.y += circle.delta.y;
@@ -264,7 +266,7 @@ class Stage {
      */
     getSelectionDimensions(scaled = true) {
         var box;
-        this.selection.children.forEach(obj => {
+        this.getSelectedObjects().forEach(obj => {
             box = ObjectAlgorithms.findBoundingBox(obj, this.selection, box);
         });
         var size = new THREE.Vector3();
@@ -344,14 +346,27 @@ class Stage {
     }
 
     // Return all printable objects in the stage
-    getPrintableObjects() {
+    getPrintableObjects(container) {
+        if(!container) container = this.placedObjects;
         const result = [];
-        this.placedObjects.traverse(obj => {
+        container.traverse(obj => {
             if (obj instanceof PrintableObject) {
                 result.push(obj);
             }
         });
         return result;
+    }
+
+    // Returns all top-level objects in the stage, selected or not
+    getTopLevelObjects() {
+        return this.placedObjects.children
+            .filter(item => item !== this.selection)
+            .concat(this.selection.children);
+    }
+
+    // Returns all top-level selected objects on the stage
+    getSelectedObjects() {
+        return this.selection.children.slice();
     }
 
     /**
@@ -376,7 +391,7 @@ class Stage {
         this.scaleObjectToFit(obj, true);
         this.dropObjectToFloor(obj);
         this.centerObjectOnPlatform(obj);
-        this.arrangeObjectsOnPlatform(this.placedObjects.children);
+        this.arrangeObjectsOnPlatform(this.getTopLevelObjects());
         this.render();
     }
 
@@ -396,21 +411,19 @@ class Stage {
     }
 
     removeSelectedObjects() {
-        this.removeObjects(this.selection.children.slice());
+        this.removeObjects(this.getSelectedObjects());
         this.render();
     }
 
     centerSelectedObjects() {
-        if(this.selection.children.length == 0) {
-            return;
-        }
-        if(this.numObjects > 1) {
-            this.arrangeObjectsOnPlatform(this.selection.children.slice());
+        const selection = this.getSelectedObjects();
+        if(selection.length == 0) return;
+        if(selection.length > 1) {
+            this.arrangeObjectsOnPlatform(selection);
         } else {
-            let objectToCenter = this.selection.children[0];
-            this.centerObjectOnPlatform(objectToCenter);
-            this.highlightOutOfBounds([objectToCenter]);
+            this.centerObjectOnPlatform(selection[0]);
         }
+        this.highlightOutOfBounds(this.getPrintableObjects());
         this.render();
     }
 
@@ -418,16 +431,15 @@ class Stage {
         if(resetTransforms) {
             this.selection.resetChildTransforms();
             // Temporarily assign extruders to different materials
-            for(var i = 0; i < this.selection.children.length; i++) {
-                this.selection.children[i].setExtruder(i);
-            }
+            this.getPrintableObjects(this.selection).forEach((obj,i) => obj.setExtruder(i));
         }
-        this.selection.groupObjects();
-        this.centerSelectedObjects();
+        const group = this.selection.groupObjects();
+        this.dropObjectToFloor(group);
         this.render();
     }
 
     ungroupSelectedObjects() {
+        this.selection.ungroupObjects();
     }
 
     arrangeAll() {
@@ -435,12 +447,12 @@ class Stage {
     }
 
     removeAll() {
-        this.removeObjects(this.placedObjects.children.slice());
+        this.removeObjects(this.getTopLevelObjects());
         this.render();
     }
 
     selectAll() {
-        this.selection.setSelection(this.placedObjects.children);
+        this.selection.setSelection(this.getTopLevelObjects());
         this.render();
     }
 
@@ -529,7 +541,7 @@ class Stage {
         if (dropToFloor) {
             this.dropObjectToFloor(this.selection);
         }
-        this.highlightOutOfBounds(this.selection.children);
+        this.highlightOutOfBounds(this.getPrintableObjects());
         this.render();
     }
 
@@ -611,6 +623,6 @@ class Stage {
     }
 
     onLayFlatClicked() {
-        this.selection.children.forEach(obj => this.layObjectFlat(obj));
+        getSelectedObjects().forEach(obj => this.layObjectFlat(obj));
     }
 }

@@ -85,6 +85,17 @@ class SelectionGroup extends ObjectGroup {
         const group = new ObjectGroup();
         this.setSelection(group);
         group.setGroup(objs);
+        return group
+    }
+
+    ungroupObjects() {
+        this.children.forEach(child => {
+            if(child instanceof ObjectGroup) {
+                child.setGroup([]);
+                // Remove without reattaching to parent
+                child.removeFromParent();
+            }
+        });
     }
 
     setTransformControl(control) {
