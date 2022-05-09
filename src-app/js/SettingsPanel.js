@@ -101,10 +101,9 @@ class SettingsPanel {
         this.loadFiles(files);
     }
 
-    static loadFiles(files) {
-        // Create a synthetic onDrop event that will be dispatched
-        // once Symple Slicer is initialized.
-        const evt = {
+    // Create a synthetic onDrop event with a list of files
+    static makeDropEvent(files) {
+        return {
             stopPropagation: () => {},
             preventDefault: () => {},
             dataTransfer: {
@@ -112,6 +111,11 @@ class SettingsPanel {
                 getData: () => null
             }
         };
+    }
+
+    static loadFiles(files) {
+        // Dispatch a synthetic onDrop event once Symple Slicer is initialized.
+        const evt = SettingsPanel.makeDropEvent(files);
         if(settings) {
             this.onWindowDrop(evt);
             settings.gotoPage("page_profiles");
@@ -162,7 +166,8 @@ class SettingsPanel {
                     id = "custom_fw_file";
             }
             if(id) {
-                settings.get(id).drophandler(e);
+                // Create a synthetic drop event with a single file and call the drop handler
+                settings.get(id).drophandler(SettingsPanel.makeDropEvent([files[i]]));
             }
         }
         // Process any drag-and-dropped commands
