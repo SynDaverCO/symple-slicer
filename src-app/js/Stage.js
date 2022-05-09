@@ -623,6 +623,6 @@ class Stage {
     }
 
     onLayFlatClicked() {
-        getSelectedObjects().forEach(obj => this.layObjectFlat(obj));
+        this.getSelectedObjects().forEach(obj => this.layObjectFlat(obj));
     }
 }
