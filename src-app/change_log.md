@@ -1,3 +1,9 @@
+SynDaver Symple Slicer v1.1.1
+=============================
+
+* '''Slicing UI:''' Added ability to group, merge and ungroup models.
+* '''Firmware''': Added firmware for Level and NG 2.
+
 SynDaver Symple Slicer v1.1.0
 =============================
 
