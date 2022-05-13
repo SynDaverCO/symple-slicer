@@ -551,15 +551,16 @@ class PlaceObjectsPage {
     }
 
     static onAddToPlatform() {
+        if(!loaded_geometry) return;
         const howMany = parseInt(settings.get("place_quantity"))
         for(var i = 0; i < howMany; i++) {
-            stage.addGeometry(loaded_geometry);
+            stage.addGeometry(loaded_geometry.geometry, loaded_geometry.filename);
         }
     }
 
-    static onGeometryLoaded(geometry) {
+    static onGeometryLoaded(geometry, filename) {
         if(geometry) {
-            loaded_geometry = geometry;
+            loaded_geometry = {geometry, filename};
             settings.enable('.place_more', true);
             PlaceObjectsPage.onAddToPlatform(); // Place the first object automatically
         } else {
@@ -871,12 +872,13 @@ class SliceObjectsPage {
     }
 
     static onSliceClicked() {
-        var geometries = stage.getAllGeometry();
+        const geometries = stage.getAllGeometry();
         if(geometries.length) {
-            var geometries = stage.getAllGeometry();
-            var filenames  = geometries.map((geo,i) => {
-                var filename = 'input_' + i + '.stl';
-                slicer.loadFromGeometry(geo, filename);
+            const filenames  = geometries.map((geo,i) => {
+                const filename = 'input_' + i + '.stl';
+                const geometry = geo.geometry.clone();
+                geometry.applyMatrix4(geo.transform);
+                slicer.loadFromGeometry(geometry, filename);
                 return filename;
             });
             Log.clear();

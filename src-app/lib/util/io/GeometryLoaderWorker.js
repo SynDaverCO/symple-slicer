@@ -57,13 +57,14 @@ function loadFromSTL(data) {
     return [bufferGeometry];
 }
 
-function send(geometry) {
+function send(geometry, filename) {
     geometry.forEach(
         geometry => {
             var payload = geometryToJSON(geometry);
             self.postMessage({
                 cmd: 'geometry',
                 geometry: payload.data,
+                filename
             }, payload.tranferables);
         }
     );
@@ -77,8 +78,8 @@ function receiveMessage(e) {
     var cmd  = e.data.cmd;
     var data = e.data;
     switch (cmd) {
-        case 'loadSTL': send(loadFromSTL(data.data)); break;
-        case 'loadOBJ': send(loadFromOBJ(data.data)); break;
+        case 'loadSTL': send(loadFromSTL(data.data), data.filename); break;
+        case 'loadOBJ': send(loadFromOBJ(data.data), data.filename); break;
         case 'stop': stop(); break;
         default: console.log('Unknown command: ' + cmd);
     };

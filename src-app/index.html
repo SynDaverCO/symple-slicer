@@ -388,8 +388,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
 
             // Prepare the geometry loading thread
-            var geoLoader    = new GeometryLoader();
-            geoLoader.onGeometryLoaded = geometry => {PlaceObjectsPage.onGeometryLoaded(geometry);};
+            const geoLoader = new GeometryLoader();
+            geoLoader.onGeometryLoaded = PlaceObjectsPage.onGeometryLoaded;
 
             geoLoader.onProgress = function(progress) {
                 ProgressBar.progress(progress);

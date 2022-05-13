@@ -370,23 +370,21 @@ class Stage {
     }
 
     /**
-     * This function returns a list of ready to slice geometries with
-     * all the transformations already baked in.
+     * This function returns a list of ready to slice geometries along
+     * with the transformation matrix.
      */
     getAllGeometry() {
         return this.getPrintableObjects().map(obj => {
-            var geometry = obj.geometry.clone();
-            var transform = obj.matrixWorld.clone();
-            var worldToPrinterRepresentation = new THREE.Matrix4();
+            const transform = obj.matrixWorld.clone();
+            const worldToPrinterRepresentation = new THREE.Matrix4();
             transform.premultiply(worldToPrinterRepresentation.copy(this.bedRelative.matrixWorld).invert());
-            geometry.applyMatrix4(transform);
-            return geometry;
+            return {geometry: obj.geometry, filename: obj.filename, extruder: obj.extruder, transform};
         });
     }
 
-    addGeometry(geometry) {
+    addGeometry(geometry, filename) {
         this.selectNone();
-        var obj = new PrintableObject(geometry);
+        var obj = new PrintableObject(geometry, filename);
         this.addObjects([obj]);
         this.scaleObjectToFit(obj, true);
         this.dropObjectToFloor(obj);

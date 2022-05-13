@@ -18,12 +18,13 @@
  */
 
 class PrintableObject extends THREE.Mesh {
-    constructor(geometry) {
+    constructor(geometry, filename) {
         geometry.computeBoundingSphere();
         geometry.computeBoundingBox();
         super(geometry, PrintableObject.modelMaterials[0]);
         this.castShadow = true;
         this.extruder = 0;
+        this.filename = filename;
     }
 
     static applyStyleSheetColors() {
