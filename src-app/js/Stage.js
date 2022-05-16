@@ -27,7 +27,6 @@ class Stage {
             z_height:          286
         });
 
-        this.objects = [];
         this.placedObjects = new THREE.Object3D();
         this.dragging      = false;
         this.packer = null;
@@ -40,7 +39,7 @@ class Stage {
         }
         this.selection.onTransformEnd = () => {
             this.dropObjectToFloor(this.selection);
-            this.highlightOutOfBounds(this.selection.children);
+            this.highlightOutOfBounds(this.getPrintableObjects(this.selection));
         };
         this.selection.onSelectionChanged = ObjectTransformPage.onSelectionChanged;
 
@@ -59,7 +58,11 @@ class Stage {
                 separator2: "-----",
                 select_all: {name: "Select All Objects"},
                 arrange_all: {name: "Arrange All Objects"},
-                delete_all: {name: "Clear Build Plate", icon: "delete"}
+                delete_all: {name: "Clear Build Plate", icon: "delete"},
+                separator3: "-----",
+                group_some: {name: "Group Selected Objects"},
+                merge_some: {name: "Merge Selected Objects"},
+                ungroup_some: {name: "Ungroup Selected Objects"}
             }
         });
     }
@@ -73,12 +76,15 @@ class Stage {
 
     menuAction(key) {
         switch(key) {
-            case "select_all"  : this.selectAll(); break;
-            case "arrange_all" : this.arrangeAll(); break;
-            case "delete_all"  : this.removeAll(); break;
-            case "center_some" : this.centerSelectedObjects(); break;
-            case "delete_some" : this.removeSelectedObjects(); break;
-            case "xform_some"  : ObjectTransformPage.onToolChanged("move");
+            case "select_all"   : this.selectAll(); break;
+            case "arrange_all"  : this.arrangeAll(); break;
+            case "delete_all"   : this.removeAll(); break;
+            case "center_some"  : this.centerSelectedObjects(); break;
+            case "delete_some"  : this.removeSelectedObjects(); break;
+            case "xform_some"   : ObjectTransformPage.onToolChanged("move"); break;
+            case "group_some"   : this.groupSelectedObjects(false); break;
+            case "merge_some"   : this.groupSelectedObjects(true); break;
+            case "ungroup_some" : this.ungroupSelectedObjects(); break;
         }
     }
 
@@ -89,7 +95,7 @@ class Stage {
     setPrinterCharacteristics(printer) {
         if(!this.printerRepresentation) {
             this.printerRepresentation = new PrinterRepresentation(printer);
-        } else {  
+        } else {
             this.printerRepresentation.update(printer);
         }
         this.bedRelative = this.printerRepresentation.bedRelative;
@@ -106,28 +112,18 @@ class Stage {
     }
 
     /**
-     * Returns the bounding sphere of an object in bed coordinates
-     */
-    getObjectBoundingSphere(object, bedMatrixWorldInverse) {
-        object.updateMatrixWorld();
-        var sphere = object.geometry.boundingSphere.clone();
-        sphere.applyMatrix4(object.matrixWorld);
-        sphere.applyMatrix4(bedMatrixWorldInverse ? bedMatrixWorldInverse : this.getBedMatrixWorldInverse());
-        return sphere;
-    }
-
-    /**
      * Positions an object in the center of the bed.
      */
     centerObjectOnPlatform(object) {
         this.selectNone();
-
-        const center = object.geometry.boundingBox.getCenter(new THREE.Vector3());
-        const delta = this.objectToBed(object, center);
+        const boundingBox = ObjectAlgorithms.findBoundingBox(object, this.bedRelative);
+        const center = boundingBox.getCenter(new THREE.Vector3());
+        const delta = center;
         if(!this.printer.origin_at_center) {
             delta.x -= this.printer.x_width/2;
             delta.y -= this.printer.y_depth/2;
         }
+        // Subtract out the center of the object so that it falls on the origin
         object.position.x -= delta.x;
         object.position.y -= delta.y;
     }
@@ -136,7 +132,8 @@ class Stage {
      * Shrinks an object to fit the print volume.
      */
     scaleObjectToFit(object, ask) {
-        const size = object.geometry.boundingBox.getSize(new THREE.Vector3());
+        const boundingBox = ObjectAlgorithms.findBoundingBox(object, this.bedRelative);
+        const size = boundingBox.getSize(new THREE.Vector3());
         const scale = Math.min(
             this.printer.x_width / size.x,
             this.printer.y_depth / size.y,
@@ -169,7 +166,7 @@ class Stage {
                 this.packer = null;
                 p.destroy();
             }
-            this.highlightOutOfBounds(this.objects);
+            this.highlightOutOfBounds(this.getPrintableObjects());
             this.render();
         };
 
@@ -179,8 +176,9 @@ class Stage {
 
         // Create an array of circles for the packing algorithm
 
-        const inv = this.getBedMatrixWorldInverse();
-        for(const [index, object] of this.objects.entries()) {
+        const objects = this.getTopLevelObjects();
+
+        for(const [index, object] of objects.entries()) {
             const isAbsoluteCenter =  objectsToArrange && objectsToArrange[0] == object;
             const isPulledToCenter = !objectsToArrange || objectsToArrange.includes(object);
             if(isAbsoluteCenter) {
@@ -193,7 +191,7 @@ class Stage {
                 object.position.x += Math.random() - 0.5;
                 object.position.y += Math.random() - 0.5;
             }
-            const sphere = this.getObjectBoundingSphere(object, inv);
+            const sphere = ObjectAlgorithms.findBoundingSphere(object, this.bedRelative);
             const circle = {
                 id:               'c' + index,
                 radius:           sphere.radius,
@@ -215,7 +213,7 @@ class Stage {
         var packingUpdate = (updatedCircles) => {
             for (let id in updatedCircles) {
                 const index = parseInt(id.substring(1));
-                const object = this.objects[index];
+                const object = objects[index];
                 const circle = updatedCircles[id];
                 object.position.x += circle.delta.x;
                 object.position.y += circle.delta.y;
@@ -244,7 +242,7 @@ class Stage {
      * Tests to see whether a particular object is within the print volume
      */
     testWithinBounds(obj) {
-        const bounds = PrintableObject.findBoundingBox(obj, this.bedRelative);
+        const bounds = ObjectAlgorithms.findBoundingBox(obj, this.bedRelative);
         bounds.min.z = Math.ceil(bounds.min.z); // Account for slight numerical imprecision
         return this.printVolume.containsBox(bounds);
     }
@@ -268,8 +266,8 @@ class Stage {
      */
     getSelectionDimensions(scaled = true) {
         var box;
-        this.selection.children.forEach(obj => {
-            box = PrintableObject.findBoundingBox(obj, this.selection, box);
+        this.getSelectedObjects().forEach(obj => {
+            box = ObjectAlgorithms.findBoundingBox(obj, this.selection, box);
         });
         var size = new THREE.Vector3();
         if(box) {
@@ -295,7 +293,7 @@ class Stage {
      * Drops an object so it touches the print platform
      */
     dropObjectToFloor(obj) {
-        const lowestPoint = PrintableObject.findLowestPoint(obj, this.bedRelative);
+        const lowestPoint = ObjectAlgorithms.findLowestPoint(obj, this.bedRelative);
         if(lowestPoint) {
             obj.position.z -= lowestPoint.z;
         }
@@ -308,7 +306,7 @@ class Stage {
      * the correction applied to the Z value text box.
      */
     get selectionHeightAdjustment() {
-        const lowestPoint = PrintableObject.findLowestPoint(this.selection, this.bedRelative);
+        const lowestPoint = ObjectAlgorithms.findLowestPoint(this.selection, this.bedRelative);
         return lowestPoint ? this.selection.position.z - lowestPoint.z : 0;
     }
 
@@ -318,21 +316,22 @@ class Stage {
     layObjectFlat(obj) {
         this.selectNone();
 
-        const helper = new FaceRotationHelper(obj);
-        const downVector = new THREE.Vector3(0, -1, 0);
+        const downVector = new THREE.Vector3(0, 0, -1);
 
-        // Step 1: Compute the center of the object in world coordinates
-        const boundingBox = new THREE.Box3();
-        boundingBox.setFromObject(obj);
+        // Step 1: Compute the center of the object in bed coordinates
+        const boundingBox = ObjectAlgorithms.findBoundingBox(obj, obj.parent);
         const center = boundingBox.getCenter(new THREE.Vector3());
 
-        // Step 2: Find the face in the convex hull intersected by a ray
-        //         from the center of the object downwards
-        const restingFace = helper.findIntersectingFace(obj.hull, center, downVector);
+        // Step 2: Find the convex hull for the object, in object coordinates.
+        const hull = ObjectAlgorithms.findConvexHull(obj, obj.parent);
 
-        // Step 3: Rotate object so that the object lays on that face.
+        // Step 3: Find the face in the convex hull intersected by a ray
+        //         from the center of the object downwards
+        const restingFace = FaceRotationHelper.findIntersectingFace(hull, center, downVector);
+
+        // Step 4: Rotate object so that the object lays on that face.
         if(restingFace) {
-            helper.alignFaceNormalToVector(restingFace, downVector);
+            FaceRotationHelper.alignFaceNormalToVector(obj, restingFace, downVector);
         } else {
             console.log("Unable to locate resting face");
         }
@@ -346,72 +345,99 @@ class Stage {
         return this.printerRepresentation;
     }
 
+    // Return all printable objects in the stage
+    getPrintableObjects(container) {
+        if(!container) container = this.placedObjects;
+        const result = [];
+        container.traverse(obj => {
+            if (obj instanceof PrintableObject) {
+                result.push(obj);
+            }
+        });
+        return result;
+    }
+
+    // Returns all top-level objects in the stage, selected or not
+    getTopLevelObjects() {
+        return this.placedObjects.children
+            .filter(item => item !== this.selection)
+            .concat(this.selection.children);
+    }
+
+    // Returns all top-level selected objects on the stage
+    getSelectedObjects() {
+        return this.selection.children.slice();
+    }
+
     /**
-     * This function returns a list of ready to slice geometries with
-     * all the transformations already baked in.
+     * This function returns a list of ready to slice geometries along
+     * with the transformation matrix.
      */
     getAllGeometry() {
-        return this.objects.map(obj => {
-            var geometry = obj.geometry.clone();
-            var transform = obj.matrixWorld.clone();
-            var worldToPrinterRepresentation = new THREE.Matrix4();
+        return this.getPrintableObjects().map(obj => {
+            const transform = obj.matrixWorld.clone();
+            const worldToPrinterRepresentation = new THREE.Matrix4();
             transform.premultiply(worldToPrinterRepresentation.copy(this.bedRelative.matrixWorld).invert());
-            geometry.applyMatrix4(transform);
-            return geometry;
+            return {geometry: obj.geometry, filename: obj.filename, extruder: obj.extruder, transform};
         });
     }
 
-    addGeometry(geometry) {
-        var obj = new PrintableObject(geometry);
+    addGeometry(geometry, filename) {
+        this.selectNone();
+        var obj = new PrintableObject(geometry, filename);
         this.addObjects([obj]);
         this.scaleObjectToFit(obj, true);
         this.dropObjectToFloor(obj);
         this.centerObjectOnPlatform(obj);
-        this.arrangeObjectsOnPlatform(this.objects);
+        this.arrangeObjectsOnPlatform(this.getTopLevelObjects());
         this.render();
     }
 
-    get numObjects() {
-        return this.objects.length;
+    get numPrintableObjects() {
+        return this.getPrintableObjects().length;
     }
 
     addObjects(objs) {
-        objs.forEach(obj => {
-            this.objects.push(obj);
-            this.placedObjects.add(obj);
-        });
-        PlaceObjectsPage.onObjectCountChanged(this.objects.length);
+        objs.forEach(obj => this.placedObjects.add(obj));
+        PlaceObjectsPage.onObjectCountChanged(this.numPrintableObjects);
     }
 
     removeObjects(objs) {
         this.selection.removeFromSelection(objs);
-        objs.forEach(obj => {
-            this.placedObjects.remove(obj);
-            var index = this.objects.indexOf(obj);
-            if (index > -1) {
-                this.objects.splice(index, 1);
-            }
-        });
-        PlaceObjectsPage.onObjectCountChanged(this.objects.length);
+        objs.forEach(obj => this.placedObjects.remove(obj));
+        PlaceObjectsPage.onObjectCountChanged(this.numPrintableObjects);
     }
 
     removeSelectedObjects() {
-        this.removeObjects(this.selection.children.slice());
+        this.removeObjects(this.getSelectedObjects());
         this.render();
     }
 
     centerSelectedObjects() {
-        if(this.selection.children.length == 0) {
-            return;
-        }
-        if(this.numObjects > 1) {
-            this.arrangeObjectsOnPlatform(this.selection.children.slice());
+        const selection = this.getSelectedObjects();
+        if(selection.length == 0) return;
+        if(selection.length > 1) {
+            this.arrangeObjectsOnPlatform(selection);
         } else {
-            let objectToCenter = this.selection.children[0];
-            this.centerObjectOnPlatform(objectToCenter);
-            this.highlightOutOfBounds([objectToCenter]);
+            this.centerObjectOnPlatform(selection[0]);
         }
+        this.highlightOutOfBounds(this.getPrintableObjects());
         this.render();
+    }
+
+    groupSelectedObjects(resetTransforms) {
+        if(resetTransforms) {
+            this.selection.resetChildTransforms();
+            // Temporarily assign extruders to different materials
+            this.getPrintableObjects(this.selection).forEach((obj,i) => obj.setExtruder(i));
+        }
+        const group = this.selection.groupObjects();
+        this.dropObjectToFloor(group);
+        this.render();
+    }
+
+    ungroupSelectedObjects() {
+        this.selection.ungroupObjects();
     }
 
     arrangeAll() {
@@ -419,12 +445,12 @@ class Stage {
     }
 
     removeAll() {
-        this.removeObjects(this.objects.slice());
+        this.removeObjects(this.getTopLevelObjects());
         this.render();
     }
 
     selectAll() {
-        this.selection.setSelection(this.objects);
+        this.selection.setSelection(this.getTopLevelObjects());
         this.render();
     }
 
@@ -513,7 +539,7 @@ class Stage {
         if (dropToFloor) {
             this.dropObjectToFloor(this.selection);
         }
-        this.highlightOutOfBounds(this.selection.children);
+        this.highlightOutOfBounds(this.getPrintableObjects());
         this.render();
     }
 
@@ -526,7 +552,16 @@ class Stage {
         $('canvas').contextMenu({x: event.clientX, y: event.clientY});
     }
 
+    // Find the top-level group for grouped objects, else return the object itself.
+    findRootObject(obj) {
+        while(obj.parent != this.placedObjects && obj.parent != this.selection) {
+            obj = obj.parent;
+        }
+        return obj;
+    }
+
     onObjectClicked(obj, event) {
+        obj = this.findRootObject(obj);
         if(event.button == 2) {
             this.showContextMenu(event);
         } else if(event.shiftKey) {
@@ -586,6 +621,6 @@ class Stage {
     }
 
     onLayFlatClicked() {
-        this.selection.children.forEach(obj => this.layObjectFlat(obj));
+        this.getSelectedObjects().forEach(obj => this.layObjectFlat(obj));
     }
 }

@@ -21,47 +21,10 @@
  * The SelectionGroup allows multiple objects to be selected and transformed
  * as a group around their center.
  */
-class SelectionGroup extends THREE.Object3D {
+class SelectionGroup extends ObjectGroup {
     constructor() {
         super();
-        this.boundingBox = new THREE.Box3();
         this.isTransforming = false;
-    }
-
-    /**
-     * This method adjusts the SelectionGroup to include a collection
-     * of items. The origin for the SelectionGroup is made to coincide
-     * with the center of all the selected objects prior to adding the
-     * objects as children.
-     */
-    _set(objs) {
-        // We remove all existing objects from the selection so we
-        // can reposition the SelectionGroup to the new center.
-        while (this.children.length) {
-            this.parent.attach(this.children.pop());
-        }
-        this.position.set(0,0,0);
-        this.rotation.set(0,0,0);
-        this.scale.set(1,1,1);
-        if(objs.length == 0)
-            return;
-        // Copy the rotation and scaling factors from the first object
-        this.rotation.copy(objs[0].rotation);
-        this.scale.copy(objs[0].scale);
-        // Set SelectionGroup origin to center of all selected objects.
-        this.boundingBox.setFromObject(objs[0]);
-        objs.forEach(obj => this.boundingBox.expandByObject(obj));
-        this.parent.worldToLocal(this.boundingBox.getCenter(this.position));
-        // Attach all selected objects to myself without changing their world transform.
-        objs.forEach(obj => {this.attach(obj);});
-    }
-
-    /**
-     * Forces a call to "setSelection()" to compute a new center
-     * for the current selection.
-     */
-    recompute() {
-        this._set(this.children.slice(0));
     }
 
     /**
@@ -69,9 +32,7 @@ class SelectionGroup extends THREE.Object3D {
      * via "setSelection()" to compute a new center.
      */
     addToSelection(obj) {
-        var objs = this.children.slice(0); // Clone array
-        objs.push(obj);
-        this._set(objs);
+        super.addObject(obj);
         this.selectionChanged();
     }
 
@@ -90,13 +51,12 @@ class SelectionGroup extends THREE.Object3D {
      * Removes one or more object(s) from the selection.
      */
     removeFromSelection(obj) {
-        (Array.isArray(obj) ? obj : [obj]).forEach(obj => this.parent.attach(obj));
-        this.recompute();
+        super.removeFromGroup(obj);
         this.selectionChanged();
     }
 
     setSelection(obj) {
-        this._set(Array.isArray(obj) ? obj : [obj]);
+        super.setGroup(obj);
         this.selectionChanged();
     }
 
@@ -105,16 +65,37 @@ class SelectionGroup extends THREE.Object3D {
      * for the now empty SelectionGroup
      */
     selectNone() {
-        this._set([]);
+        super.setGroup([]);
         this.selectionChanged();
     }
 
     isSelected(obj) {
-        return this.children.indexOf(obj) > -1;
+        return super.inGroup(obj);
     }
 
     get count() {
-        return this.children.length;
+        return super.count;
+    }
+
+    groupObjects() {
+        const objs = this.children.slice();
+        // Unselect all objects
+        super.setGroup([]);
+        // Create a new group
+        const group = new ObjectGroup();
+        this.setSelection(group);
+        group.setGroup(objs);
+        return group
+    }
+
+    ungroupObjects() {
+        this.children.forEach(child => {
+            if(child instanceof ObjectGroup) {
+                child.setGroup([]);
+                // Remove without reattaching to parent
+                child.removeFromParent();
+            }
+        });
     }
 
     setTransformControl(control) {

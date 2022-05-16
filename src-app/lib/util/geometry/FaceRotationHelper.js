@@ -87,8 +87,24 @@ class FaceRotationHelper {
      *    quaternion  - On output, the desired rotation
      */
     alignFaceNormalToVector(face, worldVector) {
-        this.rotationToAlignFaceNormalToVector(face, worldVector, this.q);
-        this.obj.quaternion.multiply(this.q);
+        // Transform the worldVector into object coordinates
+        const localVector = this.v.copy(worldVector);
+        this.worldDirectionToLocal(localVector);
+        // Rotate object so that the face normal and down vector are aligned.
+        FaceRotationHelper.alignFaceNormalToVector(this.obj, face, localVector, this.q);
+    }
+
+    /**
+     * Rotates an object so that the face normal aligns with a local vector.
+     *
+     *    object        - Object which will be rotated.
+     *    face          - Face with normal we wish to change
+     *    desiredNormal - On output, the desired rotation
+     */
+    static alignFaceNormalToVector(obj, face, desiredNormal, q) {
+        if(!q) q = new THREE.Quaternion();
+        q.setFromUnitVectors(face.normal, desiredNormal);
+        obj.quaternion.multiply(q);
     }
 
     /**
@@ -97,7 +113,14 @@ class FaceRotationHelper {
     findIntersectingFace(geom, origin, direction) {
         const localOrigin    = this.worldPositionToLocal(origin.clone());
         const localDirection = this.worldDirectionToLocal(direction.clone());
-        const raycaster = new THREE.Raycaster(localOrigin, localDirection);
+        return FaceRotationHelper.findIntersectingFace(geom, localOrigin, localDirection);
+    }
+
+    /**
+     * Find the intersection between a ray and a face in the geometry
+     */
+    static findIntersectingFace(geom, origin, direction) {
+        const raycaster = new THREE.Raycaster(origin, direction);
         const mesh = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({side: THREE.DoubleSide}));
         const intersections = raycaster.intersectObject(mesh);
         if (intersections.length) {

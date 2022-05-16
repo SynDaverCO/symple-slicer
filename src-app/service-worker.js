@@ -27,7 +27,11 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
+<<<<<<< HEAD
     cacheVersion: 233
+=======
+    cacheVersion: 236
+>>>>>>> ui-refactoring
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -111,6 +115,7 @@ const filesToCache = [
     'js/PrinterRepresentation.js',
     'js/ProfileManager.js',
     'js/RenderLoop.js',
+    'js/ObjectGroup.js',
     'js/SelectionGroup.js',
     'js/SerialPort.js',
     'js/SettingsPanel.js',

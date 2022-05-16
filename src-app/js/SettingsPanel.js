@@ -101,10 +101,9 @@ class SettingsPanel {
         this.loadFiles(files);
     }
 
-    static loadFiles(files) {
-        // Create a synthetic onDrop event that will be dispatched
-        // once Symple Slicer is initialized.
-        const evt = {
+    // Create a synthetic onDrop event with a list of files
+    static makeDropEvent(files) {
+        return {
             stopPropagation: () => {},
             preventDefault: () => {},
             dataTransfer: {
@@ -112,6 +111,11 @@ class SettingsPanel {
                 getData: () => null
             }
         };
+    }
+
+    static loadFiles(files) {
+        // Dispatch a synthetic onDrop event once Symple Slicer is initialized.
+        const evt = SettingsPanel.makeDropEvent(files);
         if(settings) {
             this.onWindowDrop(evt);
             settings.gotoPage("page_profiles");
@@ -162,7 +166,8 @@ class SettingsPanel {
                     id = "custom_fw_file";
             }
             if(id) {
-                settings.get(id).drophandler(e);
+                // Create a synthetic drop event with a single file and call the drop handler
+                settings.get(id).drophandler(SettingsPanel.makeDropEvent([files[i]]));
             }
         }
         // Process any drag-and-dropped commands
@@ -546,15 +551,16 @@ class PlaceObjectsPage {
     }
 
     static onAddToPlatform() {
+        if(!loaded_geometry) return;
         const howMany = parseInt(settings.get("place_quantity"))
         for(var i = 0; i < howMany; i++) {
-            stage.addGeometry(loaded_geometry);
+            stage.addGeometry(loaded_geometry.geometry, loaded_geometry.filename);
         }
     }
 
-    static onGeometryLoaded(geometry) {
+    static onGeometryLoaded(geometry, filename) {
         if(geometry) {
-            loaded_geometry = geometry;
+            loaded_geometry = {geometry, filename};
             settings.enable('.place_more', true);
             PlaceObjectsPage.onAddToPlatform(); // Place the first object automatically
         } else {
@@ -866,14 +872,26 @@ class SliceObjectsPage {
     }
 
     static onSliceClicked() {
-        var geometries = stage.getAllGeometry();
+        const geometries = stage.getAllGeometry();
         if(geometries.length) {
-            var geometries = stage.getAllGeometry();
-            var filenames  = geometries.map((geo,i) => {
-                var filename = 'input_' + i + '.stl';
-                slicer.loadFromGeometry(geo, filename);
-                return filename;
+            const geometryMap = new Map();
+
+            // Generate a list of models
+            const models = geometries.map(geo => {
+                // Find unique geometries
+                geometryMap.set(geo.filename, geo.geometry);
+                // Return model info
+                return {
+                    filename: geo.filename,
+                    transform: geo.transform,
+                    extruder: geo.extruder
+                };
             });
+
+            // Load geometies into the slicer
+            geometryMap.forEach((geometry, filename) => slicer.loadFromGeometry(geometry, filename));
+
+            // Send the models to the slicer for slicing
             Log.clear();
             ProgressBar.message("Slicing...");
             ProgressBar.onAbort(() => {
@@ -883,7 +901,7 @@ class SliceObjectsPage {
                 }
             }, "Stop slicing");
             ProgressBar.progress(0);
-            slicer.slice(filenames);
+            slicer.slice(models);
         }
     }
 
@@ -1053,7 +1071,7 @@ class PrintAndPreviewPage {
         PrintAndPreviewPage.extractDataFromGcodeHeader(str);
         PrintAndPreviewPage.onUpdatePreview();
     }
-    
+
     static getGcodeBlob() {
         const postProcessed = PauseAtLayer.postProcess(sliced_gcode);
         return new Blob([postProcessed], {type: "text/plain"});

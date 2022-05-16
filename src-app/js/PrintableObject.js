@@ -18,80 +18,58 @@
  */
 
 class PrintableObject extends THREE.Mesh {
-    constructor(geometry) {
+    constructor(geometry, filename) {
         geometry.computeBoundingSphere();
         geometry.computeBoundingBox();
-        super(geometry, PrintableObject.normalMaterial);
-        this.generateConvexHull();
+        super(geometry, PrintableObject.modelMaterials[0]);
         this.castShadow = true;
+        this.extruder = 0;
+        this.filename = filename;
     }
 
     static applyStyleSheetColors() {
         const normalColor = getColorValueFromElement("#stl_normal", 'color');
         const errorColor = getColorValueFromElement("#stl_error", 'color');
-        PrintableObject.normalMaterial.color = new THREE.Color(normalColor);
-        PrintableObject.errorMaterial.color = new THREE.Color(errorColor);
+        PrintableObject.modelMaterials[0].color = new THREE.Color(normalColor);
+        PrintableObject.errorMaterials[0].color = new THREE.Color(errorColor);
+        // Recompute color shades
+        PrintableObject.allocateMaterials(PrintableObject.modelMaterials, 0);
+        PrintableObject.allocateMaterials(PrintableObject.errorMaterials, 0);
     }
 
     set error(error) {
-        this.material = error ? PrintableObject.errorMaterial : PrintableObject.normalMaterial;
+        this.material = (error ? PrintableObject.errorMaterials : PrintableObject.modelMaterials)[this.extruder];
     }
 
-    generateConvexHull() {
-        const vertices = [];
-        const positions = this.geometry.getAttribute('position');
-        for(var i = 0; i < positions.count; i++) {
-            vertices.push(new THREE.Vector3(
-                positions.array[i * 3 + 0],
-                positions.array[i * 3 + 1],
-                positions.array[i * 3 + 2]
-            ));
+    setExtruder(extruder) {
+        // Make sure we have enough materials in the array
+        PrintableObject.allocateMaterials(PrintableObject.modelMaterials, extruder+1);
+        PrintableObject.allocateMaterials(PrintableObject.errorMaterials, extruder+1);
+        // Assign material to this object
+        this.extruder = extruder;
+        this.material = PrintableObject.modelMaterials[extruder];
+    }
+
+    // Make sure there are at least "count" materials available
+    // and recompute shades.
+    static allocateMaterials(materials, count) {
+        // Expand the material list by duplicating the first element
+        while(materials.length < count) {
+            const newMaterial = materials[0].clone();
+            if(materials == PrintableObject.modelMaterials)
+                OverhangShader.patchMaterial(newMaterial);
+            materials[materials.length] = newMaterial;
         }
-        this.hull = new THREE.ConvexGeometry(vertices);
-    }
-
-    /**
-     * Generic method that calls a geometry algorithm on each of this object's
-     * subobjects with an appropriate transform matrix
-     */
-    static _applyAlgorithm(obj, relativeTo, result, func) {
-        relativeTo.updateMatrixWorld();
-        var inverse   = new THREE.Matrix4().copy(relativeTo.matrixWorld).invert();
-        var transform = new THREE.Matrix4();
-        obj.traverse(child => {
-            if (child.hasOwnProperty("hull")) {
-                child.updateMatrixWorld();
-                transform.copy(inverse).multiply(child.matrixWorld);
-                result = func(child.hull, transform, result, child);
-            }
-        });
-        return result;
-    }
-
-    /**
-     * Finds the lowest point on an object
-     *
-     * obj        - The object for which we wish to find the lowest point.
-     * relativeTo - Define "lowest" relative to this object's coordinate system.
-     */
-    static findLowestPoint(obj, relativeTo) {
-        return PrintableObject._applyAlgorithm(obj, relativeTo, null,
-            (geo, xform, data, child) => GeometryAlgorithms.findLowestPoint(geo, xform, data, child));
-    }
-
-    /**
-     * Finds the true bounding box of an object
-     *
-     * obj        - The object for which we wish to compute the bounding box.
-     * relativeTo - Relative to this object's coordinate system.
-     */
-    static findBoundingBox(obj, relativeTo, initialBox) {
-        return PrintableObject._applyAlgorithm(obj, relativeTo, initialBox,
-            (geo, xform, data, child) => GeometryAlgorithms.findBoundingBox(geo, xform, data));
+        // Make each subsequent color a darker shade of the previous color.
+        for(var i = 1; i < materials.length; i++) {
+            const c = materials[i].color;
+            c.copy(materials[0].color);
+            c.offsetHSL(0,0,-1/materials.length*i);
+        }
     }
 }
 
-PrintableObject.normalMaterial  = new THREE.MeshPhongMaterial( { color: 0xfafad2, side: THREE.DoubleSide, flatShading: true } );
-PrintableObject.errorMaterial   = new THREE.MeshPhongMaterial( { color: 0xfa3e34, side: THREE.DoubleSide, flatShading: true } );
+PrintableObject.modelMaterials = [new THREE.MeshPhongMaterial( { color: 0xfafad2, side: THREE.DoubleSide, flatShading: true } )];
+PrintableObject.errorMaterials = [new THREE.MeshPhongMaterial( { color: 0xfa3e34, side: THREE.DoubleSide, flatShading: true } )];
 
-OverhangShader.patchMaterial(PrintableObject.normalMaterial);
+OverhangShader.patchMaterial(PrintableObject.modelMaterials[0]);
