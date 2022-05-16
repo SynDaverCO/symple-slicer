@@ -126,10 +126,10 @@ class SlicerInterface {
         }, json.tranferables);
     }
 
-    slice(filenames) {
+    slice(models) {
         this.worker.postMessage({
             'cmd':      'slice',
-            'args':     this.config.getCommandLineArguments(filenames)
+            'args':     this.config.getCommandLineArguments(models)
         });
     }
 

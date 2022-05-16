@@ -94,7 +94,7 @@ class SlicerConfiguration {
 
     onValueChanged(key, value) {
     }
-    
+
     onAttributeChanged(key, attributes) {
     }
 
@@ -214,12 +214,9 @@ class SlicerConfiguration {
         }
     }
 
-    getCommandLineArguments(filenames) {
-        var arg_list = [];
-        arg_list.push("slice");
-        arg_list.push("-v");
+    getAllSettings() {
+        const settings = new Map();
         for(const [key, value] of Object.entries(this.values)) {
-            arg_list.push("-s");
             var str_value;
             switch(typeof value) {
                 case "boolean":
@@ -238,21 +235,13 @@ class SlicerConfiguration {
                     console.log("Warning: Unrecognized type", typeof value, "for", key);
                     str_value = value.toString();
             }
-            arg_list.push(key + '=' + str_value);
+            settings.set(key, str_value);
         }
-        arg_list.push("-o");
-        arg_list.push("output.gcode");
-        for(const f of filenames) {
-            if (this.oneAtATime()) arg_list.push("-g");
-            arg_list.push("-l");
-            arg_list.push(f);
-            if (this.oneAtATime()) arg_list.push("--next");
-        }
-        return arg_list;
+        return settings;
     }
 
-    oneAtATime() {
-        return this.values.hasOwnProperty("print_sequence") && this.values["print_sequence"] == "one_at_a_time";
+    getCommandLineArguments(models) {
+        return CuraCommandLine.buildCommandLine(this.getAllSettings(), models);
     }
 
     /**
@@ -416,7 +405,7 @@ class SlicerConfiguration {
         if (this.values[key]    != val) {affected |= SlicerConfiguration.VALUE_AFFECTED; this.values[key] = val;}
         return affected;
     }
-    
+
     /**
      * Recomputes the flags of a setting, returns "affected" with updated bits.
      */
@@ -487,7 +476,7 @@ class SlicerConfiguration {
 
         return SlicerConfiguration.removeDuplicates(dependents);
     }
-    
+
     /**
      * Returns true if a thisSetting's property depends on anotherSetting
      */
@@ -707,3 +696,72 @@ SlicerConfiguration.CHANGED_FLAG  = 2; // Set if a value was changed from the de
 
 SlicerConfiguration.VALUE_AFFECTED = 1;
 SlicerConfiguration.FLAGS_AFFECTED = 2;
+
+/**
+ * The CuraCommandLine object is responsible for building a Cura command line.
+ */
+class CuraCommandLine {
+    static buildCommandLine(settings, models) {
+        var arg_list = [];
+        arg_list.push("slice");
+        arg_list.push("-v");
+        for(const [key, value] of settings) {
+            if(key == "mesh_rotation_matrix") continue;
+            arg_list.push("-s");
+            arg_list.push(key + '=' + value);
+        }
+        arg_list.push("-o");
+        arg_list.push("output.gcode");
+        for(const m of models) {
+            const one_at_a_time = CuraCommandLine.isOneAtATime(settings);
+            if (one_at_a_time) arg_list.push("-g");
+            var mesh_rotation_matrix, mesh_position_x, mesh_position_y, mesh_position_z;
+            if(m.hasOwnProperty("extruder")) {
+                arg_list.push("-e" + m.extruder);
+            }
+            if(m.hasOwnProperty("transform")) {
+                // Decompose the Matrix4 into a rotation matrix and position.
+                // Notice that in THREE.js, the elements array is stored column first,
+                // so we need to transpose it prior to extracting the elements.
+                const [
+                    a,b,c,x,
+                    d,e,f,y,
+                    g,h,i,z
+                ] = m.transform.clone().transpose().elements;
+                mesh_rotation_matrix = JSON.stringify([[a,b,c],[d,e,f],[g,h,i]]);
+                mesh_position_x      = x;
+                mesh_position_y      = y;
+                mesh_position_z      = z;
+            } else {
+                mesh_rotation_matrix = "[[1,0,0], [0,1,0], [0,0,1]]";
+                mesh_position_x      = 0;
+                mesh_position_y      = 0;
+                mesh_position_z      = 0;
+            }
+            if(!CuraCommandLine.isMachineCenterAtZero(settings)) {
+                mesh_position_x      -= parseInt(settings.get("machine_width"))/2;
+                mesh_position_y      -= parseInt(settings.get("machine_depth"))/2;
+            }
+            arg_list.push("-s");
+            arg_list.push("mesh_rotation_matrix=" + mesh_rotation_matrix);
+            arg_list.push("-s");
+            arg_list.push("mesh_position_x=" + mesh_position_x);
+            arg_list.push("-s");
+            arg_list.push("mesh_position_y=" + mesh_position_y);
+            arg_list.push("-s");
+            arg_list.push("mesh_position_z=" + mesh_position_z);
+            arg_list.push("-l");
+            arg_list.push(m.filename);
+            if (one_at_a_time) arg_list.push("--next");
+        }
+        return arg_list;
+    }
+
+    static isOneAtATime(settings) {
+        return settings.get("print_sequence") == "one_at_a_time";
+    }
+    
+    static isMachineCenterAtZero(settings) {
+        return settings.get("machine_center_is_zero") == "true";
+    }
+}

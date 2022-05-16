@@ -874,13 +874,24 @@ class SliceObjectsPage {
     static onSliceClicked() {
         const geometries = stage.getAllGeometry();
         if(geometries.length) {
-            const filenames  = geometries.map((geo,i) => {
-                const filename = 'input_' + i + '.stl';
-                const geometry = geo.geometry.clone();
-                geometry.applyMatrix4(geo.transform);
-                slicer.loadFromGeometry(geometry, filename);
-                return filename;
+            const geometryMap = new Map();
+
+            // Generate a list of models
+            const models = geometries.map(geo => {
+                // Find unique geometries
+                geometryMap.set(geo.filename, geo.geometry);
+                // Return model info
+                return {
+                    filename: geo.filename,
+                    transform: geo.transform,
+                    extruder: geo.extruder
+                };
             });
+
+            // Load geometies into the slicer
+            geometryMap.forEach((geometry, filename) => slicer.loadFromGeometry(geometry, filename));
+
+            // Send the models to the slicer for slicing
             Log.clear();
             ProgressBar.message("Slicing...");
             ProgressBar.onAbort(() => {
@@ -890,7 +901,7 @@ class SliceObjectsPage {
                 }
             }, "Stop slicing");
             ProgressBar.progress(0);
-            slicer.slice(filenames);
+            slicer.slice(models);
         }
     }
 
@@ -1060,7 +1071,7 @@ class PrintAndPreviewPage {
         PrintAndPreviewPage.extractDataFromGcodeHeader(str);
         PrintAndPreviewPage.onUpdatePreview();
     }
-    
+
     static getGcodeBlob() {
         const postProcessed = PauseAtLayer.postProcess(sliced_gcode);
         return new Blob([postProcessed], {type: "text/plain"});
