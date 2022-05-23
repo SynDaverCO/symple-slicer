@@ -449,9 +449,9 @@ class SlicerConfiguration {
                     dependencies.push(key);
         }
 
-        if(node.hasOwnProperty('value'))   findDependencies(nodes.value);
-        if(node.hasOwnProperty('resolve')) findDependencies(nodes.resolve);
-        if(node.hasOwnProperty('enabled')) findDependencies(nodes.enabled);
+        if(node.hasOwnProperty('value'))   findDependencies(node.value);
+        if(node.hasOwnProperty('resolve')) findDependencies(node.resolve);
+        if(node.hasOwnProperty('enabled')) findDependencies(node.enabled);
 
         return SlicerConfiguration.removeDuplicates(dependencies);
     }
