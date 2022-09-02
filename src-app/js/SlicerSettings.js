@@ -22,7 +22,7 @@ class SlicerSettings {
         let settings = localStorage.getItem("ui-slicer-settings") || query.slicer_settings || "1st-slice";
 
         if (settings == "cura-all") {
-            this.populateCuraSettings(s);
+            await this.populateCuraSettings(s);
         } else {
             if (!SlicerSettings.slicerSettings.hasOwnProperty(settings)) settings = "1st-slice";
 
@@ -58,7 +58,6 @@ class SlicerSettings {
                 parseChildren(value.children, "");
             }
         }
-         
     }
 }
 
@@ -130,6 +129,7 @@ SlicerSettings.slicerSettings = {
             "cool_min_speed",
 
         "Support:",
+            "support_enable",
             "support_extruder_nr",
             "support_structure",
             "support_pattern",

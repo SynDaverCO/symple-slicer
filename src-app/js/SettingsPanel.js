@@ -20,6 +20,8 @@
 
 var settings, sliced_gcode, loaded_geometry;
 
+const preApplyTransforms = true; // If true, apply transformations to models prior to sending them to Cura
+
 class SettingsPanel {
     static async init(id) {
         const s = settings = new SettingsUI(id);
@@ -213,9 +215,10 @@ class SelectProfilesPage {
         const upgrades_menu = s.choice(     "Upgrades:",             {...attr, id: "machine_upgrades"});
         const toolhead_menu = s.choice(     "Toolhead:",             {...attr, id: "machine_toolheads"});
         const quality_menu = s.choice(      "Quality:",              {...attr, id: "print_quality"});
-        const brand_menu = s.choice(        "Material Brand:",       {...attr, id: "material_brands"});
-        const material_menu = s.choice(     "Material:",             {...attr, id: "print_profiles"});
-        s.div();
+
+        s.div({id: "material_selections"});
+        s.div(); // material_selections
+        s.div(); // profile_choices
 
         s.div({dataRadio: "profile-source", dataValue: "from-import"});
         s.separator(                                                 {type: "br"});
@@ -225,7 +228,7 @@ class SelectProfilesPage {
         s.footer();
 
         s.div({dataRadio: "profile-source", dataValue: "from-session"});
-        s.button(     "Next",                                        {onclick: SelectProfilesPage.onNext});
+        s.button(     "Next",                                        {onclick: SelectProfilesPage.onApplyLastSettings});
         s.buttonHelp( "Click this button to proceed to placing objects.");
         s.div();
 
@@ -239,37 +242,62 @@ class SelectProfilesPage {
         s.buttonHelp( "Click this button to load slicer settings and proceed to placing objects.");
         s.div();
 
+        SelectProfilesPage.cascade = new CascadingChoices();
+
+        SelectProfilesPage.machine_menus  = [manufacturer_menu, printer_menu, upgrades_menu, toolhead_menu, quality_menu];
+        SelectProfilesPage.material_menus = [];
+
         const defaultSource = localStorage.getItem('profile-source') || 'from-profiles';
         this.setProfileSource(defaultSource);
-        this.initProfiles({
-            machine_manufacturers: manufacturer_menu,
-            machine_profiles: printer_menu,
-            machine_upgrades: upgrades_menu,
-            machine_toolheads: toolhead_menu,
-            print_quality: quality_menu,
-            material_brands: brand_menu,
-            print_profiles: material_menu
-        });
+        this.initProfiles();
 
         s.linkRadioToDivs('profile-source');
 
         SelectProfilesPage.onImportChanged(false); // Disable buttons
-
-        // Add a special style sheet to the body of the document
-        this.styles = document.createElement("style");
-        document.head.appendChild(this.styles);
     }
 
-    static async initProfiles(menus) {
+    static numberOfExtruders() {
+        const desc = ProfileLibrary.getDescriptor("machine_profiles", settings.get("machine_profiles"));
+        return desc.extruders;
+    }
+
+    static addMaterialMenus() {
+        // Clear out the UI existing material menus
+        document.getElementById("material_selections").innerText = "";
+        SelectProfilesPage.material_menus = [];
+
+        // Add the menus to the UI
+        settings.setTarget("material_selections");
+        const extruderCount = SelectProfilesPage.numberOfExtruders();
+        for(let e = 0; e < extruderCount; e++) {
+            if(extruderCount > 1) {
+                settings.heading("Extruder #" + (e + 1));
+            }
+            const attr = {onchange: SelectProfilesPage.onDropDownChange};
+            const brand_menu    = settings.choice( "Material Brand:", {...attr, id: "material_brands_" + e});
+            const material_menu = settings.choice( "Material:",       {...attr, id: "print_profiles_" + e});
+
+            this.populateProfileMenus([brand_menu, material_menu], e);
+
+            SelectProfilesPage.material_menus.push(brand_menu);
+            SelectProfilesPage.material_menus.push(material_menu);
+        }
+    }
+
+    static async initProfiles() {
         try {
-            await this.populateProfileMenus(menus);
+            await ProfileLibrary.fetch();
+            this.populateProfileMenus(SelectProfilesPage.machine_menus);
             if(ProfileManager.loadStoredProfile()) {
-                SliceObjectsPage.onPrinterSizeChanged();
-                this.rememberProfileSelections(menus);
+                this.rememberProfileSelections(SelectProfilesPage.machine_menus);
+                this.addMaterialMenus();
+                this.rememberProfileSelections(SelectProfilesPage.material_menus);
             } else {
                 // If no startup profile is found, load first profile from the selection box
                 this.loadPresets();
+                this.addMaterialMenus();
             }
+            SliceObjectsPage.onPrinterSizeChanged();
             this.onDropDownChange();
         } catch(error) {
             alert(error);
@@ -279,20 +307,27 @@ class SelectProfilesPage {
         onProfilesReady();
     }
 
-    // Populate the pull down menus in the UI with a list of available profiles
-    static async populateProfileMenus(menus) {
-        for(const profile of await ProfileLibrary.fetch()) {
-            if(menus.hasOwnProperty(profile.type)) {
-                const menu = menus[profile.type];
-                menu.option(
-                    profile.name,
-                    {value: profile.id}
-                );
-                // Any constraints are added as attributes to the option so we can
-                // hide them using a dynamic style sheet.
-                const opt = menu.element.lastElementChild;
-                for(const s of ProfileLibrary.constraints) {
-                    if(profile[s]) opt.setAttribute(s, profile[s]);
+    // Populate the pull down menus in the UI with available profiles
+    static populateProfileMenus(menus, extruder = 0) {
+        for(const profile of ProfileLibrary.getProfiles()) {
+            for(const menu of menus) {
+                if(menu.element.id.startsWith(profile.type)) {
+                    menu.option(
+                        profile.name,
+                        {value: profile.id}
+                    );
+                    // Any constraints are added as attributes to the option so we can
+                    // hide them using a dynamic style sheet.
+                    const opt = menu.element.lastElementChild;
+                    for(const s of ProfileLibrary.constraints) {
+                        if(profile[s]) {
+                            let depends_on = ProfileLibrary.constraintsMap[s];
+                            if(depends_on == "material_brands") {
+                                depends_on += "_" + extruder;
+                            }
+                            CascadingChoices.setConstraint(opt, depends_on, profile[s]);
+                        }
+                    }
                 }
             }
         }
@@ -302,70 +337,36 @@ class SelectProfilesPage {
         // Preselect the previously used profile
         const based_on = ProfileManager.getSection("based_on");
         if(based_on) {
-            this.disableDropDownValidation = true;
-            for(const [key, menu] of Object.entries(menus)) {
-                if(based_on.hasOwnProperty(key)) {
-                    menu.element.value = based_on[key];
+            CascadingChoices.disable();
+            for(const menu of menus) {
+                const id = menu.element.id;
+                if(based_on.hasOwnProperty(id)) {
+                    menu.element.value = based_on[id];
                 }
             }
-            this.disableDropDownValidation = false;
+            CascadingChoices.enable();
         }
     }
 
+    static getMenuElements() {
+        return SelectProfilesPage.machine_menus.concat(SelectProfilesPage.material_menus).map(menu => menu.element);
+    }
+
+    // Returns an object containing the value of all profile drop down menus.
+    static getProfileChoices() {
+        const menus = SelectProfilesPage.getMenuElements();
+        const basedOn = {};
+        menus.forEach(e => basedOn[e.id] = e.value);
+        return basedOn;
+    }
+
     static onDropDownChange(e) {
-        if(this.disableDropDownValidation) return;
-        function hideNonMatchingOptions(key, value) {
-            return '#profile_choices option[' + key + ']:not([' + key + '="' + value + '"]) {display: none}\n';
+        // When a change happens to the machine, adjust the extruder menus
+        if(e && e.target.id == "machine_profiles") {
+            SelectProfilesPage.addMaterialMenus()
         }
-        function isHidden(el) {
-            return window.getComputedStyle(el).getPropertyValue('display') === 'none';
-        }
-        function chooseOtherIfHidden(id) {
-            const el = document.getElementById(id);
-            let opt = el.firstChild;
-            while(opt && !opt.selected) opt = opt.nextElementSibling;
-            if(opt && isHidden(opt)) {
-                opt = el.firstChild;
-                while(opt && isHidden(opt)) opt = opt.nextElementSibling;
-                if(opt) {
-                    el.value = opt.value;
-                    return true;
-                } else {
-                    el.removeAttribute("value");
-                }
-            }
-            return false;
-        }
-        function hideIfNoChoices(id) {
-            const el = document.getElementById(id);
-            let opt = el.firstChild;
-            let count = 0;
-            while(opt) {
-                if(!isHidden(opt)) count++;
-                opt = opt.nextElementSibling;
-            }
-            settings.setVisibility("#"+id, count > 1);
-        }
-        while(true) {
-            SelectProfilesPage.styles.innerText =
-                hideNonMatchingOptions('manufacturer', settings.get("machine_manufacturers")) +
-                hideNonMatchingOptions('machine',      settings.get("machine_profiles")) +
-                hideNonMatchingOptions('upgrade',      settings.get("machine_upgrades")) +
-                hideNonMatchingOptions('toolhead',     settings.get("machine_toolheads")) +
-                hideNonMatchingOptions('quality',      settings.get("print_quality")) +
-                hideNonMatchingOptions('brand',        settings.get("material_brands"));
-            if(chooseOtherIfHidden("machine_profiles")) continue;
-            if(chooseOtherIfHidden("machine_upgrades")) continue;
-            if(chooseOtherIfHidden("machine_toolheads")) continue;
-            if(chooseOtherIfHidden("material_brands")) continue;
-            if(chooseOtherIfHidden("print_profiles")) continue;
-            break;
-        }
-        hideIfNoChoices("machine_manufacturers");
-        hideIfNoChoices("machine_upgrades");
-        hideIfNoChoices("machine_toolheads");
-        hideIfNoChoices("print_quality");
-        hideIfNoChoices("material_brands");
+        // Adjust the menu items
+        SelectProfilesPage.cascade.validate(SelectProfilesPage.getMenuElements());
     }
 
     static async onApplyPreset() {
@@ -382,14 +383,21 @@ class SelectProfilesPage {
     static async loadPresets() {
         try {
             ProgressBar.message("Loading profiles");
-            await ProfileManager.applyPresets({
-                machine:  settings.get("machine_profiles"),
-                upgrade:  settings.get("machine_upgrades"),
-                toolhead: settings.get("machine_toolheads"),
-                quality:  settings.get("print_quality"),
-                material: settings.get("print_profiles")
-            });
+            await ProfileManager.defaults();
+            // Apply the machine profiles
+            await ProfileManager.loadPresets("machine_profiles",  settings.get("machine_profiles"));
+            await ProfileManager.loadPresets("machine_upgrades",  settings.get("machine_upgrades"));
+            await ProfileManager.loadPresets("machine_toolheads", settings.get("machine_toolheads"));
+            await ProfileManager.loadPresets("print_quality",     settings.get("print_quality"));
+            // Apply the material profiles
+            const extruderCount = SelectProfilesPage.numberOfExtruders();
+            for(let e = 0; e < extruderCount; e++) {
+                await ProfileManager.loadPresets("print_profiles", settings.get("print_profiles_" + e), {extruder: e});
+            }
+            SliceObjectsPage.repopulate();
             SliceObjectsPage.onPrinterSizeChanged();
+            // Persist the menu selections in the saved profile
+            ProfileManager.setBasedOn(SelectProfilesPage.getProfileChoices());
         }  finally {
             ProgressBar.hide();
         }
@@ -404,12 +412,18 @@ class SelectProfilesPage {
             const el = settings.get("toml_file");
             ProfileManager.importConfiguration(el.data);
             el.clear();
+            SliceObjectsPage.repopulate();
             SliceObjectsPage.onPrinterSizeChanged();
             SelectProfilesPage.onImportChanged(false);
             SelectProfilesPage.onNext();
         } catch(e) {
             alert(["Error:", e.message, "Line:", e.line].join(" "));
         }
+    }
+
+    static onApplyLastSettings() {
+        SliceObjectsPage.repopulate();
+        SelectProfilesPage.onNext();
     }
 
     static onNext() {
@@ -763,86 +777,211 @@ class SliceObjectsPage {
         SliceObjectsPage.initSlicerHelpers(s);
 
         s.page(       "Slice Objects",                               {id: "page_slice", className: "scrollable"});
-
-        const mode = await SlicerSettings.populate(s);
-
-        if (mode != "1st-slice") {
-            s.category(   "Save Settings to File");
-            s.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only stretch"});
-            s.separator(                                                 {type: "br"});
-            s.button(     "Save",                                        {onclick: SliceObjectsPage.onExportClicked});
-            s.buttonHelp( "Click this button to save the slicer settings to a file on your computer.");
-        }
+        s.html('<div id="no_profile_warn">Please apply a printer profile to slice</div>');
 
         s.footer();
         s.button(     "Slice",                                       {onclick: SliceObjectsPage.onSliceClicked});
         s.buttonHelp( "Click this button to generate a G-code file for printing.");
     }
 
+    static async repopulate(s) {
+        // Clear out the slicer settings
+        document.getElementById("page_slice").innerText = "";
+
+        settings.setTarget("page_slice");
+        const mode = await SlicerSettings.populate(settings);
+
+        if (mode != "1st-slice") {
+            settings.category(   "Save Settings to File");
+            settings.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only stretch"});
+            settings.separator(                                                 {type: "br"});
+            settings.button(     "Save",                                        {onclick: SliceObjectsPage.onExportClicked});
+            settings.buttonHelp( "Click this button to save the slicer settings to a file on your computer.");
+        }
+
+        // Dump all values from the slicer
+        slicer.forceRefresh();
+    }
+
     /**
      * Helper function for obtaining UI parameters from the slicer engine
      */
     static initSlicerHelpers(s) {
-        var valueSetter = {};
+        function getEditableElement(key, extruder) {
+            if(!document.getElementById(key)) return;
+            const suffix = extruder == 0 ? "" : "_E" + extruder;
+            const id = key + suffix;
+            const el = document.getElementById(id);
+            if (!el) {
+                console.warn("Unable to locate", id);
+            }
+            return el;
+        }
 
-        function updateSettingInSlicer(key, value) {
-            slicer.setOption(key, value);
+        function updateSettingInSlicer(key, value, extruder) {
+            slicer.setOption(key, value, extruder);
             SliceObjectsPage.onSlicerSettingsChanged(key, value);
         }
 
-        function updateSettingFromSlicer(key, value) {
-            if(valueSetter.hasOwnProperty(key)) valueSetter[key](key, value);
-            SliceObjectsPage.onSlicerSettingsChanged(key, value)
+        function updateSettingFromSlicer(key, vals, attr) {
+            const sd = slicer.getOptionDescriptor(key);
+            if (!sd) {
+                console.error("Unable to locate property", key);
+                return;
+            }
+
+            // Update the textbox values
+            const nExtruder = sd.settable_per_extruder ? vals.length : 1;
+            for(var e = 0; e < nExtruder; e++) {
+                const el = getEditableElement(key, e);
+                if(el) {
+                    const val = vals[e];
+                    switch(sd.type) {
+                        case 'float':
+                        case 'int':
+                        case 'str':
+                        case 'enum':
+                            el.value = val;
+                            break;
+                        case 'bool':
+                            el.checked = val;
+                            break;
+                        default:
+                            console.error("Unsupported type for", key, "of", sd.type);
+                    }
+                }
+            }
+            SliceObjectsPage.onSlicerSettingsChanged(key, vals[0])
+
+            // Show or hide the individual extruder values as needed
+            let anyVisible = false;
+            for(var e = 0; e < nExtruder; e++) {
+                const el = getEditableElement(key, e);
+                if(el) {
+                    const extruderVisible = attr.enabled[e];
+                    anyVisible ||= extruderVisible;
+                    const container = el.closest(".parameter-box");
+                    if(extruderVisible) {
+                        container.classList.remove("hidden");
+                    } else {
+                        container.classList.add("hidden");
+                    }
+                }
+            }
+
+            const el = getEditableElement(key, 0);
+            if(el) {
+                const container = el.closest(".parameter");
+
+                // If all the extruder values are hidden, hide the container
+                if(anyVisible) {
+                    container.classList.remove("hidden");
+                } else {
+                    container.classList.add("hidden");
+                }
+                // Mark any resolved values
+                if(attr.resolved) {
+                    container.classList.add("resolved");
+                } else {
+                    container.classList.remove("resolved");
+                }
+            }
         }
 
-        function updateAttributeFromSlicer(key, attr) {
-            s.setVisibility("#" + key, attr.enabled);
+        function onChange(evt) {
+            // Figure out the key and extruder from the element id
+            let key = evt.target.id;
+            let extruder = 0;
+            if(key.endsWith("_E1")) {
+                key = key.slice(0,-3);
+                extruder = 1;
+            }
+            // Use the descriptor to figure out how to parse the value
+            const sd = slicer.getOptionDescriptor(key);
+            let value;
+            switch(sd.type) {
+                case 'float':
+                case 'int':
+                    value = parseFloat(event.target.value);
+                    break;
+                case 'str':
+                case 'enum':
+                    value = event.target.value;
+                    break;
+                case 'bool':
+                    value = event.target.checked;
+                    break;
+            }
+            if(sd.settable_per_extruder) {
+                // Assign the value to a particular extruder
+                updateSettingInSlicer(key, value, extruder);
+            } else {
+                // Assign the value to each extruder
+                const nExtruders = SelectProfilesPage.numberOfExtruders();
+                for(var e = 0; e < nExtruders; e++) {
+                    updateSettingInSlicer(key, value, e);
+                }
+            }
         }
 
         s.fromSlicer = function(key, attr, label_prefix = "") {
-            var sd = slicer.getOptionDescriptor(key);
+            const sd = slicer.getOptionDescriptor(key);
             if (sd === undefined) {
-                console.log("Unable to locate property", key);
+                console.error("Unable to locate property", key);
                 return;
             }
-            var label = label_prefix + (sd.hasOwnProperty("label") ? sd.label : key);
-            var el;
-            var attr = {
+            const label = label_prefix + (sd.hasOwnProperty("label") ? sd.label : key);
+            attr = {
                 ...attr,
                 units:   sd.unit,
                 tooltip: sd.description,
                 id:      key
             };
+            let el;
             switch(sd.type) {
                 case 'float':
                 case 'int':
                     el = s.number(label, {...attr, step: sd.type == 'int' ? 1 : 0.01});
-                    valueSetter[key] = (key, val) => {el.value = val;}
-                    el.addEventListener('change', (event) => slicer.setOption(key, parseFloat(event.target.value)));
                     break;
                 case 'str':
                     el = s.textarea(label + ":", attr);
-                    valueSetter[key] = (key, val) => {el.value = val;}
-                    el.addEventListener('change', (event) => slicer.setOption(key, event.target.value));
                     break;
                 case 'bool':
                     el = s.toggle(label, attr);
-                    valueSetter[key] = (key, val) => {el.checked = val;}
-                    el.addEventListener('change', (event) => slicer.setOption(key,el.checked));
                     break;
                 case 'enum':
-                    var o = s.choice(label, attr);
+                    const o = s.choice(label, attr);
                     for(const [value, label] of Object.entries(sd.options)) {
                         o.option(label, {value: value});
                     }
-                    valueSetter[key] = (key, val) => {o.element.value = val;}
-                    o.element.addEventListener('change', (event) => slicer.setOption(key, event.target.value));
+                    el = o.element;
                     break;
+                default:
+                    console.error("Unsupported type for", key, "of", sd.type);
+                    return;
+            }
+            el.addEventListener('change', onChange);
+
+            // If we have multiple extruders, then duplicate the DOM tree corresponding to
+            // the editable values.
+            if(el && sd.settable_per_extruder && SelectProfilesPage.numberOfExtruders() > 1) {
+                const old_id = el.id;
+                const new_id = el.id + "_E1";
+                const container = el.closest('.parameter-box');
+                if(container) {
+                    const clone = container.cloneNode(true);
+                    container.parentElement.insertBefore(clone,container);
+                    // Change the id of the INPUT element, which may or may not be a child of the container
+                    const el_clone = clone.id == old_id ? clone : clone.querySelector("#" + old_id);
+                    el_clone.id = new_id;
+                    el_clone.addEventListener('change', onChange);
+                } else {
+                    console.log(label, "lacks container");
+                }
             }
         }
 
-        slicer.onOptionChanged = updateSettingFromSlicer;
-        slicer.onAttributeChanged = updateAttributeFromSlicer;
+        slicer.onSettingsChanged = updateSettingFromSlicer;
     }
 
     static onSlicerSettingsChanged(name, val) {
@@ -876,17 +1015,46 @@ class SliceObjectsPage {
         if(geometries.length) {
             const geometryMap = new Map();
 
-            // Generate a list of models
-            const models = geometries.map(geo => {
-                // Find unique geometries
-                geometryMap.set(geo.filename, geo.geometry);
+            // Option 1: Preapply all transformations to the STL files prior to sending them
+            //           to the slicer
+
+            function applyTransformsBefore(geo, index) {
+                const newGeo = geo.geometry.clone();
+                newGeo.applyMatrix4(geo.transform);
+                // Store the modified geometry
+                const newName = index.toString() + ".stl";
+                geometryMap.set(newName, newGeo);
                 // Return model info
                 return {
-                    filename: geo.filename,
+                    filename: newName,
+                    extruder: geo.extruder
+                };
+            }
+
+            // Option 2: Send STL files to Cura unmodified and have Cura position them using mesh
+            //           offsets and mesh rotations.
+            const stlList = [];
+            function getUniqueId(filename) {
+                if(stlList.indexOf(filename) < 0) {
+                    stlList.push(filename);
+                }
+                return stlList.indexOf(filename).toString() + ".stl";
+            }
+
+            function applyTransformsLater(geo, index) {
+                const newName = getUniqueId(geo.filename);
+                // Find unique geometries
+                geometryMap.set(newName, geo.geometry);
+                // Return model info
+                return {
+                    filename: newName,
                     transform: geo.transform,
                     extruder: geo.extruder
                 };
-            });
+            }
+
+            // Generate a list of models
+            const models = geometries.map(preApplyTransforms ? applyTransformsBefore : applyTransformsLater);
 
             // Load geometies into the slicer
             geometryMap.forEach((geometry, filename) => slicer.loadFromGeometry(geometry, filename));

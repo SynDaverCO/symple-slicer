@@ -75,10 +75,571 @@ class ConfigurationIterator {
  */
 class SlicerConfiguration {
     constructor(path) {
-        this.verbose    = false;
+        this.defs       = new CuraDefinitions(path);
+        this.defs.onLoaded = () => {
+            this.settings.postLoad();
+            this.onLoaded();
+        }
+        this.clear();
+    }
 
+    clear() {
+        this.hash = new CuraMultiHash();
+        this.settings = new CuraSettings(this.defs, this.hash);
+        this.settings.onLoaded = () => {this.onLoaded();}
+        this.settings.onSettingsChanged = (key, valChanged, attrChanged) => {
+            const vals = this.defs.getProperty(key, "settable_per_extruder") ?
+                         this.settings.getValueList(key) :
+                         [this.settings.resolveValue(key)];
+            const attr = {
+                enabled: this.hash.getFlagList(key, CuraHash.ENABLED_FLAG),
+                resolved: !(this.defs.getProperty(key, "settable_per_extruder") || this.hash.equalOnAllExtruders(key))
+            };
+            this.onSettingsChanged(key, vals, attr);
+        }
+    }
+
+    onSettingsChanged(key, vals, attr) {
+    }
+
+    /**
+     * Called when all configurations have been loaded and are ready
+     */
+    onLoaded() {
+    }
+
+    getCommandLineArguments(models) {
+        return CuraCommandLine.buildCommandLine(this.settings, models);
+    }
+
+    /**
+     * Returns the attributes associated with a setting for initializing the UI.
+     */
+    getSettingDescriptor(key) {
+        return this.defs.getDescriptor(key);
+    }
+
+    /**
+     * This loads the default settings. If alwaysNotify is true, the change
+     * callbacks will be triggered even if a particular setting did not change.
+     */
+    loadDefaults(alwaysNotify) {
+        this.clear();
+        this.settings.loadDefaults(alwaysNotify);
+    }
+
+    /**
+     * Forces all callbacks to be triggered as if all settings were changed.
+     */
+    forceRefresh() {
+        this.settings.forceRefresh();
+    }
+
+    /**
+     * Sets one or more settings to new values. This will also
+     * propagate to other enabled settings that depend on the
+     * settings that just changed.
+     */
+    setMultiple(settings, extruder = 0) {
+        this.hash.setExtruder(extruder);
+        this.settings.setMultiple(settings);
+    }
+
+    /**
+     * Sets a setting to a new value. This will also cause changes to
+     * propagate to other settings which might depend on this setting.
+     */
+    set(key, value, extruder = 0) {
+        const settings = {};
+        settings[key] = value;
+        this.setMultiple(settings, extruder);
+    }
+
+    /**
+     * Returns the current value of a setting
+     */
+    get(key, extruder = 0) {
+        this.hash.setExtruder(extruder);
+        return this.hash.get(key);
+    }
+
+    saveSettings(writer, options) {
+        this.settings.saveSettings(writer, options);
+    }
+
+    loadSettings(settings, options) {
+        this.settings.loadSettings(settings, options);
+    }
+}
+
+class CuraHash {
+    constructor() {
         this.values     = {};
         this.flags      = {};
+    }
+
+    throwIfMissing(key) {
+        if(!this.values.hasOwnProperty(key)) {
+            //throw "Error: Attempt to use " + key + " which is undefined"
+            console.warn("Error: Attempt to use " + key + " which is undefined");
+            return 0;
+        } else {
+            return this.values[key];
+        }
+    }
+
+    // Sets a value, returns true if the value was changed.
+    set(key, value) {
+        if(this.values.hasOwnProperty(key) && this.values[key] === value) {
+            return false;
+        }
+        this.values[key] = value;
+        return true;
+    }
+
+    get(key) {
+        this.throwIfMissing(key);
+        return this.values[key];
+    }
+
+    has(key) {
+        return this.values.hasOwnProperty(key);
+    }
+
+    hasFlag(key, bit) {
+        this.throwIfMissing(key);
+        return !!(this.flags[key] & bit);
+    }
+
+    setFlag(key, bit) {
+        if(!this.flags.hasOwnProperty(key)) {
+            this.flags[key] = bit;
+            return true;
+        }
+        if(this.flags[key] & bit) return false;
+        this.flags[key] |= bit;
+        return true;
+    }
+
+    clearFlag(key, bit) {
+        if(!this.flags.hasOwnProperty(key)) {
+            this.flags[key] = 0;
+            return true;
+        }
+        if(!(this.flags[key] & bit)) return false;
+        this.flags[key] &= ~bit;
+        return true;
+    }
+
+    getAsString(key) {
+        this.throwIfMissing(key);
+        const value = this.values[key];
+        switch(typeof value) {
+            case "boolean":
+            case "object":
+            case "number":
+                return value.toString();
+            case "string":
+                return value;
+            default:
+                console.log("Warning: Unrecognized type", typeof value, "for", key);
+                return value.toString();
+        }
+    }
+
+    clone() {
+        const clone = new CuraHash();
+        clone.values = Object.assign({}, this.values);
+        clone.flags = Object.assign({}, this.flags);
+        return clone;
+    }
+}
+
+// Static constants
+
+CuraHash.ENABLED_FLAG  = 1; // Set if a value is enabled in the UI
+CuraHash.CHANGED_FLAG  = 2; // Set if a value was changed from the default
+CuraHash.DIRTY_VALUE   = 4; // Set if the value was changed, but a notification has not yet been sent
+CuraHash.DIRTY_FLAG    = 8; // Set if the flag was changed, but a notification has not yet been sent
+
+class CuraMultiHash {
+    constructor() {
+        this.clear();
+    }
+
+    clear() {
+        this.extruders      = [new CuraHash()];
+        this.activeExtruder = 0;
+    }
+
+    setExtruder(extruder) {
+        this.allocateExtruder(extruder);
+        this.activeExtruder = extruder;
+    }
+
+    // Ensures we have a settings object for the extruder
+    allocateExtruder(extruder) {
+        // Make sure we have enough settings objects for this extruder.
+        while(extruder >= this.extruders.length) {
+            this.extruders.push(this.extruders[0].clone());
+        }
+    }
+
+    set(key, value) {
+        return this.extruders[this.activeExtruder].set(key,value);
+    }
+
+    get(key) {
+        return this.extruders[this.activeExtruder].get(key);
+    }
+
+    has(key) {
+        return this.extruders[this.activeExtruder].has(key);
+    }
+
+    hasFlag(key, bit) {
+        return this.extruders[this.activeExtruder].hasFlag(key, bit);
+    }
+
+    setFlag(key, bit) {
+        return this.extruders[this.activeExtruder].setFlag(key, bit);
+    }
+
+    clearFlag(key, bit) {
+        return this.extruders[this.activeExtruder].clearFlag(key, bit);
+    }
+
+    equalOnAllExtruders(key) {
+        for(var i = 1; i < this.extruders.length; i++) {
+            if(JSON.stringify(this.extruders[0].get(key)) != JSON.stringify(this.extruders[i].get(key)))
+                return false;
+        }
+        return true;
+    }
+
+    getValueList(key) {
+        return this.extruders.map(extruder => extruder.get(key));
+    }
+
+    getFlagList(key, bit) {
+        return this.extruders.map(extruder => extruder.hasFlag(key, bit));
+    }
+
+    get length() {
+        return this.extruders.length;
+    }
+}
+
+class CuraSettings {
+    constructor(definitions, hash) {
+        this.verbose = false;
+        this.defs    = definitions;
+        this.hash    = hash;
+    }
+
+    onSettingsChanged(key, valChanged, attrChanged) {
+    }
+
+    /**
+     * Called when all configurations have been loaded and are ready
+     */
+    onLoaded() {
+    }
+
+    /**
+     * This function is called after all JSON files are loaded to
+     * initialize the other data structures and to check the expressions
+     * for syntax errors.
+     */
+    postLoad() {
+        for(const [key, node] of this.defs.entries()) {
+            this.hash.set(key, node.default_value);
+        }
+
+        // Do a syntax check on all expressions
+
+        var checkSyntax = (key, node, prop) => {
+            if(node.hasOwnProperty(prop)) {
+                this.evaluateProperty(key, prop);
+            }
+        }
+
+        for(const [key, node] of this.defs.entries()) {
+            checkSyntax(key, node, "value");
+            checkSyntax(key, node, "resolve");
+            checkSyntax(key, node, "enabled");
+            checkSyntax(key, node, "minimum_value");
+            checkSyntax(key, node, "minimum_value_warning");
+            checkSyntax(key, node, "maximum_value_warning");
+        }
+    }
+
+    /**
+     * Do variable substitutions in start and end gcode
+     */
+     doVariableSubstitutions(gcode) {
+        return gcode.replace(/{\w+}/g, variable => {
+            var key = variable.substring(1,variable.length - 1);
+            if(this.hash.has(key)) {
+                if(this.hash.hasFlag(key,CuraHash.ENABLED_FLAG)) {
+                    return this.hash.get(key);
+                } else {
+                    console.log("Use of not-enabled value in start/end gcode", key);
+                }
+            } else {
+                console.log("Use of undefined value in start/end gcode", key);
+                return key;
+            }
+        });
+     }
+
+    /**
+     * This loads the default settings.
+     */
+    loadDefaults() {
+        this.hash.clear();
+        // Set the default values
+        for(const [key, node] of this.defs.entries()) {
+            if(node.hasOwnProperty('default_value')) {
+                this.hash.set(key, node.default_value);
+            }
+        }
+        // Recompute all values
+        for(const key of this.defs.keys().sort()) {
+            this.recomputeFlags(key);
+            this.recomputeValue(key);
+            this.hash.setFlag(key, CuraHash.DIRTY_VALUE);
+            this.hash.setFlag(key, CuraHash.DIRTY_FLAG);
+            this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
+        }
+        for(const key of this.defs.keys().sort()) {
+            this.propagateChanges(key);
+        }
+        this.postProcessAffectedSettings();
+    }
+
+    /**
+     * Causes all settings to be marked as changed and the change callbacks to be called.
+     */
+    forceRefresh() {
+        for(const key of this.defs.keys().sort()) {
+            this.hash.setFlag(key, CuraHash.DIRTY_VALUE);
+            this.hash.setFlag(key, CuraHash.DIRTY_FLAG);
+        }
+        this.postProcessAffectedSettings();
+    }
+
+    /**
+     * Print summary of affected settings and dispatch indirect change events.
+     */
+    postProcessAffectedSettings() {
+        for(const key of this.defs.keys()) {
+            const valChanged = this.hash.hasFlag(key, CuraHash.DIRTY_VALUE);
+            const flagChanged = this.hash.hasFlag(key, CuraHash.DIRTY_FLAG);
+            if (valChanged) {
+                const val = this.hash.get(key);
+                if(this.verbose)
+                    console.log("--> Changed", key, "to", val);
+                this.hash.clearFlag(key, CuraHash.DIRTY_VALUE);
+            }
+            if (flagChanged) {
+                const enabled = this.hash.hasFlag(key, CuraHash.ENABLED_FLAG);
+                if(this.verbose)
+                    console.log("-->        ", key, "is now", enabled ? "enabled" : "disabled");
+                this.hash.clearFlag(key, CuraHash.DIRTY_FLAG);
+            }
+            if (valChanged || flagChanged) {
+                this.onSettingsChanged(key, valChanged, flagChanged);
+            }
+        }
+    }
+
+    /**
+     * Sets one or more settings to new values. This will also
+     * propagate to other enabled settings that depend on the
+     * settings that just changed.
+     */
+    setMultiple(settings) {
+        for(const key of Object.keys(settings)) {
+            this.hash.setFlag(key, CuraHash.CHANGED_FLAG);
+        }
+        // Settings propagation may be modify a setting multiple
+        // times, so log unique changes for postprocessing.
+        for(const [key, val] of Object.entries(settings)) {
+            if(this.hash.set(key, val)) {
+                this.hash.setFlag(key, CuraHash.DIRTY_VALUE);
+                this.propagateChanges(key);
+            }
+        }
+        this.postProcessAffectedSettings();
+    }
+
+    /**
+     * Recomputes the value of all settings which depend on the key, except those
+     * marked as CHANGED_FLAG.
+     */
+    propagateChanges(key) {
+        this.defs.getDependents(key).forEach(
+            dependent => {
+                if(dependent == key) return; // Prevent self-reference
+                const excluded = this.hash.hasFlag(dependent, CuraHash.CHANGED_FLAG);
+                const changedValue = (!excluded) && this.recomputeValue(dependent);
+                const changedFlag  = this.recomputeFlags(dependent);
+                if(changedValue) {
+                    this.hash.setFlag(dependent, CuraHash.DIRTY_VALUE);
+                }
+                if(changedFlag) {
+                    this.hash.setFlag(dependent, CuraHash.DIRTY_FLAG);
+                }
+                if(changedValue || changedFlag) {
+                    this.propagateChanges(dependent);
+                }
+            }
+        );
+    }
+
+    getValueList(key) {
+        return this.hash.getValueList(key);
+    }
+
+    get(key) {
+        return this.hash.get(key);
+    }
+
+    resolveValue(key) {
+        if(this.hash.equalOnAllExtruders(key)) {
+            return this.hash.get(key);
+        } else if(this.defs.hasProperty(key, 'resolve')) {
+            return this.evaluateProperty(key, 'resolve');
+        } else {
+            console.warn("No formula to resolve", key, "from", this.hash.getValueList(key));
+            return this.hash.get(key);
+        }
+    }
+
+    /**
+     * Recomputes the value of a setting
+     */
+    recomputeValue(key) {
+        const val  = this.defs.hasProperty(key, 'value')   ? this.evaluateProperty(key, 'value') :
+                     this.defs.hasProperty(key, 'resolve') ? this.evaluateProperty(key, 'resolve') :
+                     this.hash.get(key);
+        return this.hash.set(key, val);
+    }
+
+    /**
+     * Recomputes the flags of a setting, returns "affected" with updated bits.
+     */
+    recomputeFlags(key) {
+        const en  = this.defs.hasProperty(key, 'enabled') ? this.evaluateProperty(key, 'enabled') : true;
+        return en ? this.hash.setFlag(  key, CuraHash.ENABLED_FLAG)
+                  : this.hash.clearFlag(key, CuraHash.ENABLED_FLAG);
+    }
+
+    /**
+     * Evaluates a property with a local context
+     */
+    evaluateProperty(key, property) {
+        const expr = this.defs.getProperty(key, property);
+        try {
+            return this.defs.evaluatePythonExpression(this, expr);
+        } catch(err) {
+            console.warn("Unable to evaluate", property, "for", key, ":", expr, "Error:", err.message);
+            return 0;
+        }
+    }
+
+    /**
+     * Save all the settings into a writer object
+     *
+     * Attributes:
+     *   unchanged    - Whether to include unchanged settings in the config file
+     *   descriptions - Whether to annotate the file with descriptions
+     *   choices      - Whether to annotate the file with units and choices
+     */
+    saveSettings(writer, attr) {
+        function writeSetting(defs, hash, key) {
+            const value   = hash.get(key);
+            const uncommented = hash.hasFlag(key, CuraHash.CHANGED_FLAG);
+
+            if(!uncommented && attr && !attr.unchanged)
+                return;
+
+            // Generate the comments
+
+            let comments = "";
+
+            if(attr && attr.choices) {
+                if(defs.hasProperty(key,"unit")) {
+                    comments = defs.nodes[key].unit;
+                }
+                if(defs.hasProperty(key,"options")) {
+                    comments = Object.keys(defs.getProperty(key,'options')).join(", ");
+                }
+            }
+
+            if(attr && attr.descriptions) {
+                if(comments) {
+                    comments = "(" + comments + ") ";
+                }
+                if(defs.hasProperty(key,"description")) {
+                    comments += defs.getProperty(key,'description').replace("\n"," ");
+                }
+            }
+
+            writer.writeValue(key, value, comments, uncommented);
+        }
+
+        // Write the settings which are equal on all extruders
+
+        writer.writeCategory("settings");
+        const extruder_settings = [];
+        const keys = this.defs.keys().sort();
+        this.hash.setExtruder(0);
+        for(const key of keys) {
+            if(this.hash.equalOnAllExtruders(key)) {
+                writeSetting(this.defs, this.hash, key);
+            } else {
+                extruder_settings.push(key);
+            }
+        }
+
+        // Write the settings which are different on extruders
+
+        for(var e = 0; e < this.hash.length; e++) {
+            writer.writeCategory("settings.extruder_" + e);
+            this.hash.setExtruder(e);
+            for(const key of extruder_settings) {
+                writeSetting(this.defs, this.hash, key);
+            }
+        }
+    }
+
+    loadSettings(settings, options) {
+        if(options && options.hasOwnProperty("extruder")) {
+            this.hash.setExtruder(options.extruder);
+            this.setMultiple(settings);
+        } else {
+            this.hash.setExtruder(0);
+            this.setMultiple(settings);
+
+            // Load configuration for specific extruders, if it exists
+            for(var e = 0;; e++) {
+                const prop = "extruder_" + e;
+                if(!settings.hasOwnProperty(prop)) break;
+                this.hash.setExtruder(e);
+                this.setMultiple(settings[prop]);
+            }
+        }
+    }
+}
+
+/**
+ * The CuraDefinitions object is responsible for reading the Cura json files and
+ * interpreting the rules.
+ */
+class CuraDefinitions {
+    constructor(path) {
         this.nodes      = {};
         this.var_regex  = {};
 
@@ -90,12 +651,6 @@ class SlicerConfiguration {
                 path + "fdmprinter_extras.def.json"
             ]);
         }
-    }
-
-    onValueChanged(key, value) {
-    }
-
-    onAttributeChanged(key, attributes) {
     }
 
     /**
@@ -139,7 +694,9 @@ class SlicerConfiguration {
             this.processJSON(config);
         }
         console.log("All resources loaded");
-        this.postprocessJSON();
+        for(const [key, node] of Object.entries(this.nodes)) {
+            this.var_regex[key] = new RegExp('\\b' + key + '\\b');
+        }
         this.onLoaded();
     }
 
@@ -173,6 +730,7 @@ class SlicerConfiguration {
             copyProperty(key, dest, node, "minimum_value");
             copyProperty(key, dest, node, "minimum_value_warning");
             copyProperty(key, dest, node, "maximum_value_warning");
+            copyProperty(key, dest, node, "settable_per_extruder");
             copyProperty(key, dest, node, "value");
             copyProperty(key, dest, node, "resolve");
             copyProperty(key, dest, node, "unit");
@@ -184,116 +742,12 @@ class SlicerConfiguration {
         cfg.parse(json);
     }
 
-    /**
-     * This function is called after all JSON files are loaded to
-     * initialize the other data structures and to check the expressions
-     * for syntax errors.
-     */
-    postprocessJSON() {
-        for(const [key, node] of Object.entries(this.nodes)) {
-            this.var_regex[key] = new RegExp('\\b' + key + '\\b');
-            this.values[key]    = node.default_value;
-            this.flags[key]     = 0;
-        }
-
-        // Do a syntax check on all expressions
-
-        var checkSyntax = (key, node, prop) => {
-            if(node.hasOwnProperty(prop)) {
-                this.evaluatePythonExpression(key, node[prop]);
-            }
-        }
-
-        for(const [key, node] of Object.entries(this.nodes)) {
-            checkSyntax(key, node, "value");
-            checkSyntax(key, node, "resolve");
-            checkSyntax(key, node, "enabled");
-            checkSyntax(key, node, "minimum_value");
-            checkSyntax(key, node, "minimum_value_warning");
-            checkSyntax(key, node, "maximum_value_warning");
-        }
+    entries() {
+        return Object.entries(this.nodes);
     }
 
-    getAllSettings() {
-        const settings = new Map();
-        for(const [key, value] of Object.entries(this.values)) {
-            var str_value;
-            switch(typeof value) {
-                case "boolean":
-                case "object":
-                case "number":
-                    str_value = value.toString();
-                    break;
-                case "string":
-                    if(key == "machine_start_gcode" || key == "machine_end_gcode") {
-                        str_value = this.doVariableSubstitutions(value);
-                    } else {
-                        str_value = value;
-                    }
-                    break;
-                default:
-                    console.log("Warning: Unrecognized type", typeof value, "for", key);
-                    str_value = value.toString();
-            }
-            settings.set(key, str_value);
-        }
-        return settings;
-    }
-
-    getCommandLineArguments(models) {
-        return CuraCommandLine.buildCommandLine(this.getAllSettings(), models);
-    }
-
-    /**
-     * Do variable substitutions in start and end gcode
-     */
-     doVariableSubstitutions(gcode) {
-        return gcode.replace(/{\w+}/g, variable => {
-            var key = variable.substring(1,variable.length - 1);
-            if(this.values.hasOwnProperty(key)) {
-                if(this.isEnabled(key)) {
-                    return this.values[key];
-                } else {
-                    console.log("Use of not-enabled value in start/end gcode", key);
-                }
-            } else {
-                console.log("Use of undefined value in start/end gcode", key);
-                return key;
-            }
-        });
-     }
-
-    /**
-     * Returns the attributes associated with a setting for initializing the UI.
-     */
-    getSettingDescriptor(key) {
-        return this.nodes[key];
-    }
-
-    /**
-     * This loads the default settings.
-     */
-    loadDefaults(force) {
-        // Settings propagation may be modify a setting multiple
-        // times, so log unique changes for postprocessing.
-        var affectedSettings = {};
-        for(const [key, node] of Object.entries(this.nodes)) {
-            const previousValue = this.values[key];
-            if(node.hasOwnProperty('default_value')) {
-                this.values[key] = node.default_value;
-            }
-            this.recomputeValue(key);
-            var affected = force ? SlicerConfiguration.VALUE_AFFECTED | SlicerConfiguration.FLAGS_AFFECTED : 0;
-            if(previousValue != this.values[key]) {
-                affected |= SlicerConfiguration.VALUE_AFFECTED;
-            }
-            affectedSettings[key] = this.recomputeFlags(key, affected);
-            this.setFlag(key, SlicerConfiguration.CHANGED_FLAG, false);
-        }
-        for(const key of Object.keys(this.nodes)) {
-            this.propagateChanges(key, [], affectedSettings);
-        }
-        this.postProcessAffectedSettings(affectedSettings);
+    keys() {
+        return Object.keys(this.nodes);
     }
 
     /**
@@ -304,177 +758,37 @@ class SlicerConfiguration {
     }
 
     /**
-     * Print summary of affected settings and dispatch indirect change events.
+     * Returns a Set of all settings that affect a string expression
      */
-    postProcessAffectedSettings(affectedSettings) {
-        for(const key of Object.keys(affectedSettings).sort()) {
-            if (affectedSettings[key] & SlicerConfiguration.VALUE_AFFECTED) {
-                var val = this.values[key];
-                if(this.verbose)
-                    console.log("--> Changed", key, "to", val);
-                this.onValueChanged(key, val);
-            }
-            if (affectedSettings[key] & SlicerConfiguration.FLAGS_AFFECTED) {
-                var enabled = this.isEnabled(key);
-                if(this.verbose)
-                    console.log("-->        ", key, "is now", enabled ? "enabled" : "disabled");
-                this.onAttributeChanged(key, {enabled: enabled});
-            }
-        }
-    }
-
-    /**
-     * Sets one or more settings to new values. This will also
-     * propagate to other enabled settings that depend on the
-     * settings that just changed.
-     */
-    setMultiple(settings) {
-        var excluding = Object.keys(settings).sort();
-        // Settings propagation may be modify a setting multiple
-        // times, so log unique changes for postprocessing.
-        var affectedSettings = {};
-        for(const key of excluding) {
-            var val = settings[key];
-            if(this.values[key] != val) {
-                this.values[key] = val;
-                this.propagateChanges(key, excluding, affectedSettings);
-                if(this.verbose)
-                    console.log("Changed", key, "to", val);
-                this.onValueChanged(key, val);
-                this.setFlag(key, SlicerConfiguration.CHANGED_FLAG, true);
-            }
-        }
-        this.postProcessAffectedSettings(affectedSettings);
-    }
-
-    /**
-     * Sets a setting to a new value. This will also cause changes to
-     * propagate to other settings which might depend on this setting.
-     */
-    set(key, value) {
-        var settings = {};
-        settings[key] = value;
-        this.setMultiple(settings);
-    }
-
-    /**
-     * Returns the current value of a setting
-     */
-    get(key) {
-        if(this.values.hasOwnProperty(key)) {
-            return this.values[key];
-        } else {
-            console.log("Error: Attempt to use", key, "which is undefined");
-            return 0;
-        }
-    }
-
-    /**
-     * Recomputes the value of all settings which depend on the key, except those
-     * in the exclusion list. Returns an object with bits indicating what changes
-     * happened.
-     */
-    propagateChanges(key, excluding, changes) {
-        changes = changes || {};
-        this.getDependents(key).forEach(
-            dependent => {
-                var whatChanged = 0;
-                if((this.nodeDependsOn(dependent, key, "value") ||
-                   this.nodeDependsOn(dependent, key, "resolve")) &&
-                   excluding.indexOf(dependent) == -1) {
-                    whatChanged = this.recomputeValue(dependent, whatChanged);
-                }
-                whatChanged = this.recomputeFlags(dependent, whatChanged);
-                if(whatChanged) {
-                    changes[dependent] = (changes[dependent] || 0) | whatChanged;
-                    this.propagateChanges(dependent, excluding, changes);
-                }
-            }
-        );
-        return changes;
-    }
-
-    /**
-     * Recomputes the value of a setting, returns "affected" with updated bits.
-     */
-    recomputeValue(key, affected) {
-        var node = this.nodes[key];
-        var val  = node.hasOwnProperty('value')   ? this.evaluatePythonExpression(key, node.value) :
-                   node.hasOwnProperty('resolve') ? this.evaluatePythonExpression(key, node.resolve) :
-                   this.values[key];
-        if (this.values[key]    != val) {affected |= SlicerConfiguration.VALUE_AFFECTED; this.values[key] = val;}
-        return affected;
-    }
-
-    /**
-     * Recomputes the flags of a setting, returns "affected" with updated bits.
-     */
-    recomputeFlags(key, affected) {
-        var node = this.nodes[key];
-        var en   = node.hasOwnProperty('enabled') ? this.evaluatePythonExpression(key, node.enabled) : true;
-        if (this.isEnabled(key) != en)  {affected |= SlicerConfiguration.FLAGS_AFFECTED; this.setFlag(key, SlicerConfiguration.ENABLED_FLAG, en);}
-        return affected;
-    }
-
-    /**
-     * Checks to see if a setting is enabled.
-     */
-    isEnabled(key) {
-        return this.getFlag(key, SlicerConfiguration.ENABLED_FLAG);
-    }
-
-    /**
-     * Gets the state of a flag for a key
-     */
-    getFlag(key, bit) {
-        return !!(this.flags[key] & bit);
-    }
-
-    /**
-     * Sets the state of a flag for a key
-     */
-    setFlag(key, bit, state) {
-        this.flags[key] =  (this.flags[key] & ~bit) | (state ? bit : 0);
+    getExpressionDependencies(expr, dependencies = new Set()) {
+        for (const [key, regex] of Object.entries(this.var_regex))
+            if(expr.search(regex) != -1)
+                    dependencies.add(key);
+        return dependencies;
     }
 
     /**
      * Return a list of all settings that directly affect a setting
      */
     getDependencies(setting) {
-        var node = this.nodes[setting], dependencies = [];
-
-        function findDependencies(string) {
-            for (const [key, regex] of Object.entries(this.var_regex))
-                if(expr.search(regex) != -1)
-                    dependencies.push(key);
-        }
-
-        if(node.hasOwnProperty('value'))   findDependencies(node.value);
-        if(node.hasOwnProperty('resolve')) findDependencies(node.resolve);
-        if(node.hasOwnProperty('enabled')) findDependencies(node.enabled);
-
-        return SlicerConfiguration.removeDuplicates(dependencies);
+        const node = this.nodes[setting], dependencies = new Set();
+        if(node.hasOwnProperty('value'))   this.getExpressionDependencies(node.value, dependencies);
+        if(node.hasOwnProperty('resolve')) this.getExpressionDependencies(node.resolve, dependencies);
+        if(node.hasOwnProperty('enabled')) this.getExpressionDependencies(node.enabled, dependencies);
+        return dependencies;
     }
 
     /**
      * Return a list of all settings that this setting directly affects
      */
     getDependents(setting) {
-        var dependents = [];
-        var regex = this.var_regex[setting];
-
-        function findDependents(key, node, prop) {
-            if(node.hasOwnProperty(prop) && typeof node[prop] === 'string' && node[prop].search(regex) != -1)
-                dependents.push(key);
+        const dependents = new Set();
+        for(const key of Object.keys(this.nodes)) {
+            if(this.nodeDependsOn(key, setting, 'value'))   dependents.add(key);
+            if(this.nodeDependsOn(key, setting, 'resolve')) dependents.add(key);
+            if(this.nodeDependsOn(key, setting, 'enabled')) dependents.add(key);
         }
-
-        for(const [key, node] of Object.entries(this.nodes)) {
-            findDependents(key, node, 'value');
-            findDependents(key, node, 'resolve');
-            findDependents(key, node, 'enabled');
-        }
-
-        return SlicerConfiguration.removeDuplicates(dependents);
+        return dependents;
     }
 
     /**
@@ -482,7 +796,7 @@ class SlicerConfiguration {
      */
 
      nodeDependsOn(thisSetting, anotherSetting, prop) {
-         var node = this.nodes[thisSetting];
+         const node = this.nodes[thisSetting];
          return node.hasOwnProperty(prop) && typeof node[prop] === 'string' && node[prop].search(this.var_regex[anotherSetting]) != -1;
      }
 
@@ -594,10 +908,17 @@ class SlicerConfiguration {
      * from Python into JavaScript and executing them with the proper
      * context.
      */
-    evaluatePythonExpression(key, expr) {
-
+    evaluatePythonExpression(settings, expr) {
         if(typeof expr !== 'string')
             return expr;
+
+        // Build the variable context
+        const context = Object.create(null);
+        for (const dep of this.getExpressionDependencies(expr)) {
+            //if(settings.has(dep)) {
+                context[dep] = settings.get(dep);
+            //}
+        }
 
         // Handle nested parenthesis
 
@@ -630,129 +951,126 @@ class SlicerConfiguration {
             True:                    true,
 
             // Function defined in Cura:
-            extruderValue:           (e, val)     => this.get(val),
-            extruderValues:          (val)        => [this.get(val)],
-            resolveOrValue:          (val)        => this.get(val),
+            extruderValue:           (e, key)     => settings.getValueList(key)[e],
+            extruderValues:          (key)        => settings.getValueList(key),
+            resolveOrValue:          (key)        => settings.resolveValue(key),
             defaultExtruderPosition: ()           => 0
         };
 
-        try {
-            var f = new Function('obj', 'funcs', 'with(funcs) with(obj) return ' + expr);
-            return f(this.values, pythonFunctions);
-        } catch(err) {
-            console.log("Unable to evaluate expression for", key, ": ", expr, " Error: ", err.message);
-            return 0;
-        }
+        var f = new Function('context', 'funcs', 'with(context) with(funcs) return ' + expr);
+        return f(context, pythonFunctions);
     }
 
-    /**
-     * Dumps all the settings into a writer object
-     *
-     * Attributes:
-     *   unchanged    - Whether to include unchanged settings in the config file
-     *   descriptions - Whether to annotate the file with descriptions
-     *   choices      - Whether to annotate the file with units and choices
-     */
-    dumpSettings(writer, attr) {
-        for(const key of Object.keys(this.nodes).sort()) {
-            let value   = this.values[key];
-            let enabled = this.getFlag(key, SlicerConfiguration.CHANGED_FLAG);
+    hasProperty(key, property) {
+        return this.nodes[key].hasOwnProperty(property);
+    }
 
-            if(!enabled && attr && !attr.unchanged) {
-                continue;
-            }
+    getProperty(key, property) {
+        return this.nodes[key][property];
+    }
 
-            // Generate the comments
-
-            let comments = "";
-
-            if(attr && attr.choices) {
-                if(this.nodes[key].hasOwnProperty("unit")) {
-                    comments = this.nodes[key].unit;
-                }
-                if(this.nodes[key].hasOwnProperty("options")) {
-                    comments = Object.keys(this.nodes[key].options).join(", ");
-                }
-            }
-
-            if(attr && attr.descriptions) {
-                if(comments) {
-                    comments = "(" + comments + ") ";
-                }
-                if(this.nodes[key].hasOwnProperty("description")) {
-                    comments += this.nodes[key].description.replace("\n"," ");
-                }
-            }
-
-            writer.writeValue(key, value, comments, enabled);
-        }
+    getDescriptor(key) {
+        return this.nodes[key];
     }
 }
-
-// Static constants
-
-SlicerConfiguration.ENABLED_FLAG  = 1; // Set if a value is enabled in the UI
-SlicerConfiguration.CHANGED_FLAG  = 2; // Set if a value was changed from the default
-
-SlicerConfiguration.VALUE_AFFECTED = 1;
-SlicerConfiguration.FLAGS_AFFECTED = 2;
 
 /**
  * The CuraCommandLine object is responsible for building a Cura command line.
  */
 class CuraCommandLine {
     static buildCommandLine(settings, models) {
-        var arg_list = [];
+        const defs = settings.defs;
+        const hash = settings.hash;
+
+        // Grab machine parameters
+        hash.setExtruder(0);
+        const one_at_a_time = CuraCommandLine.isOneAtATime(hash);
+        const origin_at_zero = CuraCommandLine.isMachineCenterAtZero(hash);
+        const machine_width = parseInt(hash.get("machine_width"));
+        const machine_depth = parseInt(hash.get("machine_depth"));
+
+        // Push global settings
+        const arg_list = [];
         arg_list.push("slice");
         arg_list.push("-v");
-        for(const [key, value] of settings) {
-            if(key == "mesh_rotation_matrix") continue;
+
+        function appendParameter(key, value) {
             arg_list.push("-s");
             arg_list.push(key + '=' + value);
         }
+
+        const extruder_settings = {};
+        const keys = defs.keys().sort();
+        for(const key of keys) {
+            if(defs.getProperty(key, "settable_per_extruder")) {
+                if(hash.equalOnAllExtruders(key)) {
+                    appendParameter(key, settings.get(key));
+                } else {
+                    extruder_settings[key] = settings.getValueList(key);
+                }
+            } else {
+                let value = settings.resolveValue(key);
+                if(key == "machine_start_gcode" || key == "machine_end_gcode") {
+                    value = settings.doVariableSubstitutions(value);
+                }
+                appendParameter(key, value);
+            }
+        }
+
         arg_list.push("-o");
         arg_list.push("output.gcode");
-        for(const m of models) {
-            const one_at_a_time = CuraCommandLine.isOneAtATime(settings);
-            if (one_at_a_time) arg_list.push("-g");
-            var mesh_rotation_matrix, mesh_position_x, mesh_position_y, mesh_position_z;
-            if(m.hasOwnProperty("extruder")) {
-                arg_list.push("-e" + m.extruder);
+
+        for(var extruder = 0; extruder < hash.length; extruder++) {
+            // Push extruder specific settings
+            arg_list.push("-e" + extruder);
+
+            for(const [key, values] of Object.entries(extruder_settings)) {
+                appendParameter(key, values[extruder]);
             }
-            if(m.hasOwnProperty("transform")) {
-                // Decompose the Matrix4 into a rotation matrix and position.
-                // Notice that in THREE.js, the elements array is stored column first,
-                // so we need to transpose it prior to extracting the elements.
-                const [
-                    a,b,c,x,
-                    d,e,f,y,
-                    g,h,i,z
-                ] = m.transform.clone().transpose().elements;
-                mesh_rotation_matrix = JSON.stringify([[a,b,c],[d,e,f],[g,h,i]]);
-                mesh_position_x      = x;
-                mesh_position_y      = y;
-                mesh_position_z      = z;
-            } else {
-                mesh_rotation_matrix = "[[1,0,0], [0,1,0], [0,0,1]]";
-                mesh_position_x      = 0;
-                mesh_position_y      = 0;
-                mesh_position_z      = 0;
+
+            // Push models for the extruder
+            for(const m of models) {
+                if(m.extruder != extruder)
+                    continue;
+
+                if (one_at_a_time) arg_list.push("-g");
+                var mesh_rotation_matrix, mesh_position_x, mesh_position_y, mesh_position_z;
+                if(m.hasOwnProperty("transform")) {
+                    // Decompose the Matrix4 into a rotation matrix and position.
+                    // Notice that in THREE.js, the elements array is stored column first,
+                    // so we need to transpose it prior to extracting the elements.
+                    const [
+                        a,b,c,x,
+                        d,e,f,y,
+                        g,h,i,z
+                    ] = m.transform.clone().transpose().elements;
+                    mesh_rotation_matrix = JSON.stringify([[a,b,c],[d,e,f],[g,h,i]]);
+                    mesh_position_x      = x;
+                    mesh_position_y      = y;
+                    mesh_position_z      = z;
+                } else {
+                    mesh_rotation_matrix = "[[1,0,0], [0,1,0], [0,0,1]]";
+                    mesh_position_x      = 0;
+                    mesh_position_y      = 0;
+                    mesh_position_z      = 0;
+                }
+                if(!origin_at_zero) {
+                    mesh_position_x      -= machine_width/2;
+                    mesh_position_y      -= machine_depth/2;
+                }
+                arg_list.push("-s");
+                arg_list.push("mesh_rotation_matrix=" + mesh_rotation_matrix);
+                arg_list.push("-l");
+                arg_list.push(m.filename);
+                arg_list.push("-s");
+                arg_list.push("mesh_position_x=" + mesh_position_x);
+                arg_list.push("-s");
+                arg_list.push("mesh_position_y=" + mesh_position_y);
+                arg_list.push("-s");
+                arg_list.push("mesh_position_z=" + mesh_position_z);
+
+                if (one_at_a_time) arg_list.push("--next");
             }
-            if(!CuraCommandLine.isMachineCenterAtZero(settings)) {
-                mesh_position_x      -= parseInt(settings.get("machine_width"))/2;
-                mesh_position_y      -= parseInt(settings.get("machine_depth"))/2;
-            }
-            arg_list.push("-s");
-            arg_list.push("mesh_rotation_matrix=" + mesh_rotation_matrix);
-            arg_list.push("-s");
-            arg_list.push("mesh_position_x=" + mesh_position_x);
-            arg_list.push("-s");
-            arg_list.push("mesh_position_y=" + mesh_position_y);
-            arg_list.push("-s");
-            arg_list.push("mesh_position_z=" + mesh_position_z);
-            arg_list.push("-l");
-            arg_list.push(m.filename);
-            if (one_at_a_time) arg_list.push("--next");
         }
         return arg_list;
     }
@@ -760,7 +1078,7 @@ class CuraCommandLine {
     static isOneAtATime(settings) {
         return settings.get("print_sequence") == "one_at_a_time";
     }
-    
+
     static isMachineCenterAtZero(settings) {
         return settings.get("machine_center_is_zero") == "true";
     }

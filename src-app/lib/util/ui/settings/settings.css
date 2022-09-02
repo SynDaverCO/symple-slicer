@@ -55,9 +55,13 @@ body.debug .setting-ui {
 
 .settings-panel .parameter {
     display:            flex;
-    justify-content:    space-between;
+    gap:                0.3em;
     margin-top:         0.3em;
     margin-bottom:      0.3em;
+}
+
+.settings-panel .parameter label {
+    flex-grow:          1;
 }
 
 .settings-panel .parameter.textarea {
@@ -65,6 +69,14 @@ body.debug .setting-ui {
     flex-direction:     column;
     align-items:        stretch;
     gap:                5px;
+}
+
+.settings-panel .parameter.hidden {
+    display:            none;
+}
+
+.settings-panel .parameter-box.hidden {
+    visibility:         hidden;
 }
 
 .settings-panel h1 {
@@ -126,14 +138,36 @@ body.debug .setting-ui {
     font-size:          13px;
 }
 
-.settings-panel input[type=text],
-.settings-panel input[type=number],
-.settings-panel editable-select {
+.settings-panel .parameter-box {
+    position:           relative;
     box-sizing:         border-box;
-    padding:            1px 2px;
     width:              12em;
     font-size:          11px;
+}
+
+.settings-panel .parameter-box.has_units {
+}
+.parameter-box input[type=number] {
+    box-sizing:         border-box;
+    width:              100%;
+    height:             100%;
     border:             1px solid;
+    padding:            1px 2px;
+}
+
+.parameter-box input[type=checkbox] {
+   float:               right;
+}
+
+.parameter-box input[type=number].has_units {
+    padding-right:      3em; /* Allow 3em for units */
+}
+
+.has_units span {
+    position:           absolute;
+    right:              3px;
+    top:                3px;
+    font-size:          11px;
 }
 
 .settings-panel input[type=text].readonly,
@@ -148,10 +182,7 @@ body.debug .setting-ui {
     width:              12em;    
 }
 
-.settings-panel .has_units input[type=text],
-.settings-panel .has_units input[type=number] {
-    padding:            1px 3em 1px 2px; /* Allow 3em for units */
-}
+
 
 button {
     cursor:             pointer;
@@ -165,16 +196,6 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
   -moz-appearance:textfield;
-}
-
-.has_units {
-    position:           relative;
-}
-
-.has_units span {
-    position:           absolute;
-    right:              3px;
-    font-size:          11px;
 }
 
 .settings-panel input[type=submit] {

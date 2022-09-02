@@ -83,7 +83,7 @@ class ProfileLibrary {
             // Process an expanded profile definition
             if(typeof value === "object") {
                 desc.name = key;
-                for(const prop of ["name", "url"].concat(ProfileLibrary.constraints)) {
+                for(const prop of ["name", "url", "extruders"].concat(ProfileLibrary.constraints)) {
                     if(value.hasOwnProperty(prop)) {
                         desc[prop] = value[prop];
                     }
@@ -98,6 +98,7 @@ class ProfileLibrary {
             if(desc.type == "print_profiles"   && !desc.brand)        desc.brand        = "generic";
             if(desc.manufacturer == "*") delete desc.manufacturer;
             if(desc.brand == "*")        delete desc.brand;
+            if(desc.type == "machine_profiles" && !desc.extruders) desc.extruders = 1;
             // Make URL absolute
             if(desc.url) {
                 desc.url = new URL(desc.url, baseUrl).toString();
@@ -154,12 +155,16 @@ class ProfileLibrary {
             }
         }
     }
+
+    static getProfiles() {
+        return ProfileLibrary.profiles;
+    }
 }
 
 class ProfileManager {
     // Clears out any configuration information in the ProfileManager object.
     static _loadDefaults() {
-        ProfileManager.profile = {};
+        
     }
 
     static getSection(section) {
@@ -168,7 +173,7 @@ class ProfileManager {
 
     // Parses a TOML string and loads the profile. Slicer settings are sent to the slicer,
     // while other settings are stored in the ProfileManager object.
-    static _loadProfileStr(str, baseUrl) {
+    static _loadProfileStr(str, baseUrl, options) {
         let config;
         try {
             config = toml.parse(str);
@@ -198,7 +203,7 @@ class ProfileManager {
 
         // Apply the slicer settings
         if(config.settings) {
-            slicer.setMultiple(config.settings);
+            slicer.loadSettings(config.settings, options);
             delete config.settings;
         }
 
@@ -212,8 +217,7 @@ class ProfileManager {
         if(ProfileManager.profile) {
             toml.writeProperties(ProfileManager.profile, ["metadata", "based_on", "usb", "wireless", "scripts"]);
         }
-        toml.writeCategory("settings");
-        slicer.dumpSettings(toml, options);
+        slicer.saveSettings(toml, options);
         return toml.str;
     }
 
@@ -233,7 +237,7 @@ class ProfileManager {
 
         console.log("Loaded settings from local storage");
         try {
-            ProfileManager.importConfiguration(stored_config, true);
+            ProfileManager.importConfiguration(stored_config);
         } catch (e) {
             alert("Unable to load profile from last session");
             console.error(e);
@@ -250,37 +254,33 @@ class ProfileManager {
     /**
      * Loads a specific print profile. These profiles are stored as TOML files.
      */
-    static async loadPresets(type, value) {
+    static async loadPresets(type, value, options) {
         const desc = ProfileLibrary.getDescriptor(type, value);
         if(!desc) return;
         const url = desc.url;
         if(!url) return;
         const data = await fetchText(url);
         console.log("Loaded", type, " from", url);
-        ProfileManager._loadProfileStr(data, url);
-        if(!ProfileManager.profile.hasOwnProperty("based_on")) ProfileManager.profile.based_on = {};
-        ProfileManager.profile.based_on[type] = value;
+        ProfileManager._loadProfileStr(data, url, options);
     }
 
     // Apply a selection from the menu
-    static async applyPresets(presets) {
+    static defaults() {
         slicer.loadDefaults();
-        ProfileManager._loadDefaults();
-        await ProfileManager.loadPresets("machine_profiles",  presets.machine);
-        await ProfileManager.loadPresets("machine_upgrades",  presets.upgrade);
-        await ProfileManager.loadPresets("machine_toolheads", presets.toolhead);
-        await ProfileManager.loadPresets("print_quality",     presets.quality);
-        await ProfileManager.loadPresets("print_profiles",    presets.material);
+        ProfileManager.profile = {};
     }
 
-    static importConfiguration(data, initial) {
-        slicer.loadDefaults(initial);
-        ProfileManager._loadDefaults();
+    static importConfiguration(data) {
+        ProfileManager.defaults();
         ProfileManager._loadProfileStr(data);
     }
 
     static exportConfiguration(options) {
         return TOMLWriter.alignComments(ProfileManager._saveProfileStr(options));
+    }
+
+    static setBasedOn(data) {
+        ProfileManager.profile.based_on = data;
     }
 }
 
@@ -289,4 +289,12 @@ ProfileLibrary.defaultProfileLists = [
     "config/syndaver/profile_list.toml",
     "config/profiles/profile_list.toml"
 ];
-ProfileLibrary.constraints = ["manufacturer","machine","upgrade","toolhead","brand","quality"];
+ProfileLibrary.constraintsMap = {
+    "manufacturer" : "machine_manufacturers",
+    "machine"      : "machine_profiles",
+    "upgrade"      : "machine_upgrades",
+    "toolhead"     : "machine_toolheads",
+    "brand"        : "material_brands",
+    "quality"      : "print_quality"
+}
+ProfileLibrary.constraints = Object.keys(ProfileLibrary.constraintsMap);

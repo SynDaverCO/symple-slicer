@@ -84,9 +84,9 @@
         for(var i = 0; i < nFaces; i++) {
             var faceA, faceB, faceC;
             if (indices) {
-                faceA = indices.array[i * 3 + 0] * 3;
-                faceB = indices.array[i * 3 + 1] * 3;
-                faceC = indices.array[i * 3 + 2] * 3;
+                faceA = indices[i * 3 + 0] * 3;
+                faceB = indices[i * 3 + 1] * 3;
+                faceC = indices[i * 3 + 2] * 3;
             } else {
                 faceA = i * 9 + 0;
                 faceB = i * 9 + 3;

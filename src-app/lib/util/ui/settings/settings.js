@@ -142,7 +142,9 @@ class SettingsUI {
     toggle(description, attr) {
         const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
-        const el = SettingsUI._input(container, "checkbox", attr);
+        // A a div container to allow for alignment via CSS
+        const div = SettingsUI.addTag(container, "div", {className: "parameter-box"});
+        const el = SettingsUI._input(div, "checkbox", attr);
         if(attr && attr.id) {
             this.getters[attr.id] = SettingsUI.toggle_getter;
         }
@@ -177,14 +179,15 @@ class SettingsUI {
     number(description, attr) {
         const container = SettingsUI._param(this.target_dom, attr, true);
         SettingsUI._label(container, description, attr);
-        const el = SettingsUI._input(container, "number", attr);
+        const div = SettingsUI.addTag(container, "div", {classList: "parameter-box"});
+        const el = SettingsUI._input(div, "number", attr);
         if(attr) {
             if(attr.id) {
                 this.getters[attr.id] = SettingsUI.number_getter;
             }
             if(attr.units) {
-                SettingsUI.addTag(container, "span", {innerHTML: attr.units, className: "units"});
-                container.classList.add("has_units");
+                SettingsUI.addTag(div, "span", {innerHTML: attr.units, className: "units"});
+                div.classList.add("has_units");
             }
         }
         return el;
@@ -226,6 +229,7 @@ class SettingsUI {
         const container = SettingsUI._param(this.target_dom, attr, true);
         SettingsUI._label(container, description, attr);
         const el = attr.dropdown ? SettingsUI.addTag(container, "editable-select", attr) : SettingsUI._input(container, "text", attr);
+        el.classList.add("parameter-box");
         if(attr && attr.id) {
             this.getters[attr.id] = SettingsUI.text_getter;
         }
@@ -240,6 +244,7 @@ class SettingsUI {
         const container = SettingsUI._param(this.target_dom, attr, false);
         SettingsUI._label(container, description, attr);
         const el = SettingsUI.addTag(container, "select", SettingsUI._copyAttr({}, attr, ["id", "multiple","onchange"]));
+        el.classList.add("parameter-box");
         if(attr && attr.id) {
             this.getters[attr.id] = SettingsUI.choice_getter;
         }
@@ -315,6 +320,7 @@ class SettingsUI {
         container.classList.add("textarea");
         SettingsUI._label(container, description, attr);
         const el = SettingsUI.addTag(container, "textarea", SettingsUI._copyAttr({}, attr, ["id", "spellcheck", "value"]));
+        el.classList.add("parameter-box");
         if(attr && attr.id) {
             this.getters[attr.id] = SettingsUI.textarea_getter;
         }
@@ -568,5 +574,9 @@ class SettingsUI {
         const el = $("[name='" + group + "']");
         el.change(SettingsUI._linkedRadioHandler);
         $("[name='" + group + "']:checked").trigger("change");
+    }
+
+    setTarget(id) {
+        this.target_dom = document.getElementById(id);
     }
 }

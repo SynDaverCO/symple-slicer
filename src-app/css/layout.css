@@ -126,7 +126,7 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
     width:              50vw;
 }
 
-#lcd_warn, #custom_fw_warn {
+#lcd_warn, #custom_fw_warn, #no_profile_warn {
     padding:            1em;
     text-align:         center;
     color:              red;
@@ -187,4 +187,8 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
 
 #settings {
     min-width:          30vw;
+}
+
+.parameter.resolved input {
+    background-color: yellow;
 }
