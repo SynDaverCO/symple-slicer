@@ -503,8 +503,8 @@ class SettingsUI {
     gotoPage(page) {
         if(page != this.currentPage) {
             this.onPageExit(this.currentPage);
-            $(".settings-panel").hide();
-            $("." + page).show();
+            $(".settings-panel").removeClass("page-active");
+            $("." + page).addClass("page-active");
             $("#settingSelect").val(page);
             this.lastPage = this.currentPage;
             this.currentPage = page;

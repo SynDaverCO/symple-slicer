@@ -122,19 +122,20 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
     margin-right:       auto;
 }
 
-#profile_sources_warn, #profile_sources {
-    width:              50vw;
-}
-
-#lcd_warn, #custom_fw_warn, #no_profile_warn {
-    padding:            1em;
-    text-align:         center;
-    color:              red;
+#profile_sources {
+    width:              100%;
 }
 
 .warning {
     padding:            1em;
     text-align:         center;
+    color:              red;
+}
+
+.hidden-warning {
+    padding:            1em;
+    text-align:         center;
+    color:              red;
     display:            none;
 }
 

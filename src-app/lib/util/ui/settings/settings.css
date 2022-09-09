@@ -31,6 +31,20 @@
     text-align:         right;
 }
 
+.settings-ui:not(.fixed-size) .settings-panel:not(.page-active) {
+    display:            none;
+}
+
+.settings-ui.fixed-size .settings-panel:not(.page-active) {
+    height:             0;
+    flex-grow:          0;
+    overflow:           hidden;
+}
+
+.settings-ui.fixed-size .no-grow, .settings-ui.fixed-size p {
+    max-width:          fit-content;
+}
+
 body.debug .setting-ui {
     outline:            5px solid cyan;
     outline-offset:     -5px;

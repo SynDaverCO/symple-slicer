@@ -162,7 +162,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <span id="help"       onclick="showUserGuide();"  title="User's Guide">?</span>
         </div>
         <div id="toolbar"  class="panel-style dock-left dock-bottom vertical"></div>
-        <div id="settings" class="panel-style dock-right dock-bottom"></div>
+        <div id="settings" class="panel-style dock-right dock-bottom fixed-size"></div>
 
         <!-- Orientation cube -->
         <div id="navCubeContainer" class="dock-top dock-left">
@@ -178,15 +178,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         <!-- Help table -->
 
-        <div id = "material_notes"></div>
+        <p id = "material_notes"></p>
 
-        <div id = "gcode-out-of-bounds" class = "warning">
-            The print falls outside of<br>the printable area.
-        </div>
+        <p id = "gcode-out-of-bounds" class = "hidden-warning">
+            The print falls outside of the printable area.
+        </p>
 
-        <div id = "object-out-of-bounds" class = "warning">
-            The red objects are outside<br>the printable area.
-        </div>
+        <p id = "object-out-of-bounds" class = "hidden-warning">
+            The red objects are outside the printable area.
+        </p>
 
         <table id="help-viewport">
             <tr>

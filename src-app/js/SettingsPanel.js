@@ -777,7 +777,7 @@ class SliceObjectsPage {
         SliceObjectsPage.initSlicerHelpers(s);
 
         s.page(       "Slice Objects",                               {id: "page_slice", className: "scrollable"});
-        s.html('<div id="no_profile_warn">Please apply a printer profile to slice</div>');
+        s.html('<p>Please apply a printer profile to slice</p>');
 
         s.footer();
         s.button(     "Slice",                                       {onclick: SliceObjectsPage.onSliceClicked});
@@ -1362,14 +1362,14 @@ class AdvancedFeaturesPage {
         s.buttonHelp( "Click this button to save current settings to a file on your computer.");
 
         s.category(   "Custom Firmware Update",                      {id: "custom_fw_upload"});
-        s.html('<div id="custom_fw_warn">Custom or beta firmware could damage your printer.<br>Use only if instructed by technical support.</div><br>');
+        s.html('<p class="warning">Custom or beta firmware could damage your printer. Use only if instructed by technical support.</p>');
         s.file("Drag and drop firmware<br><small>(BIN or HEX)</small>", {id: "custom_fw_file", onchange: AdvancedFeaturesPage.onCustomFirmwareChanged, accept: ".hex,.bin", mode: "binary"});
         s.separator(                                                 {type: "br"});
         s.button(     "Update",                                      {id: "upload_custom_fw", onclick: AdvancedFeaturesPage.onCustomFlash});
         s.buttonHelp( "Click this button to upload custom firmware via USB.");
 
         s.category(   "Data Sources");
-        s.html('<div id="profile_sources_warn">These options are for advanced users and are not supported by SynDaver. Use at your own risk.</div><br>');
+        s.html('<p class="warning">These options are for advanced users and are not supported by SynDaver. Use at your own risk.</p>');
         s.textarea("Profile URLs:",                                  {id: "profile_sources", spellcheck: "false",
             tooltip: "Network URLs to \"profile_list.toml\" files for profiles (one per line)."});
         s.button(     "Save",                                        {onclick: AdvancedFeaturesPage.onSaveProfileSources});
@@ -1859,7 +1859,7 @@ class UpdateFirmwarePage {
     static init(s) {
         s.page(       "Update Firmware",                {id: "page_flash_fw"});
         s.category(   "Update Printer Firmware");
-        s.html('<div id="lcd_warn">During an update, the display on your printer will fade. This is normal.</div>');
+        s.html('<p class="warning">During an update, the display on your printer will fade. This is normal.</p>');
         s.text(       "Firmware:",                      {id: "printer_fw_filename", className: "stretch readonly"});
         s.separator(                                    {type: "br"});
         s.button(     "Update",                         {onclick: UpdateFirmwarePage.onFlashPrinterClicked});

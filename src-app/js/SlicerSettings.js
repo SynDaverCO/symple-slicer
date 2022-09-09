@@ -66,7 +66,7 @@ SlicerSettings.slicerSettings = {
     "1st-slice" : [
         // My 1st Slice! 'Slicing' refers to the process of taking a 3D file and converting it into a G-code(.gco) file for 3D printing using a slicing software. 
         // Powering this software is a complex bundle of math called a 'Slicing Engine'. The slicing engine we support is the, open source, CURA slicing engine.
-        "<div id='first_slice_warn'>The recommended settings for the selected material will be used.<p>To customize, go to &quot;Advanced Features&quot; and change your &quot;User Interface&quot; experience.</div><br>"
+        "<p>The recommended settings for the selected material will be used.</p><p>To customize, go to &quot;Advanced Features&quot; and change your &quot;User Interface&quot; experience.</p>"
     ],
 
     /***************************** SynDaver Beginner ***************************/
