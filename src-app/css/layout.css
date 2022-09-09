@@ -122,10 +122,6 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
     margin-right:       auto;
 }
 
-#profile_sources {
-    width:              100%;
-}
-
 .warning {
     padding:            1em;
     text-align:         center;

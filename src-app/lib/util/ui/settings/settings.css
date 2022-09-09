@@ -85,6 +85,10 @@ body.debug .setting-ui {
     gap:                5px;
 }
 
+.settings-panel .parameter textarea {
+    width:              100%;
+}
+
 .settings-panel .parameter.hidden {
     display:            none;
 }
