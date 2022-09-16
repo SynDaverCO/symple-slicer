@@ -18,6 +18,8 @@
  */
 #toolbar {
     padding:            0px;
+    flex-grow:          0;
+    flex-shrink:        0;
 }
 
 #toolbar.vertical {
@@ -27,6 +29,11 @@
     
     max-height:         calc(100% - 60px - 2em);
     overflow: hidden;
+}
+
+#toolbar.stretch {
+    display:            flex;
+    justify-content:    space-around;
 }
 
 #toolbar img {

@@ -189,3 +189,38 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
 .parameter.resolved input {
     background-color: yellow;
 }
+
+.dock-region {
+    position:           absolute;
+    display:            flex;
+    top:                0;
+    left:               0;
+    right:              0;
+    bottom:             0;
+    margin:             0;
+    overflow:           visible;
+}
+
+.dock {
+    display:           flex;
+    flex-direction:    column;
+
+    margin-top:       1.5em;
+    margin-bottom:    1.5em;
+    gap:              1.0em;
+    margin-right:     10px; /* Make sure the shadow is visible */
+}
+
+.panel-style {
+    border-left-width: 0;
+}
+
+div.dock-center {
+    position:          relative;
+    flex-grow:         1;
+}
+
+.settings-ui {
+    flex-grow:         1;
+    flex-shrink:       1;
+}

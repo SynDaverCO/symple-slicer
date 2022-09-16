@@ -21,11 +21,11 @@ class RenderLoop {
         var mine = this;
 
         var debugShadowLight = false;
-        var backgroundColor = 0x757575;
 
         this.renderer = new THREE.WebGLRenderer({canvas:canvas});
-        this.renderer.setSize( window.innerWidth, window.innerHeight );
-        this.renderer.setClearColor( backgroundColor );
+        canvas.width  = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        this.renderer.setViewport(0, 0, canvas.clientWidth, canvas.clientHeight);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -57,6 +57,7 @@ class RenderLoop {
         // postprocessing
 
         this.composer = new THREE.EffectComposer( this.renderer );
+        this.composer.setSize(canvas.clientWidth, canvas.clientHeight);
 
         var renderPass = new THREE.RenderPass( scene, camera );
         this.composer.addPass( renderPass );
@@ -89,10 +90,13 @@ class RenderLoop {
         // Add event listeners
 
         function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            canvas.width  = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            mine.renderer.setViewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+            mine.composer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
-            mine.renderer.setSize( window.innerWidth, window.innerHeight );
-            mine.composer.setSize( window.innerWidth, window.innerHeight );
 
             mine.orbit.update();
             mine.render();
@@ -119,9 +123,9 @@ class RenderLoop {
 
         function onMouseMove( event ) {
             event.preventDefault();
-
-            mouse.x =   ( event.clientX / window.innerWidth )  * 2 - 1;
-            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            const rect = event.target.getBoundingClientRect();
+            mouse.x =   ( (event.clientX - rect.left) / rect.width )  * 2 - 1;
+            mouse.y = - ( (event.clientY - rect.top) / rect.height ) * 2 + 1;
         }
 
         canvas.addEventListener( 'mousedown', onMouseDown, false );
@@ -141,9 +145,8 @@ class RenderLoop {
             case "bottom": this.camera.position.set(    0, -600,   -1); break;
             case "front":  this.camera.position.set(    0,    y, -600); break;
         }
-        const topOrBottom = view == "top" || view == "bottom";
         this.fitInView(size);
-        this.centerOnScreen(0, size.y / 2, 0, topOrBottom ? 0.5 : 0.4, 0.5);
+        this.centerOnScreen(0, size.y / 2, 0,0.5, 0.5);
         this.adjustFarDistance();
         this.render();
     }
@@ -153,7 +156,7 @@ class RenderLoop {
     }
 
     applyStyleSheetColors() {
-        const backgroundColor = getColorValueFromElement("#print_volume", 'background-color');
+        const backgroundColor = getColorValueFromElement("body", 'background-color');
         const glow1 = getColorFloatArrayFromElement("#stl_glow", 'color');
         const glow2 = getColorFloatArrayFromElement("#stl_glow", 'background-color');
         this.outlinePass.visibleEdgeColor = new THREE.Color(glow1[0], glow1[1], glow1[2]);

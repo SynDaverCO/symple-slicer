@@ -409,8 +409,7 @@ class SettingsUI {
             {type: "file"}, attr, ["id", "multiple", "accept"]));
 
         // Drop area
-        var da   = SettingsUI.addTag(container, "div", {className: "drop-area"});
-        SettingsUI.addTag(da, "div", {innerHTML: description});
+        var da   = SettingsUI.addTag(container, "div", {className: "drop-area", innerHTML: description});
 
         // Selected file & reset button
         var sf = SettingsUI.addTag(container, "div", {className: "selected-file"});

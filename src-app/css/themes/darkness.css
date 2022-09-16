@@ -28,11 +28,11 @@
 
 body {
     font-family:        Tahoma, Verdana, Segoe, sans-serif;
+    background-color:   #303030;
     color:              var(--text-color);
 }
 
 #print_volume {
-    background-color:   #303030;
     border-color:       gray;
 }
 

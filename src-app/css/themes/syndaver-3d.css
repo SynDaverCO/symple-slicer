@@ -28,10 +28,10 @@
 
 body {
     font-family:        Tahoma, Verdana, Segoe, sans-serif;
+    background-color:   var(--pale-blue-color);
 }
 
 #print_volume {
-    background-color:   var(--pale-blue-color);
     border-color:       var(--syn-color);
 }
 

@@ -52,8 +52,7 @@ body.debug .setting-ui {
 
 .settings-panel {
     user-select:        none;
-    
-    flex-basis:         auto;
+    flex-basis:         0;
     flex-grow:          1;
     flex-shrink:        1;
     overflow:           auto;
@@ -61,7 +60,7 @@ body.debug .setting-ui {
     margin:             0 -10px;
 }
 
-.settings-panel.footer {
+.settings-panel.footer, .settings-panel.header {
     flex-basis:         auto;
     flex-grow:          0;
     flex-shrink:        0;
@@ -69,6 +68,7 @@ body.debug .setting-ui {
 
 .settings-panel .parameter {
     display:            flex;
+    align-items:        baseline;
     gap:                0.3em;
     margin-top:         0.3em;
     margin-bottom:      0.3em;
@@ -161,6 +161,7 @@ body.debug .setting-ui {
     box-sizing:         border-box;
     width:              12em;
     font-size:          11px;
+    flex-shrink:        0;
 }
 
 .settings-panel .parameter-box.has_units {
@@ -229,17 +230,9 @@ input[type=number] {
     margin-top:         10px;
     padding:            10px;
     text-align:         center;
-    height:             3em;
-    vertical-align:     middle;
     border:             3px dotted;
     cursor:             pointer;
-}
 
-.settings-panel .drop-area > div {
-    position:           relative;
-    top:                50%; 
-    transform:          translateY(-50%);
-    -webkit-transform:  translateY(-50%);
     font-size:          1.5em;
     font-family:        'Courier New', Courier, 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
     font-weight:        bold;

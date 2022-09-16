@@ -25,10 +25,10 @@
 
 body {
     font-family:        Tahoma, Verdana, Segoe, sans-serif;
+    background-color:   #757575;
 }
 
 #print_volume {
-    background-color:   #757575;
     border-color:       white;
 }
 
