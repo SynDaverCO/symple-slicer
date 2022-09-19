@@ -125,6 +125,7 @@ body.debug .setting-ui {
 
 .settings-panel label {
     font-size:          11px;
+    min-width:          15em;
     margin-right:       1em;
 }
 
