@@ -69,6 +69,10 @@ class Stage {
             return SelectProfilesPage.numberOfExtruders() > 1;
         }
 
+        let extruderSelected = (extruder) => {
+            return () => {console.log("test", extruder); return this.testAllSelectedObjectsOnExtruder(extruder)};
+        }
+
         $.contextMenu({
             selector: 'canvas',
             trigger: 'none',
@@ -87,8 +91,8 @@ class Stage {
                     disabled: noneSelected,
                     visible: multiExtruder,
                     items: {
-                        extruder_0: {name: "Extruder 1"},
-                        extruder_1: {name: "Extruder 2"}
+                        extruder_0: {name: "Extruder 1", disabled: extruderSelected(0)},
+                        extruder_1: {name: "Extruder 2", disabled: extruderSelected(1)}
                     }
                 },
                 separator3: "-----",
@@ -453,8 +457,12 @@ class Stage {
     }
 
     assignExtruderToSelectedObjects(extruder) {
-        this.getPrintableObjects(this.selection).forEach((obj,i) => obj.setExtruder(extruder));
+        this.getPrintableObjects(this.selection).forEach(obj => obj.setExtruder(extruder));
         this.render();
+    }
+
+    testAllSelectedObjectsOnExtruder(extruder) {
+        return this.getPrintableObjects(this.selection).every(obj => obj.extruder == extruder);
     }
 
     groupSelectedObjects(resetTransforms) {
