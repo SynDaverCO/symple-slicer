@@ -1506,7 +1506,8 @@ class ConfigWirelessPage {
             s.button( "Monitor",                                     {onclick: ConfigWirelessPage.onMonitorClicked,  className: "canUpload"});
         }
         s.button(     "Manage\u2026",                                {onclick: ConfigWirelessPage.onManageClicked,   className: "canUpload"});
-        s.separator();
+
+        s.footer();
         s.button(     "Export",                                      {onclick: ConfigWirelessPage.onExportClicked, id: "export_config_btn"});
         s.buttonHelp( "Click to export configuration G-code for a wireless-capable SynDaver printer");
 
@@ -1954,16 +1955,5 @@ class HelpAndInfoPage {
 
         s.heading(    "View Controls:");
         s.element(                                                   {id: "help-viewport"});
-
-        s.footer();
-        s.button(     "Back",                                        {onclick: HelpAndInfoPage.onHelpDismissed});
-    }
-
-    static onHelpDismissed() {
-        settings.goBack();
-    }
-
-    static show() {
-        settings.gotoPage("page_help");
     }
 }
