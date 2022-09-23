@@ -4,6 +4,7 @@ SynDaver Symple Slicer v1.2.0
 * '''Slicing UI:''' Improved layout for UI elements.
 * '''Slicing UI:''' Added support for dual nozzle slicing.
 * '''Slicing UI:''' Added ability to group, merge and ungroup models.
+* '''Slicing UI:''' Unavailable items in the right-click menu are now grayed out
 * '''Slicing UI:''' Fix drag-and-drop of multiple files.
 * '''Firmware''': Added firmware for Level and NG 2.
 

@@ -46,25 +46,7 @@ class Stage {
         this.placedObjects.add(this.selection);
         this.bedRelative.add(this.placedObjects);
 
-        $.contextMenu({
-            trigger: 'none',
-            selector: 'canvas',
-            callback: (evt, key, options) => this.menuAction(key),
-            items: {
-                center_some:  {name: "Center Selected Objects"},
-                delete_some: {name: "Delete Selected Objects", icon: "delete"},
-                separator1: "-----",
-                xform_some:  {name: "Edit Transform Values\u2026", icon: "edit"},
-                separator2: "-----",
-                select_all: {name: "Select All Objects"},
-                arrange_all: {name: "Arrange All Objects"},
-                delete_all: {name: "Clear Build Plate", icon: "delete"},
-                separator3: "-----",
-                group_some: {name: "Group Selected Objects"},
-                merge_some: {name: "Merge Selected Objects"},
-                ungroup_some: {name: "Ungroup Selected Objects"}
-            }
-        });
+        this.addContextMenu();
     }
 
     static applyStyleSheetColors() {
@@ -72,6 +54,49 @@ class Stage {
         Toolpath.colorMap["SKIN"] = color;
         Toolpath.colorMap["WALL-OUTER"] = color;
         Toolpath.colorMap["WALL-INNER"] = color;
+    }
+
+    addContextMenu() {
+        let noneSelected = () => {
+            return this.selection.children.length == 0;
+        }
+
+        let noObjects = () => {
+            return this.numPrintableObjects == 0;
+        }
+
+        let multiExtruder = () => {
+            return SelectProfilesPage.numberOfExtruders() > 1;
+        }
+
+        $.contextMenu({
+            selector: 'canvas',
+            trigger: 'none',
+            callback: (evt, key, options) => this.menuAction(key),
+            items: {
+                select_all: {name: "Select All Objects", disabled: noObjects},
+                arrange_all: {name: "Arrange All Objects", disabled: noObjects},
+                delete_all: {name: "Clear Build Plate", disabled: noObjects, icon: "delete"},
+                separator1: "-----",
+                xform_some:  {name: "Edit Transform Values\u2026", disabled: noneSelected, icon: "edit"},
+                separator2: "-----",
+                center_some:  {name: "Center Selected Objects", disabled: noneSelected},
+                delete_some: {name: "Delete Selected Objects", disabled: noneSelected, icon: "delete"},
+                assign_extruder: {
+                    name: "Assign Selected Objects to Extruder",
+                    disabled: noneSelected,
+                    visible: multiExtruder,
+                    items: {
+                        extruder_0: {name: "Extruder 1"},
+                        extruder_1: {name: "Extruder 2"}
+                    }
+                },
+                separator3: "-----",
+                group_some: {name: "Group Selected Objects", disabled: noneSelected},
+                merge_some: {name: "Merge Selected Objects", disabled: noneSelected},
+                ungroup_some: {name: "Ungroup Selected Objects", disabled: noneSelected},
+            }
+        });
     }
 
     menuAction(key) {
@@ -85,6 +110,8 @@ class Stage {
             case "group_some"   : this.groupSelectedObjects(false); break;
             case "merge_some"   : this.groupSelectedObjects(true); break;
             case "ungroup_some" : this.ungroupSelectedObjects(); break;
+            case "extruder_0"   : this.assignExtruderToSelectedObjects(0); break;
+            case "extruder_1"   : this.assignExtruderToSelectedObjects(1); break;
         }
     }
 
@@ -425,11 +452,14 @@ class Stage {
         this.render();
     }
 
+    assignExtruderToSelectedObjects(extruder) {
+        this.getPrintableObjects(this.selection).forEach((obj,i) => obj.setExtruder(extruder));
+        this.render();
+    }
+
     groupSelectedObjects(resetTransforms) {
         if(resetTransforms) {
             this.selection.resetChildTransforms();
-            // Temporarily assign extruders to different materials
-            this.getPrintableObjects(this.selection).forEach((obj,i) => obj.setExtruder(i));
         }
         const group = this.selection.groupObjects();
         this.dropObjectToFloor(group);
