@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 255
+    cacheVersion: 256
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -125,9 +125,10 @@ const filesToCache = [
     'lib/details-polyfill/details-polyfill.js',
     'lib/jakwings-toml-j0.4/toml-browser.js',
     'lib/jquery/contextmenu/font/context-menu-icons.woff2?4wdhf',
-    'lib/jquery/contextmenu/jquery.contextMenu.css',
+    'lib/jquery/contextmenu/jquery.contextMenu.min.css',
     'lib/jquery/contextmenu/jquery.contextMenu.min.js',
     'lib/jquery/contextmenu/jquery.contextMenu.min.js.map',
+    'lib/jquery/contextmenu/jquery.ui.position.min.js',
     'lib/jquery/jquery-3.5.0.min.js',
     'lib/jquery/jquery.easing.1.3.js',
     'lib/jszip/jszip.min.js',
