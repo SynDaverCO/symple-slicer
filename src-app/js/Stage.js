@@ -70,13 +70,13 @@ class Stage {
         }
 
         let extruderSelected = (extruder) => {
-            return () => {console.log("test", extruder); return this.testAllSelectedObjectsOnExtruder(extruder)};
+            return () => this.testAllSelectedObjectsOnExtruder(extruder);
         }
 
         $.contextMenu({
             selector: 'canvas',
             trigger: 'none',
-            callback: (evt, key, options) => this.menuAction(key),
+            callback: (key, options) => this.menuAction(key),
             items: {
                 select_all: {name: "Select All Objects", disabled: noObjects},
                 arrange_all: {name: "Arrange All Objects", disabled: noObjects},
