@@ -957,7 +957,7 @@ class SliceObjectsPage {
                     el = o.element;
                     break;
                 default:
-                    console.error("Unsupported type for", key, "of", sd.type);
+                    console.warn("Unsupported type for", key, "of", sd.type);
                     return;
             }
             el.addEventListener('change', onChange);

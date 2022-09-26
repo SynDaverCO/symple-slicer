@@ -372,6 +372,21 @@ class CuraSettings {
             checkSyntax(key, node, "minimum_value_warning");
             checkSyntax(key, node, "maximum_value_warning");
         }
+
+        // Any settings that depends on a setting marked settable_per_extruder
+        // should in turn have settable_per_extruder set
+        for(const [key, node] of this.defs.entries()) {
+            if(node.hasOwnProperty("settable_per_extruder")) {
+                this.defs.getDependents(key).forEach(
+                    dependent => {
+                        if(!this.defs.hasProperty(dependent, "settable_per_extruder")) {
+                            console.warn("Assuming settable_per_extruder for", dependent);
+                            this.defs.setProperty(dependent, "settable_per_extruder", true);
+                        }
+                    }
+                );
+            }
+        }
     }
 
     /**
@@ -967,6 +982,10 @@ class CuraDefinitions {
 
     getProperty(key, property) {
         return this.nodes[key][property];
+    }
+
+    setProperty(key, property, value) {
+        this.nodes[key][property] = value;
     }
 
     getDescriptor(key) {
