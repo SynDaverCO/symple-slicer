@@ -224,7 +224,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </div>
 
         <div id="log-dialog" class="float-center panel-style">
-            <pre id="console"></pre>
+            <div id="console"></div>
             <button onclick="Log.hide()">Close</button>
         </div>
 
@@ -403,7 +403,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             // Cura interface
             slicer.onStdoutOutput = Log.write;
-            slicer.onStderrOutput = Log.write;
+            slicer.onStderrOutput = Log.error;
 
             slicer.onFileReceived = function(data) {
                 PrintAndPreviewPage.readyToDownload(data);

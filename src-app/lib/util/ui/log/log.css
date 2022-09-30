@@ -31,5 +31,14 @@
     height:             calc(100vh - 13em);
     resize:             both;
     overflow:           auto;
+}
+
+#console pre {
+    margin:             0;
+    min-height:         1em;
+}
+
+#console pre:hover {
     white-space:        pre-wrap;
+    outline:            1px dotted;
 }

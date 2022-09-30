@@ -54,7 +54,7 @@ function help() {
  * file over using a message.
  */
 function slice(args) {
-    self.postMessage({'cmd': 'stderr', 'str': "Slicing..."});
+    self.postMessage({'cmd': 'stdout', 'str': "Slicing..."});
     callMain(args);
 }
 
@@ -140,9 +140,9 @@ function capturePrintInfo(str) {
 function loadGeometry(geometry, filename) {
     try {
         geometry.computeBoundingBox();
-        self.postMessage({'cmd': 'stderr', 'str': "Bounding box " + geometry.boundingBox.min.x + ", " + geometry.boundingBox.min.y + ", " + geometry.boundingBox.max.x + ", " + geometry.boundingBox.max.y});
+        self.postMessage({'cmd': 'stdout', 'str': "Bounding box " + geometry.boundingBox.min.x + ", " + geometry.boundingBox.min.y + ", " + geometry.boundingBox.max.x + ", " + geometry.boundingBox.max.y});
 
-        self.postMessage({'cmd': 'stderr', 'str': "Writing binary STL as " + filename});
+        self.postMessage({'cmd': 'stdout', 'str': "Writing binary STL as " + filename});
 
         var headerData = new Uint8Array(80);
         var uint16Data = new Uint16Array(1);
@@ -191,7 +191,7 @@ function loadGeometry(geometry, filename) {
                 FS.write(f, new Uint8Array(uint16Data.buffer), 0, uint16Data.length * uint16Data.BYTES_PER_ELEMENT);
             });
         FS.close(f);
-        self.postMessage({'cmd': 'stderr', 'str': "Done writing binary STL"});
+        self.postMessage({'cmd': 'stdout', 'str': "Done writing binary STL"});
     } catch (err) {
         console.error(err);
         Module.printErr('Unable to write STL file: ', err.message);
@@ -206,7 +206,7 @@ function loadFromUrl(url, filename) {
     self.postMessage({'cmd': 'stdout', 'str': "Reading model"});
     fetchFile(url)
     .then(response => loadFromBlob(response, filename))
-    .catch(error => self.postMessage({'cmd': 'stderr', 'str': error}));
+    .catch(error => self.postMessage({'cmd': 'stdout', 'str': error}));
 }
 
 /**
@@ -230,7 +230,7 @@ function get_file(slicer_args) {
             'cmd': 'file',
             'file': enc.encode(gcode)
         };
-    self.postMessage({'cmd': 'stderr', 'str': "Transfering G-code"});
+    self.postMessage({'cmd': 'stdout', 'str': "Transfering G-code"});
     self.postMessage(payload, [payload.file.buffer]);
 }
 

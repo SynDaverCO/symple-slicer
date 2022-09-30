@@ -24,7 +24,7 @@
 
 class Log {
     static clear() {
-        document.getElementById('console').textContent = '';
+        document.getElementById('console').innerHTML = '';
     }
     static show() {
         $("#log-dialog").show();
@@ -34,12 +34,23 @@ class Log {
         $("#log-dialog").hide();
     }
 
-    static write(...str) {
+    static writeArray(arr, style) {
         let el = document.getElementById('console');
         let atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 3;
-        el.textContent += str.join(' ') + '\n';
+        let pre = document.createElement('pre');
+        if(style) pre.classList.add(style);
+        pre.innerText = arr.join(' ');
+        el.appendChild(pre);
         if(atBottom) {
             el.scrollTop = el.scrollHeight;
         }
+    }
+
+    static write(...str) {
+        Log.writeArray(str);
+    }
+
+    static error(...str) {
+        Log.writeArray(str, "error");
     }
 }
