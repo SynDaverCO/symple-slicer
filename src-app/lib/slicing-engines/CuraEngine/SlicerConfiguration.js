@@ -1012,6 +1012,7 @@ class CuraCommandLine {
         const arg_list = [];
         arg_list.push("slice");
         arg_list.push("-v");
+        arg_list.push("-p");
 
         function appendParameter(key, value) {
             arg_list.push("-s");

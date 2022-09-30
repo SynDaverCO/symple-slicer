@@ -114,11 +114,15 @@ function addPrintProgress(gcode) {
 }
 
 function captureProgress(str) {
-    var m, stages = ["start", "slice", "layerparts", "inset+skin", "support", "export"];
-    if(m = str.match(/Progress: ([\w+]+)/)) {
-        const progress = Math.round(stages.indexOf(m[1])/(stages.length-1)*100);
+    var m, stages = ["slice", "layerparts", "inset+skin", "support", "export"];
+    if(m = str.match(/Progress:([\w+]+):(\d+):(\d+)/)) {
+        const stageProgress = stages.indexOf(m[1]);
+        const sliceProgress = parseInt(m[2])/parseInt(m[3]);
+        const progress = (sliceProgress + stageProgress)/stages.length;
         self.postMessage({cmd: 'progress', value: progress});
+        return true;
     }
+    return false;
 }
 
 function capturePrintInfo(str) {
@@ -255,7 +259,7 @@ function onStdout(str) {
 }
 
 function onStderr(str) {
-    captureProgress(str);
+    if(captureProgress(str)) return;
     captureGcodeHeader(str);
     capturePrintInfo(str);
     self.postMessage({'cmd': 'stderr', 'str' : str});
