@@ -1203,6 +1203,11 @@ class PrintAndPreviewPage {
         this.loadSlicedGcode(gcode);
     }
 
+    static sliceFailed() {
+        ProgressBar.hide();
+        alert('Slicing engine exited with errors. For details, please see the slicer output under "Advanced Features".');
+    }
+
     static extractDataFromGcodeHeader(gcode) {
         function getField(str) {
             const r = new RegExp('^;' + str + ':\\s*([-0-9.]+)','m');

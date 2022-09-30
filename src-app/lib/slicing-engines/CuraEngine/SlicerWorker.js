@@ -25,7 +25,8 @@
 var Module = {
     'print':    onStdout,
     'printErr': onStderr,
-    'noInitialRun': true
+    'onAbort':  onAbort,
+    'noInitialRun': true,
 };
 
 var sliceInfo = {
@@ -258,6 +259,10 @@ function onStderr(str) {
     captureGcodeHeader(str);
     capturePrintInfo(str);
     self.postMessage({'cmd': 'stderr', 'str' : str});
+}
+
+function onAbort(str) {
+    self.postMessage({'cmd': 'abort', 'str' : str});
 }
 
 function receiveMessage(e) {

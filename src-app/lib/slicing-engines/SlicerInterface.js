@@ -60,6 +60,9 @@ class SlicerInterface {
         switch (data.cmd) {
             case 'stdout': this.onStdoutOutput(data.str); break;
             case 'stderr': this.onStderrOutput(data.str); break;
+            case 'abort':
+                this.onAbort();
+                break;
             case 'file':
                 this.onFileReceived(data.file);
                 /**
@@ -88,6 +91,7 @@ class SlicerInterface {
 
     onStdoutOutput(str)                {console.log(str);};
     onStderrOutput(str)                {console.log(str);};
+    onAbort()                          {console.log("Slicing aborted");};
     onProgress(progress)               {console.log("Slicing progress:", progress);};
     onPrintStats(stats)                {console.log("Print statistics:", stats);};
     onFileReceived(blob)               {};

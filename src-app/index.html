@@ -409,6 +409,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 PrintAndPreviewPage.readyToDownload(data);
             }
 
+            slicer.onAbort = function(data) {
+                PrintAndPreviewPage.sliceFailed(data);
+            }
+
             slicer.onProgress = function(progress) {
                 ProgressBar.progress(progress);
             }
