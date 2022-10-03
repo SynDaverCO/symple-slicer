@@ -26,6 +26,7 @@ var Module = {
     'print':    onStdout,
     'printErr': onStderr,
     'onAbort':  onAbort,
+    'onExit':  onExit,
     'noInitialRun': true,
 };
 
@@ -265,8 +266,13 @@ function onStderr(str) {
     self.postMessage({'cmd': 'stderr', 'str' : str});
 }
 
-function onAbort(str) {
+function onAbort() {
     self.postMessage({'cmd': 'abort', 'str' : str});
+}
+
+function onExit() {
+    console.log("Exit handler called");
+    //self.postMessage({'cmd': 'abort', 'str' : str});
 }
 
 function receiveMessage(e) {
