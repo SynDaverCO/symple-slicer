@@ -21,7 +21,7 @@ class NavCube {
         this.selector = selector;
         $.contextMenu({
             selector: selector, 
-            callback: (evt, key, options) => {this.onViewSelected(key);},
+            callback: (key, options) => {this.onViewSelected(key);},
             items: {
                 "front":  {name: "Front"},
                 "left":   {name: "Left"},
