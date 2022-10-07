@@ -54,7 +54,8 @@ class GeometryLoader {
                 this.onProgress(data.value);
                 break;
             case 'geometry':
-                this.onGeometryLoaded(jsonToGeometry(data.geometry,true), data.filename);
+                const geometries = data.jsonGeometry.map(json => jsonToGeometry(json,true));
+                this.onModelLoaded(geometries, data.filename);
                 break;
             default:
                 this.onStderrOutput('Unknown command: ' + cmd);
@@ -67,10 +68,10 @@ class GeometryLoader {
 
     // Event handlers (may be overriden by users):
 
-    onStdoutOutput(str)                  {console.log(str);};
-    onStderrOutput(str)                  {console.log(str);};
-    onProgress(progress)                 {console.log("Loading progress:", progress);};
-    onGeometryLoaded(geometry, filename) {};
+    onStdoutOutput(str)                 {console.log(str);};
+    onStderrOutput(str)                 {console.log(str);};
+    onProgress(progress)                {console.log("Loading progress:", progress);};
+    onModelLoaded(geometries, filename) {};
 
     // Public methods:
 
@@ -108,7 +109,7 @@ class GeometryLoader {
         obj.traverse( node => {
             if (node instanceof THREE.Mesh) {
                 node.geometry.computeVertexNormals();
-                this.onGeometryLoaded(node.geometry, filename);
+                this.onModelLoaded(node.geometry, filename);
             }
         });
     }
@@ -133,11 +134,11 @@ class GeometryLoader {
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
                 const geometry = GeometryAlgorithms.geometryFromImageData(imageData, 20, 1);
-                this.onGeometryLoaded(geometry, filename);
+                this.onModelLoaded(geometry, filename);
             }
         } else {
             alert("Failed to read file");
-            this.onGeometryLoaded();
+            this.onModelLoaded();
         }
     }
 }

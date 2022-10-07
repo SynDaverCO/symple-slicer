@@ -146,7 +146,6 @@ class Stage {
      * Positions an object in the center of the bed.
      */
     centerObjectOnPlatform(object) {
-        this.selectNone();
         const boundingBox = ObjectAlgorithms.findBoundingBox(object, this.bedRelative);
         const center = boundingBox.getCenter(new THREE.Vector3());
         const delta = center;
@@ -413,14 +412,18 @@ class Stage {
         });
     }
 
-    addGeometry(geometry, filename) {
-        this.selectNone();
-        var obj = new PrintableObject(geometry, filename);
-        this.addObjects([obj]);
-        this.scaleObjectToFit(obj, true);
-        this.dropObjectToFloor(obj);
-        this.centerObjectOnPlatform(obj);
-        this.arrangeObjectsOnPlatform(this.getTopLevelObjects());
+    // Adds a model to the stage. A model can consist of one or more geometries.
+    addModel(geometries, filename) {
+        const printableObjs = geometries.map(geo => new PrintableObject(geo, filename));
+        this.addObjects(printableObjs);
+        this.selection.setSelection(printableObjs);
+        if(this.selection.length > 1) {
+            this.selection.groupObjects();
+        }
+        this.getSelectedObjects().forEach(obj => this.centerObjectOnPlatform(obj));
+        this.scaleObjectToFit(this.selection, true);
+        this.dropObjectToFloor(this.selection);
+        this.arrangeObjectsOnPlatform();
         this.render();
     }
 
@@ -445,15 +448,11 @@ class Stage {
     }
 
     centerSelectedObjects() {
-        const selection = this.getSelectedObjects();
-        if(selection.length == 0) return;
-        if(selection.length > 1) {
+        if(this.selection.count) {
             this.arrangeObjectsOnPlatform(selection);
-        } else {
-            this.centerObjectOnPlatform(selection[0]);
+            this.highlightOutOfBounds(this.getPrintableObjects());
+            this.render();
         }
-        this.highlightOutOfBounds(this.getPrintableObjects());
-        this.render();
     }
 
     assignExtruderToSelectedObjects(extruder) {

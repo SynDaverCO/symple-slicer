@@ -58,16 +58,20 @@ function loadFromSTL(data) {
 }
 
 function send(geometry, filename) {
-    geometry.forEach(
+    const tranferables = [];
+    const jsonGeometry = geometry.map(
         geometry => {
-            var payload = geometryToJSON(geometry);
-            self.postMessage({
-                cmd: 'geometry',
-                geometry: payload.data,
-                filename
-            }, payload.tranferables);
+            const payload = geometryToJSON(geometry);
+            tranferables.concat(payload.tranferables);
+            return payload.data;
         }
     );
+
+    self.postMessage({
+        cmd: 'geometry',
+        jsonGeometry,
+        filename
+    }, tranferables);
 }
 
 /**

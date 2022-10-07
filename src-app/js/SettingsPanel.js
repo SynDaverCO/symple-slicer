@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-var settings, sliced_gcode, loaded_geometry;
+var settings, sliced_gcode, loaded_model;
 
 const preApplyTransforms = true; // If true, apply transformations to models prior to sending them to Cura
 
@@ -544,7 +544,7 @@ class PlaceObjectsPage {
             ProgressBar.message("Preparing model");
             geoLoader.load(filename, data);
         } else {
-            PlaceObjectsPage.onGeometryLoaded(null);
+            PlaceObjectsPage.onModelLoaded(null);
         }
     }
 
@@ -552,7 +552,7 @@ class PlaceObjectsPage {
         if(data) {
             PrintAndPreviewPage.setOutputGcodeName(filename);
         } else {
-            PlaceObjectsPage.onGeometryLoaded(null);
+            PlaceObjectsPage.onModelLoaded(null);
         }
         settings.enable("#add_litho", data !== undefined);
     }
@@ -565,21 +565,21 @@ class PlaceObjectsPage {
     }
 
     static onAddToPlatform() {
-        if(!loaded_geometry) return;
+        if(!loaded_model) return;
         const howMany = parseInt(settings.get("place_quantity"))
         for(var i = 0; i < howMany; i++) {
-            stage.addGeometry(loaded_geometry.geometry, loaded_geometry.filename);
+            stage.addModel(loaded_model.geometries, loaded_model.filename);
         }
     }
 
-    static onGeometryLoaded(geometry, filename) {
-        if(geometry) {
-            loaded_geometry = {geometry, filename};
+    static onModelLoaded(geometries, filename) {
+        if(geometries) {
+            loaded_model = {geometries, filename};
             settings.enable('.place_more', true);
             PlaceObjectsPage.onAddToPlatform(); // Place the first object automatically
         } else {
             settings.enable('.place_more', false);
-            loaded_geometry = false;
+            loaded_model = false;
         }
         ProgressBar.hide();
     }
