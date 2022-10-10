@@ -46,7 +46,7 @@ class CascadingChoices {
     }
 
     static cssSelectNonMatchingOptions(key, value) {
-        return '#page_profiles option[' + key + ']:not([' + key + '="' + value + '"])';
+        return value == "" ? false : '#page_profiles option[' + key + ']:not([' + key + '="' + value + '"])';
     }
 
     validate(menus) {
@@ -54,7 +54,7 @@ class CascadingChoices {
 
         do {
             // Hide elements based on criteria
-            const css = menus.map(el => CascadingChoices.cssSelectNonMatchingOptions(el.id, el.value)).join(",");
+            const css = menus.map(el => CascadingChoices.cssSelectNonMatchingOptions(el.id, el.value)).filter(e => e).join(",");
             this.styles.innerText = css + ", #page_profiles .onlyOneChoice {display: none}";
 
             // If a selected element is hidden, make another selection
