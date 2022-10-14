@@ -417,7 +417,7 @@ class Stage {
         const printableObjs = geometries.map(geo => new PrintableObject(geo, filename));
         this.addObjects(printableObjs);
         this.selection.setSelection(printableObjs);
-        if(this.selection.length > 1) {
+        if(this.selection.count > 1) {
             this.selection.groupObjects();
         }
         this.getSelectedObjects().forEach(obj => this.centerObjectOnPlatform(obj));
@@ -449,7 +449,7 @@ class Stage {
 
     centerSelectedObjects() {
         if(this.selection.count) {
-            this.arrangeObjectsOnPlatform(selection);
+            this.arrangeObjectsOnPlatform(this.getSelectedObjects());
             this.highlightOutOfBounds(this.getPrintableObjects());
             this.render();
         }
