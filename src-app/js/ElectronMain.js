@@ -85,14 +85,18 @@ function createMenu(win) {
                 /*{ role: 'undo', enabled: false },
                 { role: 'redo', enabled: false },
                 { type: 'separator' },*/
-                { label: 'Center Selected Object', click: () => win.webContents.executeJavaScript('stage.menuAction("center_one")') },
-                { label: 'Delete Selected Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("delete_some")') },
-                { type: 'separator' },
-                { label: 'Edit Transform Values\u2026', click: () => win.webContents.executeJavaScript('stage.menuAction("xform_some")') },
-                { type: 'separator' },
                 { label: 'Select All Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("select_all")') },
                 { label: 'Arrange All Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("arrange_all")') },
                 { label: 'Clear Build Plate', click: () => win.webContents.executeJavaScript('stage.menuAction("delete_all")') },
+                { type: 'separator' },
+                { label: 'Edit Transform Values\u2026', click: () => win.webContents.executeJavaScript('stage.menuAction("xform_some")') },
+                { type: 'separator' },
+                { label: 'Center Selected Object', click: () => win.webContents.executeJavaScript('stage.menuAction("center_one")') },
+                { label: 'Delete Selected Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("delete_some")') },
+                { type: 'separator' },
+                { label: 'Group Selected Object', click: () => win.webContents.executeJavaScript('stage.menuAction("group_some")') },
+                { label: 'Merge Selected Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("merge_some")') },
+                { label: 'Ungroup Selected Objects', click: () => win.webContents.executeJavaScript('stage.menuAction("ungroup_some")') }
             ]
         },
         // { role: 'viewMenu' }
@@ -118,7 +122,6 @@ function createMenu(win) {
                 {label: 'Place Objects\u2026',      click: () => win.webContents.executeJavaScript('settings.gotoPage("page_place")')},
                 {label: 'Slice Objects\u2026',      click: () => win.webContents.executeJavaScript('settings.gotoPage("page_slice")')},
                 { type: 'separator' },
-                {label: 'Machine Setup\u2026',      click: () => win.webContents.executeJavaScript('settings.gotoPage("page_machine")')},
                 {label: 'Wireless Printing\u2026',  click: () => win.webContents.executeJavaScript('settings.gotoPage("page_config_wifi")')},
                 {label: 'Update Firmware\u2026',    click: () => win.webContents.executeJavaScript('settings.gotoPage("page_flash_fw")')},
                 {label: 'Advanced Features\u2026',  click: () => win.webContents.executeJavaScript('settings.gotoPage("page_advanced")')},
