@@ -30,13 +30,11 @@ var Module = {
     'noInitialRun': true,
 };
 
-var sliceInfo = {
-    header: ""
-};
-
 self.importScripts('../../three/three.min.js');
 self.importScripts('../../util/geometry/GeometrySerialize.js');
 self.importScripts('../../util/geometry/GeometryAlgorithms.js');
+self.importScripts('../../util/io/StlWriter.js');
+self.importScripts('CuraPostprocessing.js');
 self.importScripts('CuraEngine.js');
 
 if(typeof TextEncoder === "undefined") {
@@ -60,85 +58,6 @@ function slice(args) {
 }
 
 /**
- * When slicing via the command line, Cura puts in a dummy header in the GCODE
- * and prints the real header via stderr. Capture this for later use.
- */
-function captureGcodeHeader(str) {
-    if(str.match(/Gcode header after slicing/)) {
-        this.capturing = true;
-        sliceInfo.header = "";
-        return;
-    }
-    if(str.match(/End of gcode header/)) {
-        this.capturing = false;
-    }
-    if(this.capturing) {
-        sliceInfo.header += str + "\n";
-    }
-}
-
-/**
- * Preform postprocessing on generated G-code
- */
-function postProcessGcode(gcode, slicer_args) {
-    gcode = replaceGcodeHeader(gcode);
-    if(slicer_args.includes("machine_gcode_flavor=RepRap (Marlin/Sprinter)")) {
-        gcode = addPrintProgress(gcode);
-    }
-    return gcode;
-}
-
-/**
- * Replace the fake header in the G-code with the real header
- */
-function replaceGcodeHeader(gcode) {
-    var start_offset = gcode.indexOf("M82 ;absolute extrusion mode");
-    if(start_offset == -1) {
-        console.warn("Warning: Unable to strip Cura header");
-        start_offset = 0;
-    }
-    return sliceInfo.header + gcode.slice(start_offset);
-}
-
-/**
- * Add M73 (Set Print Progress) to GCODE file
- */
-function addPrintProgress(gcode) {
-    if(m = gcode.match(/^;TIME:(\d+)$/m)) {
-        const total_time = m[1];
-        gcode = gcode.replace(/^;TIME_ELAPSED:(\d+).*$/gm,
-            (match, time_elapsed) => match + "\nM73 P" + Math.ceil((time_elapsed+1)/(total_time+1)*100));
-    } else {
-        console.warn("Warning: Unable to find time elapsed");
-    }
-    return gcode;
-}
-
-function captureProgress(str) {
-    var m, stages = ["slice", "layerparts", "inset+skin", "support", "export"];
-    if(m = str.match(/Progress:([\w+]+):(\d+):(\d+)/)) {
-        const stageProgress = stages.indexOf(m[1]);
-        const sliceProgress = parseInt(m[2])/parseInt(m[3]);
-        const progress = (sliceProgress + stageProgress)/stages.length;
-        self.postMessage({cmd: 'progress', value: progress});
-        return true;
-    }
-    return false;
-}
-
-function capturePrintInfo(str) {
-    if(m = str.match(/^Print time \(s\): (.*)$/)) {
-        sliceInfo.time_seconds = m[1];
-    }
-    if(m = str.match(/^Print time \(hr\|min\|s\): (.*)$/)) {
-        sliceInfo.time_hms = m[1];
-    }
-    if(m = str.match(/^Filament \(mm\^3\): (.*)$/)) {
-        sliceInfo.filament = m[1];
-    }
-}
-
-/**
  * This function writes out the geometry object as a binary STL file
  * to the Emscripten FS so that cura can read it in.
  */
@@ -149,52 +68,8 @@ function loadGeometry(geometry, filename) {
 
         self.postMessage({'cmd': 'stdout', 'str': "Writing binary STL as " + filename});
 
-        var headerData = new Uint8Array(80);
-        var uint16Data = new Uint16Array(1);
-        var uint32Data = new Uint32Array(1);
-        var vectorData = new Float32Array(3);
-
-        var f = FS.open(filename, "w");
-
-        // Unpack the buffered geometry
-        
-        const position = geometry.getAttribute('position');
-        const index = geometry.getIndex();
-
-        // Write the 80 byte header
-        FS.write(f, new Uint8Array(headerData.buffer), 0, headerData.length * headerData.BYTES_PER_ELEMENT);
-
-        // Write the number of triangles
-        uint32Data[0] = GeometryAlgorithms.countFaces(geometry);
-        FS.write(f, new Uint8Array(uint32Data.buffer), 0, uint32Data.length * uint32Data.BYTES_PER_ELEMENT);
-
-        // Write the triangle information
-        GeometryAlgorithms.forEachFace(geometry,
-            (face, i) => {
-                // Write the face normal
-                vectorData[0] = face.normal.x;
-                vectorData[1] = face.normal.y;
-                vectorData[2] = face.normal.z;
-                FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
-                // Write the vertex A information
-                vectorData[0] = face.a.x;
-                vectorData[1] = face.a.y;
-                vectorData[2] = face.a.z;
-                FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
-                // Write the vertex B information
-                vectorData[0] = face.b.x;
-                vectorData[1] = face.b.y;
-                vectorData[2] = face.b.z;
-                FS.write(f, new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
-                // Write the vertex C information
-                vectorData[0] = face.c.x;
-                vectorData[1] = face.c.y;
-                vectorData[2] = face.c.z;
-                FS.write(f,  new Uint8Array(vectorData.buffer), 0, vectorData.length * vectorData.BYTES_PER_ELEMENT);
-                // Write the attribute type count
-                uint16Data[0] = 0;
-                FS.write(f, new Uint8Array(uint16Data.buffer), 0, uint16Data.length * uint16Data.BYTES_PER_ELEMENT);
-            });
+        const f = FS.open(filename, "w");
+        GEOMETRY_WRITERS.writeStl(geometry, (buffer, offset, length) => FS.write(f, buffer, offset, length));
         FS.close(f);
         self.postMessage({'cmd': 'stdout', 'str': "Done writing binary STL"});
     } catch (err) {
@@ -260,7 +135,11 @@ function onStdout(str) {
 }
 
 function onStderr(str) {
-    if(captureProgress(str)) return;
+    const progress = captureProgress(str);
+    if(typeof progress !== "undefined") {
+        self.postMessage({cmd: 'progress', value: progress});
+        return;
+    }
     captureGcodeHeader(str);
     capturePrintInfo(str);
     self.postMessage({'cmd': 'stderr', 'str' : str});

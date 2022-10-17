@@ -55,7 +55,7 @@ function createWindow () {
     win.on('close', onClose);
 
     // and load the index.html of the app.
-    win.loadFile('index.html');
+    win.loadFile('index.html',  {query: {"slicer": "native-cura"}});
 
     createMenu(win);
     checkForUpdates(win);

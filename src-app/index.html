@@ -377,15 +377,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             switch(query.slicer) {
                 case "jsslicer":
-                    slicer = new SlicerInterface(
+                    slicer = new SlicerWorkerInterface(
                         "lib/slicing-engines/JSSlicer/worker/SlicerWorker.js",
                         "lib/slicing-engines/JSSlicer/worker/SlicerConfiguration.js",
                         "config/jsslicer_defaults/",
                         () => SettingsPanel.init("settings")
                     );
                     break;
+                case "native-cura":
+                    slicer = new SlicerNativeInterface(
+                        "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
+                        "config/cura_defaults/",
+                        () => SettingsPanel.init("settings")
+                    );
+                    break;
                 default:
-                    slicer = new SlicerInterface(
+                    slicer = new SlicerWorkerInterface(
                         "lib/slicing-engines/CuraEngine/SlicerWorker.js",
                         "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
                         "config/cura_defaults/",

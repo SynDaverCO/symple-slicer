@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 265
+    cacheVersion: 269
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -172,6 +172,7 @@ const filesToCache = [
     'lib/slicing-engines/CuraEngine/CuraEngine.data',
     'lib/slicing-engines/CuraEngine/CuraEngine.js',
     'lib/slicing-engines/CuraEngine/CuraEngine.wasm',
+    'lib/slicing-engines/CuraEngine/CuraPostprocessing.js',
     'lib/slicing-engines/CuraEngine/SlicerConfiguration.js',
     'lib/slicing-engines/CuraEngine/SlicerWorker.js',
     'lib/slicing-engines/SlicerInterface.js',
@@ -201,6 +202,7 @@ const filesToCache = [
     'lib/util/io/GeometryLoaderWorker.js',
     'lib/util/io/LoadResource.js',
     'lib/util/io/StlReader.js',
+    'lib/util/io/StlWriter.js',
     'lib/util/io/TOMLWriter.js',
     'lib/util/misc/ParseQuery.js',
     'lib/util/misc/ParseColor.js',

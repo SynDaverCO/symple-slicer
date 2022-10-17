@@ -23,7 +23,7 @@
  */
 
 class SlicerInterface {
-    constructor(workerJs, configJs, configPath, callback) {
+    constructor(configJs, configPath, callback) {
         // Load the configurator object for the slicer asynchronously.
 
         loadResource(configJs).onload = () => {
@@ -31,6 +31,45 @@ class SlicerInterface {
             this.config.onSettingsChanged = (key, vals, attr)     => {this.onSettingsChanged(key, vals, attr);};
             this.config.onLoaded = callback;
         }
+    }
+
+    setOption(name, value, extruder = 0) {
+        this.config.set(name, value, extruder);
+    }
+
+    getOption(name) {
+        return this.config.get(name);
+    }
+
+    setMultiple(values, extruder = 0) {
+        this.config.setMultiple(values, extruder);
+    }
+
+    getOptionDescriptor(name) {
+        return this.config.getSettingDescriptor(name);
+    }
+
+    loadDefaults(force) {
+        this.config.loadDefaults(force);
+    }
+
+    // Causes the change handlers to be called for all values
+    forceRefresh() {
+        this.config.forceRefresh();
+    }
+
+    saveSettings(writer, options) {
+        return this.config.saveSettings(writer, options);
+    }
+
+    loadSettings(settings, options) {
+        return this.config.loadSettings(settings, options);
+    }
+}
+
+class SlicerWorkerInterface extends SlicerInterface {
+    constructor(workerJs, configJs, configPath, callback) {
+        super(configJs, configPath, callback);
 
         this.workerJs = workerJs;
         this.worker   = undefined;
@@ -135,12 +174,6 @@ class SlicerInterface {
         });
     }
 
-    get_file() {
-        this.worker.postMessage({
-            'cmd':      'get_file'
-        });
-    }
-
     stop() {
         this.worker.postMessage({
             'cmd':      'stop'
@@ -151,37 +184,44 @@ class SlicerInterface {
         this._stopWorker();
         this._startWorker();
     }
+}
 
-    setOption(name, value, extruder = 0) {
-        this.config.set(name, value, extruder);
+class SlicerNativeInterface extends SlicerInterface {
+    constructor(configJs, configPath, callback) {
+        super(configJs, configPath, callback);
     }
 
-    getOption(name) {
-        return this.config.get(name);
+    // Event handlers (may be overriden by users):
+
+    onStdoutOutput(str)                {console.log(str);};
+    onStderrOutput(str)                {console.log(str);};
+    onAbort()                          {console.log("Slicing aborted");};
+    onProgress(progress)               {console.log("Slicing progress:", progress);};
+    onPrintStats(stats)                {console.log("Print statistics:", stats);};
+    onFileReceived(blob)               {};
+    onSettingsChanged(key, vals, attr) {console.log("Option", key, "changed to", vals, "with attributes", attr);};
+
+    // Public methods:
+
+    help() {
     }
 
-    setMultiple(values, extruder = 0) {
-        this.config.setMultiple(values, extruder);
+    loadFromUrl(url, filename) {
     }
 
-    getOptionDescriptor(name) {
-        return this.config.getSettingDescriptor(name);
+    loadFromBlob(blob, filename) {
     }
 
-    loadDefaults(force) {
-        this.config.loadDefaults(force);
+    loadFromGeometry(geometry, filename) {
     }
 
-    // Causes the change handlers to be called for all values
-    forceRefresh() {
-        this.config.forceRefresh();
+    slice(models) {
+        console.log(this.config.getCommandLineArguments(models));
     }
 
-    saveSettings(writer, options) {
-        return this.config.saveSettings(writer, options);
+    stop() {
     }
 
-    loadSettings(settings, options) {
-        return this.config.loadSettings(settings, options);
+    reset() {
     }
 }
