@@ -216,7 +216,8 @@ class SlicerNativeInterface extends SlicerInterface {
     }
 
     slice(models) {
-        console.log(this.config.getCommandLineArguments(models));
+        const args = this.config.getCommandLineArguments(models);
+        LaunchExternalProcess("ping",["www.google.com"], onStdoutOutput, onStderrOutput);
     }
 
     stop() {
