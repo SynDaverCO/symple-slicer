@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const SerialPort = require('serialport');
+const { SerialPort  } = require('serialport');
 const { ipcRenderer } = require('electron');
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
