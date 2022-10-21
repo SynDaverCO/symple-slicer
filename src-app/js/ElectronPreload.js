@@ -177,8 +177,8 @@ window.LaunchExternalProcess = (command, args, onStdout, onStderr) => {
     const cspr = childProcess.spawn('ping', ['www.google.com']);
     const rlso = readline.createInterface({ input: cspr.stdout });
     const rlse = readline.createInterface({ input: cspr.stderr });
-    rlso.on('line', line => onStdout(line));
-    rlse.on('line', line => onStderr(line));
+    rlso.on('line', onStdout);
+    rlse.on('line', onStderr);
 }
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/

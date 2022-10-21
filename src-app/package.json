@@ -8,6 +8,6 @@
   "dependencies": {
     "electron-log": "^4.2.4",
     "electron-updater": "^4.3.5",
-    "serialport": "^9.0.1"
+    "serialport": "^10.4.0"
   }
 }
