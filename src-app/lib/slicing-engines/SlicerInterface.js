@@ -212,12 +212,16 @@ class SlicerNativeInterface extends SlicerInterface {
     loadFromBlob(blob, filename) {
     }
 
-    loadFromGeometry(geometry, filename) {
+    async loadFromGeometry(geometry, filename) {
+        const tempDir = ELECTRON.os.tmpdir();
+        const f = await ELECTRON.fs.open(ELECTRON.path.join(tempDir,filename), 'w');
+        await GEOMETRY_WRITERS.writeStlAsync(geometry, (buffer, offset, length) => f.write(buffer, offset, length));
+        await f.close();
     }
 
     slice(models) {
         const args = this.config.getCommandLineArguments(models);
-        LaunchExternalProcess("ping",["www.google.com"], this.onStdoutOutput, this.onStderrOutput);
+        RunNativeSlicer(args, this.onStdoutOutput, this.onStderrOutput);
     }
 
     stop() {

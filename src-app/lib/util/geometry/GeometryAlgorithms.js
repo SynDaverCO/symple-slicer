@@ -100,6 +100,36 @@
         }
     }
 
+    static async forEachFaceAsync(geometry, lambda) {
+        const position = geometry.getAttribute('position').array;
+        var indices = geometry.getIndex();
+        const face = {
+            a: new THREE.Vector3(),
+            b: new THREE.Vector3(),
+            c: new THREE.Vector3(),
+            normal: new THREE.Vector3()
+        };
+        if (indices) indices = indices.array;
+        const nFaces = GeometryAlgorithms.countFaces(geometry);
+        for(var i = 0; i < nFaces; i++) {
+            var faceA, faceB, faceC;
+            if (indices) {
+                faceA = indices[i * 3 + 0] * 3;
+                faceB = indices[i * 3 + 1] * 3;
+                faceC = indices[i * 3 + 2] * 3;
+            } else {
+                faceA = i * 9 + 0;
+                faceB = i * 9 + 3;
+                faceC = i * 9 + 6;
+            }
+            face.a.set(position[faceA + 0], position[faceA + 1], position[faceA + 2]);
+            face.b.set(position[faceB + 0], position[faceB + 1], position[faceB + 2]);
+            face.c.set(position[faceC + 0], position[faceC + 1], position[faceC + 2]);
+            THREE.Triangle.getNormal(face.a,face.b,face.c,face.normal);
+            await lambda(face, i);
+        }
+    }
+
     /**
      * Finds the lowest point in the object.
      *

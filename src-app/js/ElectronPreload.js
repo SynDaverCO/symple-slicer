@@ -172,14 +172,21 @@ class SequentialSerial {
 
 const childProcess = require('child_process');
 const readline = require('readline');
+const path = require('node:path');
+const os = require('os');
+const fs = require('node:fs/promises');
 
-window.LaunchExternalProcess = (command, args, onStdout, onStderr) => {
-    const cspr = childProcess.spawn('ping', ['www.google.com']);
+window.RunNativeSlicer = (args, onStdout, onStderr) => {
+    const cura = path.join(__dirname, '..', 'lib', 'slicing-engines', 'NativeCuraEngine', 'CuraEngine.exe');
+    const tempDir = os.tmpdir();
+    const cspr = childProcess.spawn(cura, args, {cwd: tempDir});
     const rlso = readline.createInterface({ input: cspr.stdout });
     const rlse = readline.createInterface({ input: cspr.stderr });
     rlso.on('line', onStdout);
     rlse.on('line', onStderr);
 }
+
+window.ELECTRON = {fs,os,path};
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
