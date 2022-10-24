@@ -77,7 +77,7 @@ SlicerSettings.slicerSettings = {
             "layer_height_0",
 
         "Shell:",
-            "wall_line_count",
+           "wall_line_count",
             "z_seam_type",
             "z_seam_position",
             " z_seam_x",
@@ -85,14 +85,14 @@ SlicerSettings.slicerSettings = {
             "z_seam_corner",
 
         "Top/Bottom:",
-            "top_layers",
+             "top_layers",
             " bottom_layers",
             " initial_bottom_layers",
             "top_bottom_pattern",
             "top_bottom_pattern_0",
   
         "Infill:",
-            "infill_sparse_density",
+             "infill_sparse_density",
             "infill_pattern",
 
         "Material:",
@@ -130,6 +130,11 @@ SlicerSettings.slicerSettings = {
 
         "Support:",
             "support_enable",
+            "support_extruder_nr"
+            "support_infill_extruder_nr_layer_0"
+            "support_interface_extruder_nr"
+            "support_roof_extruder_nr"
+            "support_bottom_extruder_nr"
             "support_extruder_nr",
             "support_structure",
             "support_pattern",
@@ -182,6 +187,9 @@ SlicerSettings.slicerSettings = {
             "initial_layer_line_width_factor",
 
         "Shell:",
+            "wall_extruder_nr",
+            " wall_0_extruder_nr",
+            " wall_x_extruder_nr",
             "wall_thickness",
             " wall_line_count",
             "wall_0_wipe_dist",
@@ -202,7 +210,9 @@ SlicerSettings.slicerSettings = {
             "z_seam_relative",
 
         "Top/Bottom:",
+            "roofing_extruder_nr",
             "roofing_layer_count",
+            "top_bottom_extruder_nr",
             "top_bottom_thickness",
             " top_thickness",
             "  top_layers",
@@ -233,6 +243,7 @@ SlicerSettings.slicerSettings = {
             " min_skin_width_for_expansion",
 
         "Infill:",
+            "infill_extruder_nr",
             "infill_sparse_density",
             " infill_line_distance",
             "infill_pattern",
@@ -380,6 +391,12 @@ SlicerSettings.slicerSettings = {
 
         "Support:",
             "support_enable",
+            "support_extruder_nr",
+            " support_infill_extruder_nr",
+            " support_extruder_nr_layer_0",
+            " support_interface_extruder_nr",
+            "  support_roof_extruder_nr",
+            "  support_bottom_extruder_nr",
             "support_structure",
             "support_tree_angle",
             "support_tree_branch_distance",
@@ -447,6 +464,11 @@ SlicerSettings.slicerSettings = {
 
         "Platform Adhesion:",
             "adhesion_type",
+            "adhesion_extruder_nr",
+            " skirt_brim_extruder_nr",
+            " raft_base_extruder_nr",
+            " raft_interface_extruder_nr",
+            " raft_surface_extruder_nr",
             "skirt_line_count",
             "skirt_gap",
             "skirt_brim_minimal_length",
@@ -486,7 +508,24 @@ SlicerSettings.slicerSettings = {
             " raft_surface_fan_speed",
             " raft_interface_fan_speed",
             " raft_base_fan_speed",
-
+        
+        "Dual:",
+            "prime_tower_enable",
+            "prime_tower_size",
+            "prime_tower_min_volume",
+            "prime_tower_position_x",
+            "prime_tower_position_y",
+            "prime_tower_wipe_enabled",
+            "prime_tower_brim_enable",
+            "ooze_shield_enabled",
+            "ooze_shield_angle",
+            "ooze_shield_dist",
+            "switch_extruder_retraction_amount",
+            "switch_extruder_retraction_speeds",
+            " switch_extruder_retraction_speed",
+            " switch_extruder_prime_speed",
+            "switch_extruder_extra_prime_amount",
+        
         "Mesh Fix:",
             "meshfix_union_all",
             "meshfix_union_all_remove_holes",
@@ -928,6 +967,11 @@ SlicerSettings.slicerSettings = {
             "extruder_prime_pos_x",
             "extruder_prime_pos_y",
             "adhesion_type",
+            "adhesion_extruder_nr",
+            " skirt_brim_extruder_nr",
+            " raft_base_extruder_nr",
+            " raft_interface_extruder_nr",
+            " raft_surface_extruder_nr",
             "skirt_line_count",
             "skirt_gap",
             "skirt_brim_minimal_length",
@@ -968,6 +1012,23 @@ SlicerSettings.slicerSettings = {
             " raft_interface_fan_speed",
             " raft_base_fan_speed",
 
+        "Dual:",
+            "prime_tower_enable",
+            "prime_tower_size",
+            "prime_tower_min_volume",
+            "prime_tower_position_x",
+            "prime_tower_position_y",
+            "prime_tower_wipe_enabled",
+            "prime_tower_brim_enable",
+            "ooze_shield_enabled",
+            "ooze_shield_angle",
+            "ooze_shield_dist",
+            "switch_extruder_retraction_amount",
+            "switch_extruder_retraction_speeds",
+            " switch_extruder_retraction_speed",
+            " switch_extruder_prime_speed",
+            "switch_extruder_extra_prime_amount",
+       
         "Mesh Fix:",
             "meshfix_union_all",
             "meshfix_union_all_remove_holes",
