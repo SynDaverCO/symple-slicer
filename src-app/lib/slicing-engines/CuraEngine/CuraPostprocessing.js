@@ -55,18 +55,6 @@ function captureProgress(str) {
     }
 }
 
-function capturePrintInfo(str) {
-    if(m = str.match(/^Print time \(s\): (.*)$/)) {
-        sliceInfo.time_seconds = m[1];
-    }
-    if(m = str.match(/^Print time \(hr\|min\|s\): (.*)$/)) {
-        sliceInfo.time_hms = m[1];
-    }
-    if(m = str.match(/^Filament \(mm\^3\): (.*)$/)) {
-        sliceInfo.filament = m[1];
-    }
-}
-
 /******************* Routines for postprocessing the gcode *******************/
 
 /**
@@ -99,7 +87,7 @@ function addPrintProgress(gcode) {
  * Preform postprocessing on generated G-code
  */
 function postProcessGcode(gcode, slicer_args) {
-    gcode = replaceGcodeHeader(gcode);
+    //gcode = replaceGcodeHeader(gcode);
     if(slicer_args.includes("machine_gcode_flavor=RepRap (Marlin/Sprinter)")) {
         gcode = addPrintProgress(gcode);
     }

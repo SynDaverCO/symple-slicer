@@ -213,15 +213,34 @@ class SlicerNativeInterface extends SlicerInterface {
     }
 
     async loadFromGeometry(geometry, filename) {
-        const tempDir = ELECTRON.os.tmpdir();
-        const f = await ELECTRON.fs.open(ELECTRON.path.join(tempDir,filename), 'w');
-        await GEOMETRY_WRITERS.writeStlAsync(geometry, (buffer, offset, length) => f.write(buffer, offset, length));
+        ProgressBar.message("Writing model...");
+        const writeFunc = async (buffer, offset, length) => await f.write(buffer, offset, length);
+        const progressFunc = (count, outOf) => this.onProgress(count/outOf);
+        const filePath = GetNativeFilePath(filename);
+        const f = await ELECTRON.fs.open(filePath, 'w');
+        await GEOMETRY_WRITERS.writeStlAsync(geometry, writeFunc, progressFunc);
         await f.close();
     }
 
     slice(models) {
+        const onStderr = str => {
+            const progress = captureProgress(str);
+            if(typeof progress !== "undefined") {
+                this.onProgress(progress);
+            } else {
+                captureGcodeHeader(str);
+                this.onStderrOutput(str);
+            }
+        }
+        const onExit = async (code) => {
+            const filePath = GetNativeFilePath("output.gcode");
+            const gcode = await ELECTRON.fs.readFile(filePath, { encoding: 'utf8' });
+            const enc = new TextEncoder();
+            const data = enc.encode(gcode)
+            this.onFileReceived(data);
+        }
         const args = this.config.getCommandLineArguments(models);
-        RunNativeSlicer(args, this.onStdoutOutput, this.onStderrOutput);
+        RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
     }
 
     stop() {

@@ -18,7 +18,7 @@
 var GEOMETRY_WRITERS = {};
 
 (function( GEOMETRY_WRITERS, undefined ) { // EXTEND NAMESPACE
-    GEOMETRY_WRITERS.writeStl = (geometry, writeFunc) => {
+    GEOMETRY_WRITERS.writeStl = (geometry, writeFunc, progressFunc) => {
         var headerData = new Uint8Array(80);
         var uint16Data = new Uint16Array(1);
         var uint32Data = new Uint32Array(1);
@@ -33,7 +33,8 @@ var GEOMETRY_WRITERS = {};
         writeFunc(new Uint8Array(headerData.buffer), 0, headerData.length * headerData.BYTES_PER_ELEMENT);
 
         // Write the number of triangles
-        uint32Data[0] = GeometryAlgorithms.countFaces(geometry);
+        const nFaces = GeometryAlgorithms.countFaces(geometry);
+        uint32Data[0] = nFaces;
         writeFunc(new Uint8Array(uint32Data.buffer), 0, uint32Data.length * uint32Data.BYTES_PER_ELEMENT);
 
         // Write the triangle information
@@ -62,11 +63,12 @@ var GEOMETRY_WRITERS = {};
                 // Write the attribute type count
                 uint16Data[0] = 0;
                 writeFunc(new Uint8Array(uint16Data.buffer), 0, uint16Data.length * uint16Data.BYTES_PER_ELEMENT);
+                if(progressFunc) progressFunc(i,nFaces);
             });
     }
 
 
-    GEOMETRY_WRITERS.writeStlAsync = async (geometry, writeFunc) => {
+    GEOMETRY_WRITERS.writeStlAsync = async (geometry, writeFunc, progressFunc) => {
         var headerData = new Uint8Array(80);
         var uint16Data = new Uint16Array(1);
         var uint32Data = new Uint32Array(1);
@@ -81,7 +83,8 @@ var GEOMETRY_WRITERS = {};
         await writeFunc(new Uint8Array(headerData.buffer), 0, headerData.length * headerData.BYTES_PER_ELEMENT);
 
         // Write the number of triangles
-        uint32Data[0] = GeometryAlgorithms.countFaces(geometry);
+        const nFaces = GeometryAlgorithms.countFaces(geometry);
+        uint32Data[0] = nFaces;
         await writeFunc(new Uint8Array(uint32Data.buffer), 0, uint32Data.length * uint32Data.BYTES_PER_ELEMENT);
 
         // Write the triangle information
@@ -110,6 +113,7 @@ var GEOMETRY_WRITERS = {};
                 // Write the attribute type count
                 uint16Data[0] = 0;
                 await writeFunc(new Uint8Array(uint16Data.buffer), 0, uint16Data.length * uint16Data.BYTES_PER_ELEMENT);
+                if(progressFunc) progressFunc(i,nFaces);
             });
     }
 

@@ -176,14 +176,19 @@ const path = require('node:path');
 const os = require('os');
 const fs = require('node:fs/promises');
 
-window.RunNativeSlicer = (args, onStdout, onStderr) => {
-    const cura = path.join(__dirname, '..', 'lib', 'slicing-engines', 'NativeCuraEngine', 'CuraEngine.exe');
+window.RunNativeSlicer = (args, onStdout, onStderr, onExit) => {
+    const exec = path.join(__dirname, '..', 'lib', 'slicing-engines', 'NativeCuraEngine', 'CuraEngine.exe');
     const tempDir = os.tmpdir();
-    const cspr = childProcess.spawn(cura, args, {cwd: tempDir});
-    const rlso = readline.createInterface({ input: cspr.stdout });
-    const rlse = readline.createInterface({ input: cspr.stderr });
+    const cura = childProcess.spawn(exec, args, {cwd: tempDir});
+    const rlso = readline.createInterface({ input: cura.stdout });
+    const rlse = readline.createInterface({ input: cura.stderr });
     rlso.on('line', onStdout);
     rlse.on('line', onStderr);
+    cura.on('exit', onExit);
+}
+
+window.GetNativeFilePath = filename => {
+    return ELECTRON.path.join(ELECTRON.os.tmpdir(),filename);
 }
 
 window.ELECTRON = {fs,os,path};

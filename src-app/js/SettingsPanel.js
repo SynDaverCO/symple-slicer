@@ -1010,7 +1010,7 @@ class SliceObjectsPage {
         renderLoop.setView("front");
     }
 
-    static onSliceClicked() {
+    static async onSliceClicked() {
         const geometries = stage.getAllGeometry();
         if(geometries.length) {
             const geometryMap = new Map();
@@ -1057,7 +1057,9 @@ class SliceObjectsPage {
             const models = geometries.map(preApplyTransforms ? applyTransformsBefore : applyTransformsLater);
 
             // Load geometies into the slicer
-            geometryMap.forEach((geometry, filename) => slicer.loadFromGeometry(geometry, filename));
+            for (const [filename, geometry] of geometryMap) {
+                await slicer.loadFromGeometry(geometry, filename);
+            }
 
             // Send the models to the slicer for slicing
             Log.clear();

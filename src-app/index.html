@@ -386,6 +386,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     );
                     break;
                 case "native-cura":
+                    loadResource("lib/slicing-engines/CuraEngine/CuraPostprocessing.js");
                     slicer = new SlicerNativeInterface(
                         "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
                         "config/cura_defaults/",
