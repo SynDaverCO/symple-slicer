@@ -141,7 +141,6 @@ function onStderr(str) {
         return;
     }
     captureGcodeHeader(str);
-    capturePrintInfo(str);
     self.postMessage({'cmd': 'stderr', 'str' : str});
 }
 

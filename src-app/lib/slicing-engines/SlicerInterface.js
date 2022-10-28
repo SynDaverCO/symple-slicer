@@ -212,12 +212,47 @@ class SlicerNativeInterface extends SlicerInterface {
     loadFromBlob(blob, filename) {
     }
 
-    loadFromGeometry(geometry, filename) {
+    async loadFromGeometry(geometry, filename) {
+        await CreateTempDir();
+        ProgressBar.message("Writing model...");
+        const writeFunc = async (buffer, offset, length) => await f.write(buffer, offset, length);
+        const progressFunc = (count, outOf) => this.onProgress(count/outOf);
+        const filePath = GetNativeFilePath(filename);
+        const f = await ELECTRON.fs.open(filePath, 'w');
+        await GEOMETRY_WRITERS.writeStlAsync(geometry, writeFunc, progressFunc);
+        await f.close();
     }
 
     slice(models) {
+        const onStderr = str => {
+            const progress = captureProgress(str);
+            if(typeof progress !== "undefined") {
+                this.onProgress(progress);
+            } else {
+                captureGcodeHeader(str);
+                this.onStderrOutput(str);
+            }
+        }
+        const onExit = async (code) => {
+            const filePath = GetNativeFilePath("output.gcode");
+            try {
+                const gcode = await ELECTRON.fs.readFile(filePath, { encoding: 'utf8' });
+                const enc = new TextEncoder();
+                const data = enc.encode(gcode)
+                this.onFileReceived(data);
+            } catch(err) {
+                console.error(err);
+                alert("Cannot load the GCODE from the slicer. The cura work directory will open in a window for troubleshooting.");
+            }
+            await ShowTempDir("output.gcode");
+        }
         const args = this.config.getCommandLineArguments(models);
-        LaunchExternalProcess("ping",["www.google.com"], this.onStdoutOutput, this.onStderrOutput);
+        const curaExe = RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
+        // Write a batch file for testing
+        const filePath = GetNativeFilePath("slice.bat");
+        args.unshift(curaExe);
+        let nargs = args.map(s => '"' + s.replace(/[\r\n]+/g," ") + '"');
+        ELECTRON.fs.writeFile(filePath, "@echo off\n" + nargs.join(" ") + "\npause");
     }
 
     stop() {

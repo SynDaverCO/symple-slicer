@@ -172,14 +172,42 @@ class SequentialSerial {
 
 const childProcess = require('child_process');
 const readline = require('readline');
+const path = require('node:path');
+const os = require('os');
+const fs = require('node:fs/promises');
+const {shell} = require('electron');
 
-window.LaunchExternalProcess = (command, args, onStdout, onStderr) => {
-    const cspr = childProcess.spawn('ping', ['www.google.com']);
-    const rlso = readline.createInterface({ input: cspr.stdout });
-    const rlse = readline.createInterface({ input: cspr.stderr });
+let tmpPath;
+
+window.CreateTempDir = async () => {
+    if(tmpPath) return tmpPath;
+    try {
+        tmpPath = await fs.mkdtemp(path.join(os.tmpdir(), 'sympleslicer-'));
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+window.RunNativeSlicer = (args, onStdout, onStderr, onExit) => {
+    const exec = path.join(__dirname, '..', 'lib', 'slicing-engines', 'NativeCuraEngine', 'CuraEngine.exe');
+    const cura = childProcess.spawn(exec, args, {cwd: tmpPath});
+    const rlso = readline.createInterface({ input: cura.stdout });
+    const rlse = readline.createInterface({ input: cura.stderr });
     rlso.on('line', onStdout);
     rlse.on('line', onStderr);
+    cura.on('exit', onExit);
+    return exec;
 }
+
+window.ShowTempDir = async (filename) => {
+    await shell.showItemInFolder(GetNativeFilePath(filename));
+}
+
+window.GetNativeFilePath = filename => {
+    return ELECTRON.path.join(tmpPath,filename);
+}
+
+window.ELECTRON = {fs,os,path};
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
