@@ -130,11 +130,11 @@ SlicerSettings.slicerSettings = {
 
         "Support:",
             "support_enable",
-            "support_extruder_nr"
-            "support_infill_extruder_nr_layer_0"
-            "support_interface_extruder_nr"
-            "support_roof_extruder_nr"
-            "support_bottom_extruder_nr"
+            "support_extruder_nr",
+            "support_infill_extruder_nr_layer_0",
+            "support_interface_extruder_nr",
+            "support_roof_extruder_nr",
+            "support_bottom_extruder_nr",
             "support_extruder_nr",
             "support_structure",
             "support_pattern",
