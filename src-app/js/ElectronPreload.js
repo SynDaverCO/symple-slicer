@@ -175,20 +175,36 @@ const readline = require('readline');
 const path = require('node:path');
 const os = require('os');
 const fs = require('node:fs/promises');
+const {shell} = require('electron');
+
+let tmpPath;
+
+window.CreateTempDir = async () => {
+    if(tmpPath) return tmpPath;
+    try {
+        tmpPath = await fs.mkdtemp(path.join(os.tmpdir(), 'sympleslicer-'));
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 window.RunNativeSlicer = (args, onStdout, onStderr, onExit) => {
     const exec = path.join(__dirname, '..', 'lib', 'slicing-engines', 'NativeCuraEngine', 'CuraEngine.exe');
-    const tempDir = os.tmpdir();
-    const cura = childProcess.spawn(exec, args, {cwd: tempDir});
+    const cura = childProcess.spawn(exec, args, {cwd: tmpPath});
     const rlso = readline.createInterface({ input: cura.stdout });
     const rlse = readline.createInterface({ input: cura.stderr });
     rlso.on('line', onStdout);
     rlse.on('line', onStderr);
     cura.on('exit', onExit);
+    return exec;
+}
+
+window.ShowTempDir = async (filename) => {
+    await shell.showItemInFolder(GetNativeFilePath(filename));
 }
 
 window.GetNativeFilePath = filename => {
-    return ELECTRON.path.join(ELECTRON.os.tmpdir(),filename);
+    return ELECTRON.path.join(tmpPath,filename);
 }
 
 window.ELECTRON = {fs,os,path};

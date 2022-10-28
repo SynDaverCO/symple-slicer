@@ -213,6 +213,7 @@ class SlicerNativeInterface extends SlicerInterface {
     }
 
     async loadFromGeometry(geometry, filename) {
+        await CreateTempDir();
         ProgressBar.message("Writing model...");
         const writeFunc = async (buffer, offset, length) => await f.write(buffer, offset, length);
         const progressFunc = (count, outOf) => this.onProgress(count/outOf);
@@ -234,13 +235,24 @@ class SlicerNativeInterface extends SlicerInterface {
         }
         const onExit = async (code) => {
             const filePath = GetNativeFilePath("output.gcode");
-            const gcode = await ELECTRON.fs.readFile(filePath, { encoding: 'utf8' });
-            const enc = new TextEncoder();
-            const data = enc.encode(gcode)
-            this.onFileReceived(data);
+            try {
+                const gcode = await ELECTRON.fs.readFile(filePath, { encoding: 'utf8' });
+                const enc = new TextEncoder();
+                const data = enc.encode(gcode)
+                this.onFileReceived(data);
+            } catch(err) {
+                console.error(err);
+                alert("Cannot load the GCODE from the slicer. The cura work directory will open in a window for troubleshooting.");
+            }
+            await ShowTempDir("output.gcode");
         }
         const args = this.config.getCommandLineArguments(models);
-        RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
+        const curaExe = RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
+        // Write a batch file for testing
+        const filePath = GetNativeFilePath("slice.bat");
+        args.unshift(curaExe);
+        let nargs = args.map(s => '"' + s.replace(/[\r\n]+/g," ") + '"');
+        ELECTRON.fs.writeFile(filePath, "@echo off\n" + nargs.join(" ") + "\npause");
     }
 
     stop() {
