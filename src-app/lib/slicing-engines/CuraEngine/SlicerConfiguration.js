@@ -87,19 +87,32 @@ class SlicerConfiguration {
         this.hash = new CuraMultiHash();
         this.settings = new CuraSettings(this.defs, this.hash);
         this.settings.onLoaded = () => {this.onLoaded();}
-        this.settings.onSettingsChanged = (key, valChanged, attrChanged) => {
-            const vals = this.defs.getProperty(key, "settable_per_extruder") ?
-                         this.settings.getValueList(key) :
-                         [this.settings.resolveValue(key)];
-            const attr = {
-                enabled: this.hash.getFlagList(key, CuraHash.ENABLED_FLAG),
-                resolved: !(this.defs.getProperty(key, "settable_per_extruder") || this.hash.equalOnAllExtruders(key))
-            };
-            this.onSettingsChanged(key, vals, attr);
-        }
+        this.settings.onSettingsChanged = this.processSettingsChanged.bind(this);
     }
 
-    onSettingsChanged(key, vals, attr) {
+    isMultipleValues(key) {
+        return (this.defs.getProperty(key, "settable_per_extruder") || this.defs.getProperty(key, "settable_per_mesh")) && !this.defs.hasProperty(key,"limit_to_extruder");
+    }
+
+    processSettingsChanged(key) {
+        let values, enabled, resolved;
+
+        if(this.isMultipleValues(key)) {
+            values = this.settings.getValueList(key);
+            enabled = this.hash.getFlagList(key, CuraHash.ENABLED_FLAG);
+            resolved = false;
+        } else {
+            const nExtruders = this.hash.length;
+            const whichExtruder = Math.max(0, this.settings.limitToExtruder(key));
+            values =  Array(nExtruders).fill(this.settings.resolveValue(key));
+            enabled = Array(nExtruders).fill(false);
+            resolved = !this.hash.equalOnAllExtruders(key);
+            enabled[whichExtruder] = this.hash.getFlagList(key, CuraHash.ENABLED_FLAG)[whichExtruder];
+        }
+        this.onSettingsChanged(key, {values, enabled, resolved});
+    }
+
+    onSettingsChanged(key, attr) {
     }
 
     /**
@@ -152,7 +165,17 @@ class SlicerConfiguration {
     set(key, value, extruder = 0) {
         const settings = {};
         settings[key] = value;
-        this.setMultiple(settings, extruder);
+
+        if(this.isMultipleValues(key)) {
+            this.hash.setExtruder(extruder);
+            this.settings.setMultiple(settings, true);
+        } else {
+            // For values linked values, set all extruders.
+            for(var e = this.hash.length - 1; e >= 0; e--) {
+                this.hash.setExtruder(e);
+                this.settings.setMultiple(settings, e == 0);
+            }
+        }
     }
 
     /**
@@ -259,8 +282,7 @@ class CuraHash {
 
 CuraHash.ENABLED_FLAG  = 1; // Set if a value is enabled in the UI
 CuraHash.CHANGED_FLAG  = 2; // Set if a value was changed from the default
-CuraHash.DIRTY_VALUE   = 4; // Set if the value was changed, but a notification has not yet been sent
-CuraHash.DIRTY_FLAG    = 8; // Set if the flag was changed, but a notification has not yet been sent
+CuraHash.MUST_NOTIFY   = 4; // Set if the setting was changed, but a notification has not yet been sent
 
 class CuraMultiHash {
     constructor() {
@@ -337,7 +359,7 @@ class CuraSettings {
         this.hash    = hash;
     }
 
-    onSettingsChanged(key, valChanged, attrChanged) {
+    onSettingsChanged(key) {
     }
 
     /**
@@ -375,18 +397,22 @@ class CuraSettings {
 
         // Any settings that depends on a setting marked settable_per_extruder
         // should in turn have settable_per_extruder set
-        for(const [key, node] of this.defs.entries()) {
-            if(node.hasOwnProperty("settable_per_extruder")) {
-                this.defs.getDependents(key).forEach(
-                    dependent => {
-                        if(!this.defs.hasProperty(dependent, "settable_per_extruder")) {
-                            console.warn("Assuming settable_per_extruder for", dependent);
-                            this.defs.setProperty(dependent, "settable_per_extruder", true);
+        const applyInheritance = property => {
+            for(const [key, node] of this.defs.entries()) {
+                if(node.hasOwnProperty(property)) {
+                    this.defs.getDependents(key).forEach(
+                        dependent => {
+                            if(!this.defs.hasProperty(dependent, property)) {
+                                console.warn("Assuming", property, "for", dependent);
+                                this.defs.setProperty(dependent, property, true);
+                            }
                         }
-                    }
-                );
+                    );
+                }
             }
         }
+        applyInheritance("settable_per_extruder");
+        applyInheritance("settable_per_mesh");
     }
 
     /**
@@ -423,14 +449,13 @@ class CuraSettings {
         for(const key of this.defs.keys().sort()) {
             this.recomputeFlags(key);
             this.recomputeValue(key);
-            this.hash.setFlag(key, CuraHash.DIRTY_VALUE);
-            this.hash.setFlag(key, CuraHash.DIRTY_FLAG);
+            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
             this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
         }
         for(const key of this.defs.keys().sort()) {
             this.propagateChanges(key);
         }
-        this.postProcessAffectedSettings();
+        this.notifyListenersOfChanges();
     }
 
     /**
@@ -438,33 +463,22 @@ class CuraSettings {
      */
     forceRefresh() {
         for(const key of this.defs.keys().sort()) {
-            this.hash.setFlag(key, CuraHash.DIRTY_VALUE);
-            this.hash.setFlag(key, CuraHash.DIRTY_FLAG);
+            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
         }
-        this.postProcessAffectedSettings();
+        this.notifyListenersOfChanges();
     }
 
     /**
      * Print summary of affected settings and dispatch indirect change events.
      */
-    postProcessAffectedSettings() {
+    notifyListenersOfChanges() {
         for(const key of this.defs.keys()) {
-            const valChanged = this.hash.hasFlag(key, CuraHash.DIRTY_VALUE);
-            const flagChanged = this.hash.hasFlag(key, CuraHash.DIRTY_FLAG);
-            if (valChanged) {
+            if (this.hash.hasFlag(key, CuraHash.MUST_NOTIFY)) {
                 const val = this.hash.get(key);
                 if(this.verbose)
                     console.log("--> Changed", key, "to", val);
-                this.hash.clearFlag(key, CuraHash.DIRTY_VALUE);
-            }
-            if (flagChanged) {
-                const enabled = this.hash.hasFlag(key, CuraHash.ENABLED_FLAG);
-                if(this.verbose)
-                    console.log("-->        ", key, "is now", enabled ? "enabled" : "disabled");
-                this.hash.clearFlag(key, CuraHash.DIRTY_FLAG);
-            }
-            if (valChanged || flagChanged) {
-                this.onSettingsChanged(key, valChanged, flagChanged);
+                this.hash.clearFlag(key, CuraHash.MUST_NOTIFY);
+                this.onSettingsChanged(key);
             }
         }
     }
@@ -474,7 +488,7 @@ class CuraSettings {
      * propagate to other enabled settings that depend on the
      * settings that just changed.
      */
-    setMultiple(settings) {
+    setMultiple(settings, notify = true) {
         for(const key of Object.keys(settings)) {
             this.hash.setFlag(key, CuraHash.CHANGED_FLAG);
         }
@@ -482,11 +496,13 @@ class CuraSettings {
         // times, so log unique changes for postprocessing.
         for(const [key, val] of Object.entries(settings)) {
             if(this.hash.set(key, val)) {
-                this.hash.setFlag(key, CuraHash.DIRTY_VALUE);
+                this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
                 this.propagateChanges(key);
             }
         }
-        this.postProcessAffectedSettings();
+        if(notify) {
+            this.notifyListenersOfChanges();
+        }
     }
 
     /**
@@ -500,15 +516,10 @@ class CuraSettings {
                 const excluded = this.hash.hasFlag(dependent, CuraHash.CHANGED_FLAG);
                 const changedValue = (!excluded) && this.recomputeValue(dependent);
                 const changedFlag  = this.recomputeFlags(dependent);
-                if(changedValue) {
-                    this.hash.setFlag(dependent, CuraHash.DIRTY_VALUE);
-                }
-                if(changedFlag) {
-                    this.hash.setFlag(dependent, CuraHash.DIRTY_FLAG);
-                }
                 if(changedValue || changedFlag) {
                     this.propagateChanges(dependent);
                 }
+                this.hash.setFlag(dependent, CuraHash.MUST_NOTIFY);
             }
         );
     }
@@ -529,6 +540,14 @@ class CuraSettings {
         } else {
             console.warn("No formula to resolve", key, "from", this.hash.getValueList(key));
             return this.hash.get(key);
+        }
+    }
+
+    limitToExtruder(key) {
+        if(this.defs.hasProperty(key, 'limit_to_extruder')) {
+            return this.evaluateProperty(key, 'limit_to_extruder');
+        } else {
+            return -1;
         }
     }
 
@@ -746,6 +765,8 @@ class CuraDefinitions {
             copyProperty(key, dest, node, "minimum_value_warning");
             copyProperty(key, dest, node, "maximum_value_warning");
             copyProperty(key, dest, node, "settable_per_extruder");
+            copyProperty(key, dest, node, "settable_per_mesh");
+            copyProperty(key, dest, node, "limit_to_extruder");
             copyProperty(key, dest, node, "value");
             copyProperty(key, dest, node, "resolve");
             copyProperty(key, dest, node, "unit");
@@ -790,6 +811,7 @@ class CuraDefinitions {
         if(node.hasOwnProperty('value'))   this.getExpressionDependencies(node.value, dependencies);
         if(node.hasOwnProperty('resolve')) this.getExpressionDependencies(node.resolve, dependencies);
         if(node.hasOwnProperty('enabled')) this.getExpressionDependencies(node.enabled, dependencies);
+        if(node.hasOwnProperty('limit_to_extruder')) this.getExpressionDependencies(node.limit_to_extruder, dependencies);
         return dependencies;
     }
 
@@ -802,6 +824,7 @@ class CuraDefinitions {
             if(this.nodeDependsOn(key, setting, 'value'))   dependents.add(key);
             if(this.nodeDependsOn(key, setting, 'resolve')) dependents.add(key);
             if(this.nodeDependsOn(key, setting, 'enabled')) dependents.add(key);
+            if(this.nodeDependsOn(key, setting, 'limit_to_extruder')) dependents.add(key);
         }
         return dependents;
     }
@@ -1022,7 +1045,7 @@ class CuraCommandLine {
         const extruder_settings = {};
         const keys = defs.keys().sort();
         for(const key of keys) {
-            if(defs.getProperty(key, "settable_per_extruder")) {
+            if(defs.getProperty(key, "settable_per_extruder") || defs.getProperty(key, "settable_per_mesh")) {
                 if(hash.equalOnAllExtruders(key)) {
                     appendParameter(key, settings.get(key));
                 } else {

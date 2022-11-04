@@ -789,6 +789,12 @@ class SliceObjectsPage {
         document.getElementById("page_slice").innerText = "";
 
         settings.setTarget("page_slice");
+
+        // If doing multiple extrusion, create an extruder header
+        if(SelectProfilesPage.numberOfExtruders() > 1) {
+            settings.html('<div class="parameter extruder-legend"><label></label><h1 class="parameter-box">Extruder 2</h1><h1 class="parameter-box">Extruder 1</h1></div>');
+        }
+
         const mode = await SlicerSettings.populate(settings);
 
         if (mode != "1st-slice") {
@@ -823,7 +829,7 @@ class SliceObjectsPage {
             SliceObjectsPage.onSlicerSettingsChanged(key, value);
         }
 
-        function updateSettingFromSlicer(key, vals, attr) {
+        function updateSettingFromSlicer(key, attr) {
             const sd = slicer.getOptionDescriptor(key);
             if (!sd) {
                 console.error("Unable to locate property", key);
@@ -831,16 +837,18 @@ class SliceObjectsPage {
             }
 
             // Update the textbox values
-            const nExtruder = sd.settable_per_extruder ? vals.length : 1;
+            const nExtruder = attr.values.length;
             for(var e = 0; e < nExtruder; e++) {
                 const el = getEditableElement(key, e);
                 if(el) {
-                    const val = vals[e];
+                    const val = attr.values[e];
                     switch(sd.type) {
                         case 'float':
                         case 'int':
                         case 'str':
                         case 'enum':
+                        case 'extruder':
+                        case 'optional_extruder':
                             el.value = val;
                             break;
                         case 'bool':
@@ -851,7 +859,7 @@ class SliceObjectsPage {
                     }
                 }
             }
-            SliceObjectsPage.onSlicerSettingsChanged(key, vals[0])
+            SliceObjectsPage.onSlicerSettingsChanged(key, attr.values[0])
 
             // Show or hide the individual extruder values as needed
             let anyVisible = false;
@@ -902,6 +910,8 @@ class SliceObjectsPage {
             switch(sd.type) {
                 case 'float':
                 case 'int':
+                case 'extruder':
+                case 'optional_extruder':
                     value = parseFloat(event.target.value);
                     break;
                 case 'str':
@@ -912,16 +922,7 @@ class SliceObjectsPage {
                     value = event.target.checked;
                     break;
             }
-            if(sd.settable_per_extruder) {
-                // Assign the value to a particular extruder
-                updateSettingInSlicer(key, value, extruder);
-            } else {
-                // Assign the value to each extruder
-                const nExtruders = SelectProfilesPage.numberOfExtruders();
-                for(var e = 0; e < nExtruders; e++) {
-                    updateSettingInSlicer(key, value, e);
-                }
-            }
+            updateSettingInSlicer(key, value, extruder);
         }
 
         s.fromSlicer = function(key, attr, label_prefix = "") {
@@ -949,13 +950,26 @@ class SliceObjectsPage {
                 case 'bool':
                     el = s.toggle(label, attr);
                     break;
-                case 'enum':
+                case 'enum': {
                     const o = s.choice(label, attr);
                     for(const [value, label] of Object.entries(sd.options)) {
                         o.option(label, {value: value});
                     }
                     el = o.element;
                     break;
+                }
+                case 'extruder':
+                case 'optional_extruder': {
+                    const o = s.choice(label, attr);
+                    if(sd.type == 'optional_extruder') {
+                        o.option("Not overriden", {value: -1});
+                    }
+                    for(let e = 0; e < SelectProfilesPage.numberOfExtruders(); e++) {
+                        o.option("Extruder " + (e + 1), {value: e});
+                    }
+                    el = o.element;
+                    break;
+                }
                 default:
                     console.warn("Unsupported type for", key, "of", sd.type);
                     return;
@@ -964,7 +978,7 @@ class SliceObjectsPage {
 
             // If we have multiple extruders, then duplicate the DOM tree corresponding to
             // the editable values.
-            if(el && sd.settable_per_extruder && SelectProfilesPage.numberOfExtruders() > 1) {
+            if(SelectProfilesPage.numberOfExtruders() > 1) {
                 const old_id = el.id;
                 const new_id = el.id + "_E1";
                 const container = el.closest('.parameter-box');

@@ -220,3 +220,16 @@ div.dock-center {
     flex-grow:         1;
     flex-shrink:       1;
 }
+
+/* When using multi extrusion, we want to have a legend for the extruders */
+
+.extruder-legend {
+    position:          sticky;
+    top:               0;
+    background-color:  var(--panel-color);
+    z-index:           99;
+}
+
+.extruder-legend .parameter-box {
+    border-bottom:     2px solid;
+}
