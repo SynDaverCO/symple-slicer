@@ -163,18 +163,13 @@ class SlicerConfiguration {
      * propagate to other settings which might depend on this setting.
      */
     set(key, value, extruder = 0) {
-        const settings = {};
-        settings[key] = value;
-
         if(this.isMultipleValues(key)) {
+            const settings = {};
+            settings[key] = value;
             this.hash.setExtruder(extruder);
-            this.settings.setMultiple(settings, true);
+            this.settings.setMultiple(settings);
         } else {
-            // For values linked values, set all extruders.
-            for(var e = this.hash.length - 1; e >= 0; e--) {
-                this.hash.setExtruder(e);
-                this.settings.setMultiple(settings, e == 0);
-            }
+            this.settings.setAcross(key, value);
         }
     }
 
@@ -484,11 +479,37 @@ class CuraSettings {
     }
 
     /**
+     * Sets a setting across all extruders. This is done
+     * in such a way that it introduces no inconsitencies
+     * during propagation.
+     */
+    setAcross(key, value) {
+        // ...first change values
+        for(var e = 0; e < this.hash.length; e++) {
+            this.hash.setExtruder(e);
+            this.hash.setFlag(key, CuraHash.CHANGED_FLAG);
+            if(this.hash.set(key, value)) {
+                this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
+            }
+        }
+        // ...now propagate changes
+        for(var e = 0; e < this.hash.length; e++) {
+            this.hash.setExtruder(e);
+            this.propagateChanges(key);
+        }
+        // ...finally notify listeners.
+        for(var e = 0; e < this.hash.length; e++) {
+            this.hash.setExtruder(e);
+            this.notifyListenersOfChanges();
+        }
+    }
+
+    /**
      * Sets one or more settings to new values. This will also
      * propagate to other enabled settings that depend on the
      * settings that just changed.
      */
-    setMultiple(settings, notify = true) {
+    setMultiple(settings) {
         for(const key of Object.keys(settings)) {
             this.hash.setFlag(key, CuraHash.CHANGED_FLAG);
         }
@@ -500,9 +521,7 @@ class CuraSettings {
                 this.propagateChanges(key);
             }
         }
-        if(notify) {
-            this.notifyListenersOfChanges();
-        }
+        this.notifyListenersOfChanges();
     }
 
     /**
@@ -1126,3 +1145,10 @@ class CuraCommandLine {
         return settings.get("machine_center_is_zero") == "true";
     }
 }
+
+// Debugging Methods
+var SS = SS || {};
+SS.Slicer = SS.Slicer || {};
+
+SS.Slicer.getSetting  = (key, extruder = 0) => slicer.config.hash.extruders[extruder].get(key);
+SS.Slicer.getProperty = (key, property, extruder = 0) => {slicer.config.hash.setExtruder(extruder); return slicer.config.settings.evaluateProperty(key, property)};
