@@ -1061,8 +1061,14 @@ class CuraCommandLine {
             arg_list.push(key + '=' + value);
         }
 
-        const extruder_settings = {};
         const keys = defs.keys().sort();
+        
+        // WORKAROUND: CuraEngine 1.42.1 requires "support_enable" to be prior to any other support settings.
+        //             Reported as: https://github.com/Ultimaker/CuraEngine/issues/1763
+        keys.splice(keys.indexOf('support_enable'), 1); 
+        keys.unshift('support_enable');
+
+        const extruder_settings = {};
         for(const key of keys) {
             if(defs.getProperty(key, "settable_per_extruder") || defs.getProperty(key, "settable_per_mesh")) {
                 if(hash.equalOnAllExtruders(key)) {
@@ -1086,8 +1092,10 @@ class CuraCommandLine {
             // Push extruder specific settings
             arg_list.push("-e" + extruder);
 
-            for(const [key, values] of Object.entries(extruder_settings)) {
-                appendParameter(key, values[extruder]);
+            for(const key of keys) {
+                if(extruder_settings.hasOwnProperty(key)) {
+                     appendParameter(key, extruder_settings[key][extruder]);
+                }
             }
 
             // Push models for the extruder
