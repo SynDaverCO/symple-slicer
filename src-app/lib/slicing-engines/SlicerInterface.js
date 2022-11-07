@@ -224,6 +224,7 @@ class SlicerNativeInterface extends SlicerInterface {
     }
 
     slice(models) {
+        const args = this.config.getCommandLineArguments(models);
         const onStderr = str => {
             const progress = captureProgress(str);
             if(typeof progress !== "undefined") {
@@ -237,10 +238,8 @@ class SlicerNativeInterface extends SlicerInterface {
             const filePath = GetNativeFilePath("output.gcode");
             try {
                 const gcode = await ELECTRON.fs.readFile(filePath, { encoding: 'utf8' });
-                // Apply post-processing to file
-                gcode = postProcessGcode(gcode, slicer_args);
                 const enc = new TextEncoder();
-                const data = enc.encode(gcode)
+                const data = enc.encode(postProcessGcode(gcode, args))
                 this.onFileReceived(data);
             } catch(err) {
                 console.error(err);
@@ -248,7 +247,6 @@ class SlicerNativeInterface extends SlicerInterface {
             }
             await ShowTempDir("output.gcode");
         }
-        const args = this.config.getCommandLineArguments(models);
         const curaExe = RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
         // Write a batch file for testing
         const filePath = GetNativeFilePath("slice.bat");
