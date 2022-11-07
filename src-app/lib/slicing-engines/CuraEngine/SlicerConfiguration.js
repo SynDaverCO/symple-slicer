@@ -408,6 +408,11 @@ class CuraSettings {
         }
         applyInheritance("settable_per_extruder");
         applyInheritance("settable_per_mesh");
+
+        // WORKAROUND: In CuraEngine 1.4.2, if "support_enable" is specified per extruder, it
+        //             will cause an error. This has been reported upstream:
+        //             https://github.com/Ultimaker/CuraEngine/issues/1763
+        this.defs.setProperty('support_enable', 'settable_per_mesh', false);
     }
 
     /**
@@ -1134,6 +1139,7 @@ class CuraCommandLine {
                 if (one_at_a_time) arg_list.push("--next");
             }
         }
+        console.log(arg_list);
         return arg_list;
     }
 
