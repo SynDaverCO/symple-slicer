@@ -1139,7 +1139,6 @@ class CuraCommandLine {
                 if (one_at_a_time) arg_list.push("--next");
             }
         }
-        console.log(arg_list);
         return arg_list;
     }
 
