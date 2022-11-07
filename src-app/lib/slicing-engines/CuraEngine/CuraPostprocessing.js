@@ -87,7 +87,7 @@ function addPrintProgress(gcode) {
  * Preform postprocessing on generated G-code
  */
 function postProcessGcode(gcode, slicer_args) {
-    //gcode = replaceGcodeHeader(gcode);
+    gcode = replaceGcodeHeader(gcode);
     if(slicer_args.includes("machine_gcode_flavor=RepRap (Marlin/Sprinter)")) {
         gcode = addPrintProgress(gcode);
     }
