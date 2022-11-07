@@ -237,6 +237,8 @@ class SlicerNativeInterface extends SlicerInterface {
             const filePath = GetNativeFilePath("output.gcode");
             try {
                 const gcode = await ELECTRON.fs.readFile(filePath, { encoding: 'utf8' });
+                // Apply post-processing to file
+                gcode = postProcessGcode(gcode, slicer_args);
                 const enc = new TextEncoder();
                 const data = enc.encode(gcode)
                 this.onFileReceived(data);
