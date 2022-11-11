@@ -616,6 +616,11 @@ class CuraSettings {
             if(!uncommented && attr && !attr.unchanged)
                 return;
 
+            if(typeof(value) === "undefined" || value === null) {
+                console.error("Found null or undefined setting while exporting TOML", key);
+                return;
+            }
+
             // Generate the comments
 
             let comments = "";

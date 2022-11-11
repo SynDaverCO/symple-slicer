@@ -258,7 +258,7 @@ class SelectProfilesPage {
 
     static numberOfExtruders() {
         const desc = ProfileLibrary.getDescriptor("machine_profiles", settings.get("machine_profiles"));
-        return desc.extruders;
+        return desc ? desc.extruders : 1;
     }
 
     static addMaterialMenus() {

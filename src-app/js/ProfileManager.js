@@ -154,6 +154,7 @@ class ProfileLibrary {
                 return profile;
             }
         }
+        console.error("Unable to find profile", id);
     }
 
     static getProfiles() {
