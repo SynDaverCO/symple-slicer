@@ -91,7 +91,8 @@ class SlicerConfiguration {
     }
 
     isMultipleValues(key) {
-        return (this.defs.getProperty(key, "settable_per_extruder") || this.defs.getProperty(key, "settable_per_mesh")) && !this.defs.hasProperty(key,"limit_to_extruder");
+        return (this.defs.getProperty(key, "settable_per_extruder") || this.defs.getProperty(key, "settable_per_mesh")) &&
+               (!this.defs.hasProperty(key,"limit_to_extruder") || this.settings.evaluateProperty(key, 'limit_to_extruder') < 0);
     }
 
     processSettingsChanged(key) {
@@ -103,7 +104,7 @@ class SlicerConfiguration {
             resolved = false;
         } else {
             const nExtruders = this.hash.length;
-            const whichExtruder = Math.max(0, this.settings.limitToExtruder(key));
+            const whichExtruder = this.defs.hasProperty(key, 'limit_to_extruder') ? this.settings.evaluateProperty(key, 'limit_to_extruder') : 0;
             values =  Array(nExtruders).fill(this.settings.resolveValue(key));
             enabled = Array(nExtruders).fill(false);
             resolved = !this.hash.equalOnAllExtruders(key);
@@ -567,14 +568,6 @@ class CuraSettings {
         }
     }
 
-    limitToExtruder(key) {
-        if(this.defs.hasProperty(key, 'limit_to_extruder')) {
-            return this.evaluateProperty(key, 'limit_to_extruder');
-        } else {
-            return -1;
-        }
-    }
-
     /**
      * Recomputes the value of a setting
      */
@@ -1019,7 +1012,7 @@ class CuraDefinitions {
             defaultExtruderPosition: ()           => 0
         };
 
-        var f = new Function('context', 'funcs', 'with(context) with(funcs) return ' + expr);
+        const f = new Function('context', 'funcs', 'with(context) with(funcs) return ' + expr);
         return f(context, pythonFunctions);
     }
 
