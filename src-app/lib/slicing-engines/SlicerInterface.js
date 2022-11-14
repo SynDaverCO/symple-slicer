@@ -223,7 +223,11 @@ class SlicerNativeInterface extends SlicerInterface {
         await f.close();
     }
 
-    slice(models) {
+    async slice(models) {
+        // Copy the helper files
+        await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmprinter.def.json", GetNativeFilePath("fdmprinter.def.json"));
+        await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmextruder.def.json", GetNativeFilePath("fdmextruder.def.json"));
+
         const args = this.config.getCommandLineArguments(models);
         const onStderr = str => {
             const progress = captureProgress(str);

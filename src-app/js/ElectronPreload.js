@@ -207,6 +207,10 @@ window.GetNativeFilePath = filename => {
     return ELECTRON.path.join(tmpPath,filename);
 }
 
+window.GetNativeConfigPath = filename => {
+    return ELECTRON.path.join(__dirname, '..', 'lib', 'slicing-engines', 'CuraEngine',filename);
+}
+
 window.ELECTRON = {fs,os,path};
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/

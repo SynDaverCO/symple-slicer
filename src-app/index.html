@@ -389,7 +389,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     loadResource("lib/slicing-engines/CuraEngine/CuraPostprocessing.js");
                     slicer = new SlicerNativeInterface(
                         "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
-                        "config/cura_defaults/",
+                        "lib/slicing-engines/CuraEngine/",
                         () => SettingsPanel.init("settings")
                     );
                     break;
@@ -397,7 +397,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     slicer = new SlicerWorkerInterface(
                         "lib/slicing-engines/CuraEngine/SlicerWorker.js",
                         "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
-                        "config/cura_defaults/",
+                        "lib/slicing-engines/CuraEngine/",
                         () => SettingsPanel.init("settings")
                     );
             }

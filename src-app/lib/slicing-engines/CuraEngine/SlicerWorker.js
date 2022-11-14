@@ -34,6 +34,7 @@ self.importScripts('../../three/three.min.js');
 self.importScripts('../../util/geometry/GeometrySerialize.js');
 self.importScripts('../../util/geometry/GeometryAlgorithms.js');
 self.importScripts('../../util/io/StlWriter.js');
+self.importScripts('../../util/io/FetchFile.js');
 self.importScripts('CuraPostprocessing.js');
 self.importScripts('CuraEngine.js');
 
@@ -52,7 +53,12 @@ function help() {
  * The following routine runs the Cura slicer. It then transfers the
  * file over using a message.
  */
-function slice(args) {
+async function slice(args) {
+    // Load support files into Emscripten FS
+
+    await loadFromUrl("fdmprinter.def.json", "fdmprinter.def.json");
+    await loadFromUrl("fdmextruder.def.json", "fdmextruder.def.json");
+
     self.postMessage({'cmd': 'stdout', 'str': "Slicing..."});
     callMain(args);
 }
@@ -82,11 +88,14 @@ function loadFromBlob(stlData, filename) {
     FS.writeFile(filename, stlData);
 }
 
-function loadFromUrl(url, filename) {
-    self.postMessage({'cmd': 'stdout', 'str': "Reading model"});
-    fetchFile(url)
-    .then(response => loadFromBlob(response, filename))
-    .catch(error => self.postMessage({'cmd': 'stdout', 'str': error}));
+async function loadFromUrl(url, filename) {
+    self.postMessage({'cmd': 'stdout', 'str': "Reading " + url});
+    try {
+        const data = await fetchFile(url);
+        loadFromBlob(new Uint8Array(data), filename);
+    } catch(error) {
+        console.error(error);
+    }
 }
 
 /**
@@ -145,7 +154,7 @@ function onStderr(str) {
 }
 
 function onAbort() {
-    self.postMessage({'cmd': 'abort', 'str' : str});
+    self.postMessage({'cmd': 'abort', 'str' : "Abort called"});
 }
 
 function onExit() {
@@ -153,7 +162,7 @@ function onExit() {
     //self.postMessage({'cmd': 'abort', 'str' : str});
 }
 
-function receiveMessage(e) {
+async function receiveMessage(e) {
     var cmd  = e.data.cmd;
     var data = e.data;
     switch (cmd) {
@@ -161,7 +170,7 @@ function receiveMessage(e) {
         case 'loadFromUrl':  loadFromUrl(data.url, data.filename);                   break;
         case 'loadFromBlob': loadFromBlob(data.blob, data.filename);                 break;
         case 'loadGeometry': loadGeometry(jsonToGeometry(data.data,true), data.filename); break;
-        case 'slice':        slice(data.args); get_stats(); get_file(data.args);     break;
+        case 'slice':        await slice(data.args); get_stats(); get_file(data.args);     break;
         case 'stop':         stop();                                                 break;
         default:             Module.printErr('Unknown command: ' + cmd);
     };

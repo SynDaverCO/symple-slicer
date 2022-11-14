@@ -788,6 +788,7 @@ class CuraDefinitions {
             copyProperty(key, dest, node, "maximum_value_warning");
             copyProperty(key, dest, node, "settable_per_extruder");
             copyProperty(key, dest, node, "settable_per_mesh");
+            copyProperty(key, dest, node, "settable_globally");
             copyProperty(key, dest, node, "limit_to_extruder");
             copyProperty(key, dest, node, "value");
             copyProperty(key, dest, node, "resolve");
@@ -1043,6 +1044,12 @@ class CuraDefinitions {
  */
 class CuraCommandLine {
     static buildCommandLine(settings, models) {
+        const stats = {
+            changed: 0,
+            inactive: 0,
+            defaults: 0
+        };
+
         const defs = settings.defs;
         const hash = settings.hash;
 
@@ -1058,32 +1065,55 @@ class CuraCommandLine {
         arg_list.push("slice");
         arg_list.push("-v");
         arg_list.push("-p");
+        arg_list.push("-j");
+        arg_list.push("fdmprinter.def.json");
 
         function appendParameter(key, value) {
-            arg_list.push("-s");
-            arg_list.push(key + '=' + value);
+
+            if(value == defs.getProperty(key, "default_value")) {
+                stats.defaults++;
+            } else if(!hash.hasFlag(key, CuraHash.ENABLED_FLAG)) {
+                stats.inactive++;
+            } else {
+                const str = key + '=' + value;
+                arg_list.push("-s");
+                arg_list.push(str);
+                stats.changed++;
+            }
         }
 
         const extruder_settings = {};
         const keys = defs.keys().sort();
         for(const key of keys) {
-            if(defs.getProperty(key, "settable_per_extruder") || defs.getProperty(key, "settable_per_mesh")) {
-                if(hash.equalOnAllExtruders(key)) {
-                    appendParameter(key, settings.get(key));
-                } else {
-                    extruder_settings[key] = settings.getValueList(key);
-                }
-            } else {
-                let value = settings.resolveValue(key);
+            const settable_per_extruder = defs.getProperty(key, "settable_per_extruder") || defs.getProperty(key, "settable_per_mesh");
+            const settable_globally     = defs.getProperty(key, "settable_globally") || !settable_per_extruder;
+            const all_equal             = hash.equalOnAllExtruders(key);
+
+            if(settable_globally && all_equal) {
+                let value = settings.get(key);
                 if(key == "machine_start_gcode" || key == "machine_end_gcode") {
                     value = settings.doVariableSubstitutions(value);
                 }
                 appendParameter(key, value);
+            } else if(settable_per_extruder) {
+                extruder_settings[key] = settings.getValueList(key);
+            } else if(settable_globally) {
+                const value = settings.resolveValue(key);
+                appendParameter(key, value);
+            } else {
+                console.error("Cannot apply slicer setting", key);
             }
         }
 
         arg_list.push("-o");
         arg_list.push("output.gcode");
+        
+        for(var extruder = 0; extruder < hash.length; extruder++) {
+            // Push extruder specific defaults
+            arg_list.push("-e" + extruder);
+            arg_list.push("-j");
+            arg_list.push("fdmextruder.def.json");
+        }
 
         for(var extruder = 0; extruder < hash.length; extruder++) {
             // Push extruder specific settings
@@ -1137,6 +1167,8 @@ class CuraCommandLine {
                 if (one_at_a_time) arg_list.push("--next");
             }
         }
+
+        console.log("Effective slicer parameters:", stats);
         return arg_list;
     }
 
