@@ -250,22 +250,6 @@ class CuraHash {
         return true;
     }
 
-    getAsString(key) {
-        this.throwIfMissing(key);
-        const value = this.values[key];
-        switch(typeof value) {
-            case "boolean":
-            case "object":
-            case "number":
-                return value.toString();
-            case "string":
-                return value;
-            default:
-                console.log("Warning: Unrecognized type", typeof value, "for", key);
-                return value.toString();
-        }
-    }
-
     clone() {
         const clone = new CuraHash();
         clone.values = Object.assign({}, this.values);
@@ -391,25 +375,6 @@ class CuraSettings {
             checkSyntax(key, node, "maximum_value_warning");
         }
 
-        // Any settings that depends on a setting marked settable_per_extruder
-        // should in turn have settable_per_extruder set
-        const applyInheritance = property => {
-            for(const [key, node] of this.defs.entries()) {
-                if(node.hasOwnProperty(property)) {
-                    this.defs.getDependents(key).forEach(
-                        dependent => {
-                            if(!this.defs.hasProperty(dependent, property)) {
-                                console.warn("Assuming", property, "for", dependent);
-                                this.defs.setProperty(dependent, property, true);
-                            }
-                        }
-                    );
-                }
-            }
-        }
-        applyInheritance("settable_per_extruder");
-        applyInheritance("settable_per_mesh");
-
         // WORKAROUND: In CuraEngine 1.4.2, if "support_enable" is specified per extruder, it
         //             will cause an error. This has been reported upstream:
         //             https://github.com/Ultimaker/CuraEngine/issues/1763
@@ -445,13 +410,13 @@ class CuraSettings {
             if(node.hasOwnProperty('default_value')) {
                 this.hash.set(key, node.default_value);
             }
+            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
+            this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
         }
         // Recompute all values
         for(const key of this.defs.keys().sort()) {
             this.recomputeFlags(key);
             this.recomputeValue(key);
-            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
-            this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
         }
         for(const key of this.defs.keys().sort()) {
             this.propagateChanges(key);
@@ -1037,6 +1002,26 @@ class CuraDefinitions {
     getDescriptor(key) {
         return this.nodes[key];
     }
+
+    static asString(type, value) {
+        switch(type) {
+            case 'str':
+            case 'float':
+            case 'int':
+            case 'enum':
+            case 'bool':
+            case 'extruder':
+            case 'optional_extruder':
+                return value.toString();
+            case 'polygon':
+            case 'polygons':
+            case '[int]':
+                return JSON.stringify(value);;
+                break;
+            default:
+                console.error("Unsupported type", type);
+        }
+    }
 }
 
 /**
@@ -1069,17 +1054,23 @@ class CuraCommandLine {
         arg_list.push("fdmprinter.def.json");
 
         function appendParameter(key, value) {
-
-            if(value == defs.getProperty(key, "default_value")) {
+            const valType    = defs.getProperty(key, "type")
+            const stringVal  = CuraDefinitions.asString(valType, value);
+            const defaultVal = CuraDefinitions.asString(valType, defs.getProperty(key, "default_value"));
+            if(stringVal == defaultVal) {
                 stats.defaults++;
             } else if(!hash.hasFlag(key, CuraHash.ENABLED_FLAG)) {
                 stats.inactive++;
             } else {
-                const str = key + '=' + value;
                 arg_list.push("-s");
-                arg_list.push(str);
+                arg_list.push(key + '=' + stringVal);
                 stats.changed++;
             }
+        }
+
+        function appendTransform(key, value) {
+            arg_list.push("-s");
+            arg_list.push(key + '=' + JSON.stringify(value));
         }
 
         const extruder_settings = {};
@@ -1139,12 +1130,12 @@ class CuraCommandLine {
                         d,e,f,y,
                         g,h,i,z
                     ] = m.transform.clone().transpose().elements;
-                    mesh_rotation_matrix = JSON.stringify([[a,b,c],[d,e,f],[g,h,i]]);
+                    mesh_rotation_matrix = [[a,b,c],[d,e,f],[g,h,i]];
                     mesh_position_x      = x;
                     mesh_position_y      = y;
                     mesh_position_z      = z;
                 } else {
-                    mesh_rotation_matrix = "[[1,0,0], [0,1,0], [0,0,1]]";
+                    mesh_rotation_matrix = [[1,0,0], [0,1,0], [0,0,1]];
                     mesh_position_x      = 0;
                     mesh_position_y      = 0;
                     mesh_position_z      = 0;
@@ -1153,17 +1144,12 @@ class CuraCommandLine {
                     mesh_position_x      -= machine_width/2;
                     mesh_position_y      -= machine_depth/2;
                 }
-                arg_list.push("-s");
-                arg_list.push("mesh_rotation_matrix=" + mesh_rotation_matrix);
+                appendTransform("mesh_rotation_matrix", mesh_rotation_matrix);
                 arg_list.push("-l");
                 arg_list.push(m.filename);
-                arg_list.push("-s");
-                arg_list.push("mesh_position_x=" + mesh_position_x);
-                arg_list.push("-s");
-                arg_list.push("mesh_position_y=" + mesh_position_y);
-                arg_list.push("-s");
-                arg_list.push("mesh_position_z=" + mesh_position_z);
-
+                appendTransform("mesh_position_x", mesh_position_x);
+                appendTransform("mesh_position_y", mesh_position_y);
+                appendTransform("mesh_position_z", mesh_position_z);
                 if (one_at_a_time) arg_list.push("--next");
             }
         }
