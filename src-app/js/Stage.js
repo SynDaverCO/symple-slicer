@@ -245,8 +245,10 @@ class Stage {
                 const index = parseInt(id.substring(1));
                 const object = objects[index];
                 const circle = updatedCircles[id];
-                object.position.x += circle.delta.x;
-                object.position.y += circle.delta.y;
+                if (!circle.isPinned) {
+                    object.position.x += circle.delta.x;
+                    object.position.y += circle.delta.y;
+                }
             }
             this.render();
         };
