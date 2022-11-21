@@ -92,7 +92,7 @@ class SlicerConfiguration {
 
     isMultipleValues(key) {
         return (this.defs.getProperty(key, "settable_per_extruder") || this.defs.getProperty(key, "settable_per_mesh")) &&
-               (!this.defs.hasProperty(key,"limit_to_extruder") || this.settings.evaluateProperty(key, 'limit_to_extruder') < 0);
+               (!this.defs.hasProperty(key,"limit_to_extruder") || this.settings.evalProperty(key, 'limit_to_extruder') < 0);
     }
 
     processSettingsChanged(key) {
@@ -106,7 +106,7 @@ class SlicerConfiguration {
             invalid = this.hash.getFlagList(key, CuraHash.INVALID_FLAG);
             resolved = Array(nExtruders).fill(false);
         } else {
-            const whichExtruder = this.defs.hasProperty(key, 'limit_to_extruder') ? this.settings.evaluateProperty(key, 'limit_to_extruder') : 0;
+            const whichExtruder = this.defs.hasProperty(key, 'limit_to_extruder') ? this.settings.evalProperty(key, 'limit_to_extruder') : 0;
             const allEqual = this.hash.equalOnAllExtruders(key);
             const canResolve = this.defs.hasProperty(key, 'resolve');
             const cantResolve  = !allEqual && !canResolve;
@@ -383,7 +383,7 @@ class CuraSettings {
 
         var checkSyntax = (key, node, prop) => {
             if(node.hasOwnProperty(prop)) {
-                this.evaluateProperty(key, prop);
+                this.evalProperty(key, prop);
             }
         }
 
@@ -392,6 +392,7 @@ class CuraSettings {
             checkSyntax(key, node, "resolve");
             checkSyntax(key, node, "enabled");
             checkSyntax(key, node, "minimum_value");
+            checkSyntax(key, node, "maximum_value");
             checkSyntax(key, node, "minimum_value_warning");
             checkSyntax(key, node, "maximum_value_warning");
         }
@@ -460,7 +461,7 @@ class CuraSettings {
      */
     notifyListenersOfChanges() {
         for(const key of this.defs.keys()) {
-            if (this.hash.hasFlag(key, CuraHash.MUST_NOTIFY)) {
+            if (this.hash.getFlagList(key, CuraHash.MUST_NOTIFY).some(x => x)) {
                 const val = this.hash.get(key);
                 if(this.verbose)
                     console.log("--> Changed", key, "to", val);
@@ -480,7 +481,8 @@ class CuraSettings {
         for(var e = 0; e < this.hash.length; e++) {
             this.hash.setExtruder(e);
             this.hash.setFlag(key, CuraHash.CHANGED_FLAG);
-            if(this.hash.set(key, value)) {
+            if(this.hash.set(key, this.clampOutOfRange(key, value))) {
+                this.recomputeFlags(key);
                 this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
             }
         }
@@ -555,7 +557,12 @@ class CuraSettings {
         // Settings propagation may be modify a setting multiple
         // times, so log unique changes for postprocessing.
         for(const [key, val] of Object.entries(settings)) {
-            if(this.hash.set(key, val)) {
+            if(!this.defs.hasDescriptor(key)) {
+                console.warn("Attempting to set non-existent setting", key);
+                continue;
+            }
+            if(this.hash.set(key, this.clampOutOfRange(key, val))) {
+                this.recomputeFlags(key);
                 this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
                 this.propagateChanges(key);
             }
@@ -594,7 +601,7 @@ class CuraSettings {
         if(this.hash.equalOnAllExtruders(key)) {
             return this.hash.get(key);
         } else if(this.defs.hasProperty(key, 'resolve')) {
-            return this.evaluateProperty(key, 'resolve');
+            return this.evalProperty(key, 'resolve');
         } else {
             console.warn("No formula to resolve", key, "from", this.hash.getValueList(key));
             return this.hash.get(key);
@@ -605,8 +612,8 @@ class CuraSettings {
      * Recomputes the value of a setting
      */
     recomputeValue(key) {
-        const val  = this.defs.hasProperty(key, 'value')   ? this.evaluateProperty(key, 'value') :
-                     this.defs.hasProperty(key, 'resolve') ? this.evaluateProperty(key, 'resolve') :
+        const val  = this.defs.hasProperty(key, 'value')   ? this.evalProperty(key, 'value') :
+                     this.defs.hasProperty(key, 'resolve') ? this.evalProperty(key, 'resolve') :
                      this.hash.get(key);
         return this.hash.set(key, val);
     }
@@ -615,15 +622,40 @@ class CuraSettings {
      * Recomputes the flags of a setting, returns "affected" with updated bits.
      */
     recomputeFlags(key) {
-        const en  = this.defs.hasProperty(key, 'enabled') ? this.evaluateProperty(key, 'enabled') : true;
-        return en ? this.hash.setFlag(  key, CuraHash.ENABLED_FLAG)
-                  : this.hash.clearFlag(key, CuraHash.ENABLED_FLAG);
+        const val = this.hash.get(key);
+        const flg =  this.warnOutOfRange(key, val) ? this.hash.setFlag(   key, CuraHash.INVALID_FLAG)
+                                                   : this.hash.clearFlag( key, CuraHash.INVALID_FLAG);
+        const en  = this.defs.hasProperty(key, 'enabled') ? this.evalProperty(key, 'enabled') : true;
+        return (en  ? this.hash.setFlag(  key, CuraHash.ENABLED_FLAG)
+                    : this.hash.clearFlag(key, CuraHash.ENABLED_FLAG));
+    }
+
+    warnOutOfRange(key, value) {
+        const maxWarn = this.defs.hasProperty(key, 'maximum_value_warning') ? this.evalProperty(key, 'maximum_value_warning') : Number.POSITIVE_INFINITY;
+        const minWarn = this.defs.hasProperty(key, 'minimum_value_warning') ? this.evalProperty(key, 'minimum_value_warning') : Number.NEGATIVE_INFINITY;
+        return value > maxWarn || value < minWarn;
+    }
+
+    clampOutOfRange(key, value) {
+        if(this.defs.hasProperty(key, 'maximum_value')) {
+            const max = this.evalProperty(key, 'maximum_value');
+            if(value > max) {
+                return max;
+            }
+        }
+        if(this.defs.hasProperty(key, 'minimum_value')) {
+            const min = this.evalProperty(key, 'minimum_value');
+            if(value < min) {
+                return min;
+            }
+        }
+        return value;
     }
 
     /**
      * Evaluates a property with a local context
      */
-    evaluateProperty(key, property) {
+    evalProperty(key, property) {
         const expr = this.defs.getProperty(key, property);
         try {
             return this.defs.evaluatePythonExpression(this, expr);
@@ -827,6 +859,7 @@ class CuraDefinitions {
             copyProperty(key, dest, node, "description");
             copyProperty(key, dest, node, "default_value");
             copyProperty(key, dest, node, "minimum_value");
+            copyProperty(key, dest, node, "maximum_value");
             copyProperty(key, dest, node, "minimum_value_warning");
             copyProperty(key, dest, node, "maximum_value_warning");
             copyProperty(key, dest, node, "settable_per_extruder");
@@ -1042,6 +1075,7 @@ class CuraDefinitions {
                 cos:                 Math.cos,
                 sin:                 Math.sin,
                 sqrt:                Math.sqrt,
+                log:                 Math.log,
                 radians:             deg          => deg / 180 * Math.PI,
                 degrees:             rad          => rad / Math.PI * 180
             },
@@ -1075,6 +1109,10 @@ class CuraDefinitions {
 
     setProperty(key, property, value) {
         this.nodes[key][property] = value;
+    }
+
+    hasDescriptor(key) {
+        return this.nodes.hasOwnProperty(key);
     }
 
     getDescriptor(key) {
@@ -1250,4 +1288,4 @@ var SS = SS || {};
 SS.Slicer = SS.Slicer || {};
 
 SS.Slicer.getSetting  = (key, extruder = 0) => slicer.config.hash.extruders[extruder].get(key);
-SS.Slicer.getProperty = (key, property, extruder = 0) => {slicer.config.hash.setExtruder(extruder); return slicer.config.settings.evaluateProperty(key, property)};
+SS.Slicer.getProperty = (key, property, extruder = 0) => {slicer.config.hash.setExtruder(extruder); return slicer.config.settings.evalProperty(key, property)};
