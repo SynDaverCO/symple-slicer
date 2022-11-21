@@ -861,38 +861,33 @@ class SliceObjectsPage {
             }
             SliceObjectsPage.onSlicerSettingsChanged(key, attr.values[0])
 
+            const addClassWhen = (container, className, condition) => {
+                if(condition)
+                    container.classList.add(className);
+                else
+                    container.classList.remove(className);
+            }
+
             // Show or hide the individual extruder values as needed
             let anyVisible = false;
             for(var e = 0; e < nExtruder; e++) {
                 const el = getEditableElement(key, e);
                 if(el) {
-                    const extruderVisible = attr.enabled[e];
-                    anyVisible ||= extruderVisible;
+                    const visible = attr.enabled[e];
                     const container = el.closest(".parameter-box");
-                    if(extruderVisible) {
-                        container.classList.remove("hidden");
-                    } else {
-                        container.classList.add("hidden");
-                    }
+                    addClassWhen(container, "hidden", !visible);
+                    addClassWhen(container, "changed", attr.changed[e]);
+                    addClassWhen(container, "invalid", attr.invalid[e]);
+                    addClassWhen(container, "resolved", attr.resolved[e]);
+                    anyVisible ||= visible;
                 }
             }
 
+            // Apply attributes that apply equally to all extruders
             const el = getEditableElement(key, 0);
             if(el) {
                 const container = el.closest(".parameter");
-
-                // If all the extruder values are hidden, hide the container
-                if(anyVisible) {
-                    container.classList.remove("hidden");
-                } else {
-                    container.classList.add("hidden");
-                }
-                // Mark any resolved values
-                if(attr.resolved) {
-                    container.classList.add("resolved");
-                } else {
-                    container.classList.remove("resolved");
-                }
+                addClassWhen(container, "hidden",   !anyVisible);
             }
         }
 

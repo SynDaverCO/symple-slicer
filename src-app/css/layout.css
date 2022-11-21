@@ -182,10 +182,6 @@ BODY[data-platform="desktop"] .webapp-only  {display: none;}
     font-weight:        bolder;
 }
 
-.parameter.resolved input {
-    background-color: yellow;
-}
-
 .dock-region {
     position:           absolute;
     display:            flex;

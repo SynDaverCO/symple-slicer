@@ -96,21 +96,30 @@ class SlicerConfiguration {
     }
 
     processSettingsChanged(key) {
-        let values, enabled, resolved;
+        const nExtruders = this.hash.length;
+        let values, enabled, resolved, changed, invalid;
 
         if(this.isMultipleValues(key)) {
             values = this.settings.getValueList(key);
             enabled = this.hash.getFlagList(key, CuraHash.ENABLED_FLAG);
-            resolved = false;
+            changed = this.hash.getFlagList(key, CuraHash.CHANGED_FLAG);
+            invalid = this.hash.getFlagList(key, CuraHash.INVALID_FLAG);
+            resolved = Array(nExtruders).fill(false);
         } else {
-            const nExtruders = this.hash.length;
             const whichExtruder = this.defs.hasProperty(key, 'limit_to_extruder') ? this.settings.evaluateProperty(key, 'limit_to_extruder') : 0;
-            values =  Array(nExtruders).fill(this.settings.resolveValue(key));
-            enabled = Array(nExtruders).fill(false);
-            resolved = !this.hash.equalOnAllExtruders(key);
+            const allEqual = this.hash.equalOnAllExtruders(key);
+            const canResolve = this.defs.hasProperty(key, 'resolve');
+            const cantResolve  = !allEqual && !canResolve;
+            values   = Array(nExtruders).fill(this.settings.resolveValue(key));
+            enabled  = Array(nExtruders).fill(false);
+            changed  = Array(nExtruders).fill(false);
+            invalid  = Array(nExtruders).fill(false);
+            resolved = Array(nExtruders).fill(!allEqual && canResolve);
             enabled[whichExtruder] = this.hash.getFlagList(key, CuraHash.ENABLED_FLAG)[whichExtruder];
+            changed[whichExtruder] = this.hash.getFlagList(key, CuraHash.CHANGED_FLAG)[whichExtruder];
+            invalid[whichExtruder] = this.hash.getFlagList(key, CuraHash.INVALID_FLAG)[whichExtruder] || cantResolve;
         }
-        this.onSettingsChanged(key, {values, enabled, resolved});
+        this.onSettingsChanged(key, {values, enabled, resolved, changed, invalid});
     }
 
     onSettingsChanged(key, attr) {
@@ -164,6 +173,9 @@ class SlicerConfiguration {
      * propagate to other settings which might depend on this setting.
      */
     set(key, value, extruder = 0) {
+        if(isNaN(value)) {
+            return this.unset(key, extruder);
+        }
         if(this.isMultipleValues(key)) {
             const settings = {};
             settings[key] = value;
@@ -171,6 +183,15 @@ class SlicerConfiguration {
             this.settings.setMultiple(settings);
         } else {
             this.settings.setAcross(key, value);
+        }
+    }
+
+    unset(key, extruder = 0) {
+        if(this.isMultipleValues(key)) {
+            this.hash.setExtruder(extruder);
+            this.settings.unset(key);
+        } else {
+            this.settings.unsetAcross(key);
         }
     }
 
@@ -262,7 +283,8 @@ class CuraHash {
 
 CuraHash.ENABLED_FLAG  = 1; // Set if a value is enabled in the UI
 CuraHash.CHANGED_FLAG  = 2; // Set if a value was changed from the default
-CuraHash.MUST_NOTIFY   = 4; // Set if the setting was changed, but a notification has not yet been sent
+CuraHash.INVALID_FLAG  = 4; // Set if a value is in an error state
+CuraHash.MUST_NOTIFY   = 8; // Set if the setting was changed, but a notification has not yet been sent
 
 class CuraMultiHash {
     constructor() {
@@ -275,16 +297,15 @@ class CuraMultiHash {
     }
 
     setExtruder(extruder) {
-        this.allocateExtruder(extruder);
+        if(extruder >= this.extruders.length) {
+            console.error("Cannot select extruder", extruder);
+        }
         this.activeExtruder = extruder;
     }
 
-    // Ensures we have a settings object for the extruder
-    allocateExtruder(extruder) {
-        // Make sure we have enough settings objects for this extruder.
-        while(extruder >= this.extruders.length) {
-            this.extruders.push(this.extruders[0].clone());
-        }
+    // Clones the first extruder so we have a new one in the hash
+    duplicateExtruder() {
+        this.activeExtruder = this.extruders.push(this.extruders[this.activeExtruder].clone()) - 1;
     }
 
     set(key, value) {
@@ -404,7 +425,6 @@ class CuraSettings {
      * This loads the default settings.
      */
     loadDefaults() {
-        this.hash.clear();
         // Set the default values
         for(const [key, node] of this.defs.entries()) {
             if(node.hasOwnProperty('default_value')) {
@@ -412,6 +432,7 @@ class CuraSettings {
             }
             this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
             this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
+            this.hash.clearFlag(key, CuraHash.INVALID_FLAG);
         }
         // Recompute all values
         for(const key of this.defs.keys().sort()) {
@@ -473,6 +494,53 @@ class CuraSettings {
             this.hash.setExtruder(e);
             this.notifyListenersOfChanges();
         }
+    }
+
+    _unsetKey(key) {
+        if(this.defs.hasProperty(key, 'value')) {
+            return this.recomputeValue(key);
+        }
+        else if(this.defs.hasProperty(key, 'default_value')) {
+            return this.hash.set(key, this.defs.getProperty(key,'default_value'));
+        }
+        return false;
+    }
+
+    /**
+     * Restores to default a setting across all extruders.
+     * This is done in such a way that it introduces no
+     * inconsitencies during propagation.
+     */
+    unsetAcross(key) {
+        // ...first change values
+        for(var e = 0; e < this.hash.length; e++) {
+            this.hash.setExtruder(e);
+            this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
+            this._unsetKey(key);
+            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
+        }
+        // ...now propagate changes
+        for(var e = 0; e < this.hash.length; e++) {
+            this.hash.setExtruder(e);
+            this.propagateChanges(key);
+        }
+        // ...finally notify listeners.
+        for(var e = 0; e < this.hash.length; e++) {
+            this.hash.setExtruder(e);
+            this.notifyListenersOfChanges();
+        }
+    }
+
+    /**
+     * Restore a setting to the defaults
+     */
+    unset(key) {
+        this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
+        this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
+        if(this._unsetKey(key)) {
+            this.propagateChanges(key);
+        }
+        this.notifyListenersOfChanges();
     }
 
     /**
@@ -636,19 +704,29 @@ class CuraSettings {
         }
     }
 
+    setExtruder(extruder) {
+        // We might be selecting an extruder that has not been allocated
+        // if that is the case, allocate it with the defaults now.
+        while(extruder >= this.hash.length) {
+            this.hash.duplicateExtruder();
+            this.loadDefaults();
+        }
+        this.hash.setExtruder(extruder);
+    }
+
     loadSettings(settings, options) {
         if(options && options.hasOwnProperty("extruder")) {
-            this.hash.setExtruder(options.extruder);
+            this.setExtruder(options.extruder);
             this.setMultiple(settings);
         } else {
-            this.hash.setExtruder(0);
+            this.setExtruder(0);
             this.setMultiple(settings);
 
             // Load configuration for specific extruders, if it exists
             for(var e = 0;; e++) {
                 const prop = "extruder_" + e;
                 if(!settings.hasOwnProperty(prop)) break;
-                this.hash.setExtruder(e);
+                this.setExtruder(e);
                 this.setMultiple(settings[prop]);
             }
         }
