@@ -223,9 +223,18 @@ div.dock-center {
     position:          sticky;
     top:               0;
     background-color:  var(--panel-color);
-    z-index:           99;
+    z-index:           1;
 }
 
 .extruder-legend .parameter-box {
     border-bottom:     2px solid;
 }
+
+.panel-style {
+    z-index: 2;
+}
+
+.dock-region {
+    z-index: 1;
+}
+
