@@ -45,12 +45,20 @@ class SlicerInterface {
         this.config.setMultiple(values, extruder);
     }
 
+    beginTransaction() {
+        this.config.beginTransaction();
+    }
+
+    endTransaction() {
+        this.config.endTransaction();
+    }
+
     getOptionDescriptor(name) {
         return this.config.getSettingDescriptor(name);
     }
 
-    loadDefaults(force) {
-        this.config.loadDefaults(force);
+    loadDefaults(numberOfExtruders, alwaysNotify) {
+        this.config.loadDefaults(numberOfExtruders, alwaysNotify);
     }
 
     // Causes the change handlers to be called for all values

@@ -163,19 +163,13 @@ class ProfileLibrary {
 }
 
 class ProfileManager {
-    // Clears out any configuration information in the ProfileManager object.
-    static _loadDefaults() {
-        
-    }
-
     static getSection(section) {
         return ProfileManager.profile[section];
     }
 
-    // Parses a TOML string and loads the profile. Slicer settings are sent to the slicer,
-    // while other settings are stored in the ProfileManager object.
-    static _loadProfileStr(str, baseUrl, options) {
-        let config;
+    // Parses a TOML string and returns the slicer settings.
+    static importConfiguration(str, baseUrl) {
+        let config, result;
         try {
             config = toml.parse(str);
         } catch (e) {
@@ -202,18 +196,19 @@ class ProfileManager {
             }
         }
 
-        // Apply the slicer settings
+        // Grab the slicer settings
         if(config.settings) {
-            slicer.loadSettings(config.settings, options);
+            result = config.settings;
             delete config.settings;
         }
 
         // Merge data from the config with data that may already exist in the ProfileManager object
         mergeProperties(ProfileManager.profile, config);
+        return result;
     }
 
     // Writes out the current profile as a TOML formatted string
-    static _saveProfileStr(options) {
+    static _getProfileStr(options) {
         const toml = new TOMLWriter();
         if(ProfileManager.profile) {
             toml.writeProperties(ProfileManager.profile, ["metadata", "based_on", "usb", "wireless", "scripts"]);
@@ -231,53 +226,46 @@ class ProfileManager {
     }
 
     static loadStoredProfile() {
-        if(typeof(Storage) === "undefined") return false;
+        if(typeof(Storage) === "undefined") return;
 
         const stored_config = localStorage.getItem("startup_config");
-        if(!stored_config) return false;
+        if(!stored_config) return;
 
         console.log("Loaded settings from local storage");
         try {
-            ProfileManager.importConfiguration(stored_config);
+            ProfileManager.clear();
+            return ProfileManager.importConfiguration(stored_config);
         } catch (e) {
             alert("Unable to load profile from last session");
             console.error(e);
-            return false;
         }
-        return true;
    }
 
     static onUnloadHandler() {
         console.log("Saved setting to local storage");
-        localStorage.setItem("startup_config", ProfileManager._saveProfileStr());
+        localStorage.setItem("startup_config", ProfileManager._getProfileStr());
     }
 
     /**
      * Loads a specific print profile. These profiles are stored as TOML files.
      */
-    static async loadPresets(type, value, options) {
+    static async loadPresets(type, value) {
+        if(value === "") return;
         const desc = ProfileLibrary.getDescriptor(type, value);
-        if(!desc) return;
+        if(!desc) throw("Unable to locate descriptor for " + type);
         const url = desc.url;
-        if(!url) return;
+        if(!url) throw("Unable to locate url for " + type);
         const data = await fetchText(url);
         console.log("Loaded", type, " from", url);
-        ProfileManager._loadProfileStr(data, url, options);
+        return ProfileManager.importConfiguration(data, url);
     }
 
-    // Apply a selection from the menu
-    static defaults() {
-        slicer.loadDefaults();
+    static clear() {
         ProfileManager.profile = {};
     }
 
-    static importConfiguration(data) {
-        ProfileManager.defaults();
-        ProfileManager._loadProfileStr(data);
-    }
-
     static exportConfiguration(options) {
-        return TOMLWriter.alignComments(ProfileManager._saveProfileStr(options));
+        return TOMLWriter.alignComments(ProfileManager._getProfileStr(options));
     }
 
     static setBasedOn(data) {

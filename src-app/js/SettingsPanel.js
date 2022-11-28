@@ -256,19 +256,17 @@ class SelectProfilesPage {
         SelectProfilesPage.onImportChanged(false); // Disable buttons
     }
 
-    static numberOfExtruders() {
-        const desc = ProfileLibrary.getDescriptor("machine_profiles", settings.get("machine_profiles"));
-        return desc ? desc.extruders : 1;
-    }
-
     static addMaterialMenus() {
+        // Before the profile is loaded, we read the number of extruders from the profile list
+        const desc = ProfileLibrary.getDescriptor("machine_profiles", settings.get("machine_profiles"));
+        const extruderCount = desc ? desc.extruders : 1;
+
         // Clear out the UI existing material menus
         document.getElementById("material_selections").innerText = "";
         SelectProfilesPage.material_menus = [];
 
         // Add the menus to the UI
         settings.setTarget("material_selections");
-        const extruderCount = SelectProfilesPage.numberOfExtruders();
         for(let e = 0; e < extruderCount; e++) {
             if(extruderCount > 1) {
                 settings.heading("Extruder #" + (e + 1));
@@ -288,14 +286,19 @@ class SelectProfilesPage {
         try {
             await ProfileLibrary.fetch();
             this.populateProfileMenus(SelectProfilesPage.machine_menus);
-            if(ProfileManager.loadStoredProfile()) {
+
+            // Attempt to load a stored profile, if one is available
+            const storedProfile = await ProfileManager.loadStoredProfile();
+            if(storedProfile) {
+                slicer.loadDefaults(storedProfile.machine_extruder_count);
+                slicer.loadSettings(storedProfile);
                 this.rememberProfileSelections(SelectProfilesPage.machine_menus);
                 this.addMaterialMenus();
                 this.rememberProfileSelections(SelectProfilesPage.material_menus);
             } else {
                 // If no startup profile is found, load first profile from the selection box
-                this.loadPresets();
                 this.addMaterialMenus();
+                await this.loadPresets();
             }
             SliceObjectsPage.onPrinterSizeChanged();
             this.onDropDownChange();
@@ -383,19 +386,30 @@ class SelectProfilesPage {
     static async loadPresets() {
         try {
             ProgressBar.message("Loading profiles");
-            await ProfileManager.defaults();
+
             // Apply the machine profiles
-            await ProfileManager.loadPresets("machine_profiles",  settings.get("machine_profiles"));
-            await ProfileManager.loadPresets("machine_upgrades",  settings.get("machine_upgrades"));
-            await ProfileManager.loadPresets("machine_toolheads", settings.get("machine_toolheads"));
-            await ProfileManager.loadPresets("print_quality",     settings.get("print_quality"));
-            // Apply the material profiles
-            const extruderCount = SelectProfilesPage.numberOfExtruders();
+            await ProfileManager.clear();
+            const machine_profiles  = await ProfileManager.loadPresets("machine_profiles",  settings.get("machine_profiles"));
+            const machine_upgrades  = await ProfileManager.loadPresets("machine_upgrades",  settings.get("machine_upgrades"));
+            const machine_toolheads = await ProfileManager.loadPresets("machine_toolheads", settings.get("machine_toolheads"));
+            const print_quality     = await ProfileManager.loadPresets("print_quality",     settings.get("print_quality"));
+            // Apply the settings to the slicer
+            const extruderCount = machine_profiles.machine_extruder_count;
+            slicer.beginTransaction();
+            slicer.loadDefaults(extruderCount);
             for(let e = 0; e < extruderCount; e++) {
-                await ProfileManager.loadPresets("print_profiles", settings.get("print_profiles_" + e), {extruder: e});
+                const print_profiles = await ProfileManager.loadPresets("print_profiles", settings.get("print_profiles_" + e));
+                const options = {extruder: e};
+                if(machine_profiles)  slicer.loadSettings(machine_profiles, options);
+                if(machine_upgrades)  slicer.loadSettings(machine_upgrades, options);
+                if(machine_toolheads) slicer.loadSettings(machine_toolheads, options);
+                if(print_quality)     slicer.loadSettings(print_quality, options);
+                if(print_profiles)    slicer.loadSettings(print_profiles, options);
             }
+            slicer.endTransaction();
             SliceObjectsPage.repopulate();
             SliceObjectsPage.onPrinterSizeChanged();
+
             // Persist the menu selections in the saved profile
             ProfileManager.setBasedOn(SelectProfilesPage.getProfileChoices());
         }  finally {
@@ -410,7 +424,10 @@ class SelectProfilesPage {
     static onImportClicked() {
         try {
             const el = settings.get("toml_file");
-            ProfileManager.importConfiguration(el.data);
+            ProfileManager.clear();
+            const profile = ProfileManager.importConfiguration(el.data);
+            slicer.loadDefaults(profile.machine_extruder_count);
+            slicer.loadSettings(profile);
             el.clear();
             SliceObjectsPage.repopulate();
             SliceObjectsPage.onPrinterSizeChanged();
@@ -784,6 +801,10 @@ class SliceObjectsPage {
         s.buttonHelp( "Click this button to generate a G-code file for printing.");
     }
 
+    static numberOfExtruders() {
+        return slicer.getOption("machine_extruder_count");
+    }
+
     static async repopulate(s) {
         // Clear out the slicer settings
         document.getElementById("page_slice").innerText = "";
@@ -791,7 +812,7 @@ class SliceObjectsPage {
         settings.setTarget("page_slice");
 
         // If doing multiple extrusion, create an extruder header
-        if(SelectProfilesPage.numberOfExtruders() > 1) {
+        if(SliceObjectsPage.numberOfExtruders() > 1) {
             settings.html('<div class="parameter extruder-legend"><label></label><h1 class="parameter-box">Extruder 2</h1><h1 class="parameter-box">Extruder 1</h1></div>');
         }
 
@@ -825,6 +846,7 @@ class SliceObjectsPage {
         }
 
         function updateSettingInSlicer(key, value, extruder) {
+            console.log(key, "set to", value, "on", extruder);
             slicer.setOption(key, value, extruder);
             SliceObjectsPage.onSlicerSettingsChanged(key, value);
         }
@@ -959,7 +981,7 @@ class SliceObjectsPage {
                     if(sd.type == 'optional_extruder') {
                         o.option("Not overriden", {value: -1});
                     }
-                    for(let e = 0; e < SelectProfilesPage.numberOfExtruders(); e++) {
+                    for(let e = 0; e < SliceObjectsPage.numberOfExtruders(); e++) {
                         o.option("Extruder " + (e + 1), {value: e});
                     }
                     el = o.element;
@@ -973,7 +995,7 @@ class SliceObjectsPage {
 
             // If we have multiple extruders, then duplicate the DOM tree corresponding to
             // the editable values.
-            if(SelectProfilesPage.numberOfExtruders() > 1) {
+            if(SliceObjectsPage.numberOfExtruders() > 1) {
                 const old_id = el.id;
                 const new_id = el.id + "_E1";
                 const container = el.closest('.parameter-box');

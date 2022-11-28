@@ -80,14 +80,15 @@ class SlicerConfiguration {
             this.settings.postLoad();
             this.onLoaded();
         }
-        this.clear();
-    }
-
-    clear() {
         this.hash = new CuraMultiHash();
         this.settings = new CuraSettings(this.defs, this.hash);
         this.settings.onLoaded = () => {this.onLoaded();}
-        this.settings.onSettingsChanged = this.processSettingsChanged.bind(this);
+        this.clear();
+        this.isTransaction = 0;
+    }
+
+    clear() {
+        this.hash.clear();
     }
 
     isMultipleValues(key) {
@@ -143,56 +144,146 @@ class SlicerConfiguration {
     }
 
     /**
-     * This loads the default settings. If alwaysNotify is true, the change
-     * callbacks will be triggered even if a particular setting did not change.
-     */
-    loadDefaults(alwaysNotify) {
-        this.clear();
-        this.settings.loadDefaults(alwaysNotify);
-    }
-
-    /**
      * Forces all callbacks to be triggered as if all settings were changed.
      */
     forceRefresh() {
-        this.settings.forceRefresh();
+        for(const key of this.defs.keys()) {
+            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
+        }
+        this.notifyListenersOfChanges();
+    }
+    
+    /**
+     * Print summary of affected settings and dispatch indirect change events.
+     */
+    notifyListenersOfChanges() {
+        for(const key of this.defs.keys()) {
+            if (this.hash.getFlagList(key, CuraHash.MUST_NOTIFY).some(x => x)) {
+                const val = this.hash.get(key);
+                if(this.verbose)
+                    console.log("--> Changed", key, "to", val);
+                this.hash.clearFlag(key, CuraHash.MUST_NOTIFY);
+                this.processSettingsChanged(key);
+            }
+        }
+    }
+
+    beginTransaction() {
+        this.isTransaction++;
+    }
+
+    endTransaction() {
+        if(this.isTransaction > 0) {
+            this.isTransaction--;
+        } else {
+            console.warn("endTransaction() called without corresponding beginTransaction()");
+        }
+        if(this.isTransaction != 0) {
+            return;
+        }
+
+        // Propagate changes on any settings flagged with DO_PROPAGATE
+        for(const key of this.defs.keys()) {
+            for(var e = 0; e < this.hash.length; e++) {
+                this.hash.setExtruder(e);
+                if(this.hash.hasFlag(key, CuraHash.DO_RECOMPUTE)) {
+                    this.hash.clearFlag(key, CuraHash.DO_PROPAGATE);
+                    this.settings.recomputeValue(key);
+                }
+                if(this.hash.hasFlag(key, CuraHash.DO_PROPAGATE)) {
+                    this.hash.clearFlag(key, CuraHash.DO_PROPAGATE);
+                    this.settings.propagateChanges(key);
+                }
+            }
+        }
+
+        // Update flags on any settings with a CuraHash.MUST_NOTIFY
+        for(const key of this.defs.keys()) {
+            for(var e = 0; e < this.hash.length; e++) {
+                this.hash.setExtruder(e);
+                if(this.hash.hasFlag(key, CuraHash.MUST_NOTIFY) ||
+                   this.hash.hasFlag(key, CuraHash.DO_RECOMPUTE)) {
+                    this.settings.recomputeFlags(key);
+                }
+            }
+        }
+
+        // Finally, update the UI.
+        this.notifyListenersOfChanges();
     }
 
     /**
-     * Sets one or more settings to new values. This will also
-     * propagate to other enabled settings that depend on the
-     * settings that just changed.
+     * This loads the default settings. If alwaysNotify is true, the change
+     * callbacks will be triggered even if a particular setting did not change.
+     */
+    loadDefaults(extruders, alwaysNotify) {
+        this.clear();
+        this.beginTransaction();
+        for(var e = 0; e < extruders; e++) {
+            if(e >= this.hash.length) {
+                this.hash.duplicateExtruder();
+            }
+            this.hash.setExtruder(e);
+            this.settings.loadDefaults(alwaysNotify);
+        }
+        this.endTransaction();
+    }
+
+    /**
+     * Sets one or more settings to new values.
      */
     setMultiple(settings, extruder = 0) {
         this.hash.setExtruder(extruder);
-        this.settings.setMultiple(settings);
+        this.beginTransaction();
+        for(const [key, val] of Object.entries(settings)) {
+            if(!this.defs.hasDescriptor(key)) {
+                console.warn("Ignoring non-slicer setting", key);
+                continue;
+            }
+            this.settings.set(key, val);
+        }
+        this.endTransaction();
     }
 
     /**
-     * Sets a setting to a new value. This will also cause changes to
-     * propagate to other settings which might depend on this setting.
+     * Sets a setting to a new value. This operation will apply
+     * to the specified extruder, unless the setting is linked
+     * across extruders, in which case it will apply to all.
      */
     set(key, value, extruder = 0) {
         if(isNaN(value)) {
             return this.unset(key, extruder);
         }
+        this.beginTransaction();
         if(this.isMultipleValues(key)) {
-            const settings = {};
-            settings[key] = value;
             this.hash.setExtruder(extruder);
-            this.settings.setMultiple(settings);
+            this.settings.set(key, value);
         } else {
-            this.settings.setAcross(key, value);
+            for(var e = 0; e < this.hash.length; e++) {
+                this.hash.setExtruder(e);
+                this.settings.set(key, value);
+            }
         }
+        this.endTransaction();
     }
 
+    /**
+     * Clears a setting, returning it to defaults. This operation
+     * will apply to the specified extruder, unless the setting is
+     * linked across extruders, in which case it will apply to all.
+     */
     unset(key, extruder = 0) {
+        this.beginTransaction();
         if(this.isMultipleValues(key)) {
             this.hash.setExtruder(extruder);
             this.settings.unset(key);
         } else {
-            this.settings.unsetAcross(key);
+            for(var e = 0; e < this.hash.length; e++) {
+                this.hash.setExtruder(e);
+                this.settings.unset(key);
+            }
         }
+        this.endTransaction();
     }
 
     /**
@@ -208,7 +299,18 @@ class SlicerConfiguration {
     }
 
     loadSettings(settings, options) {
-        this.settings.loadSettings(settings, options);
+        this.beginTransaction();
+        for(var e = 0; e < this.hash.length; e++) {
+            if(!options || !options.hasOwnProperty("extruder") || options.extruder == e) {
+                this.setMultiple(settings, e);
+                // Extruder specific options
+                const prop = "extruder_" + e;
+                if(settings.hasOwnProperty(prop)) {
+                    this.setMultiple(settings[prop], e);
+                }
+            }
+        }
+        this.endTransaction();
     }
 }
 
@@ -256,7 +358,7 @@ class CuraHash {
             this.flags[key] = bit;
             return true;
         }
-        if(this.flags[key] & bit) return false;
+        if((this.flags[key] & bit) == bit) return false;
         this.flags[key] |= bit;
         return true;
     }
@@ -281,10 +383,12 @@ class CuraHash {
 
 // Static constants
 
-CuraHash.ENABLED_FLAG  = 1; // Set if a value is enabled in the UI
-CuraHash.CHANGED_FLAG  = 2; // Set if a value was changed from the default
-CuraHash.INVALID_FLAG  = 4; // Set if a value is in an error state
-CuraHash.MUST_NOTIFY   = 8; // Set if the setting was changed, but a notification has not yet been sent
+CuraHash.ENABLED_FLAG = 1;  // Set if a value is enabled in the UI
+CuraHash.CHANGED_FLAG = 2;  // Set if a value was changed from the default
+CuraHash.INVALID_FLAG = 4;  // Set if a value is in an error state
+CuraHash.DO_RECOMPUTE = 8;  // Set if a value must be recomputed at the end of the transaction
+CuraHash.DO_PROPAGATE = 16; // Set if changes need to be propagated at the end of the transaction
+CuraHash.MUST_NOTIFY  = 32; // Set if the setting was changed, but a notification has not yet been sent
 
 class CuraMultiHash {
     constructor() {
@@ -360,9 +464,6 @@ class CuraSettings {
         this.hash    = hash;
     }
 
-    onSettingsChanged(key) {
-    }
-
     /**
      * Called when all configurations have been loaded and are ready
      */
@@ -431,70 +532,39 @@ class CuraSettings {
             if(node.hasOwnProperty('default_value')) {
                 this.hash.set(key, node.default_value);
             }
-            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
+            this.hash.setFlag(key,   CuraHash.MUST_NOTIFY);
+            this.hash.setFlag(key,   CuraHash.DO_RECOMPUTE);
             this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
             this.hash.clearFlag(key, CuraHash.INVALID_FLAG);
         }
-        // Recompute all values
-        for(const key of this.defs.keys().sort()) {
-            this.recomputeFlags(key);
-            this.recomputeValue(key);
-        }
-        for(const key of this.defs.keys().sort()) {
-            this.propagateChanges(key);
-        }
-        this.notifyListenersOfChanges();
     }
 
     /**
-     * Causes all settings to be marked as changed and the change callbacks to be called.
+     * Sets one or more settings to new values. This will also
+     * propagate to other enabled settings that depend on the
+     * settings that just changed.
      */
-    forceRefresh() {
-        for(const key of this.defs.keys().sort()) {
-            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
-        }
-        this.notifyListenersOfChanges();
-    }
-
-    /**
-     * Print summary of affected settings and dispatch indirect change events.
-     */
-    notifyListenersOfChanges() {
-        for(const key of this.defs.keys()) {
-            if (this.hash.getFlagList(key, CuraHash.MUST_NOTIFY).some(x => x)) {
-                const val = this.hash.get(key);
-                if(this.verbose)
-                    console.log("--> Changed", key, "to", val);
-                this.hash.clearFlag(key, CuraHash.MUST_NOTIFY);
-                this.onSettingsChanged(key);
-            }
+    set(key, val) {
+        if(this.hash.set(key, this.clampOutOfRange(key, val)) || !this.hash.hasFlag(key, CuraHash.CHANGED_FLAG)) {
+            this.hash.setFlag(key,
+                CuraHash.CHANGED_FLAG |
+                CuraHash.DO_PROPAGATE |
+                CuraHash.MUST_NOTIFY
+            );
+            this.hash.clearFlag(
+                CuraHash.DO_RECOMPUTE
+            );
         }
     }
 
     /**
-     * Sets a setting across all extruders. This is done
-     * in such a way that it introduces no inconsitencies
-     * during propagation.
+     * Restore a setting to the defaults
      */
-    setAcross(key, value) {
-        // ...first change values
-        for(var e = 0; e < this.hash.length; e++) {
-            this.hash.setExtruder(e);
-            this.hash.setFlag(key, CuraHash.CHANGED_FLAG);
-            if(this.hash.set(key, this.clampOutOfRange(key, value))) {
-                this.recomputeFlags(key);
-                this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
-            }
-        }
-        // ...now propagate changes
-        for(var e = 0; e < this.hash.length; e++) {
-            this.hash.setExtruder(e);
-            this.propagateChanges(key);
-        }
-        // ...finally notify listeners.
-        for(var e = 0; e < this.hash.length; e++) {
-            this.hash.setExtruder(e);
-            this.notifyListenersOfChanges();
+    unset(key) {
+        this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
+        this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
+        if(this._unsetKey(key)) {
+            this.hash.setFlag(key, CuraHash.DO_PROPAGATE);
         }
     }
 
@@ -506,68 +576,6 @@ class CuraSettings {
             return this.hash.set(key, this.defs.getProperty(key,'default_value'));
         }
         return false;
-    }
-
-    /**
-     * Restores to default a setting across all extruders.
-     * This is done in such a way that it introduces no
-     * inconsitencies during propagation.
-     */
-    unsetAcross(key) {
-        // ...first change values
-        for(var e = 0; e < this.hash.length; e++) {
-            this.hash.setExtruder(e);
-            this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
-            this._unsetKey(key);
-            this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
-        }
-        // ...now propagate changes
-        for(var e = 0; e < this.hash.length; e++) {
-            this.hash.setExtruder(e);
-            this.propagateChanges(key);
-        }
-        // ...finally notify listeners.
-        for(var e = 0; e < this.hash.length; e++) {
-            this.hash.setExtruder(e);
-            this.notifyListenersOfChanges();
-        }
-    }
-
-    /**
-     * Restore a setting to the defaults
-     */
-    unset(key) {
-        this.hash.clearFlag(key, CuraHash.CHANGED_FLAG);
-        this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
-        if(this._unsetKey(key)) {
-            this.propagateChanges(key);
-        }
-        this.notifyListenersOfChanges();
-    }
-
-    /**
-     * Sets one or more settings to new values. This will also
-     * propagate to other enabled settings that depend on the
-     * settings that just changed.
-     */
-    setMultiple(settings) {
-        for(const key of Object.keys(settings)) {
-            this.hash.setFlag(key, CuraHash.CHANGED_FLAG);
-        }
-        // Settings propagation may be modify a setting multiple
-        // times, so log unique changes for postprocessing.
-        for(const [key, val] of Object.entries(settings)) {
-            if(!this.defs.hasDescriptor(key)) {
-                console.warn("Attempting to set non-existent setting", key);
-                continue;
-            }
-            if(this.hash.set(key, this.clampOutOfRange(key, val))) {
-                this.recomputeFlags(key);
-                this.hash.setFlag(key, CuraHash.MUST_NOTIFY);
-                this.propagateChanges(key);
-            }
-        }
-        this.notifyListenersOfChanges();
     }
 
     /**
@@ -735,34 +743,6 @@ class CuraSettings {
             }
         }
     }
-
-    setExtruder(extruder) {
-        // We might be selecting an extruder that has not been allocated
-        // if that is the case, allocate it with the defaults now.
-        while(extruder >= this.hash.length) {
-            this.hash.duplicateExtruder();
-            this.loadDefaults();
-        }
-        this.hash.setExtruder(extruder);
-    }
-
-    loadSettings(settings, options) {
-        if(options && options.hasOwnProperty("extruder")) {
-            this.setExtruder(options.extruder);
-            this.setMultiple(settings);
-        } else {
-            this.setExtruder(0);
-            this.setMultiple(settings);
-
-            // Load configuration for specific extruders, if it exists
-            for(var e = 0;; e++) {
-                const prop = "extruder_" + e;
-                if(!settings.hasOwnProperty(prop)) break;
-                this.setExtruder(e);
-                this.setMultiple(settings[prop]);
-            }
-        }
-    }
 }
 
 /**
@@ -828,6 +808,7 @@ class CuraDefinitions {
         for(const [key, node] of Object.entries(this.nodes)) {
             this.var_regex[key] = new RegExp('\\b' + key + '\\b');
         }
+        //console.log("Computing resolution order", this.getResolutionOrder());
         this.onLoaded();
     }
 
@@ -905,12 +886,13 @@ class CuraDefinitions {
     /**
      * Return a list of all settings that directly affect a setting
      */
-    getDependencies(setting) {
+    getDependencies(setting, properties = ['value', 'resolve', 'enabled', 'limit_to_extruder']) {
         const node = this.nodes[setting], dependencies = new Set();
-        if(node.hasOwnProperty('value'))   this.getExpressionDependencies(node.value, dependencies);
-        if(node.hasOwnProperty('resolve')) this.getExpressionDependencies(node.resolve, dependencies);
-        if(node.hasOwnProperty('enabled')) this.getExpressionDependencies(node.enabled, dependencies);
-        if(node.hasOwnProperty('limit_to_extruder')) this.getExpressionDependencies(node.limit_to_extruder, dependencies);
+        for (const prop of properties) {
+            if(node.hasOwnProperty(prop)) {
+                this.getExpressionDependencies(node[prop], dependencies);
+            }
+        }
         return dependencies;
     }
 
@@ -935,6 +917,33 @@ class CuraDefinitions {
      nodeDependsOn(thisSetting, anotherSetting, prop) {
          const node = this.nodes[thisSetting];
          return node.hasOwnProperty(prop) && typeof node[prop] === 'string' && node[prop].search(this.var_regex[anotherSetting]) != -1;
+     }
+
+    /**
+     * Generates an ordering of the settings such that dependents are always evaluated first. 
+     */
+     getResolutionOrder() {
+         const order = new Set();
+         const processNode = key => {
+            const dependencies = this.getDependencies(key, ['value', 'resolve']);
+            dependencies.forEach(
+                dependency => {
+                    if(dependency == key) return; // Prevent self-reference
+                    processNode(dependency);
+                }
+            );
+            if(dependencies.size > 0) {
+                order.add(key);
+            }
+         }
+         for(const key of Object.keys(this.nodes)) {
+             try {
+                processNode(key);
+             } catch(e) {
+                 console.error("Failed to determine dependency order for", key);
+             }
+         }
+         return Array.from(order);
      }
 
     /**
@@ -1287,5 +1296,6 @@ class CuraCommandLine {
 var SS = SS || {};
 SS.Slicer = SS.Slicer || {};
 
+SS.Slicer.hasFlag     = (key, bit, extruder = 0) => slicer.config.hash.extruders[extruder].hasFlag(key, bit);
 SS.Slicer.getSetting  = (key, extruder = 0) => slicer.config.hash.extruders[extruder].get(key);
 SS.Slicer.getProperty = (key, property, extruder = 0) => {slicer.config.hash.setExtruder(extruder); return slicer.config.settings.evalProperty(key, property)};
