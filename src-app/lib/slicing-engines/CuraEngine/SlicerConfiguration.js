@@ -251,7 +251,7 @@ class SlicerConfiguration {
      * across extruders, in which case it will apply to all.
      */
     set(key, value, extruder = 0) {
-        if(isNaN(value)) {
+        if(typeof value == 'number' && isNaN(value)) {
             return this.unset(key, extruder);
         }
         this.beginTransaction();

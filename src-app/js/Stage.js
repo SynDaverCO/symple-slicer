@@ -66,7 +66,7 @@ class Stage {
         }
 
         let multiExtruder = () => {
-            return SelectProfilesPage.numberOfExtruders() > 1;
+            return slicer.numberOfExtruders() > 1;
         }
 
         let extruderSelected = (extruder) => {

@@ -801,10 +801,6 @@ class SliceObjectsPage {
         s.buttonHelp( "Click this button to generate a G-code file for printing.");
     }
 
-    static numberOfExtruders() {
-        return slicer.getOption("machine_extruder_count");
-    }
-
     static async repopulate(s) {
         // Clear out the slicer settings
         document.getElementById("page_slice").innerText = "";
@@ -812,7 +808,7 @@ class SliceObjectsPage {
         settings.setTarget("page_slice");
 
         // If doing multiple extrusion, create an extruder header
-        if(SliceObjectsPage.numberOfExtruders() > 1) {
+        if(slicer.numberOfExtruders() > 1) {
             settings.html('<div class="parameter extruder-legend"><label></label><h1 class="parameter-box">Extruder 2</h1><h1 class="parameter-box">Extruder 1</h1></div>');
         }
 
@@ -981,7 +977,7 @@ class SliceObjectsPage {
                     if(sd.type == 'optional_extruder') {
                         o.option("Not overriden", {value: -1});
                     }
-                    for(let e = 0; e < SliceObjectsPage.numberOfExtruders(); e++) {
+                    for(let e = 0; e < slicer.numberOfExtruders(); e++) {
                         o.option("Extruder " + (e + 1), {value: e});
                     }
                     el = o.element;
@@ -995,7 +991,7 @@ class SliceObjectsPage {
 
             // If we have multiple extruders, then duplicate the DOM tree corresponding to
             // the editable values.
-            if(SliceObjectsPage.numberOfExtruders() > 1) {
+            if(slicer.numberOfExtruders() > 1) {
                 const old_id = el.id;
                 const new_id = el.id + "_E1";
                 const container = el.closest('.parameter-box');

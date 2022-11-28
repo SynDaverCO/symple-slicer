@@ -73,6 +73,10 @@ class SlicerInterface {
     loadSettings(settings, options) {
         return this.config.loadSettings(settings, options);
     }
+
+    numberOfExtruders() {
+        return this.config.get("machine_extruder_count");
+    }
 }
 
 class SlicerWorkerInterface extends SlicerInterface {
