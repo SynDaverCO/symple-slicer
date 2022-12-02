@@ -27,7 +27,7 @@ importScripts('lib/util/misc/Wikify.js');
 // Based on https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 
 const info = {
-    cacheVersion: 293
+    cacheVersion: 295
 };
 
 const cacheName = 'v' + info.cacheVersion;
@@ -41,11 +41,11 @@ const filesToCache = [
     'config/syndaver/machine_profiles/syndaver_axi_2.toml',
     'config/syndaver/machine_profiles/syndaver_level.toml',
     'config/syndaver/machine_profiles/syndaver_level_up.toml',
-    'config/syndaver/machine_profiles/syndaver_ng2_0.4.toml',
-    'config/syndaver/machine_profiles/syndaver_ng2_0.6.toml',
-    'config/syndaver/machine_profiles/syndaver_ng2_0.8.toml',
-    'config/syndaver/machine_profiles/syndaver_ng2_1.0.toml',
-    'config/syndaver/machine_profiles/syndaver_ng2_1.2.toml',
+    'config/syndaver/machine_profiles/syndaver_ng2_04.toml',
+    'config/syndaver/machine_profiles/syndaver_ng2_06.toml',
+    'config/syndaver/machine_profiles/syndaver_ng2_08.toml',
+    'config/syndaver/machine_profiles/syndaver_ng2_10.toml',
+    'config/syndaver/machine_profiles/syndaver_ng2_12.toml',
     'config/syndaver/print_profiles/axi1/abs_axi1_standard.toml',
     'config/syndaver/print_profiles/axi1/asa_axi1_standard.toml',
     'config/syndaver/print_profiles/axi1/cf-nylon_axi1_standard.toml',
@@ -100,16 +100,16 @@ const filesToCache = [
     'config/syndaver/print_profiles/level-up/silk-pla_level-up_standard.toml',
     'config/syndaver/print_profiles/level-up/tpu85_level-up_standard.toml',
     'config/syndaver/print_profiles/level-up/tpu95_level-up_standard.toml',
-    'config/syndaver/print_profiles/ng2/CURA_DEFAULTS.toml',
-    'config/syndaver/print_profiles/ng2/pla_ng2_standard.toml',
+    'config/syndaver/print_profiles/ng2_04/CURA_DEFAULTS.toml',
+    'config/syndaver/print_profiles/ng2_04/pla_ng2_04_standard.toml',
+    'config/syndaver/print_profiles/ng2_06/CURA_DEFAULTS.toml',
+    'config/syndaver/print_profiles/ng2_06/pla_ng2_06_standard.toml',
+    'config/syndaver/print_profiles/ng2_08/CURA_DEFAULTS.toml',
+    'config/syndaver/print_profiles/ng2_08/pla_ng2_08_standard.toml',
     'config/syndaver/print_profiles/ng2_10/CURA_DEFAULTS.toml',
     'config/syndaver/print_profiles/ng2_10/pla_ng2_10_standard.toml',
     'config/syndaver/print_profiles/ng2_12/CURA_DEFAULTS.toml',
     'config/syndaver/print_profiles/ng2_12/pla_ng2_12_standard.toml',
-    'config/syndaver/print_profiles/ng2_6/CURA_DEFAULTS.toml',
-    'config/syndaver/print_profiles/ng2_6/pla_ng2_6_standard.toml',
-    'config/syndaver/print_profiles/ng2_8/CURA_DEFAULTS.toml',
-    'config/syndaver/print_profiles/ng2_8/pla_ng2_8_standard.toml',
     'config/syndaver/machine_firmware/LICENSE.txt',
     'config/syndaver/machine_firmware/SynDaver_Axi_1_Marlin_R7_c97c32e0f6.bin',
     'config/syndaver/machine_firmware/SynDaver_Axi_2_Marlin_R4_d365fe33af.bin',
