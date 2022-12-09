@@ -551,7 +551,7 @@ class CuraSettings {
                 CuraHash.DO_PROPAGATE |
                 CuraHash.MUST_NOTIFY
             );
-            this.hash.clearFlag(
+            this.hash.clearFlag(key,
                 CuraHash.DO_RECOMPUTE
             );
         }
