@@ -160,7 +160,7 @@ class SlicerConfiguration {
         for(const key of this.defs.keys()) {
             if (this.hash.getFlagList(key, CuraHash.MUST_NOTIFY).some(x => x)) {
                 const val = this.hash.get(key);
-                if(this.verbose)
+                if(SS.Slicer.verbose)
                     console.log("--> Changed", key, "to", val);
                 this.hash.clearFlag(key, CuraHash.MUST_NOTIFY);
                 this.processSettingsChanged(key);
@@ -185,6 +185,11 @@ class SlicerConfiguration {
         // Propagate changes on any settings flagged with DO_PROPAGATE
         for(const key of this.defs.keys()) {
             for(var e = 0; e < this.hash.length; e++) {
+                if(key == SS.Slicer.debugSetting) {
+                    console.log("Finalizing", key, "on extruder", e,
+                        "hasRecompute:", this.hash.hasFlag(key, CuraHash.DO_RECOMPUTE),
+                        "hasPropagate:", this.hash.hasFlag(key, CuraHash.DO_PROPAGATE));
+                }
                 this.hash.setExtruder(e);
                 if(this.hash.hasFlag(key, CuraHash.DO_RECOMPUTE)) {
                     this.hash.clearFlag(key, CuraHash.DO_PROPAGATE);
@@ -459,7 +464,6 @@ class CuraMultiHash {
 
 class CuraSettings {
     constructor(definitions, hash) {
-        this.verbose = false;
         this.defs    = definitions;
         this.hash    = hash;
     }
@@ -554,6 +558,9 @@ class CuraSettings {
             this.hash.clearFlag(key,
                 CuraHash.DO_RECOMPUTE
             );
+            if(key == SS.Slicer.debugSetting) {
+                console.log("Setting DO_PROPAGATE for", key);
+            }
         }
     }
 
@@ -583,6 +590,9 @@ class CuraSettings {
      * marked as CHANGED_FLAG.
      */
     propagateChanges(key) {
+        if(key == SS.Slicer.debugSetting) {
+            console.log("propagateChanges from", key);
+        }
         this.defs.getDependents(key).forEach(
             dependent => {
                 if(dependent == key) return; // Prevent self-reference
@@ -593,6 +603,9 @@ class CuraSettings {
                     this.propagateChanges(dependent);
                 }
                 this.hash.setFlag(dependent, CuraHash.MUST_NOTIFY);
+                if(key == SS.Slicer.debugSetting) {
+                    console.log("  to", dependent);
+                }
             }
         );
     }
@@ -820,12 +833,12 @@ class CuraDefinitions {
         var copyProperty = (key, to, from, prop) => {
             if(from.hasOwnProperty(prop)) {
                 if(from[prop] == null && to.hasOwnProperty(prop)) {
-                    if(this.verbose) {
+                    if(SS.Slicer.verbose) {
                         console.log("Deleting", prop, "of", key);
                     }
                     delete to[prop];
                 } else {
-                    if(this.verbose && to.hasOwnProperty(prop)) {
+                    if(SS.Slicer.verbose && to.hasOwnProperty(prop)) {
                         console.log("Overriding", prop, "of", key);
                     }
                     to[prop] = from[prop];
@@ -1296,6 +1309,8 @@ class CuraCommandLine {
 var SS = SS || {};
 SS.Slicer = SS.Slicer || {};
 
-SS.Slicer.hasFlag     = (key, bit, extruder = 0) => slicer.config.hash.extruders[extruder].hasFlag(key, bit);
-SS.Slicer.getSetting  = (key, extruder = 0) => slicer.config.hash.extruders[extruder].get(key);
-SS.Slicer.getProperty = (key, property, extruder = 0) => {slicer.config.hash.setExtruder(extruder); return slicer.config.settings.evalProperty(key, property)};
+SS.Slicer.verbose      = false;
+SS.Slicer.debugSetting = null;
+SS.Slicer.hasFlag      = (key, bit, extruder = 0) => slicer.config.hash.extruders[extruder].hasFlag(key, bit);
+SS.Slicer.getSetting   = (key, extruder = 0) => slicer.config.hash.extruders[extruder].get(key);
+SS.Slicer.getProperty  = (key, property, extruder = 0) => {slicer.config.hash.setExtruder(extruder); return slicer.config.settings.evalProperty(key, property)};
