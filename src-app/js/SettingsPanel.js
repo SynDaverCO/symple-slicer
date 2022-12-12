@@ -497,7 +497,7 @@ class PlaceObjectsPage {
 
         s.div({id: "load_models"});
         s.file("Drag and drop 3D objects<br><small>(STL, OBJ, 3MF or GCO)</small>",
-                                                                     {id: "model_file", onchange: PlaceObjectsPage.onDropModel, mode: 'binary', multiple: 'multiple', accept: ".stl,.obj,.3mf,.gco,.gcode"});
+                                                                     {id: "model_file", onchange: PlaceObjectsPage.onDropModel, mode: 'file', multiple: 'multiple', accept: ".stl,.obj,.3mf,.gco,.gcode"});
 
         s.category("Place More");
         s.number(     "How many more to place?",                     {id: "place_quantity", value: "1", min: "1", max: "50", onchange: SettingsPanel.enforceMinMax});
@@ -542,13 +542,34 @@ class PlaceObjectsPage {
         }
     }
 
-    static onDropModel(data, filename) {
+    static readFileAsPromise(file, mode) {
+        return new Promise((resolve, reject) => {
+            var fr = new FileReader();  
+            fr.onload = () => {
+                resolve(fr.result )
+            };
+            fr.onerror = reject;
+            fr.onprogress = e => {
+                if (e.lengthComputable) {
+                    ProgressBar.progress(e.loaded/e.total);
+                }
+            }
+            if(mode == 'binary') {
+                fr.readAsArrayBuffer(file);
+            } else {
+                fr.readAsText(file);
+            }
+        });
+    }
+
+    static async onDropModel(file, filename) {
         // Check for pre-sliced gcode files
         if(filename) {
             const extension = filename.split('.').pop();
             if(extension == "gco" || extension == "gcode") {
                 if(confirm("Loading pre-sliced G-code will clear any existing objects.\nAny printer, material or slicing choices you have made will be ignored.\nPrinting incompatible G-code could damage your printer.")) {
                     stage.removeAll();
+                    const data = await PlaceObjectsPage.readFileAsPromise(file, 'binary');
                     PrintAndPreviewPage.setOutputGcodeName(filename);
                     PrintAndPreviewPage.readyToDownload(data);
                 }
@@ -556,7 +577,8 @@ class PlaceObjectsPage {
             }
         }
         // Handle regular model files
-        if(data) {
+        if(file) {
+            const data = await PlaceObjectsPage.readFileAsPromise(file, 'binary');
             PrintAndPreviewPage.setOutputGcodeName(filename);
             ProgressBar.message("Preparing model");
             geoLoader.load(filename, data);
