@@ -1238,8 +1238,16 @@ class PrintAndPreviewPage {
         ProgressBar.hide();
         settings.gotoPage("page_print");
         const decoder = new TextDecoder();
-        const gcode = decoder.decode(data);
-        this.loadSlicedGcode(gcode);
+        const str = decoder.decode(data);
+        sliced_gcode = str;
+        const path = new GCodeParser(str);
+        stage.setGcodePath(path);
+        const max = Math.max(0, stage.getGcodeLayers() - 1);
+        $("#preview_layer").attr("max", max).val(max);
+        $('#preview_layer').val(max);
+        $('#current_layer').val(max);
+        PrintAndPreviewPage.extractDataFromGcodeHeader(str);
+        PrintAndPreviewPage.onUpdatePreview();
     }
 
     static sliceFailed() {
@@ -1270,18 +1278,6 @@ class PrintAndPreviewPage {
         PrintAndPreviewPage.setPrintBounds(bounds);
         PrintAndPreviewPage.setPrintTime(time_hms);
         PrintAndPreviewPage.setPrintFilament(filament.toFixed(2));
-    }
-
-    static loadSlicedGcode(str) {
-        sliced_gcode = str;
-        const path = new GCodeParser(str);
-        stage.setGcodePath(path);
-        const max = Math.max(0, stage.getGcodeLayers() - 1);
-        $("#preview_layer").attr("max", max).val(max);
-        $('#preview_layer').val(max);
-        $('#current_layer').val(max);
-        PrintAndPreviewPage.extractDataFromGcodeHeader(str);
-        PrintAndPreviewPage.onUpdatePreview();
     }
 
     static getGcodeBlob() {
