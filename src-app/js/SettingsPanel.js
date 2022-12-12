@@ -842,7 +842,6 @@ class SliceObjectsPage {
         }
 
         function updateSettingInSlicer(key, value, extruder) {
-            console.log(key, "set to", value, "on", extruder);
             slicer.setOption(key, value, extruder);
             SliceObjectsPage.onSlicerSettingsChanged(key, value);
         }
@@ -863,6 +862,7 @@ class SliceObjectsPage {
                     switch(sd.type) {
                         case 'float':
                         case 'int':
+                        case '[int]':
                         case 'str':
                         case 'enum':
                         case 'extruder':
@@ -931,6 +931,13 @@ class SliceObjectsPage {
                 case 'enum':
                     value = event.target.value;
                     break;
+                case '[int]':
+                    try {
+                        value = JSON.stringify(JSON.parse(event.target.value));
+                    } catch(e) {
+                        console.log(event.target.value,"is not a valid integer list");
+                    }
+                    break;
                 case 'bool':
                     value = event.target.checked;
                     break;
@@ -956,6 +963,9 @@ class SliceObjectsPage {
                 case 'float':
                 case 'int':
                     el = s.number(label, {...attr, step: sd.type == 'int' ? 1 : 0.01});
+                    break;
+                case '[int]':
+                    el = s.text(label, attr);
                     break;
                 case 'str':
                     el = s.textarea(label + ":", attr);
