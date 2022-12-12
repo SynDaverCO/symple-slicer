@@ -50,7 +50,7 @@ class SlicerSettings {
                 }
             }
         }
-        const json = await fetchJSON("config/cura_defaults/fdmprinter.def.json");
+        const json = await fetchJSON("lib/slicing-engines/CuraEngine/fdmprinter.def.json");
         for (const [key, value] of Object.entries(json["settings"])) {
             if (key == "machine_settings" || key == "dual" || key == "command_line_settings") continue;
             if (value.type == "category") {
