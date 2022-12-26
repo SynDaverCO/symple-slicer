@@ -35,12 +35,7 @@ self.importScripts('../../util/geometry/GeometrySerialize.js');
 self.importScripts('../../util/geometry/GeometryAlgorithms.js');
 self.importScripts('../../util/io/StlWriter.js');
 self.importScripts('../../util/io/FetchFile.js');
-self.importScripts('CuraPostprocessing.js');
 self.importScripts('CuraEngine.js');
-
-if(typeof TextEncoder === "undefined") {
-    self.importScripts('../../FastestSmallestTextEncoderDecoder/EncoderDecoderTogether.min.js');
-}
 
 /**
  * The following routine causes Cura to show a help screen.
@@ -102,32 +97,20 @@ async function loadFromUrl(url, filename) {
  * The following routine reads the file "output.gcode" from the Emscripten FS
  * and posts it via a message
  */
-function get_file(slicer_args) {
-    var gcode;
+function get_file() {
+    let gcode;
     try {
-        gcode = FS.readFile('output.gcode', {encoding: 'utf8'});
+        gcode = FS.readFile('output.gcode', {encoding: 'binary'});
     } catch (err) {
         console.log("Error reading output gcode:", err.message);
         return;
     }
-
-    // Apply post-processing to file
-    gcode = postProcessGcode(gcode, slicer_args);
-
-    const enc = new TextEncoder();
-    var payload = {
+    const payload = {
             'cmd': 'file',
-            'file': enc.encode(gcode)
+            'gcode': gcode
         };
     self.postMessage({'cmd': 'stdout', 'str': "Transfering G-code"});
-    self.postMessage(payload, [payload.file.buffer]);
-}
-
-function get_stats() {
-    self.postMessage({
-        'cmd': 'stats',
-        'stats': sliceInfo
-    });
+    self.postMessage(payload, [payload.gcode.buffer]);
 }
 
 function stop() {
@@ -144,12 +127,6 @@ function onStdout(str) {
 }
 
 function onStderr(str) {
-    const progress = captureProgress(str);
-    if(typeof progress !== "undefined") {
-        self.postMessage({cmd: 'progress', value: progress});
-        return;
-    }
-    captureGcodeHeader(str);
     self.postMessage({'cmd': 'stderr', 'str' : str});
 }
 
@@ -170,7 +147,7 @@ async function receiveMessage(e) {
         case 'loadFromUrl':  loadFromUrl(data.url, data.filename);                   break;
         case 'loadFromBlob': loadFromBlob(data.blob, data.filename);                 break;
         case 'loadGeometry': loadGeometry(jsonToGeometry(data.data,true), data.filename); break;
-        case 'slice':        await slice(data.args); get_stats(); get_file(data.args);     break;
+        case 'slice':        await slice(data.args); get_file();                     break;
         case 'stop':         stop();                                                 break;
         default:             Module.printErr('Unknown command: ' + cmd);
     };

@@ -125,6 +125,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script src="js/RenderLoop.js"></script>
         <script src="js/Stage.js"></script>
         <script src="js/WebWifiConnector.js"></script>
+        <script src="js/SlicerOutput.js"></script>
+        <script src="js/GCodePostprocessing.js"></script>
         <script src="js/PauseAtLayer.js"></script>
         <script src="js/SlicerSettings.js"></script>
         <script src="js/SettingsPanel.js"></script>
@@ -386,7 +388,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     );
                     break;
                 case "native-cura":
-                    loadResource("lib/slicing-engines/CuraEngine/CuraPostprocessing.js");
                     slicer = new SlicerNativeInterface(
                         "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
                         "lib/slicing-engines/CuraEngine/",
@@ -414,8 +415,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             slicer.onStdoutOutput = Log.write;
             slicer.onStderrOutput = Log.error;
 
-            slicer.onFileReceived = function(data) {
-                PrintAndPreviewPage.readyToDownload(data);
+            slicer.onStreamAvailable = function(stream) {
+                PrintAndPreviewPage.readyToDownload(stream);
             }
 
             slicer.onAbort = function(data) {

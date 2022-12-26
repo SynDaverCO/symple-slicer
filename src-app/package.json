@@ -6,8 +6,12 @@
   "license": "AGPL-3.0-or-later",
   "main": "js/ElectronMain.js",
   "dependencies": {
+    "electron": "^23.0.0-alpha.3",
     "electron-log": "^4.2.4",
     "electron-updater": "^4.3.5",
-    "serialport": "^10.4.0"
+    "serialport": "^10.5.0"
+  },
+  "devDependencies": {
+    "electron-rebuild": "^3.2.9"
   }
 }

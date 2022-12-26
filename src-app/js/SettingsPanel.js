@@ -569,9 +569,8 @@ class PlaceObjectsPage {
             if(extension == "gco" || extension == "gcode") {
                 if(confirm("Loading pre-sliced G-code will clear any existing objects.\nAny printer, material or slicing choices you have made will be ignored.\nPrinting incompatible G-code could damage your printer.")) {
                     stage.removeAll();
-                    const data = await PlaceObjectsPage.readFileAsPromise(file, 'binary');
                     PrintAndPreviewPage.setOutputGcodeName(filename);
-                    PrintAndPreviewPage.readyToDownload(data);
+                    await PrintAndPreviewPage.readyToDownload(new SlicerOutput(file,'file'));
                 }
                 return;
             }
@@ -1256,20 +1255,23 @@ class PrintAndPreviewPage {
         $('#current_layer').val(layer);
     }
 
-    static readyToDownload(data) {
+    static async readyToDownload(slicerOutput) {
         ProgressBar.hide();
         settings.gotoPage("page_print");
-        const decoder = new TextDecoder();
-        const str = decoder.decode(data);
-        sliced_gcode = str;
-        const path = new GCodeParser(str);
-        stage.setGcodePath(path);
-        const max = Math.max(0, stage.getGcodeLayers() - 1);
-        $("#preview_layer").attr("max", max).val(max);
-        $('#preview_layer').val(max);
-        $('#current_layer').val(max);
-        PrintAndPreviewPage.extractDataFromGcodeHeader(str);
-        PrintAndPreviewPage.onUpdatePreview();
+        if(slicer.getOption("machine_gcode_flavor") == "RepRap (Marlin/Sprinter)") {
+            slicerOutput.addTransform(new AddPrintProgress());
+        }
+        sliced_gcode = await slicerOutput.text();
+        if(sliced_gcode) {
+            const path = new GCodeParser(sliced_gcode);
+            stage.setGcodePath(path);
+            const max = Math.max(0, stage.getGcodeLayers() - 1);
+            $("#preview_layer").attr("max", max).val(max);
+            $('#preview_layer').val(max);
+            $('#current_layer').val(max);
+            PrintAndPreviewPage.extractDataFromGcodeHeader(sliced_gcode);
+            PrintAndPreviewPage.onUpdatePreview();
+        }
     }
 
     static sliceFailed() {

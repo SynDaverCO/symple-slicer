@@ -110,24 +110,28 @@ class SlicerWorkerInterface extends SlicerInterface {
         var data = e.data;
         switch (data.cmd) {
             case 'stdout': this.onStdoutOutput(data.str); break;
-            case 'stderr': this.onStderrOutput(data.str); break;
+            case 'stderr':
+                const progress = CuraPostProcessing.captureProgress(data.str);
+                if(typeof progress !== "undefined") {
+                    this.onProgress(progress);
+                } else {
+                    CuraPostProcessing.captureGcodeHeader(data.str);
+                    this.onStderrOutput(data.str);
+                }
+                break;
             case 'abort':
                 this.onAbort();
                 break;
             case 'file':
-                this.onFileReceived(data.file);
+                const slicerOutput = new SlicerOutput(data.gcode, 'binary');
+                slicerOutput.addTransform(new ReplaceGCodeHeader(CuraPostProcessing.header));
+                this.onStreamAvailable(slicerOutput);
                 /**
                  * Once the gcode file is received, restart
                  * the web worker to ensure a clean state
                  * for the next slice.
                  */
                 this.reset();
-                break;
-            case 'progress':
-                this.onProgress(data.value);
-                break;
-            case 'stats':
-                this.onPrintStats(data.stats);
                 break;
             default:
                 this.onStderrOutput('Unknown command: ' + cmd);
@@ -144,8 +148,7 @@ class SlicerWorkerInterface extends SlicerInterface {
     onStderrOutput(str)                {console.log(str);};
     onAbort()                          {console.log("Slicing aborted");};
     onProgress(progress)               {console.log("Slicing progress:", progress);};
-    onPrintStats(stats)                {console.log("Print statistics:", stats);};
-    onFileReceived(blob)               {};
+    onStreamAvailable(stream)          {};
     onSettingsChanged(key, vals, attr) {console.log("Option", key, "changed to", vals, "with attributes", attr);};
 
     // Public methods:
@@ -209,8 +212,7 @@ class SlicerNativeInterface extends SlicerInterface {
     onStderrOutput(str)                {console.log(str);};
     onAbort()                          {console.log("Slicing aborted");};
     onProgress(progress)               {console.log("Slicing progress:", progress);};
-    onPrintStats(stats)                {console.log("Print statistics:", stats);};
-    onFileReceived(blob)               {};
+    onStreamAvailable(stream)          {};
     onSettingsChanged(key, vals, attr) {console.log("Option", key, "changed to", vals, "with attributes", attr);};
 
     // Public methods:
@@ -239,29 +241,22 @@ class SlicerNativeInterface extends SlicerInterface {
         // Copy the helper files
         await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmprinter.def.json"), GetNativeFilePath("fdmprinter.def.json"));
         await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmextruder.def.json"), GetNativeFilePath("fdmextruder.def.json"));
-
+        // Run the slicer
         const args = this.config.getCommandLineArguments(models);
         const onStderr = str => {
-            const progress = captureProgress(str);
+            const progress = CuraPostProcessing.captureProgress(str);
             if(typeof progress !== "undefined") {
                 this.onProgress(progress);
             } else {
-                captureGcodeHeader(str);
+                CuraPostProcessing.captureGcodeHeader(str);
                 this.onStderrOutput(str);
             }
         }
         const onExit = async (code) => {
             const filePath = GetNativeFilePath("output.gcode");
-            try {
-                const gcode = await ELECTRON.fs.readFile(filePath, { encoding: 'utf8' });
-                const enc = new TextEncoder();
-                const data = enc.encode(postProcessGcode(gcode, args))
-                this.onFileReceived(data);
-            } catch(err) {
-                console.error(err);
-                alert("Cannot load the GCODE from the slicer. The cura work directory will open in a window for troubleshooting.");
-            }
-            await ShowTempDir("output.gcode");
+            const slicerOutput = new SlicerOutput(filePath, 'node.path');
+            slicerOutput.addTransform(new ReplaceGCodeHeader(CuraPostProcessing.header));
+            this.onStreamAvailable(slicerOutput);
         }
         const curaExe = RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
         // Write a batch file for testing

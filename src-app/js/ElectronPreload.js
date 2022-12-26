@@ -170,13 +170,15 @@ class SequentialSerial {
 
 /******************************* Code for launching processes *******************/
 
-const childProcess = require('child_process');
-const readline = require('readline');
-const path = require('node:path');
-const os = require('os');
-const fs = require('node:fs/promises');
-const {shell} = require('electron');
-
+const childProcess = require('node:child_process');
+const readline     = require('node:readline');
+const path         = require('node:path');
+const os           = require('node:os');
+const fs           = require('node:fs/promises');
+const fss          = require('node:fs');
+const stream       = require('node:stream');
+const stream_web   = require('node:stream/web');
+const {shell}      = require('electron');
 let tmpPath;
 
 window.CreateTempDir = async () => {
@@ -199,7 +201,8 @@ window.RunNativeSlicer = (args, onStdout, onStderr, onExit) => {
     return exec;
 }
 
-window.ShowTempDir = async (filename) => {
+window.ShowTempDir = async filename => {
+    console.log("Showing temp dir", filename);
     await shell.showItemInFolder(GetNativeFilePath(filename));
 }
 
@@ -211,7 +214,21 @@ window.GetNativeConfigPath = filename => {
     return ELECTRON.path.join(__dirname, '..', 'lib', 'slicing-engines', 'CuraEngine',filename);
 }
 
+window.GetNativeReadableStream = async filename => {    
+    const nodeReadable = fss.createReadStream(filename);
+    return stream.Readable.toWeb(nodeReadable);
+}
+
+window.GetNativeWritableStream = filename => {
+    const nodeWritable = fss.createWriteStream(filename, {encoding: 'utf-8'});
+    return stream.Writable.toWeb(nodeWritable);
+}
+
 window.ELECTRON = {fs,os,path};
+
+window.NativeTransformStream   = stream_web.TransformStream;
+window.NativeTextEncoderStream = stream_web.TextEncoderStream;
+window.NativeTextDecoderStream = stream_web.TextDecoderStream;
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 

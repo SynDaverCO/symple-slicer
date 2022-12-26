@@ -20,6 +20,7 @@
 
 const { app, BrowserWindow, Menu, powerSaveBlocker, ipcMain, dialog } = require('electron')
 const path = require('path')
+const process = require('process')
 
 function createWindow () {
     // Create the browser window.
@@ -27,6 +28,7 @@ function createWindow () {
         width: 800,
         height: 600,
         webPreferences: {
+            sandbox: false, // TODO: Implement context bridge: https://www.electronjs.org/docs/latest/api/context-bridge
             nodeIntegration: false,
             contextIsolation: false,
             enableremotemodule: false,
@@ -165,6 +167,8 @@ app.commandLine.appendSwitch("disable-background-timer-throttling");
 
 app.allowRendererProcessReuse = false;
 app.whenReady().then(createWindow);
+
+console.log("Version", process.versions);
 
 // Auto-update functionality
 
