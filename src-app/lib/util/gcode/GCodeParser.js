@@ -23,7 +23,7 @@
  *
  */
 
-class GCodeParser {
+export class GCodeParser {
     constructor(data) {
         this.data = data;
     }

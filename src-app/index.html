@@ -44,44 +44,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             var query        = parseQuery();
         </script>
         <script src="lib/jquery/jquery-3.5.0.min.js"></script>
-        <script src="lib/util/misc/Wikify.js"></script>
-        <script src="lib/util/ui/updater/updater.js"></script>
-        <script src="lib/three/three.min.js"></script>
-        <script src="lib/three/OrbitControls.js"></script>
-        <script src="lib/three/TransformControls.js"></script>
         <script src="lib/jquery/jquery.easing.1.3.js"></script>
         <script src="lib/jquery/contextmenu/jquery.ui.position.min.js"></script>
         <script src="lib/jquery/contextmenu/jquery.contextMenu.min.js"></script>
+        <script src="lib/three/three.min.js"></script>
+        <script src="lib/three/OrbitControls.js"></script>
+        <script src="lib/three/TransformControls.js"></script>
+        <script src="lib/three/ConvexHull.js"></script>
+        <script src="lib/three/ConvexGeometry.js"></script>
+        <script src="lib/three/BufferGeometryUtils.js"></script>
+        <script src="lib/three.extendMaterial/ExtendMaterial.js"></script>
         <script src="lib/FastestSmallestTextEncoderDecoder/EncoderDecoderTogether.min.js"></script>
         <script src="lib/FileSaver/FileSaver.js"></script>
         <script src="lib/jakwings-toml-j0.4/toml-browser.js"></script>
         <script src="lib/circlepacker/circlepacker.min.js"></script>
-        <script src="lib/three/ConvexHull.js"></script>
-        <script src="lib/three/ConvexGeometry.js"></script>
-        <script src="lib/three/BufferGeometryUtils.js"></script>
         <script src="lib/util/geometry/GeometrySerialize.js"></script>
         <script src="lib/util/geometry/GeometryAlgorithms.js"></script>
-        <script src="lib/util/geometry/FaceRotationHelper.js"></script>
-        <script src="lib/util/gcode/Toolpath.js"></script>
-        <script src="lib/util/gcode/GCodeParser.js"></script>
         <script src="lib/util/io/FetchFile.js"></script>
         <script src="lib/util/io/LoadResource.js"></script>
-        <script src="lib/util/io/GeometryLoader.js"></script>
-        <script src="lib/util/io/StlWriter.js"></script>
-        <script src="lib/util/io/TOMLWriter.js"></script>
-        <script src="lib/util/misc/ResettableTimer.js"></script>
-        <script src="lib/util/misc/ParseColor.js"></script>
         <script src="lib/util/ui/settings/editable-select.js"></script>
-        <script src="lib/util/ui/settings/settings.js"></script>
-        <script src="lib/util/ui/toolbar/toolbar.js"></script>
-        <script src="lib/util/ui/progress/progress.js"></script>
-        <script src="lib/util/ui/log/log.js"></script>
-        <script src="lib/util/ui/dialog/dialog.js"></script>
-        <script src="lib/util/ui/navcube/navcube.js"></script>
         <script src="lib/serial-tools/FlashPrinters.js"></script>
         <script src="lib/serial-tools/WebSerialAdapter.js"></script>
-        <script src="lib/slicing-engines/SlicerInterface.js"></script>
-        <script src="lib/three.extendMaterial/ExtendMaterial.js"></script>
 
         <!-- ***************** Prequisites for syndaver-wifi ***************** -->
         <script src="lib/sjcl/sjcl.min.js"></script>
@@ -115,24 +98,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <!-- ***************** Prequisites for OutlinePass.js ***************** -->
 
         <link rel="stylesheet" type="text/css" href="css/layout.css">
-
-        <script src="js/OverhangShaderMaterial.js"></script>
-        <script src="js/PrinterRepresentation.js"></script>
-        <script src="js/PrintableObject.js"></script>
-        <script src="js/ObjectGroup.js"></script>
-        <script src="js/CascadingChoices.js"></script>
-        <script src="js/SelectionGroup.js"></script>
-        <script src="js/RenderLoop.js"></script>
-        <script src="js/Stage.js"></script>
-        <script src="js/WebWifiConnector.js"></script>
-        <script src="js/SlicerOutput.js"></script>
-        <script src="js/GCodePostprocessing.js"></script>
-        <script src="js/PauseAtLayer.js"></script>
-        <script src="js/SlicerSettings.js"></script>
-        <script src="js/SettingsPanel.js"></script>
-        <script src="js/ProfileManager.js"></script>
-        <script src="js/OtherUI.js"></script>
-        <script src="js/SerialPort.js"></script>
 
         <!-- Trick for colorizing images: https://css-tricks.com/color-filters-can-turn-your-gray-skies-blue/
              The target color is rgb(0.00 0.18 0.38) but for some reason we need to use (0.00, 0.03, 0.12) in
@@ -235,7 +200,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <p></p><span></span>
         </div>
 
-        <div id="about" onclick="hideAbout()" class="float-center panel-style close-box hidden">
+        <div id="about" class="float-center panel-style close-box hidden">
             <a href="syndaver3d.com"><img src="images/logo.png"></a>
             <h1>Symple Slicer <span id="serviceWorkerVersion"></span></h1>
             <p>
@@ -340,24 +305,43 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <div class="okay"><button onclick="Updater.dismiss()">Close</button></div>
         </div>
 
-        <script>
+        <script type="module">
+            import { Updater } from './lib/util/ui/updater/updater.js';
+            import { SlicerWorkerInterface, SlicerNativeInterface } from './lib/slicing-engines/SlicerInterface.js';
+            import { ProgressBar } from './lib/util/ui/progress/progress.js';
+            import { ToolbarUI } from './lib/util/ui/toolbar/toolbar.js';
+            import { Log } from './lib/util/ui/log/log.js';
+            import { NavCube } from './lib/util/ui/navcube/navcube.js';
+            import { GeometryLoader } from './lib/util/io/GeometryLoader.js';
+            import { Stage } from './js/Stage.js';
+            import { RenderLoop } from './js/RenderLoop.js';
+            import { SplashScreen, onMessage, enterFullscreen } from './js/OtherUI.js';
+            import {
+                SettingsPanel,
+                AdvancedFeaturesPage,
+                PlaceObjectsPage,
+                PrintAndPreviewPage
+            } from './js/SettingsPanel.js';
+
+            window.Updater = Updater;
+
             Updater.getVersion().then(v => $('#serviceWorkerVersion').html("V" + v));
             Updater.wikifyChangeLog("iframe-changelog");
 
-            splashScreen();
+            SplashScreen.atStartup();
 
             // Selector based on whether we are running as a desktop app or webapp-only
             // This will be set to true in ElectronPreload if running as an Electron app.
             if(typeof isDesktop === 'undefined') {
-                isDesktop = false;
+                window.isDesktop = false;
             }
             $("BODY").attr('data-platform', isDesktop ? 'desktop' : 'webapp');
 
-            var canvas       = document.getElementById("webgl");
-            var stage        = new Stage();
-            var renderLoop   = new RenderLoop(canvas, stage);
-            var toolbar      = new ToolbarUI("toolbar");
-            var navCube      = new NavCube("#navCube");
+            window.canvas     = document.getElementById("webgl");
+            window.stage      = new Stage();
+            window.renderLoop = new RenderLoop(canvas, stage);
+            window.toolbar    = new ToolbarUI("toolbar");
+            window.navCube    = new NavCube("#navCube");
 
             AdvancedFeaturesPage.linkThemeStyleSheet();
             renderLoop.setView("front");
@@ -380,7 +364,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             switch(query.slicer) {
                 case "jsslicer":
-                    slicer = new SlicerWorkerInterface(
+                    window.slicer = new SlicerWorkerInterface(
                         "lib/slicing-engines/JSSlicer/worker/SlicerWorker.js",
                         "lib/slicing-engines/JSSlicer/worker/SlicerConfiguration.js",
                         "config/jsslicer_defaults/",
@@ -388,14 +372,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     );
                     break;
                 case "native-cura":
-                    slicer = new SlicerNativeInterface(
+                    window.slicer = new SlicerNativeInterface(
                         "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
                         "lib/slicing-engines/CuraEngine/",
                         () => SettingsPanel.init("settings")
                     );
                     break;
                 default:
-                    slicer = new SlicerWorkerInterface(
+                    window.slicer = new SlicerWorkerInterface(
                         "lib/slicing-engines/CuraEngine/SlicerWorker.js",
                         "lib/slicing-engines/CuraEngine/SlicerConfiguration.js",
                         "lib/slicing-engines/CuraEngine/",
@@ -404,7 +388,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
 
             // Prepare the geometry loading thread
-            const geoLoader = new GeometryLoader();
+            window.geoLoader = new GeometryLoader();
             geoLoader.onModelLoaded = PlaceObjectsPage.onModelLoaded;
 
             geoLoader.onProgress = function(progress) {
@@ -428,15 +412,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
 
             window.addEventListener('message', onMessage);
+            document.getElementById('about').addEventListener('click', SplashScreen.hide);
 
             if(query.url) {
                 SettingsPanel.loadFileFromUrls([decodeURIComponent(query.url)]);
             }
 
             var pendingResources = 2;
-            var onStyleSheetReady = onProfilesReady = function () {
+            window.onStyleSheetReady = window.onProfilesReady = function () {
                 if(--pendingResources == 0) document.body.classList.add("ready");
             }
+
+            // The electron app calls this when the user selects Open... from the File menu
+            window.onFileOpen = () => document.getElementById('model_file').click();
         </script>
     </body>
 </html>

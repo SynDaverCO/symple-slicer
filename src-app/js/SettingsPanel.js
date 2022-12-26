@@ -18,13 +18,31 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-var settings, sliced_gcode, loaded_model;
+import { SettingsUI }                     from '../lib/util/ui/settings/settings.js';
+import { ProgressBar }                    from '../lib/util/ui/progress/progress.js';
+import { Log }                            from '../lib/util/ui/log/log.js';
+import { GCodeParser }                    from '../lib/util/gcode/GCodeParser.js';
+import { ParseColor }                     from '../lib/util/misc/ParseColor.js';
+import { SplashScreen, showUserGuide }    from './OtherUI.js';
+import { Stage }                          from './Stage.js';
+import { PauseAtLayer }                   from './PauseAtLayer.js';
+import { PrinterRepresentation }          from './PrinterRepresentation.js';
+import { PrintableObject }                from './PrintableObject.js';
+import { CascadingChoices }               from './CascadingChoices.js';
+import { OverhangShader }                 from './OverhangShaderMaterial.js';
+import { SlicerSettings }                 from './SlicerSettings.js';
+import { ProfileLibrary, ProfileManager } from './ProfileManager.js';
+import { AddPrintProgress }               from './GCodePostprocessing.js';
+import { WebWifiConnector }               from './WebWifiConnector.js';
+import { flashFirmware, flashCustomFirmware, stream_gcode } from './SerialPort.js';
+
+var sliced_gcode, loaded_model;
 
 const preApplyTransforms = true; // If true, apply transformations to models prior to sending them to Cura
 
-class SettingsPanel {
+export class SettingsPanel {
     static async init(id) {
-        const s = settings = new SettingsUI(id);
+        const s = window.settings = new SettingsUI(id);
         s.enableAutoTab();
 
         SelectProfilesPage.init(s);
@@ -57,7 +75,7 @@ class SettingsPanel {
         if(this.deferredFileLoad) {
             this.onWindowDrop(this.deferredFileLoad);
         }
-        settings.gotoPage("page_profiles");
+        window.settings.gotoPage("page_profiles");
     }
 
     // onchange handler for enforcing the min and max values.
@@ -120,7 +138,7 @@ class SettingsPanel {
         const evt = SettingsPanel.makeDropEvent(files);
         if(settings) {
             this.onWindowDrop(evt);
-            settings.gotoPage("page_profiles");
+            window.settings.gotoPage("page_profiles");
         } else {
             this.deferredFileLoad = evt;
         }
@@ -143,13 +161,13 @@ class SettingsPanel {
                 case '3mf':
                 case 'gco':
                 case 'gcode':
-                    settings.gotoPage("page_place");
+                    window.settings.gotoPage("page_place");
                     PlaceObjectsPage.onLoadTypeChanged("3d");
                     id = "model_file";
                     break;
                 case 'toml':
                     SelectProfilesPage.setProfileSource('from-import');
-                    settings.gotoPage("page_profiles");
+                    window.settings.gotoPage("page_profiles");
                     id = "toml_file";
                     break;
                 case 'jpg':
@@ -157,19 +175,19 @@ class SettingsPanel {
                 case 'png':
                 case 'bmp':
                 case 'gif':
-                    settings.gotoPage("page_place");
+                    window.settings.gotoPage("page_place");
                     PlaceObjectsPage.onLoadTypeChanged("2d");
                     id = "image_file";
                     break;
                 case 'bin':
                 case 'hex':
-                    settings.gotoPage("page_advanced");
-                    settings.expand("custom_fw_upload")
+                    window.settings.gotoPage("page_advanced");
+                    window.settings.expand("custom_fw_upload")
                     id = "custom_fw_file";
             }
             if(id) {
                 // Create a synthetic drop event with a single file and call the drop handler
-                settings.get(id).drophandler(SettingsPanel.makeDropEvent([files[i]]));
+                window.settings.get(id).drophandler(SettingsPanel.makeDropEvent([files[i]]));
             }
         }
         // Process any drag-and-dropped commands
@@ -258,7 +276,7 @@ class SelectProfilesPage {
 
     static addMaterialMenus() {
         // Before the profile is loaded, we read the number of extruders from the profile list
-        const desc = ProfileLibrary.getDescriptor("machine_profiles", settings.get("machine_profiles"));
+        const desc = ProfileLibrary.getDescriptor("machine_profiles", window.settings.get("machine_profiles"));
         const extruderCount = desc ? desc.extruders : 1;
 
         // Clear out the UI existing material menus
@@ -266,14 +284,14 @@ class SelectProfilesPage {
         SelectProfilesPage.material_menus = [];
 
         // Add the menus to the UI
-        settings.setTarget("material_selections");
+        window.settings.setTarget("material_selections");
         for(let e = 0; e < extruderCount; e++) {
             if(extruderCount > 1) {
-                settings.heading("Extruder #" + (e + 1));
+                window.settings.heading("Extruder #" + (e + 1));
             }
             const attr = {onchange: SelectProfilesPage.onDropDownChange};
-            const brand_menu    = settings.choice( "Material Brand:", {...attr, id: "material_brands_" + e});
-            const material_menu = settings.choice( "Material:",       {...attr, id: "print_profiles_" + e});
+            const brand_menu    = window.settings.choice( "Material Brand:", {...attr, id: "material_brands_" + e});
+            const material_menu = window.settings.choice( "Material:",       {...attr, id: "print_profiles_" + e});
 
             this.populateProfileMenus([brand_menu, material_menu], e);
 
@@ -389,16 +407,16 @@ class SelectProfilesPage {
 
             // Apply the machine profiles
             await ProfileManager.clear();
-            const machine_profiles  = await ProfileManager.loadPresets("machine_profiles",  settings.get("machine_profiles"));
-            const machine_upgrades  = await ProfileManager.loadPresets("machine_upgrades",  settings.get("machine_upgrades"));
-            const machine_toolheads = await ProfileManager.loadPresets("machine_toolheads", settings.get("machine_toolheads"));
-            const print_quality     = await ProfileManager.loadPresets("print_quality",     settings.get("print_quality"));
+            const machine_profiles  = await ProfileManager.loadPresets("machine_profiles",  window.settings.get("machine_profiles"));
+            const machine_upgrades  = await ProfileManager.loadPresets("machine_upgrades",  window.settings.get("machine_upgrades"));
+            const machine_toolheads = await ProfileManager.loadPresets("machine_toolheads", window.settings.get("machine_toolheads"));
+            const print_quality     = await ProfileManager.loadPresets("print_quality",     window.settings.get("print_quality"));
             // Apply the settings to the slicer
             const extruderCount = machine_profiles.machine_extruder_count;
             slicer.beginTransaction();
             slicer.loadDefaults(extruderCount);
             for(let e = 0; e < extruderCount; e++) {
-                const print_profiles = await ProfileManager.loadPresets("print_profiles", settings.get("print_profiles_" + e));
+                const print_profiles = await ProfileManager.loadPresets("print_profiles", window.settings.get("print_profiles_" + e));
                 const options = {extruder: e};
                 if(machine_profiles)  slicer.loadSettings(machine_profiles, options);
                 if(machine_upgrades)  slicer.loadSettings(machine_upgrades, options);
@@ -418,12 +436,12 @@ class SelectProfilesPage {
     }
 
     static onImportChanged(file) {
-        settings.enable("#import_settings", file);
+        window.settings.enable("#import_settings", file);
     }
 
     static onImportClicked() {
         try {
-            const el = settings.get("toml_file");
+            const el = window.settings.get("toml_file");
             ProfileManager.clear();
             const profile = ProfileManager.importConfiguration(el.data);
             slicer.loadDefaults(profile.machine_extruder_count);
@@ -445,9 +463,9 @@ class SelectProfilesPage {
 
     static onNext() {
         if(MaterialNotesPage.loadProfileNotes()) {
-            settings.gotoPage("page_material_notes");
+            window.settings.gotoPage("page_material_notes");
         } else {
-            settings.gotoPage("page_place");
+            window.settings.gotoPage("page_place");
         }
     }
 
@@ -456,8 +474,8 @@ class SelectProfilesPage {
     }
 
     static setProfileSource(source) {
-        settings.set("profile-source", source);
-        $(settings.ui).attr('data-profile-source', source);
+        window.settings.set("profile-source", source);
+        $(window.settings.ui).attr('data-profile-source', source);
     }
 }
 
@@ -472,7 +490,7 @@ class MaterialNotesPage {
     }
 
     static onNext() {
-        settings.gotoPage("page_place");
+        window.settings.gotoPage("page_place");
     }
 
     static loadProfileNotes() {
@@ -486,7 +504,7 @@ class MaterialNotesPage {
     }
 }
 
-class PlaceObjectsPage {
+export class PlaceObjectsPage {
     static init(s) {
         s.page("Place Objects",                                      {id: "page_place"});
 
@@ -524,11 +542,11 @@ class PlaceObjectsPage {
     }
 
     static onShowOverhangs() {
-        OverhangShader.showOverhang(settings.get("show_overhangs"));
+        OverhangShader.showOverhang(window.settings.get("show_overhangs"));
     }
 
     static onObjectCountChanged(count) {
-        settings.enable(".requires_objects", count > 0);
+        window.settings.enable(".requires_objects", count > 0);
     }
 
     static onLoadTypeChanged(e) {
@@ -538,7 +556,7 @@ class PlaceObjectsPage {
             case '2d': $("#load_models").hide(); $("#load_images").show(); break;
         }
         if(typeof e == "string") {
-            settings.set("load_source", mode);
+            window.settings.set("load_source", mode);
         }
     }
 
@@ -592,19 +610,19 @@ class PlaceObjectsPage {
         } else {
             PlaceObjectsPage.onModelLoaded(null);
         }
-        settings.enable("#add_litho", data !== undefined);
+        window.settings.enable("#add_litho", data !== undefined);
     }
 
     static onAddLitho() {
-        const filename = settings.get("image_file").filename;
-        const data     = settings.get("image_file").data;
+        const filename = window.settings.get("image_file").filename;
+        const data     = window.settings.get("image_file").data;
         ProgressBar.message("Preparing model");
         geoLoader.load(filename, data);
     }
 
     static onAddToPlatform() {
         if(!loaded_model) return;
-        const howMany = parseInt(settings.get("place_quantity"))
+        const howMany = parseInt(window.settings.get("place_quantity"))
         for(var i = 0; i < howMany; i++) {
             stage.addModel(loaded_model.geometries, loaded_model.filename);
         }
@@ -613,21 +631,21 @@ class PlaceObjectsPage {
     static onModelLoaded(geometries, filename) {
         if(geometries) {
             loaded_model = {geometries, filename};
-            settings.enable('.place_more', true);
+            window.settings.enable('.place_more', true);
             PlaceObjectsPage.onAddToPlatform(); // Place the first object automatically
         } else {
-            settings.enable('.place_more', false);
+            window.settings.enable('.place_more', false);
             loaded_model = false;
         }
         ProgressBar.hide();
     }
 
     static onGotoSliceClicked() {
-        settings.gotoPage("page_slice");
+        window.settings.gotoPage("page_slice");
     }
 }
 
-class ObjectTransformPage {
+export class ObjectTransformPage {
     static init(s) {
         s.page(       "",                                            {id: "page_transform"});
 
@@ -670,11 +688,11 @@ class ObjectTransformPage {
     }
 
     static onToolChanged(mode) {
-        settings.expand("xform_position",  mode == "move");
-        settings.expand("xform_rotate",    mode == "rotate");
-        settings.expand("xform_scale",     mode == "scale");
-        settings.expand("xform_mirror",    mode == "mirror");
-        settings.gotoPage("page_transform");
+        window.settings.expand("xform_position",  mode == "move");
+        window.settings.expand("xform_rotate",    mode == "rotate");
+        window.settings.expand("xform_scale",     mode == "scale");
+        window.settings.expand("xform_mirror",    mode == "mirror");
+        window.settings.gotoPage("page_transform");
     }
 
     static onObjectUnselected() {
@@ -687,7 +705,7 @@ class ObjectTransformPage {
         $('#xform_scale_x_pct').val("");
         $('#xform_scale_y_pct').val("");
         $('#xform_scale_z_pct').val("");
-        settings.dismissModal();
+        window.settings.dismissModal();
     }
 
     static setAxisScale(axis, value) {
@@ -719,31 +737,31 @@ class ObjectTransformPage {
     }
 
     static onTransformDismissed() {
-        settings.dismissModal();
+        window.settings.dismissModal();
         stage.onTransformDismissed();
     }
 
     static onEditPosition() {
-        stage.selection.position.x = settings.get("xform_position_x");
-        stage.selection.position.y = settings.get("xform_position_y");
-        stage.selection.position.z = settings.get("xform_position_z") + stage.selectionHeightAdjustment;
+        stage.selection.position.x = window.settings.get("xform_position_x");
+        stage.selection.position.y = window.settings.get("xform_position_y");
+        stage.selection.position.z = window.settings.get("xform_position_z") + stage.selectionHeightAdjustment;
         stage.onTransformEdit(false);
     }
 
     static onEditScaleAbs(axis) {
         var dim = stage.getSelectionDimensions(false);
         switch(axis) {
-            case "X": ObjectTransformPage.setAxisScale("X%", settings.get("xform_scale_x_abs") / dim.x); ObjectTransformPage.onEditScalePct("X"); break;
-            case "Y": ObjectTransformPage.setAxisScale("Y%", settings.get("xform_scale_y_abs") / dim.y); ObjectTransformPage.onEditScalePct("Y"); break;
-            case "Z": ObjectTransformPage.setAxisScale("Z%", settings.get("xform_scale_z_abs") / dim.z); ObjectTransformPage.onEditScalePct("Z"); break;
+            case "X": ObjectTransformPage.setAxisScale("X%", window.settings.get("xform_scale_x_abs") / dim.x); ObjectTransformPage.onEditScalePct("X"); break;
+            case "Y": ObjectTransformPage.setAxisScale("Y%", window.settings.get("xform_scale_y_abs") / dim.y); ObjectTransformPage.onEditScalePct("Y"); break;
+            case "Z": ObjectTransformPage.setAxisScale("Z%", window.settings.get("xform_scale_z_abs") / dim.z); ObjectTransformPage.onEditScalePct("Z"); break;
         }
     }
 
     static onEditScalePct(axis) {
-        var x_percent = settings.get("xform_scale_x_pct") / 100;
-        var y_percent = settings.get("xform_scale_y_pct") / 100;
-        var z_percent = settings.get("xform_scale_z_pct") / 100;
-        const uniform = settings.get("xform_scale_uniform");
+        var x_percent = window.settings.get("xform_scale_x_pct") / 100;
+        var y_percent = window.settings.get("xform_scale_y_pct") / 100;
+        var z_percent = window.settings.get("xform_scale_z_pct") / 100;
+        const uniform = window.settings.get("xform_scale_uniform");
         if(uniform) {
             switch(axis) {
                 case "X": y_percent = z_percent = x_percent; break;
@@ -769,9 +787,9 @@ class ObjectTransformPage {
 
     static onEditRotation() {
         const toRad = deg => deg * Math.PI / 180;
-        stage.selection.rotation.x = toRad(settings.get("xform_rotation_x"));
-        stage.selection.rotation.y = toRad(settings.get("xform_rotation_y"));
-        stage.selection.rotation.z = toRad(settings.get("xform_rotation_z"));
+        stage.selection.rotation.x = toRad(window.settings.get("xform_rotation_x"));
+        stage.selection.rotation.y = toRad(window.settings.get("xform_rotation_y"));
+        stage.selection.rotation.z = toRad(window.settings.get("xform_rotation_z"));
         stage.onTransformEdit();
     }
 
@@ -826,21 +844,21 @@ class SliceObjectsPage {
         // Clear out the slicer settings
         document.getElementById("page_slice").innerText = "";
 
-        settings.setTarget("page_slice");
+        window.settings.setTarget("page_slice");
 
         // If doing multiple extrusion, create an extruder header
         if(slicer.numberOfExtruders() > 1) {
-            settings.html('<div class="parameter extruder-legend"><label></label><h1 class="parameter-box">Extruder 2</h1><h1 class="parameter-box">Extruder 1</h1></div>');
+            window.settings.html('<div class="parameter extruder-legend"><label></label><h1 class="parameter-box">Extruder 2</h1><h1 class="parameter-box">Extruder 1</h1></div>');
         }
 
-        const mode = await SlicerSettings.populate(settings);
+        const mode = await SlicerSettings.populate(window.settings);
 
         if (mode != "1st-slice") {
-            settings.category(   "Save Settings to File");
-            settings.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only stretch"});
-            settings.separator(                                                 {type: "br"});
-            settings.button(     "Save",                                        {onclick: SliceObjectsPage.onExportClicked});
-            settings.buttonHelp( "Click this button to save the slicer settings to a file on your computer.");
+            window.settings.category(   "Save Settings to File");
+            window.settings.text(       "Save as:",                                    {id: "save_filename", value: "slicer_settings.toml", className: "webapp-only stretch"});
+            window.settings.separator(                                                 {type: "br"});
+            window.settings.button(     "Save",                                        {onclick: SliceObjectsPage.onExportClicked});
+            window.settings.buttonHelp( "Click this button to save the slicer settings to a file on your computer.");
         }
 
         // Dump all values from the slicer
@@ -1135,12 +1153,12 @@ class SliceObjectsPage {
 
      static onExportClicked() {
         const options = {unchanged: false};
-        const filename = settings.get("save_filename");
+        const filename = window.settings.get("save_filename");
         AdvancedFeaturesPage.exportConfiguration(filename, options);
     }
 }
 
-class PrintAndPreviewPage {
+export class PrintAndPreviewPage {
     static init(s) {
         s.page(       "Print and Preview",                           {id: "page_print"});
 
@@ -1204,7 +1222,7 @@ class PrintAndPreviewPage {
     }
 
     static updateOutputChoices() {
-        const selectedChoice = settings.get("print_to");
+        const selectedChoice = window.settings.get("print_to");
         let selectedChoiceHidden = false;
 
         function showOrHide(id, show) {
@@ -1227,7 +1245,7 @@ class PrintAndPreviewPage {
     }
 
     static setOutput(what) {
-        settings.set("print_to", what);
+        window.settings.set("print_to", what);
         this.onOutputChanged(what)
     }
 
@@ -1237,27 +1255,27 @@ class PrintAndPreviewPage {
     }
 
     static onUpdatePreview() {
-        stage.showGcodePath("TRAVEL",            settings.get("show_travel"));
-        stage.showGcodePath("SKIN",              settings.get("show_shell"));
-        stage.showGcodePath("DEFAULT",           settings.get("show_shell"));
-        stage.showGcodePath("WALL-OUTER",        settings.get("show_shell"));
-        stage.showGcodePath("WALL-INNER",        settings.get("show_shell"));
-        stage.showGcodePath("FILL",              settings.get("show_infill"));
-        stage.showGcodePath("SKIRT",             settings.get("show_support"));
-        stage.showGcodePath("SUPPORT",           settings.get("show_support"));
-        stage.showGcodePath("SUPPORT-INTERFACE", settings.get("show_support"));
-        settings.enable("#preview_layer", stage.isToolpathVisible);
+        stage.showGcodePath("TRAVEL",            window.settings.get("show_travel"));
+        stage.showGcodePath("SKIN",              window.settings.get("show_shell"));
+        stage.showGcodePath("DEFAULT",           window.settings.get("show_shell"));
+        stage.showGcodePath("WALL-OUTER",        window.settings.get("show_shell"));
+        stage.showGcodePath("WALL-INNER",        window.settings.get("show_shell"));
+        stage.showGcodePath("FILL",              window.settings.get("show_infill"));
+        stage.showGcodePath("SKIRT",             window.settings.get("show_support"));
+        stage.showGcodePath("SUPPORT",           window.settings.get("show_support"));
+        stage.showGcodePath("SUPPORT-INTERFACE", window.settings.get("show_support"));
+        window.settings.enable("#preview_layer", stage.isToolpathVisible);
     }
 
     static onUpdateLayer() {
-        const layer = Math.trunc(settings.get("preview_layer"));
+        const layer = Math.trunc(window.settings.get("preview_layer"));
         stage.setGcodeLayer(layer);
         $('#current_layer').val(layer);
     }
 
     static async readyToDownload(slicerOutput) {
         ProgressBar.hide();
-        settings.gotoPage("page_print");
+        window.settings.gotoPage("page_print");
         if(slicer.getOption("machine_gcode_flavor") == "RepRap (Marlin/Sprinter)") {
             slicerOutput.addTransform(new AddPrintProgress());
         }
@@ -1319,7 +1337,7 @@ class PrintAndPreviewPage {
 
     static onDownloadClicked() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
-        const name = settings.get("gcode_filename");
+        const name = window.settings.get("gcode_filename");
         saveAs(PrintAndPreviewPage.getGcodeBlob(), name);
     }
 
@@ -1342,7 +1360,7 @@ class PrintAndPreviewPage {
         try {
             await ConfigWirelessPage.queueFile(file);
             if(isDesktop) {
-                settings.gotoPage("page_monitor_wifi");
+                window.settings.gotoPage("page_monitor_wifi");
             }
         } catch (e) {
             console.error(e);
@@ -1352,7 +1370,7 @@ class PrintAndPreviewPage {
 
     static async onUploadToWiFi() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
-        const name = settings.get("gcode_filename");
+        const name = window.settings.get("gcode_filename");
         const file = SynDaverWiFi.fileFromBlob(name, PrintAndPreviewPage.getGcodeBlob());
         alert('The file will be saved to your printer for printing later.\n\nYou may start a print through the web management interface by selecting "Wireless Printing" from the menu and then clicking "Manage..."')
         try {
@@ -1391,7 +1409,7 @@ class PrintAndPreviewPage {
     }
 }
 
-class AdvancedFeaturesPage {
+export class AdvancedFeaturesPage {
     static init(s) {
         s.page(       "Advanced Features",                           {id: "page_advanced"});
 
@@ -1445,12 +1463,12 @@ class AdvancedFeaturesPage {
     }
 
     static onCustomFirmwareChanged(file) {
-        settings.enable("#upload_custom_fw", file);
+        window.settings.enable("#upload_custom_fw", file);
     }
 
     static async onCustomFlash() {
         try {
-            const el = settings.get("custom_fw_file");
+            const el = window.settings.get("custom_fw_file");
             await flashCustomFirmware(el.data, el.filename);
         } catch(err) {
             console.error(err);
@@ -1459,15 +1477,15 @@ class AdvancedFeaturesPage {
     }
 
     static onSlicerSettingsChanged() {
-        if (settings.get("ui-slicer-settings") == "cura-all")
+        if (window.settings.get("ui-slicer-settings") == "cura-all")
             if (!confirm("You are about to enable all CuraEngine slicer settings, even those which are untested or which are known to not work.\n\nClick OK to proceed at your own risk or Cancel to use only the recommended settings."))
                 document.getElementById("ui-slicer-settings").value = "syndaver-default";
     }
 
     static onApplyTheme() {
-        localStorage.setItem("ui-slicer-settings", settings.get("ui-slicer-settings"));
-        localStorage.setItem("ui-theme",  settings.get("ui-theme"));
-        localStorage.setItem("ui-accent", settings.get("ui-accent"));
+        localStorage.setItem("ui-slicer-settings", window.settings.get("ui-slicer-settings"));
+        localStorage.setItem("ui-theme",  window.settings.get("ui-theme"));
+        localStorage.setItem("ui-accent", window.settings.get("ui-accent"));
         location.reload();
     }
 
@@ -1484,11 +1502,11 @@ class AdvancedFeaturesPage {
     }
 
     static cssAccentColorRule(color) {
-        const rgb = parseHexColor(color);
-        const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+        const rgb = ParseColor.parseHexColor(color);
+        const hsl = ParseColor.rgbToHsl(rgb.r, rgb.g, rgb.b);
         return ":root {" +
             "--accent-rgb: " + color + ";" +
-            "--accent-inv: " + formatHexColor(255-rgb.r,255-rgb.g,255-rgb.b) + ";" +
+            "--accent-inv: " + ParseColor.formatHexColor(255-rgb.r,255-rgb.g,255-rgb.b) + ";" +
             "--accent-h: " + hsl.h + ";" +
             "--accent-s: " + hsl.s + "%;" +
             "--accent-l: " + hsl.l + "%;" +
@@ -1506,7 +1524,7 @@ class AdvancedFeaturesPage {
             PrintableObject.applyStyleSheetColors();
             PrinterRepresentation.applyStyleSheetColors();
             Stage.applyStyleSheetColors();
-            renderLoop.applyStyleSheetColors();
+            window.renderLoop.applyStyleSheetColors();
             onStyleSheetReady();
         };
         document.head.appendChild(link);
@@ -1523,17 +1541,17 @@ class AdvancedFeaturesPage {
     }
 
     static onSaveProfileSources() {
-        ProfileLibrary.setURLs(settings.get("profile_sources"));
+        ProfileLibrary.setURLs(window.settings.get("profile_sources"));
         alert("These changes will take into effect when you next start Symple Slicer");
     }
 
     static onExportClicked() {
         const options = {
-            descriptions: settings.get("export_with_descriptions"),
-            unchanged:    settings.get("export_with_unchanged"),
-            choices:      settings.get("export_with_choices")
+            descriptions: window.settings.get("export_with_descriptions"),
+            unchanged:    window.settings.get("export_with_unchanged"),
+            choices:      window.settings.get("export_with_choices")
         };
-        const filename = settings.get("export_filename");
+        const filename = window.settings.get("export_filename");
         AdvancedFeaturesPage.exportConfiguration(filename, options);
     }
 
@@ -1583,8 +1601,8 @@ class ConfigWirelessPage {
     }
 
     static getPrinterUrl() {
-        const printer_addr = settings.get("printer_addr");
-        const printer_pass = settings.get("printer_pass");
+        const printer_addr = window.settings.get("printer_addr");
+        const printer_pass = window.settings.get("printer_pass");
         return "http://" + printer_addr + "?no-splash=1";
     }
 
@@ -1607,11 +1625,11 @@ class ConfigWirelessPage {
     }
 
     static onExportClicked() {
-        const wifi_ssid    = settings.get("wifi_ssid");
-        const wifi_pass    = settings.get("wifi_pass");
-        let   printer_addr = settings.get("printer_addr");
-        const printer_pass = settings.get("printer_pass");
-        const printer_name = settings.get("printer_name");
+        const wifi_ssid    = window.settings.get("wifi_ssid");
+        const wifi_pass    = window.settings.get("wifi_pass");
+        let   printer_addr = window.settings.get("printer_addr");
+        const printer_pass = window.settings.get("printer_pass");
+        const printer_name = window.settings.get("printer_name");
         if(!printer_addr) {
             printer_addr = "dhcp";
         }
@@ -1650,17 +1668,17 @@ class ConfigWirelessPage {
     }
 
     static onManageClicked() {
-        const printer_pass = settings.get("printer_pass");
+        const printer_pass = window.settings.get("printer_pass");
         WebWifiConnector.postMessageToTab(ConfigWirelessPage.getPrinterUrl(), {password: printer_pass});
     }
 
     static onMonitorClicked() {
-        settings.gotoPage("page_monitor_wifi");
+        window.settings.gotoPage("page_monitor_wifi");
     }
 
     static profileContains(fields) {
         for (const field of fields) {
-            if(!settings.get(field).length) return false;
+            if(!window.settings.get(field).length) return false;
         }
         return true;
     }
@@ -1669,17 +1687,17 @@ class ConfigWirelessPage {
         if(!ConfigWirelessPage.profileContains(["printer_pass","printer_addr"])) {
             throw Error("Please configure wireless printing using the \"Configure Wireless\" from the \"Tasks\" menu");
         }
-        const printer_addr = settings.get("printer_addr");
-        const printer_pass = settings.get("printer_pass");
+        const printer_addr = window.settings.get("printer_addr");
+        const printer_pass = window.settings.get("printer_pass");
         SynDaverWiFi.setHostname('http://' + printer_addr);
         SynDaverWiFi.setPassword(printer_pass);
     }
 
     static onInput() {
-        settings.enable(".canUpload",          ConfigWirelessPage.profileContains(["printer_addr", "printer_pass"]));
-        settings.enable("#export_config_btn",  ConfigWirelessPage.profileContains(["printer_name", "printer_pass", "wifi_ssid", "wifi_pass"]));
-        settings.enable("#remember_wifi_btn",  ConfigWirelessPage.profileContains(["printer_name", "printer_pass", "wifi_ssid", "printer_addr"]));
-        settings.enable("#forget_wifi_btn",    ConfigWirelessPage.isWirelessProfileSaved());
+        window.settings.enable(".canUpload",          ConfigWirelessPage.profileContains(["printer_addr", "printer_pass"]));
+        window.settings.enable("#export_config_btn",  ConfigWirelessPage.profileContains(["printer_name", "printer_pass", "wifi_ssid", "wifi_pass"]));
+        window.settings.enable("#remember_wifi_btn",  ConfigWirelessPage.profileContains(["printer_name", "printer_pass", "wifi_ssid", "printer_addr"]));
+        window.settings.enable("#forget_wifi_btn",    ConfigWirelessPage.isWirelessProfileSaved());
     }
 
     // Uploads files to the wireless module
@@ -1696,7 +1714,7 @@ class ConfigWirelessPage {
         } else {
             // When running on the web, it is necessary to post a message to
             // the wifi module rather than sending files directly.
-            const printer_pass = settings.get("printer_pass");
+            const printer_pass = window.settings.get("printer_pass");
             WebWifiConnector.postMessageAsEmbed(ConfigWirelessPage.getPrinterUrl(), {password: printer_pass, files: files});
         }
     }
@@ -1728,7 +1746,7 @@ class ConfigWirelessPage {
     static updateWirelessMenu() {
         // Update the list of wireless profiles in the "Wireless Printing" page
         const availableProfiles = Object.keys(ConfigWirelessPage.loadWirelessProfileList());
-        const selectedProfile   = settings.get("printer_name");
+        const selectedProfile   = window.settings.get("printer_name");
         document.getElementById("printer_name").setChoices(availableProfiles);
         // Update alias pull-down menus in other pages.
         for(const el of ConfigWirelessPage.linkedMenus) {
@@ -1769,20 +1787,20 @@ class ConfigWirelessPage {
     static saveWirelessProfile() {
         if(ConfigWirelessPage.profileContains(["printer_name", "printer_addr", "printer_pass", "wifi_ssid"])) {
             const profiles = ConfigWirelessPage.loadWirelessProfileList();
-            profiles[settings.get("printer_name")] = {
-                printer_name: settings.get("printer_name"),
-                printer_addr: settings.get("printer_addr"),
-                printer_pass: settings.get("printer_pass"),
-                wifi_ssid:    settings.get("wifi_ssid")
+            profiles[window.settings.get("printer_name")] = {
+                printer_name: window.settings.get("printer_name"),
+                printer_addr: window.settings.get("printer_addr"),
+                printer_pass: window.settings.get("printer_pass"),
+                wifi_ssid:    window.settings.get("wifi_ssid")
             }
             ConfigWirelessPage.saveWirelessProfileList(profiles);
         }
     }
 
     static isWirelessProfileSaved() {
-        if(settings.get("printer_name").length) {
+        if(window.settings.get("printer_name").length) {
             const profiles = ConfigWirelessPage.loadWirelessProfileList();
-            return profiles.hasOwnProperty(settings.get("printer_name"));
+            return profiles.hasOwnProperty(window.settings.get("printer_name"));
         } else {
             return false;
         }
@@ -1790,7 +1808,7 @@ class ConfigWirelessPage {
 
     static forgetWirelessProfile() {
         const profiles = ConfigWirelessPage.loadWirelessProfileList();
-        delete profiles[settings.get("printer_name")];
+        delete profiles[window.settings.get("printer_name")];
         let clearFromStorage = id => {document.getElementById(id).value = ""; localStorage.removeItem(id)};
         clearFromStorage("printer_name");
         clearFromStorage("printer_pass");
@@ -1840,7 +1858,7 @@ class MonitorWirelessPage {
     }
 
     static onClose() {
-        settings.dismissModal();
+        window.settings.dismissModal();
     }
 
     static async catchErrors(callback) {
@@ -1857,7 +1875,7 @@ class MonitorWirelessPage {
     // If web, always returns false.
     static async isPrinterBusy() {
         if(!isDesktop) return false;
-        const printer_addr = settings.get("printer_addr");
+        const printer_addr = window.settings.get("printer_addr");
         if(printer_addr.length == 0) return false;
         const result = await fetchJSON('http://' + printer_addr + "/status");
         return result.state == "printing" ||  result.state == "paused";
@@ -1868,7 +1886,7 @@ class MonitorWirelessPage {
     static async checkIfPrinterIdle() {
         if(!await MonitorWirelessPage.isPrinterBusy()) return true;
         if(confirm("The selected printer is busy. Click OK to monitor the print in progress.")) {
-            settings.gotoPage("page_monitor_wifi");
+            window.settings.gotoPage("page_monitor_wifi");
         }
         return false;
     }
@@ -1898,7 +1916,7 @@ class MonitorWirelessPage {
          * if the user is watching.
          */
         if(!isHidden(progress)) {
-            const printer_addr = settings.get("printer_addr");
+            const printer_addr = window.settings.get("printer_addr");
             if(printer_addr.length == 0) return;
             try {
                 let json = await fetchJSON('http://' + printer_addr + "/status");
@@ -1906,15 +1924,15 @@ class MonitorWirelessPage {
                 strength.value = json.wifiRSSI;
                 state.value   = json.state;
                 const printing = json.state == "printing" || json.state == "paused";
-                settings.enable('#wifi_stop', printing);
-                settings.enable('#wifi_pause_resume', printing);
+                window.settings.enable('#wifi_stop', printing);
+                window.settings.enable('#wifi_pause_resume', printing);
                 document.getElementById("wifi_pause_resume").innerHTML = json.state == "printing" ? "Pause" : "Resume";
             } catch(e) {
                 progress.value = 0;
                 strength.value = 0;
                 state.value   = "unavailable";
-                settings.enable('#wifi_stop',         false);
-                settings.enable('#wifi_pause_resume', false);
+                window.settings.enable('#wifi_stop',         false);
+                window.settings.enable('#wifi_pause_resume', false);
             }
         }
     }
@@ -1944,7 +1962,7 @@ class UpdateFirmwarePage {
         if(!hasSerial) {
             alert("This browser is does not support serial capabilities. You will be taken to a page with additional information.");
             window.open("https://syndaverco.github.io/firmware/");
-            settings.goBack();
+            window.settings.goBack();
         } else {
             const usb = ProfileManager.getSection("usb");
             const wireless = ProfileManager.getSection("wireless");
@@ -1952,7 +1970,7 @@ class UpdateFirmwarePage {
             document.getElementById("wireless_fw_version").value = wireless && wireless.firmware ? wireless.firmware.split('/').pop() : "None available";
             if(usb && usb.firmware_confirmation && !confirm(usb.firmware_confirmation)) {
                 alert("Please select a profile corresponding to your printer and try again.");
-                settings.gotoPage("page_profiles");
+                window.settings.gotoPage("page_profiles");
             }
         }
     }
@@ -2010,7 +2028,7 @@ class HelpAndInfoPage {
         s.page(       "Help & Information",                          {id: "page_help"});
 
         s.heading(    "Help & Information:");
-        s.button(     "About",                                       {onclick: showAbout});
+        s.button(     "About",                                       {onclick: SplashScreen.show});
         s.button(     "User Guide",                                  {onclick: showUserGuide});
         s.button(     "Change Log",                                  {onclick: Updater.showReleaseNotes});
 

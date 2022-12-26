@@ -17,6 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { TOMLWriter } from '../lib/util/io/TOMLWriter.js';
+
 function mergeProperties(copyTo, copyFrom, depth = 1) {
     for(const property in copyFrom) {
         if(!copyTo.hasOwnProperty(property) || depth == 0) {
@@ -27,7 +29,7 @@ function mergeProperties(copyTo, copyFrom, depth = 1) {
     }
 }
 
-class ProfileLibrary {
+export class ProfileLibrary {
     static getURLs() {
         return localStorage.getItem("profile_urls") || "";
     }
@@ -162,7 +164,7 @@ class ProfileLibrary {
     }
 }
 
-class ProfileManager {
+export class ProfileManager {
     static getSection(section) {
         return ProfileManager.profile[section];
     }

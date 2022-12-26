@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { wikify } from '../../misc/Wikify.js';
+
 class UpdateDialog {
     static showReleaseNotes() {
         $("#update-app-dialog").attr('data-state','show');
@@ -45,7 +47,7 @@ class UpdateDialog {
     }
 }
 
-class Updater extends UpdateDialog {
+export class Updater extends UpdateDialog {
     // If a service worker is available, it will Wikify content
     // for us, otherwise we have to do it here.
     static wikifyChangeLog(id) {

@@ -17,7 +17,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-class PrintableObject extends THREE.Mesh {
+import { OverhangShader } from './OverhangShaderMaterial.js';
+import { ParseColor } from '../lib/util/misc/ParseColor.js';
+
+export class PrintableObject extends THREE.Mesh {
     constructor(geometry, filename) {
         geometry.computeBoundingSphere();
         geometry.computeBoundingBox();
@@ -28,8 +31,8 @@ class PrintableObject extends THREE.Mesh {
     }
 
     static applyStyleSheetColors() {
-        const normalColor = getColorValueFromElement("#stl_normal", 'color');
-        const errorColor = getColorValueFromElement("#stl_error", 'color');
+        const normalColor = ParseColor.getColorValueFromElement("#stl_normal", 'color');
+        const errorColor = ParseColor.getColorValueFromElement("#stl_error", 'color');
         PrintableObject.modelMaterials[0].color = new THREE.Color(normalColor);
         PrintableObject.errorMaterials[0].color = new THREE.Color(errorColor);
         // Recompute color shades

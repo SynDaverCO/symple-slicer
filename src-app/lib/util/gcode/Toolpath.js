@@ -24,7 +24,7 @@
  *
  */
 
-class Toolpath extends THREE.Object3D {
+export class Toolpath extends THREE.Object3D {
     constructor(gcode_path) {
         super();
         

@@ -16,7 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-class PauseAtLayer {
+import { ProfileManager } from './ProfileManager.js';
+
+export class PauseAtLayer {
     static init(s) {
         const attr = {name: "post_process_choice", onchange: PauseAtLayer.onChange};
         s.radio( "No post processing",                 {...attr, value: "none", checked: "checked"});
@@ -40,20 +42,20 @@ class PauseAtLayer {
     }
 
     static postProcessAt(gcode, script) {
-        const layers = settings.get('layer-list').split(/\s*,*\s*/).map(x => parseInt(x,10));
+        const layers = window.settings.get('layer-list').split(/\s*,*\s*/).map(x => parseInt(x,10));
         const isMatch = layer => layers.includes(layer);
         return PauseAtLayer.patchGcode(gcode, isMatch, script);
     }
     
     static postProcessEvery(gcode, script) {
-        const every  = settings.get('layer-every');
+        const every  = window.settings.get('layer-every');
         const isMatch = layer => layer > 0 && layer % every == 0;
         return PauseAtLayer.patchGcode(gcode, isMatch, script);
     }
     
     static postProcess(gcode) {
-        const method = settings.get('post_process_choice');
-        const customScript = settings.get('gcode-fragment');
+        const method = window.settings.get('post_process_choice');
+        const customScript = window.settings.get('gcode-fragment');
         const scripts = ProfileManager.getSection("scripts");
         switch (method) {
             case "gcode-every": return PauseAtLayer.postProcessEvery(gcode,customScript);

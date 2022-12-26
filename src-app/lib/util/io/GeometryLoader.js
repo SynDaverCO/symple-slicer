@@ -22,7 +22,7 @@
  *
  */
 
-class GeometryLoader {
+export class GeometryLoader {
     constructor() {
         this.workerJs = "lib/util/io/GeometryLoaderWorker.js";
         this.worker   = undefined;

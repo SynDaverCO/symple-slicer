@@ -21,7 +21,7 @@
  * The SelectionGroup allows multiple objects to be selected and transformed
  * as a group around their center.
  */
-class ObjectGroup extends THREE.Object3D {
+export class ObjectGroup extends THREE.Object3D {
     constructor() {
         super();
         this.boundingBox = new THREE.Box3();

@@ -16,7 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-class SlicerOutput {
+import { LineAlignedTransformStream } from './GCodePostprocessing.js';
+
+export class SlicerOutput {
     constructor(data, type) {
         this.data = data;
         this.type = type;

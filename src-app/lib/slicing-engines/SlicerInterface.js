@@ -22,6 +22,9 @@
  *
  */
 
+import { SlicerOutput } from '../../js/SlicerOutput.js';
+import { CuraPostProcessing, ReplaceGCodeHeader } from '../../js/GCodePostprocessing.js';
+
 class SlicerInterface {
     constructor(configJs, configPath, callback) {
         // Load the configurator object for the slicer asynchronously.
@@ -79,7 +82,7 @@ class SlicerInterface {
     }
 }
 
-class SlicerWorkerInterface extends SlicerInterface {
+export class SlicerWorkerInterface extends SlicerInterface {
     constructor(workerJs, configJs, configPath, callback) {
         super(configJs, configPath, callback);
 
@@ -201,7 +204,7 @@ class SlicerWorkerInterface extends SlicerInterface {
     }
 }
 
-class SlicerNativeInterface extends SlicerInterface {
+export class SlicerNativeInterface extends SlicerInterface {
     constructor(configJs, configPath, callback) {
         super(configJs, configPath, callback);
     }

@@ -17,7 +17,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-class PrinterRepresentation extends THREE.Object3D {
+import { ParseColor } from '../lib/util/misc/ParseColor.js';
+
+export class PrinterRepresentation extends THREE.Object3D {
     constructor(printer) {
         super();
 
@@ -35,9 +37,9 @@ class PrinterRepresentation extends THREE.Object3D {
     }
 
     static applyStyleSheetColors() {
-        const frameColor = getColorValueFromElement("#print_volume", 'border-top-color');
-        const gridColor1 = getColorFloatArrayFromElement("#bed_grid", 'color');
-        const gridColor2 = getColorFloatArrayFromElement("#bed_grid", 'background-color');
+        const frameColor = ParseColor.getColorValueFromElement("#print_volume", 'border-top-color');
+        const gridColor1 = ParseColor.getColorFloatArrayFromElement("#bed_grid", 'color');
+        const gridColor2 = ParseColor.getColorFloatArrayFromElement("#bed_grid", 'background-color');
 
         PrinterRepresentation.labelMaterial.color = new THREE.Color(frameColor);
         PrinterRepresentation.wireframeMaterial.color = new THREE.Color(frameColor);
@@ -126,7 +128,7 @@ class PrinterRepresentation extends THREE.Object3D {
         }
 
         const ctx = this.ctx;
-        const fontFamily = getStylePropertyFromElement("body","font-family");
+        const fontFamily = ParseColor.getStylePropertyFromElement("body","font-family");
         const fontSize = 24;
         const font = `${fontSize}px bold ${fontFamily}`;
         ctx.font = font;

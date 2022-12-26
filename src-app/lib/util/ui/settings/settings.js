@@ -15,7 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-class SettingsUI {
+
+import { ProgressBar } from '../progress/progress.js';
+
+export class SettingsUI {
     constructor(elementId) {
         this.ui            = document.getElementById(elementId);
         this.target_dom    = undefined;

@@ -16,7 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-async function flashFirmware() {
+import { Log }         from '../lib/util/ui/log/log.js';
+import { Dialog }      from '../lib/util/ui/dialog/dialog.js';
+import { ProgressBar } from '../lib/util/ui/progress/progress.js';
+
+export async function flashFirmware() {
     const usb = ProfileManager.getSection("usb");
     if(!usb) {
         throw Error("No serial port information for this profile");
@@ -33,7 +37,7 @@ async function flashFirmware() {
     }
 }
 
-async function flashCustomFirmware(data, filename) {
+export async function flashCustomFirmware(data, filename) {
     const extension = filename.split('.').pop().toLowerCase();
     const attr = {data};
     switch(extension) {
@@ -43,7 +47,7 @@ async function flashCustomFirmware(data, filename) {
     }
 }
 
-async function stream_gcode(gcode) {
+export async function stream_gcode(gcode) {
     const usb     = ProfileManager.getSection("usb");
     const scripts = ProfileManager.getSection("scripts");
     let port, asyncEvent = "", isPaused = false;

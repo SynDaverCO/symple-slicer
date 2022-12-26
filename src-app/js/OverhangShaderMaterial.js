@@ -21,7 +21,7 @@
  *    https://discourse.threejs.org/t/update-material-uniforms/8141
  */
 
-class OverhangShader {
+export class OverhangShader {
     static patchMaterial(material) {
         const shaderPatch = {
             class: THREE.ShaderMaterial,

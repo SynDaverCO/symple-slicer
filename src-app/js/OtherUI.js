@@ -17,26 +17,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-function splashScreen() {
-    if(localStorage.getItem('no-splash') != "true") {
-        showAbout();
+import { WebWifiConnector } from './WebWifiConnector.js';
+
+export class SplashScreen {
+    static atStartup() {
+        if(localStorage.getItem('no-splash') != "true") {
+            showAbout();
+        }
+    }
+
+    static show() {
+        document.getElementById("about").classList.remove("hidden");
+        document.getElementById("no-splash").checked = localStorage.getItem('no-splash') == "true";
+    }
+
+    static hide() {
+        if(event.target.tagName == "A" || event.target.tagName == "INPUT") {
+            return;
+        }
+        document.getElementById("about").classList.add("hidden");
+        localStorage.setItem('no-splash', document.getElementById("no-splash").checked);
     }
 }
 
-function showAbout() {
-    document.getElementById("about").classList.remove("hidden");
-    document.getElementById("no-splash").checked = localStorage.getItem('no-splash') == "true";
-}
-
-function hideAbout() {
-    if(event.target.tagName == "A" || event.target.tagName == "INPUT") {
-        return;
-    }
-    document.getElementById("about").classList.add("hidden");
-    localStorage.setItem('no-splash', document.getElementById("no-splash").checked);
-}
-
-function enterFullscreen() {
+export function enterFullscreen() {
     var el = document.getElementsByTagName("BODY")[0];
     if (el.requestFullscreen) {
         el.requestFullscreen();
@@ -71,7 +75,7 @@ function redirectToDesktopDownload() {
     }
 }
 
-function showUserGuide() {
+export function showUserGuide() {
     let win = window.open('guide/symple_slicer_users_guide.md.txt', '', 'menubar=no');
     if(isDesktop) {
         // When running as a desktop app there is no service worker
@@ -81,7 +85,7 @@ function showUserGuide() {
 }
 
 // Allow Symple Slicer to receive messages via postMessage
-function onMessage(e) {
+export function onMessage(e) {
     switch(e.data.cmd) {
         case "clear":
             stage.removeAll();
@@ -103,10 +107,4 @@ function onMessage(e) {
             ProgressBar.hide();
             break;
     }
-}
-
-// The electron app calls this when the user selects Open... from the File menu
-
-function onFileOpen() {
-    document.getElementById('model_file').click();
 }

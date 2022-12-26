@@ -17,11 +17,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { ObjectGroup } from './ObjectGroup.js';
+
 /**
  * The SelectionGroup allows multiple objects to be selected and transformed
  * as a group around their center.
  */
-class SelectionGroup extends ObjectGroup {
+export class SelectionGroup extends ObjectGroup {
     constructor() {
         super();
         this.isTransforming = false;

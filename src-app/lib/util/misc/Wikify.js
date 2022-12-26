@@ -282,7 +282,7 @@ function crlf(str) {
 
 // Wikifies the specified string. When a cssUrl is provided, a complete HTML document is returned
 // with a link to the style sheet.
-function wikify (str, attr) {
+export function wikify (str, attr) {
     var jsonStorage = [];
     let wikified = re_json(formatting(tables(links(figs(headers_sl(def_lists(preformatted(lists(lists(lists(lists(lists(paragraphs(headers_ml(un_json(crlf(str),jsonStorage))))))))))))))),jsonStorage);
     if(attr) {

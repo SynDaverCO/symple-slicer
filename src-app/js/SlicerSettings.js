@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-class SlicerSettings {
+export class SlicerSettings {
     static async populate(s) {
         let settings = localStorage.getItem("ui-slicer-settings") || query.slicer_settings || "1st-slice";
 

@@ -26,7 +26,7 @@ window.NativeTransformStream = window.NativeTransformStream || TransformStream;
 window.NativeTextDecoderStream = window.NativeTextDecoderStream || TextDecoderStream;
 window.NativeTextEncoderStream = window.NativeTextEncoderStream || TextEncoderStream;
 
-class CuraPostProcessing {
+export class CuraPostProcessing {
     /**
      * When slicing via the command line, Cura puts in a dummy header in the GCODE
      * and prints the real header via stderr. Capture this for later use.
@@ -63,7 +63,7 @@ class CuraPostProcessing {
 
 /******************** Classes for postprocessing the gcode ********************/
 
-class LineAlignedTransformStream {
+export class LineAlignedTransformStream {
     constructor() {
         let prefix = "";
         return new NativeTransformStream({
@@ -89,7 +89,7 @@ class LineAlignedTransformStream {
 
 /* Replace the fake header in the G-code with the real header */
 
-class ReplaceGCodeHeader {
+export class ReplaceGCodeHeader {
     constructor(header) {
         let found = false;
         return new NativeTransformStream({
@@ -115,7 +115,7 @@ class ReplaceGCodeHeader {
 
 /* Add M73 (Set Print Progress) to GCODE file */
 
-class AddPrintProgress {
+export class AddPrintProgress {
     constructor(header) {
         const re_tt = /^;TIME:(\d+)$/m;
         const re_te = /^;TIME_ELAPSED:(\d+).*$/gm;

@@ -21,7 +21,7 @@
 // This class allows sending jobs to the wireless module via postMessage,
 // when otherwise a direct connection would be a forbidden CORS request.
 
-class WebWifiConnector {
+export class WebWifiConnector {
     static postMessageToTab(url, message) {
         const target = window.open(url, "syndaver_wireless");
         if(target) {

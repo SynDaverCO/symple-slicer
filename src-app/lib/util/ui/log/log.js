@@ -22,7 +22,7 @@
  *
  */
 
-class Log {
+export class Log {
     static clear() {
         document.getElementById('console').innerHTML = '';
     }

@@ -16,7 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-class RenderLoop {
+
+import { ParseColor } from '../lib/util/misc/ParseColor.js';
+
+export class RenderLoop {
     constructor(canvas, stage) {
         var mine = this;
 
@@ -108,7 +111,7 @@ class RenderLoop {
 
             const az = mine.orbit.getAzimuthalAngle() / Math.PI * 180;
             const po = mine.orbit.getPolarAngle()     / Math.PI * 180;
-            navCube.update(po - 80, 180 - az,0);
+            window.navCube.update(po - 80, 180 - az,0);
         }
 
         function onMouseDown( event ) {
@@ -156,9 +159,9 @@ class RenderLoop {
     }
 
     applyStyleSheetColors() {
-        const backgroundColor = getColorValueFromElement("body", 'background-color');
-        const glow1 = getColorFloatArrayFromElement("#stl_glow", 'color');
-        const glow2 = getColorFloatArrayFromElement("#stl_glow", 'background-color');
+        const backgroundColor = ParseColor.getColorValueFromElement("body", 'background-color');
+        const glow1 = ParseColor.getColorFloatArrayFromElement("#stl_glow", 'color');
+        const glow2 = ParseColor.getColorFloatArrayFromElement("#stl_glow", 'background-color');
         this.outlinePass.visibleEdgeColor = new THREE.Color(glow1[0], glow1[1], glow1[2]);
         this.outlinePass.hiddenEdgeColor = new THREE.Color(glow2[0], glow2[1], glow2[2]);
         this.renderer.setClearColor(backgroundColor);

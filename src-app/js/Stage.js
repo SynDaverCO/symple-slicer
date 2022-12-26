@@ -17,7 +17,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-class Stage {
+import { Toolpath } from '../lib/util/gcode/Toolpath.js';
+import { ResettableTimeout } from '../lib/util/misc/ResettableTimer.js';
+import { ParseColor } from '../lib/util/misc/ParseColor.js';
+import { PrinterRepresentation } from './PrinterRepresentation.js';
+import { ObjectTransformPage, PlaceObjectsPage } from './SettingsPanel.js';
+import { SelectionGroup } from './SelectionGroup.js';
+import { PrintableObject } from './PrintableObject.js';
+import { OverhangShader } from './OverhangShaderMaterial.js';
+
+export class Stage {
     constructor() {
         this.setPrinterCharacteristics({
             circular:          false,
@@ -50,7 +59,7 @@ class Stage {
     }
 
     static applyStyleSheetColors() {
-        const color = getColorArrayFromElement("#stl_normal", 'color');
+        const color = ParseColor.getColorArrayFromElement("#stl_normal", 'color');
         Toolpath.colorMap["SKIN"] = color;
         Toolpath.colorMap["WALL-OUTER"] = color;
         Toolpath.colorMap["WALL-INNER"] = color;

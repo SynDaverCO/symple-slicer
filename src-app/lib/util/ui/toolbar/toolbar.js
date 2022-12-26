@@ -16,28 +16,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-class ToolbarUI {
-	constructor(elementId) {
-		this.ui = document.getElementById(elementId);
+
+export class ToolbarUI {
+    constructor(elementId) {
+        this.ui = document.getElementById(elementId);
         this.onChange = function() {};
         this.selected = null;
-	}
-	
-	// private:
-	
-	static addTag(parent, type, attr_list) {
-		var el = document.createElement(type);
+    }
+
+    // private:
+
+    static addTag(parent, type, attr_list) {
+        var el = document.createElement(type);
         if(attr_list) {
             for (const attr in attr_list)
                 if(attr_list[attr] !== undefined)
                     el[attr] = attr_list[attr];
         }
-		parent.appendChild(el);
-		return el;
-	}
-	
-	// privileged:
-    
+        parent.appendChild(el);
+        return el;
+    }
+
+    // privileged:
+
     addIcon(id, title, img_src) {
         var me = this;
         ToolbarUI.addTag(this.ui, "img", {

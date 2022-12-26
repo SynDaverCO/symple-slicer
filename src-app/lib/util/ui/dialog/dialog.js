@@ -22,7 +22,7 @@
  *
  */
 
-class Dialog {
+export class Dialog {
     static show() {
         console.log("Show dialog", $("#custom-dialog").length);
         $("#custom-dialog").show();

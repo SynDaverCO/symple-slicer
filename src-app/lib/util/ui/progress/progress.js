@@ -22,7 +22,7 @@
  *
  */
 
-class ProgressBar {
+export class ProgressBar {
     static show() {
         if(!$("#progress-dialog progress").is(":visible")) {
             $("#progress-dialog progress").attr("value",0);
