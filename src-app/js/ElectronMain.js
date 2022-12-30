@@ -18,13 +18,13 @@
 
 // Entry point for when using SympleSlicer as an Electron app
 
-const { app, BrowserWindow, Menu, powerSaveBlocker, ipcMain, dialog } = require('electron')
-const path = require('path')
-const process = require('process')
+import electron from 'electron'
+import path from 'path'
+import process from 'process'
 
 function createWindow () {
     // Create the browser window.
-    let win = new BrowserWindow({
+    let win = new electron.BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
@@ -38,7 +38,7 @@ function createWindow () {
     });
 
     // Open the DevTools.
-    //devtools = new BrowserWindow()
+    //devtools = new electron.BrowserWindow()
     //win.webContents.setDevToolsWebContents(devtools.webContents)
     //win.webContents.openDevTools({ mode: 'detach' })
 
@@ -156,17 +156,17 @@ function createMenu(win) {
         }
     ]
 
-    const menu = Menu.buildFromTemplate(template)
-    Menu.setApplicationMenu(menu)
+    const menu = electron.Menu.buildFromTemplate(template)
+    electron.Menu.setApplicationMenu(menu)
 }
 
-//app.commandLine.appendSwitch('--enable-gpu')
-//app.commandLine.appendSwitch('--enable-logging')
-app.commandLine.appendSwitch("disable-renderer-backgrounding");
-app.commandLine.appendSwitch("disable-background-timer-throttling");
+//electron.app.commandLine.appendSwitch('--enable-gpu')
+//electron.app.commandLine.appendSwitch('--enable-logging')
+electron.app.commandLine.appendSwitch("disable-renderer-backgrounding");
+electron.app.commandLine.appendSwitch("disable-background-timer-throttling");
 
-app.allowRendererProcessReuse = false;
-app.whenReady().then(createWindow);
+electron.app.allowRendererProcessReuse = false;
+electron.app.whenReady().then(createWindow);
 
 console.log("Version", process.versions);
 
@@ -191,56 +191,56 @@ function checkForUpdates(win) {
     })
     autoUpdater.on('update-downloaded', info => autoUpdater.quitAndInstall())
 
-    ipcMain.on('electronAppDownloadAndInstall', event => autoUpdater.downloadUpdate())
+    electron.ipcMain.on('electronAppDownloadAndInstall', event => autoUpdater.downloadUpdate())
 
     autoUpdater.checkForUpdatesAndNotify()
 }
 
 // Quit when all windows are closed.
-app.on('window-all-closed', () => {
+electron.app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
-      app.quit()
+      electron.app.quit()
     }
 })
 
-app.on('activate', () => {
+electron.app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (electron.BrowserWindow.getAllWindows().length === 0) {
       createWindow()
     }
 })
 
 let powerSaveId;
 
-ipcMain.on('setPowerSaveEnabled', (event, enabled) => {
+electron.ipcMain.on('setPowerSaveEnabled', (event, enabled) => {
     if(enabled) {
         // Enable power saving mode if it was previously disabled
         if(powerSaveId) {
             console.log("Enabling power saving mode");
-            powerSaveBlocker.stop(powerSaveId);
+            electron.powerSaveBlocker.stop(powerSaveId);
             powerSaveId = null;
         }
     } else {
         // Disable power saving mode if it was previously enabled
         if(!powerSaveId) {
             console.log("Disabling power saving mode");
-            powerSaveId = powerSaveBlocker.start('prevent-app-suspension');
+            powerSaveId = electron.powerSaveBlocker.start('prevent-app-suspension');
         }
     }
 })
 
 let printInProgress = false;
 
-ipcMain.on('setPrintInProgress', (event, enabled) => {
+electron.ipcMain.on('setPrintInProgress', (event, enabled) => {
     printInProgress = enabled;
 })
 
 function onClose(e){
     if(printInProgress) {
         e.preventDefault();
-        dialog.showMessageBox({message: "Symple Slicer cannot close while a print is in progress."});
+        electron.dialog.showMessageBox({message: "Symple Slicer cannot close while a print is in progress."});
     }
 }
