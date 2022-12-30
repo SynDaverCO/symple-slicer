@@ -16,16 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import electron     from 'electron'
-import serialport   from 'serialport'
-import childProcess from 'node:child_process';
-import readline     from 'node:readline';
-import path         from 'node:path';
-import os           from 'node:os';
-import fs           from 'node:fs/promises';
-import fss          from 'node:fs';
-import stream       from 'node:stream';
-import stream_web   from 'node:stream/web';
+const { SerialPort  } = require('serialport');
+const { ipcRenderer } = require('electron');
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
@@ -51,7 +43,7 @@ class SequentialSerial {
         this.encoder = new TextEncoder();
         this.timeout = timeout;
         return new Promise((resolve, reject) => {
-            this.serial = new serialport.SerialPort(this.path, {baudRate: baud});
+            this.serial = new SerialPort(this.path, {baudRate: baud});
             this.serial.on('error', reject);
             this.serial.on('open', resolve);
         });
@@ -147,7 +139,7 @@ class SequentialSerial {
     }
 
     static async getPorts() {
-        const ports = await serialport.SerialPort.list();
+        const ports = await SerialPort.list();
         return ports.map(port => new SequentialSerial(port.path, port.vendorId, port.productId));
     }
 
@@ -166,7 +158,7 @@ class SequentialSerial {
     }
 
     static async requestPort(filters) {
-        const ports = await serialport.SerialPort.list();
+        const ports = await SerialPort.list();
         for(let port of ports) {
             if(SequentialSerial.isMatch(port, filters)) {
                 return new SequentialSerial(port.path, port.vendorId, port.productId);
@@ -178,6 +170,15 @@ class SequentialSerial {
 
 /******************************* Code for launching processes *******************/
 
+const childProcess = require('node:child_process');
+const readline     = require('node:readline');
+const path         = require('node:path');
+const os           = require('node:os');
+const fs           = require('node:fs/promises');
+const fss          = require('node:fs');
+const stream       = require('node:stream');
+const stream_web   = require('node:stream/web');
+const {shell}      = require('electron');
 let tmpPath;
 
 window.CreateTempDir = async () => {
@@ -202,7 +203,7 @@ window.RunNativeSlicer = (args, onStdout, onStderr, onExit) => {
 
 window.ShowTempDir = async filename => {
     console.log("Showing temp dir", filename);
-    await electron.shell.showItemInFolder(GetNativeFilePath(filename));
+    await shell.showItemInFolder(GetNativeFilePath(filename));
 }
 
 window.GetNativeFilePath = filename => {
