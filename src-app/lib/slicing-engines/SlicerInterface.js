@@ -222,7 +222,7 @@ export class SlicerWorkerInterface extends SlicerInterface {
     async saveAsFile(slicerOutput, filename) {
         const postProcessed = await this.readFile(slicerOutput);
         const blob = new Blob([postProcessed], {type: "text/plain"});
-        saveAs(blob, name);
+        saveAs(blob, filename);
     }
 
     slice(models) {
