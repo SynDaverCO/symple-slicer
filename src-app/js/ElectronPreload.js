@@ -16,8 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { SerialPort  } = require('serialport');
-const { ipcRenderer } = require('electron');
+const electron     = require('electron');
+const serialport   = require('serialport');
+const childProcess = require('node:child_process');
+const readline     = require('node:readline');
+const path         = require('node:path');
+const os           = require('node:os');
+const fs           = require('node:fs/promises');
+const fss          = require('node:fs');
+const stream       = require('node:stream');
+const stream_web   = require('node:stream/web');
 
 /************ Contents of "serial-tools/nodejs/SequentialSerial.mjs" ************/
 
@@ -43,7 +51,7 @@ class SequentialSerial {
         this.encoder = new TextEncoder();
         this.timeout = timeout;
         return new Promise((resolve, reject) => {
-            this.serial = new SerialPort(this.path, {baudRate: baud});
+            this.serial = new serialport.SerialPort(this.path, {baudRate: baud});
             this.serial.on('error', reject);
             this.serial.on('open', resolve);
         });
@@ -139,7 +147,7 @@ class SequentialSerial {
     }
 
     static async getPorts() {
-        const ports = await SerialPort.list();
+        const ports = await serialport.SerialPort.list();
         return ports.map(port => new SequentialSerial(port.path, port.vendorId, port.productId));
     }
 
@@ -158,7 +166,7 @@ class SequentialSerial {
     }
 
     static async requestPort(filters) {
-        const ports = await SerialPort.list();
+        const ports = await serialport.SerialPort.list();
         for(let port of ports) {
             if(SequentialSerial.isMatch(port, filters)) {
                 return new SequentialSerial(port.path, port.vendorId, port.productId);
@@ -170,15 +178,6 @@ class SequentialSerial {
 
 /******************************* Code for launching processes *******************/
 
-const childProcess = require('node:child_process');
-const readline     = require('node:readline');
-const path         = require('node:path');
-const os           = require('node:os');
-const fs           = require('node:fs/promises');
-const fss          = require('node:fs');
-const stream       = require('node:stream');
-const stream_web   = require('node:stream/web');
-const {shell}      = require('electron');
 let tmpPath;
 
 window.CreateTempDir = async () => {
@@ -203,7 +202,7 @@ window.RunNativeSlicer = (args, onStdout, onStderr, onExit) => {
 
 window.ShowTempDir = async filename => {
     console.log("Showing temp dir", filename);
-    await shell.showItemInFolder(GetNativeFilePath(filename));
+    await electron.shell.showItemInFolder(GetNativeFilePath(filename));
 }
 
 window.GetNativeFilePath = filename => {
@@ -224,6 +223,15 @@ window.GetNativeWritableStream = filename => {
     return stream.Writable.toWeb(nodeWritable);
 }
 
+window.SaveAsNativeStream = async (stream, filename) => {
+    const userChosenPath = await saveAsDialogBox(filename);
+    if(!userChosenPath.canceled){
+        const file = GetNativeWritableStream(userChosenPath.filePath);
+        await stream.pipeTo(file);
+        await electron.shell.showItemInFolder(userChosenPath.filePath);
+    }
+}
+
 window.ELECTRON = {fs,os,path};
 
 window.NativeTransformStream   = stream_web.TransformStream;
@@ -235,9 +243,10 @@ window.NativeTextDecoderStream = stream_web.TextDecoderStream;
 window.SequentialSerial = SequentialSerial;
 window.SerialTimeout = SerialTimeout;
 window.SerialDisconnected = SerialDisconnected;
-window.setPowerSaveEnabled = enabled => ipcRenderer.send('setPowerSaveEnabled', enabled);
-window.setPrintInProgress = enabled => ipcRenderer.send('setPrintInProgress', enabled);
-window.electronAppDownloadAndInstall = () => ipcRenderer.send('electronAppDownloadAndInstall');
+window.setPowerSaveEnabled = enabled => electron.ipcRenderer.send('setPowerSaveEnabled', enabled);
+window.setPrintInProgress = enabled => electron.ipcRenderer.send('setPrintInProgress', enabled);
+window.electronAppDownloadAndInstall = () => electron.ipcRenderer.send('electronAppDownloadAndInstall');
+window.saveAsDialogBox = filename => electron.ipcRenderer.invoke('saveAsDialogBox', filename); 
 window.isDesktop = true;
 
 SequentialSerial.isWebSerial = false;
