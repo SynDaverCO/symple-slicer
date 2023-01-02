@@ -36,7 +36,7 @@ import { AddPrintProgress }               from './GCodePostprocessing.js';
 import { WebWifiConnector }               from './WebWifiConnector.js';
 import { flashFirmware, flashCustomFirmware, stream_gcode } from './SerialPort.js';
 
-var sliced_gcode, loaded_model;
+var gcode_handle, loaded_model;
 
 const preApplyTransforms = true; // If true, apply transformations to models prior to sending them to Cura
 
@@ -562,7 +562,7 @@ export class PlaceObjectsPage {
 
     static readFileAsPromise(file, mode) {
         return new Promise((resolve, reject) => {
-            var fr = new FileReader();  
+            var fr = new FileReader();
             fr.onload = () => {
                 resolve(fr.result )
             };
@@ -1273,14 +1273,12 @@ export class PrintAndPreviewPage {
         $('#current_layer').val(layer);
     }
 
-    static async readyToDownload(slicerOutput) {
+    static async readyToDownload(handle) {
+        gcode_handle = handle;
         ProgressBar.hide();
         window.settings.gotoPage("page_print");
-        if(slicer.getOption("machine_gcode_flavor") == "RepRap (Marlin/Sprinter)") {
-            slicerOutput.addTransform(new AddPrintProgress());
-        }
-        sliced_gcode = await slicerOutput.text();
-        if(sliced_gcode) {
+        if(gcode_handle) {
+            const sliced_gcode = await slicer.readFile(gcode_handle);
             const path = new GCodeParser(sliced_gcode);
             stage.setGcodePath(path);
             const max = Math.max(0, stage.getGcodeLayers() - 1);
@@ -1322,13 +1320,12 @@ export class PrintAndPreviewPage {
         PrintAndPreviewPage.setPrintFilament(filament.toFixed(2));
     }
 
-    static getGcodeBlob() {
-        const postProcessed = PauseAtLayer.postProcess(sliced_gcode);
-        return new Blob([postProcessed], {type: "text/plain"});
+    static toBlob(str) {
+        return new Blob([str], {type: "text/plain"});
     }
 
     static nothingToPrint() {
-        if(!sliced_gcode) {
+        if(!gcode_handle) {
             alert("There is nothing to print")
             return true;
         }
@@ -1338,13 +1335,13 @@ export class PrintAndPreviewPage {
     static onDownloadClicked() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
         const name = window.settings.get("gcode_filename");
-        saveAs(PrintAndPreviewPage.getGcodeBlob(), name);
+        slicer.saveAsFile(gcode_handle, name);
     }
 
     static async onPrintClicked() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
         try {
-            await stream_gcode(await PrintAndPreviewPage.getGcodeBlob().text());
+            await stream_gcode(await slicer.readFile(gcode_handle));
         } catch(err) {
             if(!(err instanceof PrintAborted)) {
                 // Report all errors except for user initiated abort
@@ -1356,7 +1353,7 @@ export class PrintAndPreviewPage {
 
     static async onPrintToWiFi() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
-        const file = SynDaverWiFi.fileFromBlob("printjob.gco", PrintAndPreviewPage.getGcodeBlob());
+        const file = SynDaverWiFi.fileFromBlob("printjob.gco", PrintAndPreviewPage.toBlob(await slicer.readFile(gcode_handle)));
         try {
             await ConfigWirelessPage.queueFile(file);
             if(isDesktop) {
@@ -1371,7 +1368,7 @@ export class PrintAndPreviewPage {
     static async onUploadToWiFi() {
         if(PrintAndPreviewPage.nothingToPrint()) return;
         const name = window.settings.get("gcode_filename");
-        const file = SynDaverWiFi.fileFromBlob(name, PrintAndPreviewPage.getGcodeBlob());
+        const file = SynDaverWiFi.fileFromBlob(name, PrintAndPreviewPage.toBlob(await slicer.readFile(gcode_handle)));
         alert('The file will be saved to your printer for printing later.\n\nYou may start a print through the web management interface by selecting "Wireless Printing" from the menu and then clicking "Manage..."')
         try {
             await ConfigWirelessPage.uploadFiles([file]);

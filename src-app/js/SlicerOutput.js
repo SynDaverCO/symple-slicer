@@ -16,16 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { LineAlignedTransformStream } from './GCodePostprocessing.js';
-
 export class SlicerOutput {
     constructor(data, type) {
         this.data = data;
         this.type = type;
-        this.filters = [];
     }
 
-    async rawStream() {
+    async stream() {
         switch(this.type) {
             case 'binary':
                 return new Blob([this.data], {type: 'text/plain'}).stream();
@@ -33,52 +30,6 @@ export class SlicerOutput {
                 return this.data.stream();
             case 'node.path':
                 return await GetNativeReadableStream(this.data);
-        }
-    }
-
-    addTransform(filter) {
-        this.filters.push(filter);
-    }
-
-    async stream() {
-        let stream = await this.rawStream();
-        stream = stream.pipeThrough(new NativeTextDecoderStream())
-                       .pipeThrough(new LineAlignedTransformStream());
-        if(this.header) {
-            stream = stream.pipeThrough(new ReplaceGCodeHeader(this.header));
-        }
-        for(const filter of this.filters) {
-            stream = stream.pipeThrough(filter);
-        }
-        return stream;
-    }
-
-    setHeader(header) {
-        this.header = header;
-    }
-
-    async text() {
-        try {
-            // https://stackoverflow.com/questions/40385133/retrieve-data-from-a-readablestream-object
-            // const transformedStream = (await this.stream()).pipeThrough(new TextEncoderStream());
-            // return await (new Response(transformedStream).text());
-            const reader = (await this.stream()).getReader();
-            let result = '';
-            while (true) {
-                const {done, value} = await reader.read();
-                if (done) {
-                    break;
-                }
-               result += value;
-            }
-            return result;
-        } catch(err) {
-            console.error(err);
-            if(this.type == 'node.path') {
-                alert("Cannot load the GCODE from the slicer. The cura work directory will open in a window for troubleshooting.");
-                await ShowTempDir(this.data);
-            }
-            return "";
         }
     }
 }

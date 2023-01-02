@@ -23,7 +23,9 @@
  */
 
 import { SlicerOutput } from '../../js/SlicerOutput.js';
-import { CuraPostProcessing, ReplaceGCodeHeader } from '../../js/GCodePostprocessing.js';
+import { PauseAtLayer } from '../../js/PauseAtLayer.js';
+import { CuraPostProcessing, LineAlignedTransformStream, ReplaceGCodeHeader, AddPrintProgress } from '../../js/GCodePostprocessing.js';
+import { ProgressBar } from '../util/ui/progress/progress.js';
 
 class SlicerInterface {
     constructor(configJs, configPath, callback) {
@@ -34,6 +36,8 @@ class SlicerInterface {
             this.config.onSettingsChanged = (key, vals, attr)     => {this.onSettingsChanged(key, vals, attr);};
             this.config.onLoaded = callback;
         }
+
+        this.outputTransforms = {};
     }
 
     setOption(name, value, extruder = 0) {
@@ -79,6 +83,38 @@ class SlicerInterface {
 
     numberOfExtruders() {
         return this.config.get("machine_extruder_count");
+    }
+
+    addTransform(name, options) {
+        this.outputTransforms[name] = options;
+    }
+
+    async getTransformedGCodeStream(slicerOutput) {
+        let stream = await slicerOutput.stream();
+        stream = stream.pipeThrough(new NativeTextDecoderStream())
+                       .pipeThrough(new LineAlignedTransformStream());
+        if(CuraPostProcessing.header) {
+            stream = stream.pipeThrough(new ReplaceGCodeHeader(CuraPostProcessing.header));
+        }
+        if(this.getOption("machine_gcode_flavor") == "RepRap (Marlin/Sprinter)") {
+            stream = stream.pipeThrough(new AddPrintProgress());
+        }
+        return stream;
+    }
+
+    // Attempt to load the entire slicer output as a string
+    async readFile(slicerOutput) {
+        const stream = await this.getTransformedGCodeStream(slicerOutput);
+        const reader = stream.getReader();
+        let result = '';
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) {
+                break;
+            }
+           result += value;
+        }
+        return PauseAtLayer.postProcess(result);
     }
 }
 
@@ -126,9 +162,7 @@ export class SlicerWorkerInterface extends SlicerInterface {
                 this.onAbort();
                 break;
             case 'file':
-                const slicerOutput = new SlicerOutput(data.gcode, 'binary');
-                slicerOutput.addTransform(new ReplaceGCodeHeader(CuraPostProcessing.header));
-                this.onStreamAvailable(slicerOutput);
+                this.onStreamAvailable(new SlicerOutput(data.gcode, 'binary'));
                 /**
                  * Once the gcode file is received, restart
                  * the web worker to ensure a clean state
@@ -185,6 +219,12 @@ export class SlicerWorkerInterface extends SlicerInterface {
         }, json.tranferables);
     }
 
+    async saveAsFile(slicerOutput, filename) {
+        const postProcessed = await this.readFile(slicerOutput);
+        const blob = new Blob([postProcessed], {type: "text/plain"});
+        saveAs(blob, name);
+    }
+
     slice(models) {
         this.worker.postMessage({
             'cmd':      'slice',
@@ -229,6 +269,21 @@ export class SlicerNativeInterface extends SlicerInterface {
     loadFromBlob(blob, filename) {
     }
 
+    async saveAsFile(slicerOutput, filename) {
+        SaveAsNativeStream(await this.getTransformedGCodeStream(slicerOutput), filename);
+    }
+
+    async readFile(slicerOutput) {
+        try {
+            return super.readFile(slicerOutput);
+        } catch(err) {
+            console.error(err);
+            alert("Cannot load the GCODE from the slicer. The cura work directory will open in a window for troubleshooting.");
+            await ShowTempDir(this.data);
+            return "";
+        }
+    }
+
     async loadFromGeometry(geometry, filename) {
         await CreateTempDir();
         ProgressBar.message("Writing model...");
@@ -257,9 +312,7 @@ export class SlicerNativeInterface extends SlicerInterface {
         }
         const onExit = async (code) => {
             const filePath = GetNativeFilePath("output.gcode");
-            const slicerOutput = new SlicerOutput(filePath, 'node.path');
-            slicerOutput.addTransform(new ReplaceGCodeHeader(CuraPostProcessing.header));
-            this.onStreamAvailable(slicerOutput);
+            this.onStreamAvailable(new SlicerOutput(filePath, 'node.path'));
         }
         const curaExe = RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
         // Write a batch file for testing
