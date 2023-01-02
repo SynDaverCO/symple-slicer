@@ -22,7 +22,7 @@ import { WebWifiConnector } from './WebWifiConnector.js';
 export class SplashScreen {
     static atStartup() {
         if(localStorage.getItem('no-splash') != "true") {
-            showAbout();
+            SplashScreen.show();
         }
     }
 
