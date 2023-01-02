@@ -149,33 +149,3 @@ export class AddPrintProgress {
         });
     }
 }
-
-/* Inserts a script after a layer transition if a test function returns true */
-
-class AddAtLayer {
-    constructor(layerTest, script) {
-        const re = /^;LAYER:(\d+)\s*$/gm;
-        
-        let number = 0;
-        function getScript() {
-            return script.replace("${number}",++number).trim();
-        }
-        
-        return new NativeTransformStream({
-            transform(chunk, controller) {
-                chunk = chunk.replace(re,
-                    (match,layer) =>
-                        layerTest(parseInt(layer,10)) ?
-                        match + "\n" + getScript() :
-                        match
-                );
-                controller.enqueue(chunk);
-            },
-            flush(controller) {
-                if(!number) {
-                    console.warn("Warning: No layers modified in G-code");
-                }
-            }
-        });
-    }
-}

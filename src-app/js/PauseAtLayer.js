@@ -33,43 +33,69 @@ export class PauseAtLayer {
         s.linkRadioToDivs('post_process_choice');
     }
 
-    static patchGcode(gcode, isMatch, script) {
-        const re = /^;LAYER:(\d+)\s*$/gm;
-        let number = 1;
-        return gcode.replace(re,
-            (match,layer) => isMatch(parseInt(layer,10)) ? match + "\n" + script.replace("${number}",number++).trim() : match
-        );
-    }
-
-    static postProcessAt(gcode, script) {
-        const layers = window.settings.get('layer-list').split(/\s*,*\s*/).map(x => parseInt(x,10));
-        const isMatch = layer => layers.includes(layer);
-        return PauseAtLayer.patchGcode(gcode, isMatch, script);
-    }
-    
-    static postProcessEvery(gcode, script) {
-        const every  = window.settings.get('layer-every');
-        const isMatch = layer => layer > 0 && layer % every == 0;
-        return PauseAtLayer.patchGcode(gcode, isMatch, script);
-    }
-    
-    static postProcess(gcode) {
+    static enabled() {
         const method = window.settings.get('post_process_choice');
-        const customScript = window.settings.get('gcode-fragment');
-        const scripts = ProfileManager.getSection("scripts");
-        switch (method) {
-            case "gcode-every": return PauseAtLayer.postProcessEvery(gcode,customScript);
-            case "gcode-at":    return PauseAtLayer.postProcessAt(gcode,customScript);
+        switch(method) {
+            case "none": return false;
             case "pause-at":
-                if (scripts && scripts.pause_print_gcode)
-                    return PauseAtLayer.postProcessAt(gcode,scripts.pause_print_gcode);
-                else {
+                const scripts = ProfileManager.getSection("scripts");
+                if(scripts && scripts.pause_print_gcode) {
+                    return true;
+                } else {
                     alert("Unable to insert pauses into G-code because no pause script is defined in the printer profile");
                     console.warn("No pause_print_gcode in profile");
-                    return gcode;
+                    return false;
                 }
-            default: return gcode;
+            case "gcode-at":
+            case "gcode-every":
+                return true;
         }
+    }
+
+    static getOutputTransform() {
+        const method = window.settings.get('post_process_choice');
+        if(method == "gcode-every") {
+            const every  = window.settings.get('layer-every');
+            const isMatch = layer => layer > 0 && layer % every == 0;
+            const customScript = window.settings.get('gcode-fragment');
+            return new AddAtLayer(isMatch, customScript);
+        } else {
+            const scripts = ProfileManager.getSection("scripts");
+            const customScript = method == "pause-at" ? scripts.pause_print_gcode : window.settings.get('gcode-fragment');
+            const layers = window.settings.get('layer-list').split(/\s*,*\s*/).map(x => parseInt(x,10));
+            const isMatch = layer => layers.includes(layer);
+            return new AddAtLayer(isMatch, customScript);
+        }
+    }
+}
+
+/* Inserts a script after a layer transition if a test function returns true */
+
+class AddAtLayer {
+    constructor(layerTest, script) {
+        const re = /^;LAYER:(\d+)\s*$/gm;
+
+        let number = 0;
+        function getScript() {
+            return script.replace("${number}",++number).trim();
+        }
+
+        return new NativeTransformStream({
+            transform(chunk, controller) {
+                chunk = chunk.replace(re,
+                    (match,layer) =>
+                        layerTest(parseInt(layer,10)) ?
+                        match + "\n" + getScript() :
+                        match
+                );
+                controller.enqueue(chunk);
+            },
+            flush(controller) {
+                if(!number) {
+                    console.warn("Warning: No layers modified in G-code");
+                }
+            }
+        });
     }
 }
 

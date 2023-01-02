@@ -99,6 +99,9 @@ class SlicerInterface {
         if(this.getOption("machine_gcode_flavor") == "RepRap (Marlin/Sprinter)") {
             stream = stream.pipeThrough(new AddPrintProgress());
         }
+        if(PauseAtLayer.enabled()) {
+            stream = stream.pipeThrough(PauseAtLayer.getOutputTransform());
+        }
         return stream;
     }
 
@@ -114,7 +117,7 @@ class SlicerInterface {
             }
            result += value;
         }
-        return PauseAtLayer.postProcess(result);
+        return result;
     }
 }
 
