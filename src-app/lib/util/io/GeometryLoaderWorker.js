@@ -33,22 +33,22 @@ if(typeof TextEncoder === "undefined") {
 }
 
 function loadFromOBJ(data) {
-  var geometry = [];
-  const ldr = new THREE.OBJLoader();
-  const dec = new TextDecoder();
-  const str = dec.decode(data);
-  const obj = ldr.parse(str);
-  obj.traverse( node => {
-    if (node instanceof THREE.Mesh) {
-      geometry.push(node.geometry);
-    }
-  });
-  return geometry;
+    const geometry = [];
+    const ldr = new THREE.OBJLoader();
+    const dec = new TextDecoder();
+    const str = dec.decode(data);
+    const obj = ldr.parse(str);
+    obj.traverse( node => {
+        if (node instanceof THREE.Mesh) {
+            geometry.push(node.geometry);
+        }
+    });
+    return geometry;
 }
 
 function loadFromSTL(data) {
     self.postMessage({cmd: 'progress', value: 0/4});
-    var bufferGeometry = GEOMETRY_READERS.readStl(data, GEOMETRY_READERS.THREEBufferedGeometryCreator);
+    const bufferGeometry = GEOMETRY_READERS.readStl(data, GEOMETRY_READERS.THREEBufferedGeometryCreator);
     self.postMessage({cmd: 'progress', value: 1/4});
     THREE.BufferGeometryUtils.mergeVertices(bufferGeometry);
     self.postMessage({cmd: 'progress', value: 2/4});
@@ -79,8 +79,8 @@ function send(geometry, options) {
  */
 
 function receiveMessage(e) {
-    var cmd  = e.data.cmd;
-    var data = e.data;
+    const cmd  = e.data.cmd;
+    const data = e.data;
     switch (cmd) {
         case 'loadSTL': send(loadFromSTL(data.data), data.options); break;
         case 'loadOBJ': send(loadFromOBJ(data.data), data.options); break;

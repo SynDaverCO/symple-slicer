@@ -106,14 +106,16 @@ export class GeometryLoader {
 
     loadFrom3MF(data, options) {
         // The ThreeMFLoader requires the DOMParse and thus cannot run in the worker.
+        const geometry = [];
         const ldr = new THREE.ThreeMFLoader();
         const obj = ldr.parse(data);
         obj.traverse( node => {
             if (node instanceof THREE.Mesh) {
                 node.geometry.computeVertexNormals();
-                this.onModelLoaded(node.geometry, options);
+                geometry.push(node.geometry);
             }
         });
+        this.onModelLoaded(geometry, options);
     }
 
     loadFromImage(data, options) {
@@ -136,7 +138,7 @@ export class GeometryLoader {
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
                 const geometry = GeometryAlgorithms.geometryFromImageData(imageData, 20, 1);
-                this.onModelLoaded(geometry, options);
+                this.onModelLoaded([geometry], options);
             }
         } else {
             alert("Failed to read file");
