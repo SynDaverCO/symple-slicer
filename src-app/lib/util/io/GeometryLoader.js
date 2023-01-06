@@ -40,7 +40,7 @@ export class GeometryLoader {
             this.worker.addEventListener('message', this._messageHandler.bind(this));
             this.worker.addEventListener('error', this._errorHandler.bind(this), false);
         } else {
-            this.onStderrOutput("Sorry! No Web Worker support.");
+            console.warn("Sorry! No Web Worker support.");
         }
     }
 
@@ -67,7 +67,7 @@ export class GeometryLoader {
                 break;
             }
             case 'geometry': {
-                const {jobId, jsonGeometry, options, err} = e.data;
+                const {jobId, jsonGeometry, err} = e.data;
                 const callbacks = this.callbacks[jobId];
                 if (jsonGeometry) {
                     console.log("GeometryLoader ended web worker job", jobId, "with success");
@@ -90,13 +90,11 @@ export class GeometryLoader {
     }
 
     _errorHandler(e) {
-        this.onStderrOutput(['filename: ', e.filename, ' lineno: ', e.lineno, ' error: ', e.message].join(' '));
+        console.log(['filename: ', e.filename, ' lineno: ', e.lineno, ' error: ', e.message].join(' '));
     }
 
     // Event handlers (may be overriden by users):
 
-    onStdoutOutput(str)                 {console.log(str);};
-    onStderrOutput(str)                 {console.log(str);};
     onProgress(progress)                {console.log("Loading progress:", progress);};
 
     // Public methods:
@@ -143,7 +141,7 @@ export class GeometryLoader {
     }
 
     loadFromImg(data, options) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             if(data instanceof File) {
                 const img = new Image();
                 img.src = (window.webkitURL ? webkitURL : URL).createObjectURL(data);

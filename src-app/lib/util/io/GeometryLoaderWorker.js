@@ -57,7 +57,7 @@ function loadFromSTL(data) {
     return [bufferGeometry];
 }
 
-function send(geometry, options, jobId) {
+function send(geometry, jobId) {
     const tranferables = [];
     const jsonGeometry = geometry.map(
         geometry => {
@@ -70,24 +70,15 @@ function send(geometry, options, jobId) {
     self.postMessage({
         cmd: 'geometry',
         jsonGeometry,
-        options,
         jobId
     }, tranferables);
 }
 
-/**
- * Event Listeners
- */
-
-function receiveMessage(e) {
-    const cmd  = e.data.cmd;
-    const data = e.data;
+self.addEventListener('message', e => {
+    const {cmd, data, jobId} = e.data;
     switch (cmd) {
-        case 'loadSTL': send(loadFromSTL(data.data), data.options, data.jobId); break;
-        case 'loadOBJ': send(loadFromOBJ(data.data), data.options, data.jobId); break;
-        case 'stop': stop(); break;
-        default: console.log('Unknown command: ' + cmd);
+        case 'loadSTL': send(loadFromSTL(data), jobId); break;
+        case 'loadOBJ': send(loadFromOBJ(data), jobId); break;
+        default: console.warn('Unknown command: ' + cmd);
     };
-}
-
-self.addEventListener('message', receiveMessage, false);
+}, false);
