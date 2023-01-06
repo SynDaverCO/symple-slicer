@@ -48,14 +48,14 @@ export class GeometryLoader {
     }
 
     _messageHandler(e) {
-        var data = e.data;
+        const data = e.data;
         switch (data.cmd) {
             case 'progress':
                 this.onProgress(data.value);
                 break;
             case 'geometry':
                 const geometries = data.jsonGeometry.map(json => jsonToGeometry(json,true));
-                this.onModelLoaded(geometries, data.filename);
+                this.onModelLoaded(geometries, data.options);
                 break;
             default:
                 this.onStderrOutput('Unknown command: ' + cmd);
@@ -71,14 +71,16 @@ export class GeometryLoader {
     onStdoutOutput(str)                 {console.log(str);};
     onStderrOutput(str)                 {console.log(str);};
     onProgress(progress)                {console.log("Loading progress:", progress);};
-    onModelLoaded(geometries, filename) {};
+    onModelLoaded(geometries, options)  {};
 
     // Public methods:
 
-    load(filename, data) {
-        console.log("Loading: ", filename);
-        const extension = filename.split('.').pop().toLowerCase();
-        var geometry;
+    load(data, options) {
+        let extension = 'stl';
+        if(options.hasOwnProperty('filename')) {
+            console.log("Loading: ", options.filename);
+            extension = options.filename.split('.').pop().toLowerCase();
+        }
 
         switch(extension) {
             case 'jpg':
@@ -86,35 +88,35 @@ export class GeometryLoader {
             case 'png':
             case 'bmp':
             case 'gif':
-                this.loadFromImage(data, filename);
+                this.loadFromImage(data, options);
                 break;
-            case 'obj': this.loadFromObj(data, filename); break;
-            case '3mf': this.loadFrom3MF(data, filename); break;
-            default:    this.loadFromSTL(data, filename); break;
+            case 'obj': this.loadFromObj(data, options); break;
+            case '3mf': this.loadFrom3MF(data, options); break;
+            default:    this.loadFromSTL(data, options); break;
         }
     }
 
-    loadFromSTL(data, filename) {
-        this.worker.postMessage({cmd: 'loadSTL', data, filename}, [data]);
+    loadFromSTL(data, options) {
+        this.worker.postMessage({cmd: 'loadSTL', data, options}, [data]);
     }
 
-    loadFromObj(data, filename) {
-        this.worker.postMessage({cmd: 'loadOBJ', data, filename}, [data]);
+    loadFromObj(data, options) {
+        this.worker.postMessage({cmd: 'loadOBJ', data, options}, [data]);
     }
 
-    loadFrom3MF(data, filename) {
+    loadFrom3MF(data, options) {
         // The ThreeMFLoader requires the DOMParse and thus cannot run in the worker.
         const ldr = new THREE.ThreeMFLoader();
         const obj = ldr.parse(data);
         obj.traverse( node => {
             if (node instanceof THREE.Mesh) {
                 node.geometry.computeVertexNormals();
-                this.onModelLoaded(node.geometry, filename);
+                this.onModelLoaded(node.geometry, options);
             }
         });
     }
 
-    loadFromImage(data, filename) {
+    loadFromImage(data, options) {
         if(data instanceof File) {
             const img = new Image();
             img.src = (window.webkitURL ? webkitURL : URL).createObjectURL(data);
@@ -134,7 +136,7 @@ export class GeometryLoader {
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
                 const geometry = GeometryAlgorithms.geometryFromImageData(imageData, 20, 1);
-                this.onModelLoaded(geometry, filename);
+                this.onModelLoaded(geometry, options);
             }
         } else {
             alert("Failed to read file");

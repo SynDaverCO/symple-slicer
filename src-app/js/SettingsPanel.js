@@ -598,7 +598,7 @@ export class PlaceObjectsPage {
             const data = await PlaceObjectsPage.readFileAsPromise(file, 'binary');
             PrintAndPreviewPage.setOutputGcodeName(filename);
             ProgressBar.message("Preparing model");
-            geoLoader.load(filename, data);
+            geoLoader.load(data, {filename});
         } else {
             PlaceObjectsPage.onModelLoaded(null);
         }
@@ -617,7 +617,7 @@ export class PlaceObjectsPage {
         const filename = window.settings.get("image_file").filename;
         const data     = window.settings.get("image_file").data;
         ProgressBar.message("Preparing model");
-        geoLoader.load(filename, data);
+        geoLoader.load(data, {filename});
     }
 
     static onAddToPlatform() {
@@ -628,9 +628,9 @@ export class PlaceObjectsPage {
         }
     }
 
-    static onModelLoaded(geometries, filename) {
+    static onModelLoaded(geometries, options) {
         if(geometries) {
-            loaded_model = {geometries, filename};
+            loaded_model = {geometries, filename: options.filename};
             window.settings.enable('.place_more', true);
             PlaceObjectsPage.onAddToPlatform(); // Place the first object automatically
         } else {

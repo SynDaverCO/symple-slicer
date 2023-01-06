@@ -57,7 +57,7 @@ function loadFromSTL(data) {
     return [bufferGeometry];
 }
 
-function send(geometry, filename) {
+function send(geometry, options) {
     const tranferables = [];
     const jsonGeometry = geometry.map(
         geometry => {
@@ -70,7 +70,7 @@ function send(geometry, filename) {
     self.postMessage({
         cmd: 'geometry',
         jsonGeometry,
-        filename
+        options
     }, tranferables);
 }
 
@@ -82,8 +82,8 @@ function receiveMessage(e) {
     var cmd  = e.data.cmd;
     var data = e.data;
     switch (cmd) {
-        case 'loadSTL': send(loadFromSTL(data.data), data.filename); break;
-        case 'loadOBJ': send(loadFromOBJ(data.data), data.filename); break;
+        case 'loadSTL': send(loadFromSTL(data.data), data.options); break;
+        case 'loadOBJ': send(loadFromOBJ(data.data), data.options); break;
         case 'stop': stop(); break;
         default: console.log('Unknown command: ' + cmd);
     };
