@@ -591,7 +591,7 @@ export class PlaceObjectsPage {
             if(confirm("Loading pre-sliced G-code will clear any existing objects.\nAny printer, material or slicing choices you have made will be ignored.\nPrinting incompatible G-code could damage your printer.")) {
                 stage.removeAll();
                 PrintAndPreviewPage.setOutputGcodeName(filename);
-                await PrintAndPreviewPage.readyToDownload(new SlicerOutput(file,'file'));
+                await PrintAndPreviewPage.processSlicerOutput(new SlicerOutput(file,'file'));
             }
         } else {
             // Handle regular model files
@@ -1147,7 +1147,9 @@ class SliceObjectsPage {
                 }
             }, "Stop slicing");
             ProgressBar.progress(0);
-            slicer.slice(models);
+            const handle = await slicer.slice(models);
+            ProgressBar.hide();
+            PrintAndPreviewPage.processSlicerOutput(handle);
         }
     }
 
@@ -1273,9 +1275,8 @@ export class PrintAndPreviewPage {
         $('#current_layer').val(layer);
     }
 
-    static async readyToDownload(handle) {
+    static async processSlicerOutput(handle) {
         gcode_handle = handle;
-        ProgressBar.hide();
         window.settings.gotoPage("page_print");
         if(gcode_handle) {
             const sliced_gcode = await slicer.readFile(gcode_handle);

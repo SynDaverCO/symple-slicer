@@ -45,20 +45,6 @@ function help() {
 }
 
 /**
- * The following routine runs the Cura slicer. It then transfers the
- * file over using a message.
- */
-async function slice(args) {
-    // Load support files into Emscripten FS
-
-    await loadFromUrl("fdmprinter.def.json", "fdmprinter.def.json");
-    await loadFromUrl("fdmextruder.def.json", "fdmextruder.def.json");
-
-    self.postMessage({'cmd': 'stdout', 'str': "Slicing..."});
-    callMain(args);
-}
-
-/**
  * This function writes out the geometry object as a binary STL file
  * to the Emscripten FS so that cura can read it in.
  */
@@ -94,10 +80,24 @@ async function loadFromUrl(url, filename) {
 }
 
 /**
+ * The following routine runs the Cura slicer. It then transfers the
+ * file over using a message.
+ */
+async function slice(args) {
+    // Load support files into Emscripten FS
+
+    await loadFromUrl("fdmprinter.def.json", "fdmprinter.def.json");
+    await loadFromUrl("fdmextruder.def.json", "fdmextruder.def.json");
+
+    self.postMessage({'cmd': 'stdout', 'str': "Slicing..."});
+    callMain(args);
+}
+
+/**
  * The following routine reads the file "output.gcode" from the Emscripten FS
  * and posts it via a message
  */
-function get_file() {
+function postOutputGcode(jobId) {
     let gcode;
     try {
         gcode = FS.readFile('output.gcode', {encoding: 'binary'});
@@ -106,9 +106,10 @@ function get_file() {
         return;
     }
     const payload = {
-            'cmd': 'file',
-            'gcode': gcode
-        };
+        cmd: 'file',
+        gcode,
+        jobId
+    };
     self.postMessage({'cmd': 'stdout', 'str': "Transfering G-code"});
     self.postMessage(payload, [payload.gcode.buffer]);
 }
@@ -140,16 +141,23 @@ function onExit() {
 }
 
 async function receiveMessage(e) {
-    var cmd  = e.data.cmd;
-    var data = e.data;
+    const cmd  = e.data.cmd;
+    const data = e.data;
     switch (cmd) {
-        case 'help':         help();                                                 break;
-        case 'loadFromUrl':  loadFromUrl(data.url, data.filename);                   break;
-        case 'loadFromBlob': loadFromBlob(data.blob, data.filename);                 break;
-        case 'loadGeometry': loadGeometry(jsonToGeometry(data.data,true), data.filename); break;
-        case 'slice':        await slice(data.args); get_file();                     break;
-        case 'stop':         stop();                                                 break;
-        default:             Module.printErr('Unknown command: ' + cmd);
+        case 'help':         help();                                 break;
+        case 'stop':         stop();                                 break;
+        case 'loadFromUrl':  loadFromUrl(data.url, data.filename);   break;
+        case 'loadFromBlob': loadFromBlob(data.blob, data.filename); break;
+        case 'loadGeometry':
+            const geometry = jsonToGeometry(data.data,true);
+            loadGeometry(geometry, data.filename);
+            break;
+        case 'slice':
+            await slice(data.args);
+            postOutputGcode(data.jobId);
+            break;
+        default:
+            Module.printErr('Unknown command: ' + cmd);
     };
 }
 

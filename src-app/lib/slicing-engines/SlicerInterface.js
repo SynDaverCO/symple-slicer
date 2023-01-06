@@ -129,6 +129,8 @@ export class SlicerWorkerInterface extends SlicerInterface {
         this.worker   = undefined;
 
         this._startWorker();
+        this.jobId = 0;
+        this.callbacks = {};
     }
 
     // Web worker control functions:
@@ -149,7 +151,7 @@ export class SlicerWorkerInterface extends SlicerInterface {
     }
 
     _messageHandler(e) {
-        var data = e.data;
+        const data = e.data;
         switch (data.cmd) {
             case 'stdout': this.onStdoutOutput(data.str); break;
             case 'stderr':
@@ -165,13 +167,26 @@ export class SlicerWorkerInterface extends SlicerInterface {
                 this.onAbort();
                 break;
             case 'file':
-                this.onStreamAvailable(new SlicerOutput(data.gcode, 'binary'));
+                const {jobId, gcode, error} = e.data;
+                const callbacks = this.callbacks[jobId];
+                if(gcode) {
+                    console.log("SlicerWorker ended web worker job", jobId, "with success");
+                    if (callbacks.resolve) {
+                        callbacks.resolve(new SlicerOutput(gcode, 'binary'));
+                    }
+                } else {
+                    console.warn("SlicerWorker ended web worker job", jobId, "with failure");
+                    if (callbacks.reject) {
+                        callbacks.reject(err ? err : 'Slicer returned no data');
+                    }
+                }
                 /**
                  * Once the gcode file is received, restart
                  * the web worker to ensure a clean state
                  * for the next slice.
                  */
                 this.reset();
+                delete this.callbacks[jobId];
                 break;
             default:
                 this.onStderrOutput('Unknown command: ' + cmd);
@@ -226,6 +241,16 @@ export class SlicerWorkerInterface extends SlicerInterface {
         const postProcessed = await this.readFile(slicerOutput);
         const blob = new Blob([postProcessed], {type: "text/plain"});
         saveAs(blob, filename);
+    }
+
+    _postMessage(message, transfer) {
+        const jobId = this.jobId++;
+        message.jobId = jobId;
+        return new Promise((resolve, reject) => {
+            console.log("SlicerWorker starting web worker job", jobId);
+            this.callbacks[jobId] = {resolve, reject};
+            this.worker.postMessage(message, transfer);
+        });
     }
 
     slice(models) {
@@ -298,31 +323,33 @@ export class SlicerNativeInterface extends SlicerInterface {
         await f.close();
     }
 
-    async slice(models) {
-        // Copy the helper files
-        await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmprinter.def.json"), GetNativeFilePath("fdmprinter.def.json"));
-        await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmextruder.def.json"), GetNativeFilePath("fdmextruder.def.json"));
-        // Run the slicer
-        const args = this.config.getCommandLineArguments(models);
-        const onStderr = str => {
-            const progress = CuraPostProcessing.captureProgress(str);
-            if(typeof progress !== "undefined") {
-                this.onProgress(progress);
-            } else {
-                CuraPostProcessing.captureGcodeHeader(str);
-                this.onStderrOutput(str);
+    slice(models) {
+        return new Promise(async (resolve, reject) => {
+            // Copy the helper files
+            await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmprinter.def.json"), GetNativeFilePath("fdmprinter.def.json"));
+            await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmextruder.def.json"), GetNativeFilePath("fdmextruder.def.json"));
+            // Run the slicer
+            const args = this.config.getCommandLineArguments(models);
+            const onStderr = str => {
+                const progress = CuraPostProcessing.captureProgress(str);
+                if(typeof progress !== "undefined") {
+                    this.onProgress(progress);
+                } else {
+                    CuraPostProcessing.captureGcodeHeader(str);
+                    this.onStderrOutput(str);
+                }
             }
-        }
-        const onExit = async (code) => {
-            const filePath = GetNativeFilePath("output.gcode");
-            this.onStreamAvailable(new SlicerOutput(filePath, 'node.path'));
-        }
-        const curaExe = RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
-        // Write a batch file for testing
-        const filePath = GetNativeFilePath("slice.bat");
-        args.unshift(curaExe);
-        let nargs = args.map(s => '"' + s.replace(/[\r\n]+/g," ") + '"');
-        ELECTRON.fs.writeFile(filePath, "@echo off\n" + nargs.join(" ") + "\npause");
+            const onExit = async (code) => {
+                const filePath = GetNativeFilePath("output.gcode");
+                resolve(new SlicerOutput(filePath, 'node.path'));
+            }
+            const curaExe = RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
+            // Write a batch file for testing
+            const filePath = GetNativeFilePath("slice.bat");
+            args.unshift(curaExe);
+            const nargs = args.map(s => '"' + s.replace(/[\r\n]+/g," ") + '"');
+            ELECTRON.fs.writeFile(filePath, "@echo off\n" + nargs.join(" ") + "\npause");
+        });
     }
 
     stop() {
