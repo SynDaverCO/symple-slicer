@@ -254,7 +254,7 @@ export class SlicerWorkerInterface extends SlicerInterface {
     }
 
     slice(models) {
-        this.worker.postMessage({
+        return this._postMessage({
             'cmd':      'slice',
             'args':     this.config.getCommandLineArguments(models)
         });
