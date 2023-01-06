@@ -390,11 +390,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
             // Prepare the geometry loading thread
             window.geoLoader = new GeometryLoader();
-            geoLoader.onModelLoaded = PlaceObjectsPage.onModelLoaded;
-
-            geoLoader.onProgress = function(progress) {
-                ProgressBar.progress(progress);
-            }
+            geoLoader.onProgress = ProgressBar.progress;
 
             // Cura interface
             slicer.onStdoutOutput = Log.write;

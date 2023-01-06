@@ -419,13 +419,13 @@ export class Stage {
             const transform = obj.matrixWorld.clone();
             const worldToPrinterRepresentation = new THREE.Matrix4();
             transform.premultiply(worldToPrinterRepresentation.copy(this.bedRelative.matrixWorld).invert());
-            return {geometry: obj.geometry, filename: obj.filename, extruder: obj.extruder, transform};
+            return {geometry: obj.geometry, file: obj.file, extruder: obj.extruder, transform};
         });
     }
 
     // Adds a model to the stage. A model can consist of one or more geometries.
-    addModel(geometries, filename) {
-        const printableObjs = geometries.map(geo => new PrintableObject(geo, filename));
+    addModel(geometries, file) {
+        const printableObjs = geometries.map(geo => new PrintableObject(geo, file.name));
         this.addObjects(printableObjs);
         this.selection.setSelection(printableObjs);
         if(this.selection.count > 1) {

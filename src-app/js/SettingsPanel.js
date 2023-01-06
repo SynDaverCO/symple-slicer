@@ -580,64 +580,64 @@ export class PlaceObjectsPage {
         });
     }
 
-    static async onDropModel(file, filename) {
-        // Check for pre-sliced gcode files
-        if(filename) {
-            const extension = filename.split('.').pop();
-            if(extension == "gco" || extension == "gcode") {
-                if(confirm("Loading pre-sliced G-code will clear any existing objects.\nAny printer, material or slicing choices you have made will be ignored.\nPrinting incompatible G-code could damage your printer.")) {
-                    stage.removeAll();
-                    PrintAndPreviewPage.setOutputGcodeName(filename);
-                    await PrintAndPreviewPage.readyToDownload(new SlicerOutput(file,'file'));
-                }
-                return;
-            }
+    static async onDropModel(file) {
+        if(!file) {
+            return PlaceObjectsPage.onModelLoaded(null);
         }
-        // Handle regular model files
-        if(file) {
-            const data = await PlaceObjectsPage.readFileAsPromise(file, 'binary');
+        const filename = file.name;
+        const extension = filename.split('.').pop();
+        if(extension == "gco" || extension == "gcode") {
+            // Handle pre-sliced G-code
+            if(confirm("Loading pre-sliced G-code will clear any existing objects.\nAny printer, material or slicing choices you have made will be ignored.\nPrinting incompatible G-code could damage your printer.")) {
+                stage.removeAll();
+                PrintAndPreviewPage.setOutputGcodeName(filename);
+                await PrintAndPreviewPage.readyToDownload(new SlicerOutput(file,'file'));
+            }
+        } else {
+            // Handle regular model files
             PrintAndPreviewPage.setOutputGcodeName(filename);
             ProgressBar.message("Preparing model");
-            geoLoader.load(data, {filename});
-        } else {
-            PlaceObjectsPage.onModelLoaded(null);
+            const data = await PlaceObjectsPage.readFileAsPromise(file, 'binary');
+            const geometries = await geoLoader.load(data, {filename});
+            ProgressBar.hide();
+            PlaceObjectsPage.onModelLoaded(geometries, file);
         }
     }
 
-    static onDropImage(data, filename) {
-        if(data) {
-            PrintAndPreviewPage.setOutputGcodeName(filename);
-        } else {
-            PlaceObjectsPage.onModelLoaded(null);
+    static onDropImage(file) {
+        if(!file) {
+            window.settings.enable("#add_litho", false);
+            return PlaceObjectsPage.onModelLoaded(null);
         }
-        window.settings.enable("#add_litho", data !== undefined);
+        PrintAndPreviewPage.setOutputGcodeName(file.name);
+        window.settings.enable("#add_litho", true);
     }
 
-    static onAddLitho() {
-        const filename = window.settings.get("image_file").filename;
-        const data     = window.settings.get("image_file").data;
+    static async onAddLitho() {
+        const file = window.settings.get("image_file").data;
         ProgressBar.message("Preparing model");
-        geoLoader.load(data, {filename});
+        const geometries = await geoLoader.load(file, {filename: file.name});
+        ProgressBar.hide();
+        PlaceObjectsPage.onModelLoaded(geometries, file);
     }
 
-    static onAddToPlatform() {
-        if(!loaded_model) return;
-        const howMany = parseInt(window.settings.get("place_quantity"))
-        for(var i = 0; i < howMany; i++) {
-            stage.addModel(loaded_model.geometries, loaded_model.filename);
-        }
-    }
-
-    static onModelLoaded(geometries, options) {
+    static onModelLoaded(geometries, file) {
         if(geometries) {
-            loaded_model = {geometries, filename: options.filename};
+            loaded_model = {geometries, file};
             window.settings.enable('.place_more', true);
             PlaceObjectsPage.onAddToPlatform(); // Place the first object automatically
         } else {
             window.settings.enable('.place_more', false);
             loaded_model = false;
         }
-        ProgressBar.hide();
+    }
+    
+    static onAddToPlatform() {
+        if(!loaded_model) return;
+        const howMany = parseInt(window.settings.get("place_quantity"))
+        for(var i = 0; i < howMany; i++) {
+            stage.addModel(loaded_model.geometries, loaded_model.file);
+        }
     }
 
     static onGotoSliceClicked() {
@@ -1118,7 +1118,7 @@ class SliceObjectsPage {
             }
 
             function applyTransformsLater(geo, index) {
-                const newName = getUniqueId(geo.filename);
+                const newName = getUniqueId(geo.file.name);
                 // Find unique geometries
                 geometryMap.set(newName, geo.geometry);
                 // Return model info

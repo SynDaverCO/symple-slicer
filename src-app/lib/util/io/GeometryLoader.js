@@ -28,6 +28,8 @@ export class GeometryLoader {
         this.worker   = undefined;
 
         this._startWorker();
+        this.jobId = 0;
+        this.callbacks = {};
     }
 
     // Web worker control functions:
@@ -47,18 +49,43 @@ export class GeometryLoader {
         this.worker = undefined;
     }
 
+    _postMessage(message, transfer) {
+        const jobId = this.jobId++;
+        message.jobId = jobId;
+        return new Promise((resolve, reject) => {
+            console.log("GeometryLoader starting web worker job", jobId);
+            this.callbacks[jobId] = {resolve, reject};
+            this.worker.postMessage(message, transfer);
+        });
+    }
+
     _messageHandler(e) {
-        const data = e.data;
-        switch (data.cmd) {
-            case 'progress':
-                this.onProgress(data.value);
+        switch (e.data.cmd) {
+            case 'progress': {
+                const {value} = e.data;
+                this.onProgress(value);
                 break;
-            case 'geometry':
-                const geometries = data.jsonGeometry.map(json => jsonToGeometry(json,true));
-                this.onModelLoaded(geometries, data.options);
+            }
+            case 'geometry': {
+                const {jobId, jsonGeometry, options, err} = e.data;
+                const callbacks = this.callbacks[jobId];
+                if (jsonGeometry) {
+                    console.log("GeometryLoader ended web worker job", jobId, "with success");
+                    const geometries = jsonGeometry.map(json => jsonToGeometry(json,true));
+                    if (callbacks.resolve) {
+                        callbacks.resolve(geometries);
+                    }
+                } else {
+                    console.warn("GeometryLoader ended web worker job", jobId, "with failure");
+                    if (callbacks.reject) {
+                        callbacks.reject(err ? err : 'loadGeometryFailed');
+                    }
+                }
+                delete this.callbacks[jobId];
                 break;
+            }
             default:
-                this.onStderrOutput('Unknown command: ' + cmd);
+                console.error('Unknown command: ' + cmd);
         }
     }
 
@@ -71,14 +98,13 @@ export class GeometryLoader {
     onStdoutOutput(str)                 {console.log(str);};
     onStderrOutput(str)                 {console.log(str);};
     onProgress(progress)                {console.log("Loading progress:", progress);};
-    onModelLoaded(geometries, options)  {};
 
     // Public methods:
 
-    load(data, options) {
+    async load(data, options) {
         let extension = 'stl';
         if(options.hasOwnProperty('filename')) {
-            console.log("Loading: ", options.filename);
+            console.log("GeometryLoader loading", options.filename);
             extension = options.filename.split('.').pop().toLowerCase();
         }
 
@@ -87,21 +113,19 @@ export class GeometryLoader {
             case 'jpeg':
             case 'png':
             case 'bmp':
-            case 'gif':
-                this.loadFromImage(data, options);
-                break;
-            case 'obj': this.loadFromObj(data, options); break;
-            case '3mf': this.loadFrom3MF(data, options); break;
-            default:    this.loadFromSTL(data, options); break;
+            case 'gif': return this.loadFromImg(data, options);
+            case 'obj': return this.loadFromObj(data, options);
+            case '3mf': return this.loadFrom3MF(data, options);
+            default:    return this.loadFromSTL(data, options);
         }
     }
 
-    loadFromSTL(data, options) {
-        this.worker.postMessage({cmd: 'loadSTL', data, options}, [data]);
+    async loadFromSTL(data, options) {
+        return this._postMessage({cmd: 'loadSTL', data, options}, [data]);
     }
 
-    loadFromObj(data, options) {
-        this.worker.postMessage({cmd: 'loadOBJ', data, options}, [data]);
+    async loadFromObj(data, options) {
+        return this._postMessage({cmd: 'loadOBJ', data, options}, [data]);
     }
 
     loadFrom3MF(data, options) {
@@ -115,34 +139,35 @@ export class GeometryLoader {
                 geometry.push(node.geometry);
             }
         });
-        this.onModelLoaded(geometry, options);
+        return geometry;
     }
 
-    loadFromImage(data, options) {
-        if(data instanceof File) {
-            const img = new Image();
-            img.src = (window.webkitURL ? webkitURL : URL).createObjectURL(data);
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
+    loadFromImg(data, options) {
+        return new Promise(function (resolve, reject) {
+            if(data instanceof File) {
+                const img = new Image();
+                img.src = (window.webkitURL ? webkitURL : URL).createObjectURL(data);
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
 
-                // Scale images larger than a certain threshold to
-                // avoid creating excessively large geometry
-                const pixelCount = img.width * img.height;
-                const pixelLimit = 307200;
-                const scale      = Math.min(1.0,Math.sqrt(pixelLimit/pixelCount));
-                canvas.width     = Math.floor(img.width  * scale);
-                canvas.height    = Math.floor(img.height * scale);
+                    // Scale images larger than a certain threshold to
+                    // avoid creating excessively large geometry
+                    const pixelCount = img.width * img.height;
+                    const pixelLimit = 307200;
+                    const scale      = Math.min(1.0,Math.sqrt(pixelLimit/pixelCount));
+                    canvas.width     = Math.floor(img.width  * scale);
+                    canvas.height    = Math.floor(img.height * scale);
 
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-                const geometry = GeometryAlgorithms.geometryFromImageData(imageData, 20, 1);
-                this.onModelLoaded([geometry], options);
+                    const geometry = GeometryAlgorithms.geometryFromImageData(imageData, 20, 1);
+                    resolve([geometry]);
+                }
+            } else {
+                reject("GeometryLoader.loadFromImg expects a File object");
             }
-        } else {
-            alert("Failed to read file");
-            this.onModelLoaded();
-        }
+        });
     }
 }
