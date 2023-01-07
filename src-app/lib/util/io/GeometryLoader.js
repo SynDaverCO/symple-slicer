@@ -93,6 +93,26 @@ export class GeometryLoader {
         console.log(['filename: ', e.filename, ' lineno: ', e.lineno, ' error: ', e.message].join(' '));
     }
 
+    readFileAsPromise(file, mode) {
+        return new Promise((resolve, reject) => {
+            var fr = new FileReader();
+            fr.onload = () => {
+                resolve(fr.result )
+            };
+            fr.onerror = reject;
+            fr.onprogress = e => {
+                if (e.lengthComputable) {
+                    this.onProgress(e.loaded/e.total);
+                }
+            }
+            if(mode == 'binary') {
+                fr.readAsArrayBuffer(file);
+            } else {
+                fr.readAsText(file);
+            }
+        });
+    }
+
     // Event handlers (may be overriden by users):
 
     onProgress(progress)                {console.log("Loading progress:", progress);};
@@ -100,12 +120,15 @@ export class GeometryLoader {
     // Public methods:
 
     async load(data, options) {
-        let extension = 'stl';
-        if(options.hasOwnProperty('filename')) {
-            console.log("GeometryLoader loading", options.filename);
-            extension = options.filename.split('.').pop().toLowerCase();
+        const filename = data instanceof File
+                            ? data.name
+                            : options && options.hasOwnProperty('filename')
+                                ? options.filename
+                                : "untitled.stl";
+        const extension = filename.split('.').pop().toLowerCase();
+        if(data instanceof File) {
+            data = await this.readFileAsPromise(data, 'binary');
         }
-
         switch(extension) {
             case 'jpg':
             case 'jpeg':

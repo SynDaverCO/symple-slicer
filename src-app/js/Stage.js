@@ -425,7 +425,7 @@ export class Stage {
 
     // Adds a model to the stage. A model can consist of one or more geometries.
     addModel(geometries, file) {
-        const printableObjs = geometries.map(geo => new PrintableObject(geo, file.name));
+        const printableObjs = geometries.map(geo => new PrintableObject(geo, file));
         this.addObjects(printableObjs);
         this.selection.setSelection(printableObjs);
         if(this.selection.count > 1) {
