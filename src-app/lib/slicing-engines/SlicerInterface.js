@@ -212,29 +212,37 @@ export class SlicerWorkerInterface extends SlicerInterface {
         this.worker.postMessage({'cmd': 'help'});
     }
 
-    loadFromUrl(url, filename) {
+    getUniqueFilename() {
+        this.count = (this.count || 0) + 1;
+        return this.count + ".stl";
+    }
+
+    loadFromUrl(url, filename = getUniqueFilename()) {
         this.worker.postMessage({
             'cmd':      'loadFromUrl',
             'url':      url,
             'filename': filename
         });
+        return filename;
     }
 
-    loadFromBlob(blob, filename) {
+    loadFromBlob(blob, filename = getUniqueFilename()) {
         this.worker.postMessage({
             'cmd':      'loadFromBlob',
             'blob':     blob,
             'filename': filename
         });
+        return filename;
     }
 
-    loadFromGeometry(geometry, filename) {
+    loadFromGeometry(geometry, filename = getUniqueFilename()) {
         var json = geometryToJSON(geometry);
         this.worker.postMessage({
             'cmd':      'loadGeometry',
             'data':     json.data,
             'filename': filename
         }, json.tranferables);
+        return filename;
     }
 
     async saveAsFile(slicerOutput, filename) {
@@ -312,22 +320,31 @@ export class SlicerNativeInterface extends SlicerInterface {
         }
     }
 
-    async loadFromGeometry(geometry, filename) {
-        await CreateTempDir();
-        ProgressBar.message("Writing model...");
-        const writeFunc = async (buffer, offset, length) => await f.write(buffer, offset, length);
-        const progressFunc = (count, outOf) => this.onProgress(count/outOf);
-        const filePath = GetNativeFilePath(filename);
-        const f = await ELECTRON.fs.open(filePath, 'w');
-        await GEOMETRY_WRITERS.writeStlAsync(geometry, writeFunc, progressFunc);
-        await f.close();
+    getUniqueFilename() {
+        this.count = (this.count || 0) + 1;
+        return this.count + ".stl";
+    }
+
+    async loadFromGeometry(geometry, file) {
+        if(file && file.path) {
+            return file.path;
+        } else {
+            const filePath = await GetNativeFilePath(this.getUniqueFilename());
+            ProgressBar.message("Writing model...");
+            const writeFunc = async (buffer, offset, length) => await f.write(buffer, offset, length);
+            const progressFunc = (count, outOf) => this.onProgress(count/outOf);
+            const f = await ELECTRON.fs.open(filePath, 'w');
+            await GEOMETRY_WRITERS.writeStlAsync(geometry, writeFunc, progressFunc);
+            await f.close();
+            return filePath;
+        }
     }
 
     slice(models) {
         return new Promise(async (resolve, reject) => {
             // Copy the helper files
-            await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmprinter.def.json"), GetNativeFilePath("fdmprinter.def.json"));
-            await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmextruder.def.json"), GetNativeFilePath("fdmextruder.def.json"));
+            await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmprinter.def.json"), await GetNativeFilePath("fdmprinter.def.json"));
+            await ELECTRON.fs.copyFile(GetNativeConfigPath("fdmextruder.def.json"), await GetNativeFilePath("fdmextruder.def.json"));
             // Run the slicer
             const args = this.config.getCommandLineArguments(models);
             const onStderr = str => {
@@ -340,12 +357,12 @@ export class SlicerNativeInterface extends SlicerInterface {
                 }
             }
             const onExit = async (code) => {
-                const filePath = GetNativeFilePath("output.gcode");
+                const filePath = await GetNativeFilePath("output.gcode");
                 resolve(new SlicerOutput(filePath, 'node.path'));
             }
             const curaExe = RunNativeSlicer(args, this.onStdoutOutput, onStderr, onExit);
             // Write a batch file for testing
-            const filePath = GetNativeFilePath("slice.bat");
+            const filePath = await GetNativeFilePath("slice.bat");
             args.unshift(curaExe);
             const nargs = args.map(s => '"' + s.replace(/[\r\n]+/g," ") + '"');
             ELECTRON.fs.writeFile(filePath, "@echo off\n" + nargs.join(" ") + "\npause");

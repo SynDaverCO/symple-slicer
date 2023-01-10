@@ -21,13 +21,12 @@ import { OverhangShader } from './OverhangShaderMaterial.js';
 import { ParseColor } from '../lib/util/misc/ParseColor.js';
 
 export class PrintableObject extends THREE.Mesh {
-    constructor(geometry, file) {
+    constructor(geometry) {
         geometry.computeBoundingSphere();
         geometry.computeBoundingBox();
         super(geometry, PrintableObject.modelMaterials[0]);
         this.castShadow = true;
         this.extruder = 0;
-        this.file = file;
     }
 
     static applyStyleSheetColors() {

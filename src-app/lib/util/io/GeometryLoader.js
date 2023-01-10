@@ -126,18 +126,19 @@ export class GeometryLoader {
                                 ? options.filename
                                 : "untitled.stl";
         const extension = filename.split('.').pop().toLowerCase();
-        if(data instanceof File) {
-            data = await this.readFileAsPromise(data, 'binary');
-        }
+        const get = async data =>
+            data instanceof File
+                ? this.readFileAsPromise(data, 'binary')
+                : data;
         switch(extension) {
             case 'jpg':
             case 'jpeg':
             case 'png':
             case 'bmp':
             case 'gif': return this.loadFromImg(data, options);
-            case 'obj': return this.loadFromObj(data, options);
-            case '3mf': return this.loadFrom3MF(data, options);
-            default:    return this.loadFromSTL(data, options);
+            case 'obj': return this.loadFromObj(await get(data), options);
+            case '3mf': return this.loadFrom3MF(await get(data), options);
+            default:    return this.loadFromSTL(await get(data), options);
         }
     }
 

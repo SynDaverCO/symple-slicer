@@ -18,6 +18,7 @@
  */
 
 import { Toolpath } from '../lib/util/gcode/Toolpath.js';
+import { ProgressBar } from '../lib/util/ui/progress/progress.js';
 import { ResettableTimeout } from '../lib/util/misc/ResettableTimer.js';
 import { ParseColor } from '../lib/util/misc/ParseColor.js';
 import { PrinterRepresentation } from './PrinterRepresentation.js';
@@ -25,6 +26,8 @@ import { ObjectTransformPage, PlaceObjectsPage } from './SettingsPanel.js';
 import { SelectionGroup } from './SelectionGroup.js';
 import { PrintableObject } from './PrintableObject.js';
 import { OverhangShader } from './OverhangShaderMaterial.js';
+
+const preApplyTransforms = false; // If true, apply transformations to models prior to sending them to Cura
 
 export class Stage {
     constructor() {
@@ -386,9 +389,9 @@ export class Stage {
         return this.printerRepresentation;
     }
 
-    // Return all printable objects in the stage
-    getPrintableObjects(container) {
-        if(!container) container = this.placedObjects;
+    // Return all printable objects in a specified container,
+    // or the whole stage.
+    getPrintableObjects(container = this.placedObjects) {
         const result = [];
         container.traverse(obj => {
             if (obj instanceof PrintableObject) {
@@ -410,25 +413,53 @@ export class Stage {
         return this.selection.children.slice();
     }
 
-    /**
-     * This function returns a list of ready to slice geometries along
-     * with the transformation matrix.
-     */
-    getAllGeometry() {
-        return this.getPrintableObjects().map(obj => {
-            const transform = obj.matrixWorld.clone();
-            const worldToPrinterRepresentation = new THREE.Matrix4();
-            transform.premultiply(worldToPrinterRepresentation.copy(this.bedRelative.matrixWorld).invert());
-            return {geometry: obj.geometry, file: obj.file, extruder: obj.extruder, transform};
-        });
+    /* Returns the transformation matrix for an object */
+    getObjectTransform(printableObject) {
+        const transform = printableObject.matrixWorld.clone();
+        const worldToPrinterRepresentation = new THREE.Matrix4();
+        transform.premultiply(worldToPrinterRepresentation.copy(this.bedRelative.matrixWorld).invert());
+        return transform;
     }
 
-    // Adds a model to the stage. A model can consist of one or more geometries.
-    addModel(geometries, file) {
-        const printableObjs = geometries.map(geo => new PrintableObject(geo, file));
+    async loadGeometryFromFile(file) {
+        this.cache = this.cache || new WeakMap();
+        if(this.cache.has(file)) {
+            return this.cache.get(file);
+        } else {
+            ProgressBar.message("Loading models");
+            const geometries = await geoLoader.load(file);
+            ProgressBar.hide();
+            this.cache.set(file, geometries);
+            return geometries;
+        }
+    }
+
+    // Adds a model from a file to the stage.
+    async addModelFromFile(file) {
+        // Load the model
+        const geometries = await this.loadGeometryFromFile(file);
+        // Determine whether the file is a mesh and whether it
+        // contains one or more geometries.
+        const extension = file.name.split('.').pop().toLowerCase();
+        const isMesh = ['stl','obj','3mf'].indexOf(extension) > -1;
+        const isSingle = geometries.length == 1;
+        // If there are more than one, they are loaded in as a group
+        // and save a file reference as parentFile, otherwise as meshFile,
+        // to allow for optmizations during slicing.
+        const printableObjs = geometries.map(
+            geo => {
+                const result = new PrintableObject(geo);
+                if(isMesh && isSingle) {
+                    result.meshFile = file;
+                } else {
+                    result.parentFile = file;
+                }
+                return result;
+            }
+        );
         this.addObjects(printableObjs);
         this.selection.setSelection(printableObjs);
-        if(this.selection.count > 1) {
+        if(!isSingle) {
             this.selection.groupObjects();
         }
         this.getSelectedObjects().forEach(obj => this.centerObjectOnPlatform(obj));
@@ -436,6 +467,46 @@ export class Stage {
         this.dropObjectToFloor(this.selection);
         this.arrangeObjectsOnPlatform();
         this.render();
+    }
+
+    async slice() {
+        const printableObjects = this.getPrintableObjects();
+        if(printableObjects.length) {
+            const geometryMap = new WeakMap();
+
+            async function getGeometryHandle(geometry, file) {
+                if(geometryMap.has(geometry)) {
+                    return geometryMap.get(geometry);
+                } else {
+                    const handle = await slicer.loadFromGeometry(geometry, file);
+                    geometryMap.set(geometry, handle);
+                    return handle;
+                }
+            }
+
+            // Generate a list of models
+            const models = [];
+            for(const obj of printableObjects) {
+                const transform = this.getObjectTransform(obj);
+                const extruder = obj.extruder;
+                if(preApplyTransforms || !obj.meshFile) {
+                    // Option 1: Preapply all transformations to the STL files prior to sending them
+                    //           to the slicer
+                    console.log("Sending", obj.parentFile.name, "with pre-baked transforms");
+                    const newGeo = obj.geometry.clone().applyMatrix4(transform);
+                    const filename = await getGeometryHandle(newGeo);
+                    models.push({filename, extruder});
+                } else {
+                    // Option 2: Send STL files to Cura unmodified and have Cura position them using mesh
+                    //           offsets and mesh rotations.
+                    console.log("Sending", obj.meshFile.name, "with transformation matrix");
+                    const filename = await getGeometryHandle(obj.geometry, obj.meshFile);
+                    models.push({filename, extruder, transform});
+                }
+            }
+
+            return slicer.slice(models);
+        }
     }
 
     get numPrintableObjects() {

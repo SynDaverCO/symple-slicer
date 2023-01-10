@@ -38,8 +38,6 @@ import { flashFirmware, flashCustomFirmware, stream_gcode } from './SerialPort.j
 
 var gcode_handle, loaded_model;
 
-const preApplyTransforms = true; // If true, apply transformations to models prior to sending them to Cura
-
 export class SettingsPanel {
     static async init(id) {
         const s = window.settings = new SettingsUI(id);
@@ -593,10 +591,7 @@ export class PlaceObjectsPage {
 
     static async onModelLoaded(file) {
         if(file) {
-            ProgressBar.message("Preparing model");
-            const geometries = await geoLoader.load(file);
-            ProgressBar.hide();
-            loaded_model = {geometries, file};
+            loaded_model = file;
             PrintAndPreviewPage.setOutputGcodeName(file.name);
             window.settings.enable('.place_more', true);
             PlaceObjectsPage.onAddToPlatform(); // Place the first object automatically
@@ -610,7 +605,7 @@ export class PlaceObjectsPage {
         if(!loaded_model) return;
         const howMany = parseInt(window.settings.get("place_quantity"))
         for(var i = 0; i < howMany; i++) {
-            stage.addModel(loaded_model.geometries, loaded_model.file);
+            stage.addModelFromFile(loaded_model);
         }
     }
 
@@ -1061,70 +1056,18 @@ class SliceObjectsPage {
     }
 
     static async onSliceClicked() {
-        const geometries = stage.getAllGeometry();
-        if(geometries.length) {
-            const geometryMap = new Map();
-
-            // Option 1: Preapply all transformations to the STL files prior to sending them
-            //           to the slicer
-
-            function applyTransformsBefore(geo, index) {
-                const newGeo = geo.geometry.clone();
-                newGeo.applyMatrix4(geo.transform);
-                // Store the modified geometry
-                const newName = index.toString() + ".stl";
-                geometryMap.set(newName, newGeo);
-                // Return model info
-                return {
-                    filename: newName,
-                    extruder: geo.extruder
-                };
+        Log.clear();
+        ProgressBar.message("Slicing...");
+        ProgressBar.onAbort(() => {
+            if(confirm("Click Okay to stop the slice in progress, or Cancel to allow it to continue.")) {
+                slicer.reset();
+                ProgressBar.hide();
             }
-
-            // Option 2: Send STL files to Cura unmodified and have Cura position them using mesh
-            //           offsets and mesh rotations.
-            const stlList = [];
-            function getUniqueId(filename) {
-                if(stlList.indexOf(filename) < 0) {
-                    stlList.push(filename);
-                }
-                return stlList.indexOf(filename).toString() + ".stl";
-            }
-
-            function applyTransformsLater(geo, index) {
-                const newName = getUniqueId(geo.file.name);
-                // Find unique geometries
-                geometryMap.set(newName, geo.geometry);
-                // Return model info
-                return {
-                    filename: newName,
-                    transform: geo.transform,
-                    extruder: geo.extruder
-                };
-            }
-
-            // Generate a list of models
-            const models = geometries.map(preApplyTransforms ? applyTransformsBefore : applyTransformsLater);
-
-            // Load geometies into the slicer
-            for (const [filename, geometry] of geometryMap) {
-                await slicer.loadFromGeometry(geometry, filename);
-            }
-
-            // Send the models to the slicer for slicing
-            Log.clear();
-            ProgressBar.message("Slicing...");
-            ProgressBar.onAbort(() => {
-                if(confirm("Click Okay to stop the slice in progress, or Cancel to allow it to continue.")) {
-                    slicer.reset();
-                    ProgressBar.hide();
-                }
-            }, "Stop slicing");
-            ProgressBar.progress(0);
-            const handle = await slicer.slice(models);
-            ProgressBar.hide();
-            PrintAndPreviewPage.processSlicerOutput(handle);
-        }
+        }, "Stop slicing");
+        ProgressBar.progress(0);
+        const handle = await stage.slice();
+        ProgressBar.hide();
+        PrintAndPreviewPage.processSlicerOutput(handle);
     }
 
      static onExportClicked() {

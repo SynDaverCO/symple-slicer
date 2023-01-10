@@ -205,12 +205,13 @@ window.ShowTempDir = async filename => {
     await electron.shell.showItemInFolder(GetNativeFilePath(filename));
 }
 
-window.GetNativeFilePath = filename => {
-    return ELECTRON.path.join(tmpPath,filename);
+window.GetNativeFilePath = async filename => {
+    await CreateTempDir();
+    return path.join(tmpPath,filename);
 }
 
 window.GetNativeConfigPath = filename => {
-    return ELECTRON.path.join(__dirname, '..', 'lib', 'slicing-engines', 'CuraEngine',filename);
+    return path.join(__dirname, '..', 'lib', 'slicing-engines', 'CuraEngine',filename);
 }
 
 window.GetNativeReadableStream = async filename => {    

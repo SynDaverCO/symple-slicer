@@ -152,7 +152,7 @@ class SlicerConfiguration {
         }
         this.notifyListenersOfChanges();
     }
-    
+
     /**
      * Print summary of affected settings and dispatch indirect change events.
      */
@@ -933,7 +933,7 @@ class CuraDefinitions {
      }
 
     /**
-     * Generates an ordering of the settings such that dependents are always evaluated first. 
+     * Generates an ordering of the settings such that dependents are always evaluated first.
      */
      getResolutionOrder() {
          const order = new Set();
@@ -1236,7 +1236,7 @@ class CuraCommandLine {
 
         arg_list.push("-o");
         arg_list.push("output.gcode");
-        
+
         for(var extruder = 0; extruder < hash.length; extruder++) {
             // Push extruder specific defaults
             arg_list.push("-e" + extruder);
