@@ -415,10 +415,7 @@ export class Stage {
 
     /* Returns the transformation matrix for an object */
     getObjectTransform(printableObject) {
-        const transform = printableObject.matrixWorld.clone();
-        const worldToPrinterRepresentation = new THREE.Matrix4();
-        transform.premultiply(worldToPrinterRepresentation.copy(this.bedRelative.matrixWorld).invert());
-        return transform;
+        return this.bedRelative.matrixWorld.clone().invert().multiply(printableObject.matrixWorld);
     }
 
     async loadGeometryFromFile(file) {
